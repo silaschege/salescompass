@@ -62,7 +62,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
-# Replit - Keep Replit config files in git
+# Replit temporary files
 .cache/
 .upm/
 

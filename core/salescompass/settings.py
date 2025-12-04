@@ -21,12 +21,58 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-f4*r+okok01o^i4+vd1**l+rv1snh10zz*mrbk73kb2_exq=qc'
+# In production, you MUST set the SECRET_KEY environment variable
+if os.getenv('REPLIT_DEPLOYMENT') == '1':
+    SECRET_KEY = os.getenv('SECRET_KEY')
+    if not SECRET_KEY:
+        raise ValueError("SECRET_KEY environment variable must be set in production")
+    DEBUG = False
+else:
+    # Development only - use env var or insecure default
+    SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-f4*r+okok01o^i4+vd1**l+rv1snh10zz*mrbk73kb2_exq=qc')
+    DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['*']
+# Configure ALLOWED_HOSTS and CSRF_TRUSTED_ORIGINS
+if os.getenv('REPLIT_DEPLOYMENT') == '1':
+    # Production - use Replit domain
+    allowed_hosts = []
+    csrf_trusted_origins = []
+    
+    if os.getenv('REPL_SLUG') and os.getenv('REPL_OWNER'):
+        host = f"{os.getenv('REPL_SLUG')}.{os.getenv('REPL_OWNER')}.repl.co"
+        allowed_hosts.append(host)
+        csrf_trusted_origins.append(f"https://{host}")
+    
+    if os.getenv('REPLIT_DEV_DOMAIN'):
+        host = os.getenv('REPLIT_DEV_DOMAIN')
+        allowed_hosts.append(host)
+        csrf_trusted_origins.append(f"https://{host}")
+    
+    # Use localhost as fallback
+    if not allowed_hosts:
+        allowed_hosts = ['localhost', '127.0.0.1']
+        csrf_trusted_origins = ['http://localhost', 'https://localhost', 'http://127.0.0.1', 'https://127.0.0.1']
+    
+    ALLOWED_HOSTS = allowed_hosts
+    CSRF_TRUSTED_ORIGINS = csrf_trusted_origins
+    
+    # Security settings for production
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    CSRF_COOKIE_SAMESITE = 'Lax'
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+else:
+    # Development mode
+    ALLOWED_HOSTS = ['*']
+    CSRF_TRUSTED_ORIGINS = []
 
 
 # Application definition
@@ -184,8 +230,18 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # added changes 
 # Celery configuration (optional - requires Redis)
-CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
-CELERY_TASK_ALWAYS_EAGER = os.getenv('CELERY_TASK_ALWAYS_EAGER', 'True').lower() == 'true'
+# Only use eager mode when no broker is configured
+if os.getenv('REDIS_URL'):
+    CELERY_BROKER_URL = os.getenv('REDIS_URL')
+    CELERY_TASK_ALWAYS_EAGER = False
+elif os.getenv('CELERY_BROKER_URL'):
+    CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL')
+    CELERY_TASK_ALWAYS_EAGER = False
+else:
+    # No broker configured - use eager mode (tasks run synchronously)
+    # Use memory:// as a safe in-memory URL for eager mode
+    CELERY_BROKER_URL = 'memory://'
+    CELERY_TASK_ALWAYS_EAGER = True
 
 # Celery Beat periodic tasks
 from celery.schedules import crontab
@@ -204,12 +260,24 @@ CELERY_BEAT_SCHEDULE = {
 # ASGI application (replace your current WSGI_APPLICATION)
 ASGI_APPLICATION = 'salescompass.routing.application'
 
-# Channels configuration (using in-memory for development)
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
-    },
-}
+# Channels configuration
+# Use Redis channel layer if available, otherwise in-memory for development
+REDIS_URL = os.getenv('REDIS_URL')
+if REDIS_URL:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                "hosts": [REDIS_URL],
+            },
+        },
+    }
+else:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        },
+    }
 
 
 # Elasticsearch Configuration

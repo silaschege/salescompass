@@ -35,4 +35,4 @@ externalPort = 80
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["gunicorn", "--chdir", "core", "--bind", "0.0.0.0:5000", "--workers", "4", "salescompass.wsgi:application"]
+run = ["bash", "-c", "cd core && daphne -b 0.0.0.0 -p 5000 salescompass.asgi:application"]
