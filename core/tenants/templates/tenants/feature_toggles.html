@@ -1,0 +1,100 @@
+{% extends 'tenants/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-toggles me-2"></i>Feature Toggles</h2>
+            <p class="text-muted">Manage feature toggles for tenants</p>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Select Tenant</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get">
+                        <select name="tenant_id" class="form-select" onchange="this.form.submit()">
+                            <option value="">-- Select Tenant --</option>
+                            {% for t in tenants %}
+                            <option value="{{ t.id }}" {% if tenant and tenant.id==t.id %}selected{% endif %}>
+                                {{ t.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if tenant %}
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Add Feature Toggle</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="tenant_id" value="{{ tenant.id }}">
+
+                        <div class="mb-3">
+                            {{ form.feature_name.label_tag }}
+                            {{ form.feature_name }}
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.enabled }}
+                                {{ form.enabled.label_tag }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.description.label_tag }}
+                            {{ form.description }}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Save Toggle</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Active Feature Toggles for {{ tenant.name }}</h5>
+                </div>
+                <div class="card-body">
+                    {% if features %}
+                    <div class="list-group">
+                        {% for name, config in features.items %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ name }}</h6>
+                                    <small class="text-muted">{{ config.description }}</small>
+                                </div>
+                                <span class="badge {% if config.enabled %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if config.enabled %}Enabled{% else %}Disabled{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No feature toggles configured</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>{% block title %}Feature Flags - SalesCompass{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f7f8fc 0%, #e3e6f3 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #fff;
+            border-right: 1px solid #e3e6f3;
+            padding: 1.5rem 1rem;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
+        .sidebar .navbar-brand {
+            color: #6f42c1 !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+            text-decoration: none;
+        }
+
+        .sidebar .nav-link {
+            color: #333;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link:focus,
+        .sidebar .nav-link.active {
+            color: #6f42c1;
+            background-color: #f0e6ff;
+            font-weight: 500;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .sidebar .section-title {
+            color: #6c757d;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 1.5rem 0 0.5rem 1rem;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 2rem;
+            flex-grow: 1;
+            transition: margin-left 0.3s ease;
+            width: 100%;
+        }
+
+        .main-content.sidebar-hidden {
+            margin-left: 0;
+        }
+
+        .toggle-sidebar {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: #6f42c1;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .card {
+            border-radius: 1rem;
+            box-shadow: 0 2px 16px rgba(111, 66, 193, 0.08);
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: #6f42c1;
+            border-color: #6f42c1;
+        }
+
+        .btn-primary:hover {
+            background-color: #5a34a0;
+            border-color: #5a34a0;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.visible {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 2rem 1rem;
+            }
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+    <button class="toggle-sidebar" id="toggleSidebar"><i class="bi bi-list"></i></button>
+
+    <div class="sidebar" id="sidebar">
+        <a class="navbar-brand" href="{% url 'app_selection' %}">
+            <i class="bi bi-compass me-2"></i> SalesCompass
+        </a>
+
+        <nav class="nav flex-column">
+            <!-- Feature Management -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#featuresMenu">
+                <i class="bi bi-flag"></i> Feature Management
+            </a>
+            <div class="collapse" id="featuresMenu">
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'flag_list' %}active{% endif %}"
+                    href="{% url 'feature_flags:flag_list' %}">All Flags</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'flag_create' %}active{% endif %}"
+                    href="{% url 'feature_flags:flag_create' %}">Create New Flag</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'active_flags' %}active{% endif %}"
+                    href="{% url 'feature_flags:active_flags' %}">Active Flags</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'disabled_flags' %}active{% endif %}"
+                    href="{% url 'feature_flags:disabled_flags' %}">Disabled Flags</a>
+            </div>
+
+            <!-- Rollout Management -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#rolloutMenu">
+                <i class="bi bi-arrow-right-circle"></i> Rollout Management
+            </a>
+            <div class="collapse" id="rolloutMenu">
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'percentage_rollout' %}active{% endif %}"
+                    href="{% url 'feature_flags:percentage_rollout' %}">Percentage Rollout</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'gradual_rollout' %}active{% endif %}"
+                    href="{% url 'feature_flags:gradual_rollout' %}">Gradual Rollout</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'canary_releases' %}active{% endif %}"
+                    href="{% url 'feature_flags:canary_releases' %}">Canary Releases</a>
+            </div>
+
+            <!-- Targeting Rules -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#targetingMenu">
+                <i class="bi bi-diagram-3"></i> Targeting Rules
+            </a>
+            <div class="collapse" id="targetingMenu">
+                <a class="nav-link ms-3" href="{% url 'feature_flags:targeting_rules' %}">Manage Rules</a>
+                <a class="nav-link ms-3" href="{% url 'feature_flags:targeting_rules' %}?type=user_id">By User ID</a>
+                <a class="nav-link ms-3" href="{% url 'feature_flags:targeting_rules' %}?type=tenant_id">By Tenant
+                    ID</a>
+                <a class="nav-link ms-3" href="{% url 'feature_flags:targeting_rules' %}?type=role">By User Role</a>
+                <a class="nav-link ms-3" href="{% url 'feature_flags:targeting_rules' %}?type=plan">By Plan</a>
+            </div>
+
+            <!-- Testing & Analytics -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#testingMenu">
+                <i class="bi bi-graph-up"></i> Testing & Analytics
+            </a>
+            <div class="collapse" id="testingMenu">
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'ab_testing' %}active{% endif %}"
+                    href="{% url 'feature_flags:ab_testing' %}">A/B Testing</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}"
+                    href="{% url 'feature_flags:analytics' %}">Feature Analytics</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'adoption_rates' %}active{% endif %}"
+                    href="{% url 'feature_flags:adoption_rates' %}">Adoption Rates</a>
+            </div>
+
+            <div class="section-title mt-4">NAVIGATION</div>
+            <a class="nav-link" href="{% url 'dashboard:admin_dashboard' %}"><i class="bi bi-house-door"></i> Admin
+                Dashboard</a>
+            <a class="nav-link" href="{% url 'app_selection' %}"><i class="bi bi-grid"></i> Control Plane Apps</a>
+            <div class="mt-auto pt-4 border-top">
+                <a class="nav-link text-danger" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i> Log
+                    Out</a>
+            </div>
+        </nav>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        {% if messages %}
+        <div class="container-fluid mb-3">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const toggleBtn = document.getElementById('toggleSidebar');
+            toggleBtn.addEventListener('click', function () {
+                sidebar.classList.toggle('hidden');
+                mainContent.classList.toggle('sidebar-hidden');
+            });
+            if (window.innerWidth <= 768) {
+                document.addEventListener('click', function (e) {
+                    if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+                        sidebar.classList.remove('visible');
+                    }
+                });
+            }
+        });
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,19 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Import Accounts - Step 2{% endblock %}
+
+{% block content %}
+<h1>Bulk Import Accounts</h1>
+<p class="text-muted">Step 2 of 3: Confirm field mapping</p>
+
+<div class="alert alert-info">
+    <p>Fields were automatically mapped. Review the sample below:</p>
+    <pre>{{ sample_row|pprint }}</pre>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary">Continue to Preview</button>
+    <a href="{% url 'accounts:bulk_import_upload' %}" class="btn btn-secondary">Back</a>
+</form>
+{% endblock %}

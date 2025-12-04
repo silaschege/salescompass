@@ -1,0 +1,187 @@
+{% extends "tasks/base.html" %}
+
+{% block title %}My Tasks - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">My Tasks</h1>
+        <p class="text-white text-center lead">Tasks assigned to you</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Action Buttons and Filters -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <a href="{% url 'tasks:create' %}" class="btn btn-primary">+ New Task</a>
+        </div>
+        <div class="col-md-6">
+            <form method="get" class="d-flex gap-2">
+                <select name="task_type" class="form-select" style="width: auto;">
+                    <option value="">All Types</option>
+                    {% for value, label in task_types %}
+                        <option value="{{ value }}" {% if request.GET.task_type == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <select name="priority" class="form-select" style="width: auto;">
+                    <option value="">All Priorities</option>
+                    {% for value, label in priorities %}
+                        <option value="{{ value }}" {% if request.GET.priority == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-outline-primary">Filter</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tasks Table -->
+    {% if tasks %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>Related To</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                    <tr class="{% if task.is_overdue %}table-danger{% elif task.status == 'completed' %}table-success{% endif %}">
+                        <td>
+                            <a href="{% url 'tasks:detail' task.pk %}">
+                                {{ task.title }}
+                            </a>
+                            <br>
+                            <small class="text-muted">{{ task.description|truncatewords:6 }}</small>
+                        </td>
+                        <td>
+                            {% if task.get_related_object_url %}
+                                <a href="{{ task.get_related_object_url }}">
+                                    {% if task.account %}
+                                        {{ task.account.name }}
+                                    {% elif task.opportunity %}
+                                        {{ task.opportunity.name }}
+                                    {% elif task.related_lead %}
+                                        {{ task.related_lead.full_name }}
+                                    {% elif task.case %}
+                                        {{ task.case.subject }}
+                                    {% endif %}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ task.due_date|date:"M d, Y H:i" }}
+                            {% if task.is_overdue %}
+                                <span class="badge bg-danger">Overdue</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if task.status == 'completed' %}success{% elif task.status == 'cancelled' %}secondary{% elif task.status == 'overdue' %}danger{% else %}warning{% endif %}">
+                                {{ task.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if task.priority == 'high' %}danger{% elif task.priority == 'medium' %}warning{% elif task.priority == 'low' %}secondary{% else %}info{% endif %}">
+                                {{ task.get_priority_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                {% if task.status != 'completed' %}
+                                    <form method="post" action="{% url 'tasks:complete_task' %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="task_id" value="{{ task.id }}">
+                                        <button type="submit" class="btn btn-sm btn-success">Complete</button>
+                                    </form>
+                                {% endif %}
+                                <a href="{% url 'tasks:detail' task.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center">
+            <div class="mb-4">
+                <i class="bi bi-check2-square display-1 text-muted"></i>
+            </div>
+            <h3 class="text-muted">No tasks assigned to you</h3>
+            <p class="text-muted mb-4">You don't have any tasks assigned to you right now.</p>
+            <a href="{% url 'tasks:create' %}" class="btn btn-primary">Create Task</a>
+        </div>
+    {% endif %}
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}
+{% block extra_head %}
+<style>
+.table-hover tbody tr:hover {
+    background-color: rgba(111, 66, 193, 0.05);
+}
+.badge {
+    font-size: 0.75em;
+    padding: 0.3em 0.6em;
+}
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

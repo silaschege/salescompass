@@ -1,0 +1,12 @@
+{% extends 'core/base_module.html' %}
+
+{% block extra_css %}{% endblock %}
+
+{% block module_nav %}
+<a class="nav-link ms-3" href="{% url 'opportunities:pipeline' %}">Pipeline</a>
+<a class="nav-link ms-3" href="{% url 'opportunities:opportunities_list' %}">List</a>
+<a class="nav-link ms-3" href="{% url 'opportunities:create' %}">Create</a>
+<a class="nav-link ms-3" href="{% url 'opportunities:forecast_dashboard' %}">Forecast</a>
+<a class="nav-link ms-3" href="{% url 'opportunities:win_loss_analysis' %}">Win/Loss</a>
+<a class="nav-link ms-3" href="">Update Stage</a>
+{% endblock %}

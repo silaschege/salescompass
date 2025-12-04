@@ -1,0 +1,76 @@
+{% extends "reports/base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 text-gray-800">{{ report.name }}</h1>
+        <div>
+            <a href="{% url 'reports:export_report' report.pk %}?format=csv" class="btn btn-success btn-sm"><i
+                    class="fas fa-download"></i> Export CSV</a>
+            <a href="{% url 'reports:export_report' report.pk %}?format=xlsx" class="btn btn-primary btn-sm"><i
+                    class="fas fa-file-excel"></i> Export Excel</a>
+            <a href="{% url 'reports:export_report' report.pk %}?format=pdf" class="btn btn-danger btn-sm"><i
+                    class="fas fa-file-pdf"></i> Export PDF</a>
+            <a href="{% url 'reports:list' %}" class="btn btn-secondary btn-sm">Back to List</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Report Preview</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">{{ report.description }}</p>
+                    <hr>
+                    <!-- Placeholder for report data visualization or table -->
+                    <div class="text-center py-5 bg-light rounded">
+                        <i class="fas fa-chart-bar fa-3x text-gray-300 mb-3"></i>
+                        <p>Report data preview will appear here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">Recent Exports</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for export in recent_exports %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-secondary">{{ export.export_format|upper }}</span>
+                            <small class="text-muted ms-2">{{ export.created_at|date:"M d, H:i" }}</small>
+                        </div>
+                        <a href="#" class="btn btn-sm btn-link">Download</a>
+                    </div>
+                    {% empty %}
+                    <div class="list-group-item text-muted">No recent exports.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-warning">Active Schedules</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for schedule in active_schedules %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ schedule.frequency|title }}</h6>
+                            <small>Next: {{ schedule.next_run|date:"M d" }}</small>
+                        </div>
+                        <small class="text-muted">Recipients: {{ schedule.recipients }}</small>
+                    </div>
+                    {% empty %}
+                    <div class="list-group-item text-muted">No active schedules.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

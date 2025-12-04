@@ -1,0 +1,504 @@
+{% extends "reports/base.html" %}
+
+{% block title %}Report Builder - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Custom Report Builder</h1>
+        <p class="text-white text-center lead">Create powerful reports with drag-and-drop fields</p>
+    </div>
+</div>
+
+<div class="container">
+    <form method="post" id="report-builder-form">
+        {% csrf_token %}
+
+        <!-- Hidden Config Field -->
+        <div class="d-none">
+            {{ form.config }}
+        </div>
+
+        <div class="row">
+            <!-- Left Sidebar: Configuration -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">Report Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="id_name" class="form-label">Report Name</label>
+                            {{ form.name }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_description" class="form-label">Description</label>
+                            {{ form.description }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_report_type" class="form-label">Report Type</label>
+                            {{ form.report_type }}
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="id_is_active">Active</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Area: Filters & Settings -->
+            <div class="col-md-9">
+                <!-- Preset Reports -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">Quick Start: Preset Reports</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="button" class="btn btn-outline-primary preset-btn" data-entity="opportunity"
+                                data-group="stage" data-chart="bar">
+                                <i class="bi bi-bar-chart"></i> Pipeline by Stage
+                            </button>
+                            <button type="button" class="btn btn-outline-success preset-btn" data-entity="opportunity"
+                                data-group="close_date__month" data-chart="line">
+                                <i class="bi bi-graph-up"></i> Revenue Trend
+                            </button>
+                            <button type="button" class="btn btn-outline-info preset-btn" data-entity="task"
+                                data-group="assigned_to" data-chart="bar">
+                                <i class="bi bi-check-square"></i> Tasks by Rep
+                            </button>
+                            <button type="button" class="btn btn-outline-warning preset-btn" data-entity="lead"
+                                data-group="source_ref" data-chart="conversion">
+                                <i class="bi bi-funnel"></i> Conversion by Source
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">Report Configuration</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="entity-select" class="form-label">Primary Entity</label>
+                            <select class="form-select" id="entity-select">
+                                <option value="">Select Entity...</option>
+                                {% for entity in entity_options %}
+                                <option value="{{ entity.value }}" data-fields="{{ entity.fields }}">
+                                    {{ entity.label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div id="field-selection-area" class="d-none">
+                            <div class="mb-3">
+                                <label class="form-label">Fields to Include</label>
+                                <div id="fields-container" class="border rounded p-3"
+                                    style="max-height: 200px; overflow-y: auto;">
+                                    <!-- Checkboxes populated via JS -->
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Filters</label>
+                                <div id="filters-container">
+                                    <p class="text-muted" id="no-filters-msg">No filters added.</p>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="add-filter-btn"
+                                    disabled>
+                                    <i class="bi bi-plus"></i> Add Filter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">Visualization Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Group By</label>
+                                <select class="form-select" id="group-by-select" disabled>
+                                    <option value="">None</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Chart Type</label>
+                                <select class="form-select" id="chart-type-select">
+                                    <option value="table">Table</option>
+                                    <option value="bar">Bar Chart</option>
+                                    <option value="line">Line Chart</option>
+                                    <option value="pie">Pie Chart</option>
+                                    <option value="conversion">Conversion Funnel</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Date Range Field</label>
+                                <select class="form-select" id="date-field-select" disabled>
+                                    <option value="">None</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Preview Area -->
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-outline-secondary w-100" id="preview-btn">
+                                <i class="bi bi-eye"></i> Preview Report
+                            </button>
+                            <div class="mt-3 border rounded p-3 bg-white" style="min-height: 300px;">
+                                <canvas id="preview-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'reports:list' %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Report</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Template for Filter Row -->
+<template id="filter-row-template">
+    <div class="row g-2 mb-2 align-items-center filter-row">
+        <div class="col-md-4">
+            <select class="form-select filter-field">
+                <!-- Options populated via JS -->
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select filter-operator">
+                <option value="exact">Equals</option>
+                <option value="icontains">Contains</option>
+                <option value="gt">Greater Than</option>
+                <option value="lt">Less Than</option>
+                <option value="gte">Greater or Equal</option>
+                <option value="lte">Less or Equal</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <input type="text" class="form-control filter-value" placeholder="Value">
+        </div>
+        <div class="col-md-1">
+            <button type="button" class="btn btn-outline-danger btn-sm remove-filter">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    </div>
+</template>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Elements
+        const entitySelect = document.getElementById('entity-select');
+        const fieldsContainer = document.getElementById('fields-container');
+        const fieldSelectionArea = document.getElementById('field-selection-area');
+        const filtersContainer = document.getElementById('filters-container');
+        const addFilterBtn = document.getElementById('add-filter-btn');
+        const groupBySelect = document.getElementById('group-by-select');
+        const dateFieldSelect = document.getElementById('date-field-select');
+        const chartTypeSelect = document.getElementById('chart-type-select');
+        const configInput = document.getElementById('id_config');
+        const form = document.getElementById('report-builder-form');
+        const noFiltersMsg = document.getElementById('no-filters-msg');
+        const filterTemplate = document.getElementById('filter-row-template');
+        const previewBtn = document.getElementById('preview-btn');
+        const previewChartCanvas = document.getElementById('preview-chart');
+        const presetBtns = document.querySelectorAll('.preset-btn');
+
+        // State
+        let currentEntity = '';
+        let availableFields = [];
+        let chartInstance = null;
+
+        // Load initial config if editing (parse from hidden field)
+        let config = {};
+        try {
+            if (configInput.value) {
+                // Replace single quotes with double quotes for valid JSON if needed
+                let val = configInput.value;
+                if (val.includes("'")) val = val.replace(/'/g, '"');
+                config = JSON.parse(val);
+
+                // TODO: Pre-populate UI from config (omitted for brevity in this sprint, focus on creation)
+            }
+        } catch (e) {
+            console.error("Error parsing config", e);
+        }
+
+        // Event Listeners
+        entitySelect.addEventListener('change', function () {
+            const selectedOption = this.options[this.selectedIndex];
+            currentEntity = this.value;
+
+            if (currentEntity) {
+                // Parse fields from data attribute (Django template renders python list string)
+                let fieldsStr = selectedOption.dataset.fields;
+                // Simple parse for python list string representation ['a', 'b'] -> JSON
+                fieldsStr = fieldsStr.replace(/'/g, '"');
+                try {
+                    availableFields = JSON.parse(fieldsStr);
+                } catch (e) {
+                    availableFields = [];
+                    console.error("Error parsing fields", e);
+                }
+
+                renderFields();
+                updateDropdowns();
+
+                fieldSelectionArea.classList.remove('d-none');
+                addFilterBtn.disabled = false;
+                noFiltersMsg.classList.add('d-none');
+            } else {
+                fieldSelectionArea.classList.add('d-none');
+                addFilterBtn.disabled = true;
+                noFiltersMsg.classList.remove('d-none');
+                filtersContainer.innerHTML = '';
+                filtersContainer.appendChild(noFiltersMsg);
+                groupBySelect.innerHTML = '<option value="">None</option>';
+                groupBySelect.disabled = true;
+                dateFieldSelect.innerHTML = '<option value="">None</option>';
+                dateFieldSelect.disabled = true;
+            }
+        });
+
+        // Preset Buttons
+        presetBtns.forEach(btn => {
+            btn.addEventListener('click', function () {
+                const entity = this.dataset.entity;
+                const group = this.dataset.group;
+                const chart = this.dataset.chart;
+
+                // Select Entity
+                entitySelect.value = entity;
+                // Trigger change event manually
+                entitySelect.dispatchEvent(new Event('change'));
+
+                // Wait for fields to populate then set other values
+                setTimeout(() => {
+                    // Set Group By
+                    // If group contains date lookup (e.g. close_date__month), we need to add it dynamically if not present
+                    // Or just select it if we added logic to populate date groupings
+
+                    // Check if group exists in options
+                    let groupOption = groupBySelect.querySelector(`option[value="${group}"]`);
+                    if (!groupOption) {
+                        // If it's a date grouping, add it
+                        if (group.includes('__')) {
+                            const option = document.createElement('option');
+                            option.value = group;
+                            option.textContent = formatLabel(group);
+                            groupBySelect.appendChild(option);
+                        }
+                    }
+                    groupBySelect.value = group;
+
+                    // Set Chart Type
+                    chartTypeSelect.value = chart;
+
+                    // Auto Preview?
+                    generatePreview();
+                }, 100);
+            });
+        });
+
+        addFilterBtn.addEventListener('click', function () {
+            addFilterRow();
+        });
+
+        previewBtn.addEventListener('click', function () {
+            generatePreview();
+        });
+
+        // Form Submit
+        form.addEventListener('submit', function (e) {
+            // Build Config JSON
+            const newConfig = {
+                entity: currentEntity,
+                fields: getSelectedFields(),
+                filters: getFilters(),
+                group_by: groupBySelect.value,
+                date_field: dateFieldSelect.value,
+                chart_type: chartTypeSelect.value
+            };
+
+            configInput.value = JSON.stringify(newConfig);
+        });
+
+        // Helpers
+        function renderFields() {
+            fieldsContainer.innerHTML = '';
+            availableFields.forEach(field => {
+                const div = document.createElement('div');
+                div.className = 'form-check';
+                div.innerHTML = `
+                    <input class="form-check-input field-checkbox" type="checkbox" value="${field}" id="field-${field}">
+                    <label class="form-check-label" for="field-${field}">
+                        ${formatLabel(field)}
+                    </label>
+                `;
+                fieldsContainer.appendChild(div);
+            });
+        }
+
+        function updateDropdowns() {
+            // Group By
+            groupBySelect.innerHTML = '<option value="">None</option>';
+            availableFields.forEach(field => {
+                const option = document.createElement('option');
+                option.value = field;
+                option.textContent = formatLabel(field);
+                groupBySelect.appendChild(option);
+            });
+
+            // Add Date Groupings if date fields exist
+            const dateFields = availableFields.filter(f => f.includes('date') || f.includes('_at'));
+            dateFields.forEach(f => {
+                const monthOpt = document.createElement('option');
+                monthOpt.value = `${f}__month`;
+                monthOpt.textContent = `${formatLabel(f)} (Month)`;
+                groupBySelect.appendChild(monthOpt);
+            });
+
+            groupBySelect.disabled = false;
+
+            // Date Fields (heuristic: contains 'date' or 'at')
+            dateFieldSelect.innerHTML = '<option value="">None</option>';
+            availableFields.forEach(field => {
+                if (field.includes('date') || field.includes('_at')) {
+                    const option = document.createElement('option');
+                    option.value = field;
+                    option.textContent = formatLabel(field);
+                    dateFieldSelect.appendChild(option);
+                }
+            });
+            dateFieldSelect.disabled = false;
+        }
+
+        function addFilterRow() {
+            const clone = filterTemplate.content.cloneNode(true);
+            const select = clone.querySelector('.filter-field');
+
+            availableFields.forEach(field => {
+                const option = document.createElement('option');
+                option.value = field;
+                option.textContent = formatLabel(field);
+                select.appendChild(option);
+            });
+
+            clone.querySelector('.remove-filter').addEventListener('click', function () {
+                this.closest('.filter-row').remove();
+                if (filtersContainer.children.length === 0) { // Only msg left?
+                    // Check if only msg is hidden
+                }
+            });
+
+            filtersContainer.appendChild(clone);
+        }
+
+        function getSelectedFields() {
+            const selected = [];
+            document.querySelectorAll('.field-checkbox:checked').forEach(cb => {
+                selected.push(cb.value);
+            });
+            return selected;
+        }
+
+        function getFilters() {
+            const filters = [];
+            document.querySelectorAll('.filter-row').forEach(row => {
+                const field = row.querySelector('.filter-field').value;
+                const operator = row.querySelector('.filter-operator').value;
+                const value = row.querySelector('.filter-value').value;
+                if (field && value) {
+                    filters.push({ field, operator, value });
+                }
+            });
+            return filters;
+        }
+
+        function formatLabel(str) {
+            return str.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function generatePreview() {
+            if (!currentEntity) {
+                alert('Please select an entity first.');
+                return;
+            }
+
+            const payload = {
+                entity: currentEntity,
+                filters: getFilters(),
+                group_by: groupBySelect.value,
+                chart_type: chartTypeSelect.value
+            };
+
+            fetch("{% url 'reports:generate' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('Error generating preview: ' + data.error);
+                        return;
+                    }
+                    renderChart(data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while generating the preview.');
+                });
+        }
+
+        function renderChart(data) {
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const ctx = previewChartCanvas.getContext('2d');
+            let chartType = chartTypeSelect.value;
+            if (chartType === 'table' || chartType === 'conversion') chartType = 'bar'; // Fallback
+
+            chartInstance = new Chart(ctx, {
+                type: chartType,
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Report Preview'
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

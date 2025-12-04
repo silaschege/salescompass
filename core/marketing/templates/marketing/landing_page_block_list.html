@@ -1,0 +1,108 @@
+{% extends "marketing/base.html" %}
+
+{% block title %}Landing Page Blocks - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Landing Page Blocks</h1>
+        <p class="text-white text-center lead">Manage content blocks for your landing page: {{ landing_page.title }}</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Action Buttons -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <a href="{% url 'marketing:landing_page_block_create' landing_page.id %}" class="btn btn-primary">+ Add New Block</a>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{% url 'marketing:landing_builder' landing_page.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Builder
+            </a>
+        </div>
+    </div>
+
+    <!-- Blocks Table -->
+    {% if blocks %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Title</th>
+                        <th>Content Preview</th>
+                        <th>Order</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for block in blocks %}
+                    <tr>
+                        <td>
+                            <span class="badge bg-primary">{{ block.get_block_type_display }}</span>
+                        </td>
+                        <td>{{ block.title|default:"—" }}</td>
+                        <td>
+                            {% if block.content %}
+                                <small class="text-muted">{{ block.get_content_display|truncatechars:40 }}</small>
+                            {% else %}
+                                <span class="text-muted">No content</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ block.order }}</td>
+                        <td>
+                            {% if block.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column gap-1">
+                                <a href="{% url 'marketing:landing_page_block_update' block.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <form method="post" action="{% url 'marketing:landing_page_block_delete' block.pk %}" class="d-inline" onsubmit="return confirm('Delete this block?')">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center">
+            <div class="mb-4">
+                <i class="bi bi-layout-text-sidebar-reverse display-1 text-muted"></i>
+            </div>
+            <h3 class="text-muted">No blocks found</h3>
+            <p class="text-muted mb-4">This landing page doesn't have any content blocks yet.</p>
+            <a href="{% url 'marketing:landing_page_block_create' landing_page.id %}" class="btn btn-primary">Add Your First Block</a>
+        </div>
+    {% endif %}
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+
+{% block extra_head %}
+<style>
+.table-hover tbody tr:hover {
+    background-color: rgba(111, 66, 193, 0.05);
+}
+.badge {
+    font-size: 0.75em;
+    padding: 0.3em 0.6em;
+}
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

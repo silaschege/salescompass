@@ -1,0 +1,27 @@
+from django.urls import path
+from . import views
+
+app_name = 'sales'
+
+urlpatterns = [
+   
+    path('', views.sales_dashboard, name='sales_dashboard'),
+    path('sales_list', views.sale_list, name='sale_list'),
+    path('create/', views.sale_create, name='sale_create'),
+    path('<int:pk>/', views.sale_detail, name='sale_detail'),
+    path('<int:pk>/edit/', views.sale_update, name='sale_update'),
+
+    path('products/dashboard/', views.product_dashboard, name='product_dashboard'),
+    path('products/', views.product_list, name='product_list'),
+    path('products/create/', views.product_create, name='product_create'),
+    path('products/<int:pk>/edit/', views.product_update, name='product_update'),
+    
+    # Commission URLs
+    path('commissions/', views.commission_dashboard, name='commission_dashboard'),
+    path('commissions/rules/', views.CommissionRuleListView.as_view(), name='rule_list'),
+    path('commissions/rules/create/', views.CommissionRuleCreateView.as_view(), name='rule_create'),
+    path('commissions/rules/<int:pk>/edit/', views.CommissionRuleUpdateView.as_view(), name='rule_update'),
+    path('commissions/rules/<int:pk>/delete/', views.CommissionRuleDeleteView.as_view(), name='rule_delete'),
+]
+
+

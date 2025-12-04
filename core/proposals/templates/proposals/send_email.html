@@ -1,0 +1,37 @@
+{% extends "proposals/base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Send Proposal: {{ proposal.title }}</h6>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="recipient" class="form-label">Recipient</label>
+                    <input type="email" class="form-control" id="recipient" name="recipient"
+                        value="{{ proposal.account.email }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="subject" class="form-label">Subject</label>
+                    <input type="text" class="form-control" id="subject" name="subject"
+                        value="Proposal: {{ proposal.title }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="message" class="form-label">Message</label>
+                    <textarea class="form-control" id="message" name="message" rows="5" required>Dear {{ proposal.account.name }},
+
+Please find attached the proposal for {{ proposal.title }}.
+
+Best regards,
+{{ request.user.get_full_name }}</textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Send Email</button>
+                <a href="{% url 'proposals:detail' proposal.pk %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

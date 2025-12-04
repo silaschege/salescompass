@@ -1,0 +1,31 @@
+{% extends 'tenants/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-person-gear me-2"></i>Admin User Setup</h2>
+            <p class="text-muted">Manage admin users for tenants</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Admin User Configuration</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Info:</strong> Admin users are created automatically during tenant signup.
+            </div>
+
+            <h6>Default Admin Configuration:</h6>
+            <ul>
+                <li>Role: Administrator</li>
+                <li>Permissions: Full access to tenant data</li>
+                <li>Can create additional users: Yes</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

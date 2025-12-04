@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Documentation Usage Analytics - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Documentation Usage Analytics</h1>
+
+    <!-- KPI Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body text-center">
+                    <h6>Total Views</h6>
+                    <h3>{{ total_views }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trend Chart -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Views Trend (Last 30 Days)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="viewsChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Articles -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Top Articles by Views</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Article</th>
+                                    <th>Views</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in top_articles %}
+                                <tr>
+                                    <td>{{ item.article__title }}</td>
+                                    <td>{{ item.view_count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Views by Type -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Views by Article Type</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Views</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in type_views %}
+                                <tr>
+                                    <td>{{ item.article__article_type }}</td>
+                                    <td>{{ item.view_count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    const ctx = document.getElementById('viewsChart').getContext('2d');
+    const data = {{ trend_data_json|safe }};
+    new Chart(ctx, {
+        type: 'line',
+         {
+            labels: data.map(d => d.date),
+             data.map(d => d.views),
+            borderColor: '#0d6efd',
+            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+            fill: true,
+            tension: 0.3
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+    </script>
+</div>
+{% endblock %}

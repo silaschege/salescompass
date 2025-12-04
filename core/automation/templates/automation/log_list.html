@@ -1,0 +1,169 @@
+{% extends "automation/base.html" %}
+{% load core_extras %}
+
+{% block title %}Automation Logs - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Automation Execution Logs</h1>
+        <p class="text-white text-center lead">Monitor and troubleshoot automation executions</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Filters and Actions -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <select name="status" class="form-select" onchange="this.form.submit()">
+                <option value="">All Statuses</option>
+                <option value="triggered" {% if request.GET.status=='triggered' %}selected{% endif %}>Triggered</option>
+                <option value="conditions_evaluated" {% if request.GET.status=='conditions_evaluated' %}selected{% endif
+                    %}>Conditions Evaluated</option>
+                <option value="executing" {% if request.GET.status=='executing' %}selected{% endif %}>Executing</option>
+                <option value="completed" {% if request.GET.status=='completed' %}selected{% endif %}>Completed</option>
+                <option value="failed" {% if request.GET.status=='failed' %}selected{% endif %}>Failed</option>
+                <option value="skipped" {% if request.GET.status=='skipped' %}selected{% endif %}>Skipped</option>
+            </select>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{% url 'automation:list' %}" class="btn btn-outline-secondary">← Back to Automations</a>
+        </div>
+    </div>
+
+    <!-- Logs Table -->
+    {% if logs %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Automation</th>
+                    <th>Status</th>
+                    <th>Trigger</th>
+                    <th>Executed By</th>
+                    <th>Execution Time</th>
+                    <th>Duration</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr
+                    class="{% if log.status == 'failed' %}table-danger{% elif log.status == 'completed' %}table-success{% elif log.status == 'skipped' %}table-warning{% endif %}">
+                    <td>
+                        <a href="{% url 'automation:detail' log.automation.pk %}">
+                            {{ log.automation.name|truncatechars:25 }}
+                        </a>
+                    </td>
+                    <td>
+                        <span
+                            class="badge bg-{% if log.status == 'failed' %}danger{% elif log.status == 'completed' %}success{% elif log.status == 'skipped' %}warning{% elif log.status == 'executing' %}info{% else %}secondary{% endif %}">
+                            {{ log.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ log.trigger_payload|dict_to_json|truncatechars:30 }}</td>
+                    <td>
+                        {% if log.executed_by %}
+                        {{ log.executed_by.email|truncatechars:20 }}
+                        {% else %}
+                        <span class="text-muted">System</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ log.created_at|date:"M d, Y H:i:s" }}</td>
+                    <td>
+                        {% if log.execution_time_ms %}
+                        {{ log.execution_time_ms }}ms
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'automation:log_detail' log.pk %}"
+                            class="btn btn-sm btn-outline-primary">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
+                    aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link"
+                    href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
+                    aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">
+                    {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link"
+                    href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
+                    aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link"
+                    href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
+                    aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    {% else %}
+    <div class="text-center">
+        <div class="mb-4">
+            <i class="bi bi-journal-text display-1 text-muted"></i>
+        </div>
+        <h3 class="text-muted">No execution logs found</h3>
+        <p class="text-muted mb-4">Automations will create logs when they execute.</p>
+        <a href="{% url 'automation:list' %}" class="btn btn-primary">View Automations</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}
+{% block extra_head %}
+<style>
+    .table-hover tbody tr:hover {
+        background-color: rgba(111, 66, 193, 0.05);
+    }
+
+    .badge {
+        font-size: 0.75em;
+        padding: 0.3em 0.6em;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,288 @@
+{% extends "public/base.html" %}
+{% load static %}
+
+{% block title %}Solutions - Sales Teams That Win | SalesCompass{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/public-design-system.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="section-large text-center">
+    <div class="container">
+        <h1 class="mb-4">Built for teams that sell</h1>
+        <p class="text-large text-gray mb-8" style="max-width: 700px; margin-left: auto; margin-right: auto;">
+            From startups to enterprises, SalesCompass adapts to how you work—no matter your industry or sales motion.
+        </p>
+    </div>
+</section>
+
+<!-- By Team Size -->
+<section class="section">
+    <div class="container">
+        <div class="text-center mb-12">
+            <h2 class="mb-4">For teams of any size</h2>
+        </div>
+
+        <div class="grid grid-3">
+            <div class="card text-center">
+                <div
+                    style="width: 56px; height: 56px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
+                    <i class="bi bi-lightning" style="font-size: 28px; color: var(--color-purple);"></i>
+                </div>
+                <h3 class="mb-3">Startups</h3>
+                <p class="text-gray mb-4">Move fast without sacrificing organization. Get up and running in minutes.</p>
+                <ul style="list-style: none; padding: 0; text-align: left;">
+                    <li class="mb-2 text-gray">• Quick setup, no training needed</li>
+                    <li class="mb-2 text-gray">• Affordable per-user pricing</li>
+                    <li class="mb-2 text-gray">• Scales as you grow</li>
+                </ul>
+            </div>
+
+            <div class="card text-center">
+                <div
+                    style="width: 56px; height: 56px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
+                    <i class="bi bi-graph-up-arrow" style="font-size: 28px; color: var(--color-purple);"></i>
+                </div>
+                <h3 class="mb-3">Growing Businesses</h3>
+                <p class="text-gray mb-4">Professionalize your sales process without enterprise complexity.</p>
+                <ul style="list-style: none; padding: 0; text-align: left;">
+                    <li class="mb-2 text-gray">• Advanced automation</li>
+                    <li class="mb-2 text-gray">• Custom dashboards</li>
+                    <li class="mb-2 text-gray">• Team collaboration tools</li>
+                </ul>
+            </div>
+
+            <div class="card text-center">
+                <div
+                    style="width: 56px; height: 56px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
+                    <i class="bi bi-building" style="font-size: 28px; color: var(--color-purple);"></i>
+                </div>
+                <h3 class="mb-3">Enterprise</h3>
+                <p class="text-gray mb-4">Enterprise-grade features with consumer-grade simplicity.</p>
+                <ul style="list-style: none; padding: 0; text-align: left;">
+                    <li class="mb-2 text-gray">• SSO & advanced security</li>
+                    <li class="mb-2 text-gray">• Custom integrations</li>
+                    <li class="mb-2 text-gray">• Dedicated support</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- By Use Case -->
+<section class="section bg-gray">
+    <div class="container">
+        <div class="text-center mb-12">
+            <h2 class="mb-4">Common use cases</h2>
+        </div>
+
+        <div class="grid grid-2" style="gap: var(--space-12);">
+            <!-- B2B SaaS -->
+            <div>
+                <h3 class="mb-4">B2B SaaS Sales</h3>
+                <p class="text-large text-gray mb-6">
+                    Manage complex sales cycles with multiple touchpoints. Track demos, trials, and negotiations in one
+                    place.
+                </p>
+                <div class="mb-4">
+                    <div class="mb-3" style="display: flex; align-items: start;">
+                        <i class="bi bi-check-circle-fill text-purple"
+                            style="margin-right: var(--space-3); margin-top: 2px;"></i>
+                        <div>
+                            <strong>Demo tracking</strong><br>
+                            <span class="text-gray">Schedule, record, and follow up automatically</span>
+                        </div>
+                    </div>
+                    <div class="mb-3" style="display: flex; align-items: start;">
+                        <i class="bi bi-check-circle-fill text-purple"
+                            style="margin-right: var(--space-3); margin-top: 2px;"></i>
+                        <div>
+                            <strong>Trial management</strong><br>
+                            <span class="text-gray">Monitor usage and trigger outreach</span>
+                        </div>
+                    </div>
+                    <div class="mb-3" style="display: flex; align-items: start;">
+                        <i class="bi bi-check-circle-fill text-purple"
+                            style="margin-right: var(--space-3); margin-top: 2px;"></i>
+                        <div>
+                            <strong>Multi-stakeholder deals</strong><br>
+                            <span class="text-gray">Track all decision-makers in one account</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Professional Services -->
+            <div>
+                <h3 class="mb-4">Professional Services</h3>
+                <p class="text-large text-gray mb-6">
+                    Convert prospects into clients. Manage proposals, contracts, and project kickoffs seamlessly.
+                </p>
+                <div class="mb-4">
+                    <div class="mb-3" style="display: flex; align-items: start;">
+                        <i class="bi bi-check-circle-fill text-purple"
+                            style="margin-right: var(--space-3); margin-top: 2px;"></i>
+                        <div>
+                            <strong>Proposal tracking</strong><br>
+                            <span class="text-gray">Know when proposals are viewed and approved</span>
+                        </div>
+                    </div>
+                    <div class="mb-3" style="display: flex; align-items: start;">
+                        <i class="bi bi-check-circle-fill text-purple"
+                            style="margin-right: var(--space-3); margin-top: 2px;"></i>
+                        <div>
+                            <strong>Client communication</strong><br>
+                            <span class="text-gray">All emails and calls in one timeline</span>
+                        </div>
+                    </div>
+                    <div class="mb-3" style="display: flex; align-items: start;">
+                        <i class="bi bi-check-circle-fill text-purple"
+                            style="margin-right: var(--space-3); margin-top: 2px;"></i>
+                        <div>
+                            <strong>Referral tracking</strong><br>
+                            <span class="text-gray">Never lose track of who referred who</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real Estate -->
+            <div>
+                <h3 class="mb-4">Real Estate</h3>
+                <p class="text-large text-gray mb-6">
+                    Manage properties, buyers, and sellers. Keep track of showings, offers, and closings.
+                </p>
+                <div class="mb-4">
+                    <div class="mb-3" style="display: flex; align-items: start;">
+                        <i class="bi bi-check-circle-fill text-purple"
+                            style="margin-right: var(--space-3); margin-top: 2px;"></i>
+                        <div>
+                            <strong>Property tracking</strong><br>
+                            <span class="text-gray">Match buyers with the perfect property</span>
+                        </div>
+                    </div>
+                    <div class="mb-3" style="display: flex; align-items: start;">
+                        <i class="bi bi-check-circle-fill text-purple"
+                            style="margin-right: var(--space-3); margin-top: 2px;"></i>
+                        <div>
+                            <strong>Showing scheduler</strong><br>
+                            <span class="text-gray">Automated calendar and reminders</span>
+                        </div>
+                    </div>
+                    <div class="mb-3" style="display: flex; align-items: start;">
+                        <i class="bi bi-check-circle-fill text-purple"
+                            style="margin-right: var(--space-3); margin-top: 2px;"></i>
+                        <div>
+                            <strong>Closing pipeline</strong><br>
+                            <span class="text-gray">Track every step from offer to close</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insurance -->
+            <div>
+                <h3 class="mb-4">Insurance</h3>
+                <p class="text-large text-gray mb-6">
+                    Sell policies faster. Manage quotes, renewals, and claims in one system.
+                </p>
+                <div class="mb-4">
+                    <div class="mb-3" style="display: flex; align-items: start;">
+                        <i class="bi bi-check-circle-fill text-purple"
+                            style="margin-right: var(--space-3); margin-top: 2px;"></i>
+                        <div>
+                            <strong>Quote management</strong><br>
+                            <span class="text-gray">Generate and send quotes instantly</span>
+                        </div>
+                    </div>
+                    <div class="mb-3" style="display: flex; align-items: start;">
+                        <i class="bi bi-check-circle-fill text-purple"
+                            style="margin-right: var(--space-3); margin-top: 2px;"></i>
+                        <div>
+                            <strong>Renewal automation</strong><br>
+                            <span class="text-gray">Never miss a renewal opportunity</span>
+                        </div>
+                    </div>
+                    <div class="mb-3" style="display: flex; align-items: start;">
+                        <i class="bi bi-check-circle-fill text-purple"
+                            style="margin-right: var(--space-3); margin-top: 2px;"></i>
+                        <div>
+                            <strong>Policy tracking</strong><br>
+                            <span class="text-gray">See all policies per client at a glance</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- By Role -->
+<section class="section">
+    <div class="container">
+        <div class="text-center mb-12">
+            <h2 class="mb-4">For every role on your team</h2>
+        </div>
+
+        <div class="grid grid-4">
+            <div class="text-center">
+                <div
+                    style="width: 48px; height: 48px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--space-3);">
+                    <i class="bi bi-person" style="font-size: 24px; color: var(--color-purple);"></i>
+                </div>
+                <h4 class="mb-2">Sales Reps</h4>
+                <p class="text-gray">Spend more time selling, less time on admin work.</p>
+            </div>
+
+            <div class="text-center">
+                <div
+                    style="width: 48px; height: 48px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--space-3);">
+                    <i class="bi bi-people" style="font-size: 24px; color: var(--color-purple);"></i>
+                </div>
+                <h4 class="mb-2">Sales Managers</h4>
+                <p class="text-gray">Real-time visibility into team performance and pipeline.</p>
+            </div>
+
+            <div class="text-center">
+                <div
+                    style="width: 48px; height: 48px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--space-3);">
+                    <i class="bi bi-graph-up" style="font-size: 24px; color: var(--color-purple);"></i>
+                </div>
+                <h4 class="mb-2">RevOps</h4>
+                <p class="text-gray">Build processes and automations that scale.</p>
+            </div>
+
+            <div class="text-center">
+                <div
+                    style="width: 48px; height: 48px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--space-3);">
+                    <i class="bi bi-bar-chart" style="font-size: 24px; color: var(--color-purple);"></i>
+                </div>
+                <h4 class="mb-2">Executives</h4>
+                <p class="text-gray">Forecast revenue and track key metrics at a glance.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="section-large bg-purple text-center" style="color: white;">
+    <div class="container">
+        <h2 class="mb-4" style="color: white;">See how SalesCompass fits your team</h2>
+        <p class="text-large mb-6" style="color: rgba(255,255,255,0.9);">
+            Schedule a personalized demo or start your free trial today.
+        </p>
+        <div style="display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap;">
+            <a href="{% url 'try_free' %}" class="btn btn-large"
+                style="background-color: white; color: var(--color-purple);">
+                Start free trial
+            </a>
+            <a href="{% url 'support' %}" class="btn btn-large"
+                style="background-color: transparent; color: white; border-color: white;">
+                Schedule demo
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

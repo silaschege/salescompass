@@ -1,0 +1,123 @@
+{% extends "nps/base.html" %}
+
+{% block title %}NPS Dashboard - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">NPS Dashboard</h1>
+        <p class="text-white text-center lead">Net Promoter Score management and analytics</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- KPI Cards -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card text-white bg-primary">
+                <div class="card-body text-center">
+                    <h6>NPS Score</h6>
+                    <h2>{{ nps_score }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                    <h6>Promoters</h6>
+                    <h2>{{ promoters }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-white bg-warning">
+                <div class="card-body text-center">
+                    <h6>Passives</h6>
+                    <h2>{{ passives }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-white bg-danger">
+                <div class="card-body text-center">
+                    <h6>Detractors</h6>
+                    <h2>{{ detractors }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-white bg-info">
+                <div class="card-body text-center">
+                    <h6>Total Responses</h6>
+                    <h2>{{ total_responses }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-white bg-dark">
+                <div class="card-body text-center">
+                    <h6>Benchmark</h6>
+                    <h2>Industry Avg</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex gap-2">
+                <a href="{% url 'nps:nps_trend_charts' %}" class="btn btn-outline-primary">Trend Charts</a>
+                <a href="{% url 'nps:nps_responses' %}" class="btn btn-outline-primary">All Responses</a>
+                <a href="{% url 'nps:detractor_kanban' %}" class="btn btn-outline-danger">Detractor Alerts</a>
+                <a href="{% url 'nps:nps_survey_create' %}" class="btn btn-primary">+ New Survey</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Responses -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Recent NPS Responses</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Account</th>
+                                    <th>Score</th>
+                                    <th>Comment</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for response in recent_responses %}
+                                <tr class="{% if response.is_detractor %}table-danger{% elif response.is_promoter %}table-success{% endif %}">
+                                    <td>{{ response.account.name }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if response.is_detractor %}danger{% elif response.is_promoter %}success{% else %}warning{% endif %}">
+                                            {{ response.score }}
+                                        </span>
+                                    </td>
+                                    <td>{{ response.comment|truncatewords:10 }}</td>
+                                    <td>{{ response.created_at|date:"M d" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}

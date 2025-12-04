@@ -1,0 +1,78 @@
+{% extends "marketing/base.html" %}
+
+{% block title %}Campaign Calendar - SalesCompass{% endblock %}
+
+{% block content %}
+<h1>Campaign Schedule</h1>
+
+<div class="d-flex justify-content-between mb-3">
+    <div>
+        <a href="{% url 'marketing:create' %}" class="btn btn-primary">+ New Campaign</a>
+    </div>
+    <div>
+        <button id="today-btn" class="btn btn-outline-secondary">Today</button>
+    </div>
+</div>
+
+<div id='calendar'></div>
+
+<style>
+.fc-event {
+    cursor: move;
+    border: none;
+}
+.fc-event-pending { background-color: #6c757d; }
+.fc-event-scheduled { background-color: #198754; }
+.fc-event-sent { background-color: #0dcaf0; }
+</style>
+
+<!-- FullCalendar -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: {{ events_json|safe }},
+        editable: true,
+        eventDrop: function(info) {
+            // Update campaign schedule via AJAX
+            fetch('{% url "marketing:update_campaign_schedule" %}', {
+                method: 'POST',
+                headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                body: JSON.stringify({
+                    campaign_id: info.event.id,
+                    start: info.event.start.toISOString()
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('Failed to update schedule: ' + data.error);
+                    info.revert();
+                }
+            })
+            .catch(() => {
+                info.revert();
+            });
+        },
+        eventClassNames: function(event) {
+            return [`fc-event-${event.extendedProps.status}`];
+        }
+    });
+    calendar.render();
+    
+    // Today button
+    document.getElementById('today-btn').addEventListener('click', () => {
+        calendar.today();
+    });
+});
+</script>
+{% endblock %}

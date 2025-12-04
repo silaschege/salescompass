@@ -1,0 +1,142 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 text-gray-800">Support Dashboard</h1>
+        <a href="{% url 'cases:create' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> New Case
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">My Open Cases</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ my_open_cases_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-ticket-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">SLA Breaches</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ sla_breaches }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Avg CSAT</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ avg_csat|floatformat:1 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-smile fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Case Queue -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">My Queue</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>SLA Due</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for case in my_queue %}
+                                <tr>
+                                    <td>{{ case.subject }}</td>
+                                    <td>
+                                        <span
+                                            class="badge badge-{% if case.priority == 'critical' %}danger{% elif case.priority == 'high' %}warning{% else %}info{% endif %}">
+                                            {{ case.get_priority_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ case.get_status_display }}</td>
+                                    <td>
+                                        {% if case.sla_due %}
+                                        <span class="{% if case.is_overdue %}text-danger font-weight-bold{% endif %}">
+                                            {{ case.sla_due|timeuntil }}
+                                        </span>
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'cases:detail' case.pk %}"
+                                            class="btn btn-sm btn-outline-primary">View</a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No cases in your queue.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detractor Alerts -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-warning">Recent Detractors</h6>
+                </div>
+                <div class="card-body">
+                    {% for alert in detractor_alerts %}
+                    <div class="mb-3">
+                        <div class="small text-gray-500">{{ alert.response.created_at|date:"M d, Y" }}</div>
+                        <div class="font-weight-bold">{{ alert.response.case.account.name }}</div>
+                        <div class="text-danger">Score: {{ alert.response.score }}/5</div>
+                        <div class="small font-italic">"{{ alert.response.comment|truncatechars:50 }}"</div>
+                        <hr>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No active detractor alerts.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "global_alerts/base.html" %}
+
+{% block title %}Alert Preview{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Alert Preview</h1>
+
+    <div class="card">
+        <div class="card-header">
+            <h5>How this alert will appear</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert {{ alert.css_class }} {% if alert.is_dismissible %}alert-dismissible{% endif %}">
+                {% if alert.is_dismissible %}<button type="button" class="btn-close"></button>{% endif %}
+                <strong>{{ alert.title }}</strong><br>
+                {{ alert.message }}
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a href="{% url 'global_alerts:alert_update' alert.pk %}" class="btn btn-primary">Edit Alert</a>
+        <a href="{% url 'global_alerts:alert_list' %}" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>
+{% endblock %}

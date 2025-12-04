@@ -1,0 +1,62 @@
+{% extends "infrastructure/base.html" %}
+
+{% block title %}Resource Alerts - Infrastructure{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Resource Alerts</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Tenant ID</th>
+                            <th>Alert Type</th>
+                            <th>Details</th>
+                            <th>Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usage in alerts %}
+                        <tr>
+                            <td>{{ usage.tenant_id }}</td>
+                            <td>
+                                {% if usage.is_over_api_limit %}
+                                <span class="badge bg-danger">API Limit Exceeded</span>
+                                {% endif %}
+                                {% if usage.is_over_storage_limit %}
+                                <span class="badge bg-danger">Storage Limit Exceeded</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if usage.is_over_api_limit %}
+                                API: {{ usage.api_calls_count }} / {{ usage.api_calls_limit }}
+                                <br>
+                                {% endif %}
+                                {% if usage.is_over_storage_limit %}
+                                Storage: {{ usage.storage_used_gb }} / {{ usage.storage_limit_gb }} GB
+                                {% endif %}
+                            </td>
+                            <td>{{ usage.measured_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <a href="{% url 'infrastructure:resource_limit_update' usage.tenant_id %}"
+                                    class="btn btn-sm btn-warning">
+                                    <i class="bi bi-shield-exclamation"></i> Throttle
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No active resource alerts.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

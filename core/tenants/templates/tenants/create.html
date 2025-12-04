@@ -1,0 +1,10 @@
+{% extends 'tenants/base.html' %}
+{% block title %}Create Tenant{% endblock %}
+{% block content %}
+<h1 class="mb-4">Create New Tenant</h1>
+<form method="post" class="needs-validation" novalidate>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary mt-3">Create</button>
+</form>
+{% endblock %}

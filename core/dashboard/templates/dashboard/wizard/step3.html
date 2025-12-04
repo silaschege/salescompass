@@ -1,0 +1,381 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Create Dashboard - Step 3{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Wizard Progress -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="wizard-progress d-flex justify-content-center align-items-center">
+                <div class="step completed">
+                    <div class="step-circle"><i class="bi bi-check"></i></div>
+                    <div class="step-label">Choose Template</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step completed">
+                    <div class="step-circle"><i class="bi bi-check"></i></div>
+                    <div class="step-label">Configure</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step active">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Arrange</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-grid-3x3 me-2"></i>Arrange Your Dashboard
+                    </h4>
+                    <p class="mb-0 mt-2 small">Dashboard: <strong>{{ wizard_data.dashboard_name }}</strong></p>
+                </div>
+                <div class="card-body p-4">
+
+                    <!-- Instructions -->
+                    <div class="alert alert-info mb-4">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Arrange your widgets:</strong> Choose the size and priority position for each widget.
+                    </div>
+
+                    <!-- Widget Arrangement Form -->
+                   <div class="row g-4" id="widgetConfigContainer">
+    {% for widget in selected_modules %}
+    <div class="col-md-6 col-lg-4">
+        <div class="widget-arrange-card card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi {{ widget.icon }} fs-3 text-primary me-3"></i>
+                    <div>
+                        <h6 class="mb-0">{{ widget.name }}</h6>
+                        <small class="text-muted">{{ widget.get_category_display }}</small>
+                    </div>
+                </div>
+
+                <!-- Size Selection -->
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Widget Size:</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" 
+                               name="size_{{ widget.widget_type }}"
+                               id="size_small_{{ widget.widget_type }}" 
+                               value="4" autocomplete="off">
+                        <label class="btn btn-outline-primary btn-sm" for="size_small_{{ widget.widget_type }}">
+                            Small
+                        </label>
+
+                        <input type="radio" class="btn-check" 
+                               name="size_{{ widget.widget_type }}"
+                               id="size_medium_{{ widget.widget_type }}" 
+                               value="6" autocomplete="off" checked>
+                        <label class="btn btn-outline-primary btn-sm" for="size_medium_{{ widget.widget_type }}">
+                            Medium
+                        </label>
+
+                        <input type="radio" class="btn-check" 
+                               name="size_{{ widget.widget_type }}"
+                               id="size_large_{{ widget.widget_type }}" 
+                               value="12" autocomplete="off">
+                        <label class="btn btn-outline-primary btn-sm" for="size_large_{{ widget.widget_type }}">
+                            Large
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Position Selection -->
+                <div>
+                    <label class="form-label small fw-bold">Priority:</label>
+                    <select class="form-select form-select-sm" 
+                            name="position_{{ widget.widget_type }}"
+                            data-type="{{ widget.widget_type }}">
+                        
+                        <!-- Fixed: Logic is now on single lines -->
+                        <option value="top" {% if widget.default_position == 'top' %}selected{% endif %}>
+                            Top (High Priority)
+                        </option>
+
+                        <option value="middle" {% if widget.default_position == 'middle' %}selected{% endif %}>
+                            Middle
+                        </option>
+
+                        <option value="bottom" {% if widget.default_position == 'bottom' %}selected{% endif %}>
+                            Bottom
+                        </option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+                    <!-- Preview Section -->
+                    <div class="mt-5">
+                        <h5 class="fw-bold mb-3">
+                            <i class="bi bi-eye me-2"></i>Dashboard Preview
+                        </h5>
+                        <div class="dashboard-preview p-4 bg-light rounded" id="dashboardPreview">
+                            <!-- JS will inject content here -->
+                            <div class="text-center text-muted py-5">
+                                <span class="spinner-border spinner-border-sm text-secondary"></span> Loading Preview...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Buttons -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'dashboard:wizard_step2' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Back
+                        </a>
+                        <button type="button" class="btn btn-success btn-lg" id="saveDashboardBtn">
+                            <i class="bi bi-check-circle me-1"></i>Save Dashboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Wizard Progress */
+    .wizard-progress {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .wizard-progress .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+    }
+
+    .wizard-progress .step-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #e9ecef;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s;
+    }
+
+    .wizard-progress .step.active .step-circle {
+        background: #0d6efd;
+        color: white;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.2);
+    }
+
+    .wizard-progress .step.completed .step-circle {
+        background: #198754;
+        color: white;
+    }
+
+    .wizard-progress .step-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .wizard-progress .step.active .step-label {
+        color: #0d6efd;
+        font-weight: 600;
+    }
+
+    .wizard-progress .step.completed .step-label {
+        color: #198754;
+    }
+
+    .wizard-progress .step-line {
+        width: 100px;
+        height: 2px;
+        background: #e9ecef;
+        margin: 0 1rem;
+        align-self: flex-start;
+        margin-top: 24px;
+    }
+
+    /* Widget Cards */
+    .widget-arrange-card {
+        border: 2px solid #dee2e6;
+        transition: all 0.2s;
+    }
+
+    .widget-arrange-card:hover {
+        border-color: #0d6efd;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Preview */
+    .dashboard-preview {
+        min-height: 300px;
+        border: 2px dashed #dee2e6;
+        transition: all 0.3s;
+    }
+
+    .preview-widget {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        height: 100%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const saveDashboardBtn = document.getElementById('saveDashboardBtn');
+        const previewContainer = document.getElementById('dashboardPreview');
+        const configContainer = document.getElementById('widgetConfigContainer');
+
+        // 1. Gather Widget Data Function
+        function getWidgetConfigs() {
+            const widgets = [];
+
+            // Loop through the data we injected safely via Django template
+            {% for widget in selected_modules %}
+            {
+                const type = '{{ widget.widget_type }}';
+                const name = '{{ widget.name }}';
+                const icon = '{{ widget.icon }}';
+
+                // Select elements safely using attribute selectors
+                const sizeEl = document.querySelector(`input[name="size_${type}"]:checked`);
+                const posEl = document.querySelector(`select[name="position_${type}"]`);
+
+                if (sizeEl && posEl) {
+                    widgets.push({
+                        type: type,
+                        name: name,
+                        icon: icon,
+                        span: parseInt(sizeEl.value),
+                        position: posEl.value
+                    });
+                }
+            }
+            {% endfor %}
+
+            return widgets;
+        }
+
+        // 2. Refresh Preview Logic
+        function refreshPreview() {
+            const widgets = getWidgetConfigs();
+
+            // Sort Order
+            const priorityMap = { 'top': 1, 'middle': 2, 'bottom': 3 };
+
+            // Sort widgets based on priority
+            widgets.sort((a, b) => priorityMap[a.position] - priorityMap[b.position]);
+
+            let html = '<div class="row g-3">';
+
+            if (widgets.length === 0) {
+                html = '<div class="text-center text-muted py-5">No widgets selected</div>';
+            } else {
+                widgets.forEach(w => {
+                    let badgeClass = 'bg-secondary';
+                    if (w.position === 'top') badgeClass = 'bg-primary';
+                    if (w.position === 'middle') badgeClass = 'bg-info text-dark';
+
+                    html += `
+                        <div class="col-md-${w.span}">
+                            <div class="preview-widget d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi ${w.icon} me-2 text-primary"></i>
+                                    <strong>${w.name}</strong>
+                                </div>
+                                <span class="badge ${badgeClass} small">${w.position}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            html += '</div>';
+            previewContainer.innerHTML = html;
+        }
+
+        // 3. Attach Event Listeners to Inputs
+        // We delegate the event to the container to handle all inputs efficiently
+        configContainer.addEventListener('change', refreshPreview);
+
+        // Initial Render
+        refreshPreview();
+
+        // 4. Save Logic
+        saveDashboardBtn.addEventListener('click', async function () {
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+
+            const widgets = getWidgetConfigs();
+
+            // Construct Layout JSON
+            // We will group widgets into rows based on their position to make the layout logical
+            const layout = { rows: [] };
+
+            // Helper groups
+            const groups = { top: [], middle: [], bottom: [] };
+            widgets.forEach(w => groups[w.position].push(w));
+
+            // Function to add a group as a row
+            const addGroupToLayout = (groupWidgets) => {
+                if (groupWidgets.length === 0) return;
+
+                // Simplified: Put all widgets of one priority into one wrapping row
+                // Or create multiple rows if span exceeds 12 (Bootstrap handles wrapping automatically though)
+                const row = { cols: [] };
+                groupWidgets.forEach(w => {
+                    row.cols.push({
+                        widget: w.type,
+                        span: w.span
+                    });
+                });
+                layout.rows.push(row);
+            };
+
+            addGroupToLayout(groups.top);
+            addGroupToLayout(groups.middle);
+            addGroupToLayout(groups.bottom);
+
+            try {
+                const response = await fetch('{% url "dashboard:wizard_save" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ layout: layout })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Redirect to the rendered dashboard
+                    window.location.href = '/dashboard/render/' + data.dashboard_id + '/';
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Error saving dashboard: ' + error.message);
+                this.disabled = false;
+                this.innerHTML = '<i class="bi bi-check-circle me-1"></i>Save Dashboard';
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,163 @@
+{% extends "leads/base.html" %}
+{% load auth_extras math filters_extras %}
+{% block title %}Web-to-Lead Forms - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Web-to-Lead Forms</h1>
+        <p class="text-white text-center lead">
+            Create and manage forms to capture leads from your website
+        </p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Action Buttons -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <a href="{% url 'leads:web_to_lead_builder' %}" class="btn btn-primary">+ New Form</a>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{% url 'leads:leads_list' %}" class="btn btn-outline-secondary">← Back to Leads</a>
+        </div>
+    </div>
+
+    <!-- Web-to-Lead Forms Table -->
+    {% if webtoleadforms %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Form Name</th>
+                        <th>Status</th>
+                        <th>Lead Source</th>
+                        <th>Conversion Rate</th>
+                        <th>Submissions</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for form in webtoleadforms %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'leads:webtoleadform_detail' form.pk %}" class="text-decoration-none">
+                                <strong>{{ form.name }}</strong>
+                            </a>
+                            <br>
+                            <small class="text-muted">
+                                {% if form.description %}
+                                    {{ form.description|truncatewords:8 }}
+                                {% else %}
+                                    No description
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            {% if form.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if form.lead_source %}
+                                <span class="badge bg-primary">{{ form.get_lead_source_display }}</span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if form.total_submissions > 0 %}
+                                {{ form.conversion_rate|floatformat:1 }}%
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ form.total_submissions|intcomma }}</td>
+                        <td>{{ form.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <div class="d-flex flex-column gap-1">
+                                <a href="{% url 'leads:webtoleadform_detail' form.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                <a href="{% url 'leads:webtoleadform_update' form.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                <a href="{{ form.get_embed_code_url }}" target="_blank" class="btn btn-sm btn-outline-info">Embed</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center">
+            <div class="mb-4">
+                <i class="bi bi-file-earmark-post display-1 text-muted"></i>
+            </div>
+            <h3 class="text-muted">No web-to-lead forms found</h3>
+            <p class="text-muted mb-4">Create your first web-to-lead form to start capturing leads from your website.</p>
+            <a href="{% url 'leads:web_to_lead_builder' %}" class="btn btn-primary">Create Web-to-Lead Form</a>
+        </div>
+    {% endif %}
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}
+{% block extra_head %}
+<style>
+.table-hover tbody tr:hover {
+    background-color: rgba(111, 66, 193, 0.05);
+}
+.badge {
+    font-size: 0.75em;
+    padding: 0.3em 0.6em;
+}
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

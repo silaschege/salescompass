@@ -1,0 +1,92 @@
+{% extends 'billing/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-pencil me-2"></i>Edit Plan: {{ form.instance.name }}</h2>
+            <p class="text-muted">Update plan pricing and limits</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Plan Details</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form.name.label_tag }}
+                            {{ form.name }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.slug.label_tag }}
+                            {{ form.slug }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.tier.label_tag }}
+                            {{ form.tier }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form.price_monthly.label_tag }}
+                            {{ form.price_monthly }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.price_yearly.label_tag }}
+                            {{ form.price_yearly }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.is_active.label_tag }}
+                            {{ form.is_active }}
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h6>Plan Limits</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            {{ form.max_users.label_tag }}
+                            {{ form.max_users }}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            {{ form.max_leads.label_tag }}
+                            {{ form.max_leads }}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            {{ form.max_storage_gb.label_tag }}
+                            {{ form.max_storage_gb }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    {{ form.features.label_tag }}
+                    {{ form.features }}
+                    <small class="form-text text-muted">Enter feature flags as JSON array</small>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>Save Changes
+                    </button>
+                    <a href="{% url 'billing:plan_detail' plan_id=form.instance.id %}"
+                        class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

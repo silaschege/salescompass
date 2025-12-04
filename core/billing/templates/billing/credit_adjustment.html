@@ -1,0 +1,182 @@
+{% extends 'billing/base.html' %}
+
+{% block title %}Credits & Adjustments - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-1">Credits & Adjustments</h2>
+            <p class="text-muted">Apply credits, refunds, and discounts to tenant accounts</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Form Section -->
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-plus-circle me-2"></i>New Adjustment</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.tenant_id.id_for_label }}" class="form-label">Tenant ID</label>
+                            {{ form.tenant_id }}
+                            {% if form.tenant_id.errors %}
+                            <div class="text-danger small">{{ form.tenant_id.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.adjustment_type.id_for_label }}" class="form-label">Adjustment
+                                Type</label>
+                            {{ form.adjustment_type }}
+                            {% if form.adjustment_type.errors %}
+                            <div class="text-danger small">{{ form.adjustment_type.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.amount.id_for_label }}" class="form-label">Amount ($)</label>
+                            {{ form.amount }}
+                            {% if form.amount.errors %}
+                            <div class="text-danger small">{{ form.amount.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.reason.id_for_label }}" class="form-label">Reason</label>
+                            {{ form.reason }}
+                            {% if form.reason.errors %}
+                            <div class="text-danger small">{{ form.reason.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Explain why this adjustment is being made</small>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Note:</strong> This action will immediately affect the tenant's account balance.
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-check-circle me-2"></i>Apply Adjustment
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Info Card -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Adjustment Types</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li><strong>Credit:</strong> Add funds to tenant's account</li>
+                        <li><strong>Refund:</strong> Return payment to tenant</li>
+                        <li><strong>Discount:</strong> Apply promotional discount</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Adjustments -->
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Adjustments</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_adjustments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Tenant</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Reason</th>
+                                    <th>By</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for adjustment in recent_adjustments %}
+                                <tr>
+                                    <td>
+                                        <small>{{ adjustment.created_at|date:"M d, Y H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        <strong>{{ adjustment.tenant_id }}</strong>
+                                    </td>
+                                    <td>
+                                        {% if adjustment.adjustment_type == 'credit' %}
+                                        <span class="badge bg-success">Credit</span>
+                                        {% elif adjustment.adjustment_type == 'refund' %}
+                                        <span class="badge bg-warning">Refund</span>
+                                        {% elif adjustment.adjustment_type == 'discount' %}
+                                        <span class="badge bg-info">Discount</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong class="text-success">${{ adjustment.amount|floatformat:2 }}</strong>
+                                    </td>
+                                    <td>
+                                        <small>{{ adjustment.reason|truncatewords:10 }}</small>
+                                    </td>
+                                    <td>
+                                        <small>
+                                            {% if adjustment.created_by %}
+                                            {{ adjustment.created_by.get_full_name|default:adjustment.created_by.email
+                                            }}
+                                            {% else %}
+                                            <span class="text-muted">System</span>
+                                            {% endif %}
+                                        </small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No recent adjustments found.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control,
+    .form-select,
+    textarea {
+        display: block;
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+    }
+
+    textarea.form-control {
+        min-height: 80px;
+    }
+</style>
+{% endblock %}

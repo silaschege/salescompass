@@ -1,0 +1,126 @@
+name: salescompass
+
+services:
+  # -----------------------------------
+  # CRM / Web Application (your app)
+  # -----------------------------------
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - wazo-auth
+      - wazo-confd
+      - wazo-call-logd
+      - wazo-agentd
+    environment:
+      DATABASE_URL: postgres://user:password@db:5432/salescompass
+      WAZO_AUTH_URL: http://wazo-auth:9497
+      WAZO_CONFD_URL: http://wazo-confd:9486
+      WAZO_CALL_LOG_URL: http://wazo-call-logd:9295
+      WAZO_AGENTD_URL: http://wazo-agentd:some_port   # adjust as per agentd default port
+
+  # -----------------------------------
+  # CRM Database
+  # -----------------------------------
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: salescompass
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # -----------------------------------
+  # Wazo Platform Database
+  # -----------------------------------
+  wazo-db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: wazo
+      POSTGRES_USER: wazo
+      POSTGRES_PASSWORD: wazo
+    volumes:
+      - wazo_db:/var/lib/postgresql/data
+
+  # -----------------------------------
+  # Wazo AUTH Service (authentication, tokens)
+  # -----------------------------------
+  wazo-auth:
+    image: wazoplatform/wazo-auth:latest  # or specific tag
+    depends_on:
+      - wazo-db
+    ports:
+      - "9497:9497"
+    environment:
+      WAZO_DB_URI: postgresql://wazo:wazo@wazo-db/wazo
+      WAZO_UUID: salescompass-auth
+      WAZO_ADMIN_USERNAME: admin
+      WAZO_ADMIN_PASSWORD: securepassword123
+
+  # -----------------------------------
+  # Wazo CONFD (configuration daemon)
+  # -----------------------------------
+  wazo-confd:
+    image: wazoplatform/wazo-confd:latest
+    depends_on:
+      - wazo-auth
+    ports:
+      - "9486:9486"
+    environment:
+      WAZO_AUTH_URL: http://wazo-auth:9497
+      WAZO_DB_URI: postgresql://wazo:wazo@wazo-db/wazo
+
+  # -----------------------------------
+  # Wazo CALL LOGD (call logging)
+  # -----------------------------------
+  wazo-call-logd:
+    image: wazoplatform/wazo-call-logd:latest
+    depends_on:
+      - wazo-auth
+      - wazo-confd
+    ports:
+      - "9295:9295"
+    environment:
+      WAZO_AUTH_URL: http://wazo-auth:9497
+      WAZO_DB_URI: postgresql://wazo:wazo@wazo-db/wazo
+
+  # -----------------------------------
+  # Wazo AGENTD — Call center agent management
+  # (handles agent states, queuing, etc.)  
+  # Official image: wazoplatform/wazo-agentd :contentReference[oaicite:0]{index=0}
+  # -----------------------------------
+  wazo-agentd:
+    image: wazoplatform/wazo-agentd:latest
+    depends_on:
+      - wazo-auth
+      - wazo-confd
+
+  # -----------------------------------
+  # Wazo AMID — Bridge to Asterisk
+  # -----------------------------------
+  wazo-amid:
+    image: wazoplatform/wazo-amid:latest
+    depends_on:
+      - wazo-db
+      - wazo-confd
+    environment:
+      WAZO_DB_URI: postgresql://wazo:wazo@wazo-db/wazo
+    ports:
+      - "4573:4573"
+
+  # -----------------------------------
+  # Telephony core — Asterisk
+  # This handles SIP, RTP, and media
+  # -----------------------------------
+
+
+volumes:
+  postgres_data: {}
+  wazo_db: {}
+  
+  asterisk_recordings: {}

@@ -1,0 +1,301 @@
+{% extends "tasks/base.html" %}
+{%load auth_extras math filters_extras%} 
+{% block title %}{{ task.title }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">{{ task.title }}</h1>
+        <p class="text-white text-center lead">
+            Task details and collaboration
+        </p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Task Information -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Task Details</h5>
+                    <span class="badge bg-{% if task.priority == 'high' %}danger{% elif task.priority == 'medium' %}warning{% elif task.priority == 'low' %}secondary{% else %}info{% endif %}">
+                        {{ task.get_priority_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Status:</strong> 
+                                <span class="badge bg-{% if task.status == 'completed' %}success{% elif task.status == 'cancelled' %}secondary{% elif task.status == 'overdue' %}danger{% else %}warning{% endif %}">
+                                    {{ task.get_status_display }}
+                                </span>
+                                {% if task.is_overdue %}
+                                    <span class="badge bg-danger ms-1">Overdue</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Assigned To:</strong> 
+                                {% if task.assigned_to %}
+                                    {{ task.assigned_to.email }}
+                                {% else %}
+                                    <span class="text-muted">Unassigned</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Created By:</strong> 
+                                {% if task.created_by %}
+                                    {{ task.created_by.email }}
+                                {% else %}
+                                    <span class="text-muted">System</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Task Type:</strong> {{ task.get_task_type_display }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Due Date:</strong> {{ task.due_date|date:"M d, Y H:i" }}</p>
+                            <p><strong>Created:</strong> {{ task.created_at|date:"M d, Y H:i" }}</p>
+                            {% if task.completed_at %}
+                                <p><strong>Completed:</strong> {{ task.completed_at|date:"M d, Y H:i" }}</p>
+                            {% endif %}
+                            <p><strong>Estimated Hours:</strong> 
+                                {% if task.estimated_hours %}
+                                    {{ task.estimated_hours }}
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <strong>Description:</strong>
+                        <p class="mt-2">{{ task.description|linebreaks }}</p>
+                    </div>
+                    {% if task.tags %}
+                        <div class="mt-3">
+                            <strong>Tags:</strong>
+                            {% for tag in task.get_tags_list %}
+                                <span class="badge bg-light text-dark me-1">{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Related Object -->
+            {% if task.get_related_object %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Related {{ task.get_task_type_display }}</h5>
+                </div>
+                <div class="card-body">
+                    {% if task.account %}
+                        <p><strong>Account:</strong> <a href="{% url 'accounts:detail' task.account.pk %}">{{ task.account.name }}</a></p>
+                    {% elif task.opportunity %}
+                        <p><strong>Opportunity:</strong> <a href="{% url 'opportunities:detail' task.opportunity.pk %}">{{ task.opportunity.name }}</a></p>
+                    {% elif task.related_lead %}
+                        <p><strong>Lead:</strong> <a href="{% url 'leads:detail' task.related_lead.pk %}">{{ task.related_lead.full_name }}</a></p>
+                    {% elif task.case %}
+                        <p><strong>Case:</strong> <a href="{% url 'cases:detail' task.case.pk %}">{{ task.case.subject }}</a></p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Comments -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Comments ({{ comments.count }})</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <form method="post" action="{% url 'tasks:add_comment' task.pk %}" id="comment-form">
+                            {% csrf_token %}
+                            <div class="mb-2">
+                                {{ comment_form.content }}
+                                {% if comment_form.content.errors %}
+                                    <div class="text-danger mt-1">{{ comment_form.content.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm">Add Comment</button>
+                        </form>
+                    </div>
+                    
+                    {% if comments %}
+                        <div class="comments-list">
+                            {% for comment in comments %}
+                            <div class="comment-item mb-3 pb-3 border-bottom">
+                                <div class="d-flex justify-content-between">
+                                    <strong>{{ comment.author.email|default:"Anonymous" }}</strong>
+                                    <small class="text-muted">{{ comment.created_at|date:"M d, Y H:i" }}</small>
+                                </div>
+                                <p class="mt-1">{{ comment.content|linebreaks }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No comments yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if task.status != 'completed' %}
+                            <form method="post" action="{% url 'tasks:complete_task' %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="task_id" value="{{ task.id }}">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-circle"></i> Complete Task
+                                </button>
+                            </form>
+                        {% endif %}
+                        <a href="{% url 'tasks:update' task.pk %}" class="btn btn-outline-primary">
+                            <i class="bi bi-pencil"></i> Edit Task
+                        </a>
+                        <a href="{% url 'tasks:list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Tasks
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attachments -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Attachments ({{ attachments.count }})</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'tasks:upload_attachment' task.pk %}" 
+                          enctype="multipart/form-data" id="attachment-form">
+                        {% csrf_token %}
+                        <div class="mb-2">
+                            {{ attachment_form.file }}
+                            {% if attachment_form.file.errors %}
+                                <div class="text-danger mt-1">{{ attachment_form.file.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary btn-sm">Upload</button>
+                    </form>
+                    
+                    {% if attachments %}
+                        <div class="mt-3">
+                            <h6>Files:</h6>
+                            <ul class="list-unstyled">
+                                {% for attachment in attachments %}
+                                <li class="mb-1">
+                                    <a href="{{ attachment.file.url }}" target="_blank">
+                                        <i class="bi bi-file-earmark"></i> {{ attachment.file.name|basename }}
+                                    </a>
+                                    <small class="text-muted ms-2">{{ attachment.created_at|date:"M d" }}</small>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recurrence Info -->
+            {% if task.is_recurring %}
+            <div class="card">
+                <div class="card-header">
+                    <h5>Recurrence</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Pattern:</strong> {{ task.get_recurrence_pattern_display }}</p>
+                    {% if task.recurrence_end_date %}
+                        <p><strong>End Date:</strong> {{ task.recurrence_end_date|date:"M d, Y" }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+{% block extra_head %}
+<style>
+.card-header h5 {
+    margin-bottom: 0;
+}
+.badge {
+    font-size: 0.75em;
+    padding: 0.3em 0.6em;
+}
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+.comment-item {
+    font-size: 0.9em;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Comment form submission
+    const commentForm = document.getElementById('comment-form');
+    if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error adding comment: ' + JSON.stringify(data.error));
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error);
+            });
+        });
+    }
+    
+    // Attachment form submission
+    const attachmentForm = document.getElementById('attachment-form');
+    if (attachmentForm) {
+        attachmentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error uploading attachment: ' + JSON.stringify(data.error));
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error);
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

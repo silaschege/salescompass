@@ -1,0 +1,175 @@
+{% extends 'billing/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-collection me-2"></i>Subscription #{{ subscription.id }}</h2>
+            <p class="text-muted">Subscription details and management</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'billing:subscription_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Subscriptions
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Subscription Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>Tenant ID:</strong> <code>{{ subscription.tenant_id }}</code></p>
+                            <p><strong>Current Plan:</strong> {{ subscription.plan.name }}</p>
+                            <p><strong>Status:</strong>
+                                {% if subscription.status == 'active' %}
+                                <span class="badge bg-success">Active</span>
+                                {% elif subscription.status == 'trialing' %}
+                                <span class="badge bg-info">Trial</span>
+                                {% elif subscription.status == 'canceled' %}
+                                <span class="badge bg-danger">Canceled</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ subscription.status|title }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>MRR:</strong> ${{ subscription.plan.price_monthly }}</p>
+                            <p><strong>Period Start:</strong> {{
+                                subscription.current_period_start|date:"Y-m-d"|default:"N/A" }}</p>
+                            <p><strong>Period End:</strong> {{
+                                subscription.current_period_end|date:"Y-m-d"|default:"N/A" }}</p>
+                        </div>
+                    </div>
+
+                    {% if subscription.cancel_at_period_end %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        This subscription is scheduled for cancellation at the end of the current period.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Change Plan</h5>
+                </div>
+                <div class="card-body">
+                    {% if all_plans %}
+                    <form method="post" action="{% url 'billing:upgrade_downgrade' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="subscription_id" value="{{ subscription.id }}">
+
+                        <div class="mb-3">
+                            <label for="new_plan_id" class="form-label">Select New Plan</label>
+                            <select name="new_plan_id" id="new_plan_id" class="form-select">
+                                {% for plan in all_plans %}
+                                <option value="{{ plan.id }}">
+                                    {{ plan.name }} - ${{ plan.price_monthly }}/month
+                                    (Proration: ${{ prorations|get_item:plan.id|floatformat:2 }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-arrow-up-circle me-2"></i>Change Plan
+                        </button>
+                    </form>
+                    {% else %}
+                    <p class="text-muted">All other plans are currently unavailable.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Invoices</h5>
+                </div>
+                <div class="card-body">
+                    {% if subscription.invoices.all %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Invoice #</th>
+                                    <th>Due Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for invoice in subscription.invoices.all|slice:":5" %}
+                                <tr>
+                                    <td><a href="{% url 'billing:invoice_detail' invoice_id=invoice.id %}">{{
+                                            invoice.invoice_number }}</a></td>
+                                    <td>{{ invoice.due_date }}</td>
+                                    <td>${{ invoice.total }}</td>
+                                    <td>
+                                        {% if invoice.status == 'paid' %}
+                                        <span class="badge bg-success">Paid</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">{{ invoice.status|title }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'billing:invoice_detail' invoice_id=invoice.id %}"
+                                            class="btn btn-sm btn-outline-primary">View</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No invoices yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Actions</h6>
+                </div>
+                <div class="card-body">
+                    {% if subscription.status == 'active' %}
+                    <form method="post" action="{% url 'billing:subscription_cancel' subscription_id=subscription.id %}"
+                        onsubmit="return confirm('Cancel subscription at end of period?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="immediate" value="false">
+                        <button type="submit" class="btn btn-warning w-100 mb-2">
+                            <i class="bi bi-pause-circle me-2"></i>Cancel at Period End
+                        </button>
+                    </form>
+
+                    <form method="post" action="{% url 'billing:subscription_cancel' subscription_id=subscription.id %}"
+                        onsubmit="return confirm('Cancel subscription IMMEDIATELY? This cannot be undone.');">
+                        {% csrf_token %} <input type="hidden" name="immediate" value="true">
+                        <button type="submit" class="btn btn-danger w-100">
+                            <i class="bi bi-x-circle me-2"></i>Cancel Immediately
+                        </button>
+                    </form>
+
+                    {% elif subscription.status == 'canceled' %}
+                    <form method="post"
+                        action="{% url 'billing:subscription_reactivate' subscription_id=subscription.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Reactivate
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

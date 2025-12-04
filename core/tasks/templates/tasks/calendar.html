@@ -1,0 +1,187 @@
+{% extends "tasks/base.html" %}
+
+{% block title %}Tasks Calendar - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Tasks Calendar</h1>
+        <p class="text-white text-center lead">View your tasks in a calendar layout</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Action Buttons -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <a href="{% url 'tasks:create' %}" class="btn btn-primary">+ New Task</a>
+        </div>
+        <div class="col-md-6 text-end">
+            <div class="btn-group" role="group">
+                <a href="{% url 'tasks:dashboard' %}" class="btn btn-outline-secondary">Dashboard</a>
+                <a href="{% url 'tasks:kanban' %}" class="btn btn-outline-secondary">Kanban</a>
+                <a href="{% url 'tasks:list' %}" class="btn btn-outline-secondary">List View</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div id='calendar'></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}
+{% block extra_head %}
+<!-- FullCalendar CSS -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+
+<style>
+.task-event {
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85em;
+    padding: 2px 4px;
+    border-radius: 0.25rem;
+}
+
+.completed-task {
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+
+.overdue-task {
+    border: 2px solid #dc3545 !important;
+}
+
+.fc-event-title {
+    color: white !important;
+    font-weight: normal !important;
+    font-size: 0.85em !important;
+}
+
+.fc-day-today {
+    background-color: #e7f1ff !important;
+}
+
+.fc-event-time {
+    color: white !important;
+    font-size: 0.8em !important;
+}
+
+.card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.btn {
+    padding: 0.5rem 1.25rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background-color: #6f42c1;
+    border-color: #6f42c1;
+}
+
+.btn-primary:hover {
+    background-color: #5a32a3;
+    border-color: #5a32a3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
+}
+
+.btn-outline-secondary {
+    color: #6f42c1;
+    border-color: #d1c5e6;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #f8f9fa;
+    border-color: #d1c5e6;
+    color: #5a32a3;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- FullCalendar JS -->
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    
+    // Format tasks data for FullCalendar
+    const calendarEvents = {{ tasks_json|safe }}.map(task => {
+        return {
+            id: task.id,
+            title: task.title,
+            start: task.due_date,
+            extendedProps: {
+                status: task.status,
+                priority: task.priority
+            }
+        };
+    });
+    
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: calendarEvents,
+        eventClick: function(info) {
+            window.location.href = '/tasks/' + info.event.id + '/';
+        },
+        eventClassNames: function(event) {
+            let classes = ['task-event'];
+            
+            // Priority colors
+            if (event.extendedProps.priority === 'high') {
+                classes.push('bg-danger');
+            } else if (event.extendedProps.priority === 'medium') {
+                classes.push('bg-warning');
+            } else if (event.extendedProps.priority === 'low') {
+                classes.push('bg-secondary');
+            } else {
+                classes.push('bg-primary');
+            }
+            
+            // Status indicators
+            if (event.extendedProps.status === 'completed') {
+                classes.push('completed-task');
+            } else if (event.extendedProps.status === 'overdue') {
+                classes.push('overdue-task');
+            }
+            
+            return classes;
+        },
+        eventTimeFormat: {
+            hour: '2-digit',
+            minute: '2-digit',
+            meridiem: false
+        },
+        height: 'auto'
+    });
+    calendar.render();
+});
+</script>
+{% endblock %}

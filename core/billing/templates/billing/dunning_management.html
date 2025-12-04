@@ -1,0 +1,72 @@
+{% extends 'billing/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-clock-history me-2"></i>Dunning Management</h2>
+            <p class="text-muted">Manage overdue invoices and payment retries</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Overdue Invoices</h5>
+        </div>
+        <div class="card-body">
+            {% if overdue_invoices %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Tenant</th>
+                            <th>Amount</th>
+                            <th>Due Date</th>
+                            <th>Days Overdue</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in overdue_invoices %}
+                        <tr>
+                            <td><a href="{% url 'billing:invoice_detail' invoice_id=invoice.id %}">{{
+                                    invoice.invoice_number }}</a></td>
+                            <td>{{ invoice.tenant_id }}</td>
+                            <td>${{ invoice.total }}</td>
+                            <td>{{ invoice.due_date }}</td>
+                            <td><span class="badge bg-danger">Overdue</span></td>
+                            <td>
+                                <a href="{% url 'billing:invoice_detail' invoice_id=invoice.id %}"
+                                    class="btn btn-sm btn-outline-primary">View</a>
+
+                                <form method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="invoice_id" value="{{ invoice.id }}">
+                                    <input type="hidden" name="action" value="send_reminder">
+                                    <button type="submit" class="btn btn-sm btn-outline-info">
+                                        <i class="bi bi-envelope"></i> Remind
+                                    </button>
+                                </form>
+
+                                <form method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="invoice_id" value="{{ invoice.id }}">
+                                    <input type="hidden" name="action" value="retry_payment">
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-arrow-clockwise"></i> Retry
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No overdue invoices found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

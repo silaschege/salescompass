@@ -1,0 +1,72 @@
+{% extends "settings_app/base.html" %}
+
+{% block title %}{% if object %}Edit Stage{% else %}New Stage{% endif %} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">{% if object %}Edit Stage{% else %}New Stage{% endif %}</h1>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Name *</label>
+                            {{ form.name }}
+                            <div class="form-text">Stage name (e.g., "Qualification", "Negotiation")</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Probability (%)</label>
+                                {{ form.probability }}
+                                <div class="form-text">Default probability of winning (0-100)</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Order</label>
+                                {{ form.order }}
+                            </div>
+                        </div>
+
+                        <hr>
+                        <h6 class="fw-bold">Stage Type</h6>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.is_won }}
+                                <label class="form-check-label">Closed Won</label>
+                            </div>
+                            <div class="form-check">
+                                {{ form.is_lost }}
+                                <label class="form-check-label">Closed Lost</label>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-4">
+                            <a href="{% url 'settings_app:opportunity_stage_list' %}"
+                                class="btn btn-light me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save Stage</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .form-control,
+    .form-select {
+        padding: 0.6rem 1rem;
+        border-radius: 0.5rem;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,18 @@
+<div class="card h-100">
+    <div class="card-header">
+        <h5 class="card-title mb-0">NPS Score</h5>
+    </div>
+    <div class="card-body text-center d-flex flex-column justify-content-center">
+        <div
+            class="display-1 fw-bold {% if nps_score >= 50 %}text-success{% elif nps_score >= 0 %}text-warning{% else %}text-danger{% endif %} mb-2">
+            {{ nps_score }}
+        </div>
+        <div class="text-muted mb-3">Net Promoter Score</div>
+
+        <div class="d-flex justify-content-center gap-2">
+            <span class="badge bg-light text-dark border">
+                <i class="bi bi-people me-1"></i> {{ total_responses }} Responses
+            </span>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,72 @@
+{% extends "opportunities/base.html" %}
+{% load auth_extras  number_filters %}
+
+{% block title %}Forecast Dashboard - SalesCompass{% endblock %}
+
+{% block content %}
+<h1>Sales Forecast Dashboard</h1>
+
+<!-- KPI Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body text-center">
+                <h5 class="card-title">Total Pipeline</h5>
+                <h2 class="display-6">${{ total_pipeline|intcomma }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body text-center">
+                <h5 class="card-title">Weighted Forecast</h5>
+                <h2 class="display-6">${{ weighted_forecast|intcomma }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Forecast Trend Chart -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Forecast Trend (Last 30 Days)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="forecastChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('forecastChart').getContext('2d');
+const data = {{ trend_data_json|safe }};
+new Chart(ctx, {
+    type: 'line',
+     {
+        labels: data.map(d => d.date),
+         data.map(d => d.forecast),
+        borderColor: '#28a745',
+        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+        fill: true,
+        tension: 0.3
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '$' + value.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

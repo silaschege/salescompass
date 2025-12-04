@@ -1,0 +1,62 @@
+{% extends 'tenants/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-puzzle me-2"></i>Entitlement Templates</h2>
+            <p class="text-muted">Pre-configured entitlement templates for quick tenant setup</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Basic Plan</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Core CRM Features</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Up to 5 Users</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Basic Support</li>
+                        <li><i class="bi bi-x-circle text-muted me-2"></i>Advanced Analytics</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Professional Plan</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check-circle text-success me-2"></i>All Basic Features</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Up to 25 Users</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Priority Support</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Advanced Analytics</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Enterprise Plan</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check-circle text-success me-2"></i>All Pro Features</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Unlimited Users</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>24/7 Support</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Custom Integrations</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

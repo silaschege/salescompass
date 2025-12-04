@@ -1,0 +1,50 @@
+{% extends "settings_app/base.html" %}
+
+{% block title %}Territories - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Sales Territories</h1>
+        <p class="text-white text-center lead">Manage regional territories and country assignments</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Territories</h2>
+        <a href="{% url 'settings_app:territory_create' %}" class="btn btn-primary">+ New Territory</a>
+    </div>
+
+    {% if territories %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Countries</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for territory in territories %}
+                <tr>
+                    <td>{{ territory.get_name_display }}</td>
+                    <td>{{ territory.description|truncatewords:10 }}</td>
+                    <td>{{ territory.country_codes|join:", " }}</td>
+                    <td>
+                        <a href="{% url 'settings_app:territory_update' territory.pk %}"
+                            class="btn btn-sm btn-outline-primary">Edit</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No territories found.</p>
+    <a href="{% url 'settings_app:territory_create' %}" class="btn btn-primary">Create your first territory</a>
+    {% endif %}
+</div>
+{% endblock %}

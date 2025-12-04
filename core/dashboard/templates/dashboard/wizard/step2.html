@@ -1,0 +1,480 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Create Dashboard - Step 2{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Wizard Progress -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="wizard-progress d-flex justify-content-center align-items-center">
+                <div class="step completed">
+                    <div class="step-circle"><i class="bi bi-check"></i></div>
+                    <div class="step-label">Choose Template</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step active">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Configure</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Arrange</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-sliders me-2"></i>Configure Your Modules
+                    </h4>
+                    <p class="mb-0 mt-2 small">Dashboard: <strong>{{ wizard_data.dashboard_name }}</strong></p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" id="wizardStep2Form">
+                        {% csrf_token %}
+
+                        {% if widget_configs %}
+                        <!-- Module Configuration Accordion -->
+                        <div class="accordion" id="moduleConfigAccordion">
+                            {% for widget_config in widget_configs %}
+                            {% with widget=widget_config.widget %}
+                            <div class="accordion-item mb-3 border rounded">
+                                <h2 class="accordion-header" id="heading{{ widget.widget_type }}">
+                                    <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}"
+                                        type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#collapse{{ widget.widget_type }}"
+                                        aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                                        aria-controls="collapse{{ widget.widget_type }}">
+                                        <i class="bi {{ widget.icon }} me-2 fs-5"></i>
+                                        <strong>{{ widget.name }}</strong>
+                                        <span class="badge bg-secondary ms-2">{{ widget.get_category_display }}</span>
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ widget.widget_type }}"
+                                    class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                                    aria-labelledby="heading{{ widget.widget_type }}"
+                                    data-bs-parent="#moduleConfigAccordion">
+                                    <div class="accordion-body">
+                                        <input type="hidden" name="configured_modules" value="{{ widget.widget_type }}">
+
+                                        <!-- Model Selection -->
+                                        <div class="row mb-4">
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold">
+                                                    <i class="bi bi-database me-1"></i>Data Source (Model)
+                                                </label>
+                                                <select class="form-select model-select"
+                                                    name="{{ widget.widget_type }}_model"
+                                                    data-widget-type="{{ widget.widget_type }}"
+                                                    data-default-model="{{ widget_config.default_model }}" required>
+                                                    <option value="">Select a model...</option>
+                                                    {% for model in available_models %}
+                                                    <!-- Fixed: Added spaces around '==' operator -->
+                                                    <option value="{{ model.id }}" {% if model.id == widget_config.default_model %}selected{% endif %}>{{ model.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <small class="text-muted">Select the data source for this widget</small>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold">
+                                                    <i class="bi bi-calendar-range me-1"></i>Time Range
+                                                </label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control"
+                                                        name="{{ widget.widget_type }}_time_range" value="30" min="1"
+                                                        max="365">
+                                                    <span class="input-group-text">days</span>
+                                                </div>
+                                                <small class="text-muted">Include data from the last X days</small>
+                                            </div>
+                                        </div>
+
+                                        <hr class="my-4">
+
+                                        <!-- Filters Section -->
+                                        <div class="mb-4">
+                                            <label class="form-label fw-bold mb-3">
+                                                <i class="bi bi-funnel me-1"></i>Filters
+                                            </label>
+
+                                            <div id="filters-container-{{ widget.widget_type }}">
+                                                <!-- Dynamic filters will be added here -->
+                                                <div class="alert alert-light border text-center p-3 no-filters-msg">
+                                                    <span class="text-muted">No filters applied. All records will be
+                                                        included.</span>
+                                                </div>
+                                            </div>
+
+                                            <button type="button"
+                                                class="btn btn-outline-primary btn-sm mt-2 add-filter-btn"
+                                                data-widget-type="{{ widget.widget_type }}" disabled>
+                                                <i class="bi bi-plus-circle me-1"></i>Add Filter
+                                            </button>
+                                        </div>
+
+                                        <hr class="my-4">
+
+                                        <!-- Aggregation & Sorting -->
+                                        <div class="row g-3">
+                                            <div class="col-md-4">
+                                                <label class="form-label fw-bold">
+                                                    <i class="bi bi-calculator me-1"></i>Aggregation
+                                                </label>
+                                                <select class="form-select aggregation-select"
+                                                    name="{{ widget.widget_type }}_aggregation"
+                                                    data-widget-type="{{ widget.widget_type }}">
+                                                    <option value="count">Count (Total Records)</option>
+                                                    <option value="sum">Sum (Total Value)</option>
+                                                    <option value="average">Average</option>
+                                                    <option value="min">Minimum</option>
+                                                    <option value="max">Maximum</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="col-md-4 aggregation-field-container" style="display: none;">
+                                                <label class="form-label fw-bold">
+                                                    <i class="bi bi-hash me-1"></i>Field to Aggregate
+                                                </label>
+                                                <select class="form-select field-select"
+                                                    name="{{ widget.widget_type }}_aggregation_field">
+                                                    <option value="">Select field...</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <label class="form-label fw-bold">
+                                                    <i class="bi bi-sort-down me-1"></i>Sort Order
+                                                </label>
+                                                <select class="form-select" name="{{ widget.widget_type }}_sorting">
+                                                    <option value="desc">Largest to Smallest</option>
+                                                    <option value="asc">Smallest to Largest</option>
+                                                    <option value="recent">Most Recent First</option>
+                                                    <option value="oldest">Oldest First</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endwith %} <!-- Fixed: Closing tag added here -->
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            No modules selected. Please go back and select at least one module.
+                        </div>
+                        {% endif %}
+
+                        <!-- Navigation Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'dashboard:wizard_step1' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Back
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg" {% if not widget_configs %}disabled{% endif %}>
+                                Next Step <i class="bi bi-arrow-right ms-1"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Wizard Progress */
+    .wizard-progress {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .wizard-progress .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+    }
+
+    .wizard-progress .step-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #e9ecef;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s;
+    }
+
+    .wizard-progress .step.active .step-circle {
+        background: #0d6efd;
+        color: white;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.2);
+    }
+
+    .wizard-progress .step.completed .step-circle {
+        background: #198754;
+        color: white;
+    }
+
+    .wizard-progress .step-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .wizard-progress .step.active .step-label {
+        color: #0d6efd;
+        font-weight: 600;
+    }
+
+    .wizard-progress .step.completed .step-label {
+        color: #198754;
+    }
+
+    .wizard-progress .step-line {
+        width: 100px;
+        height: 2px;
+        background: #e9ecef;
+        margin: 0 1rem;
+        align-self: flex-start;
+        margin-top: 24px;
+    }
+
+    /* Accordion styling */
+    .accordion-button:not(.collapsed) {
+        background-color: #f0f7ff;
+        color: #0d6efd;
+    }
+
+    .accordion-button:focus {
+        box-shadow: none;
+        border-color: #0d6efd;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Cache for model fields
+        const modelFieldsCache = {};
+
+        // Initialize all widgets
+        document.querySelectorAll('.model-select').forEach(select => {
+            select.addEventListener('change', function () {
+                const widgetType = this.dataset.widgetType;
+                const modelId = this.value;
+                const addFilterBtn = document.querySelector(`.add-filter-btn[data-widget-type="${widgetType}"]`);
+
+                if (modelId) {
+                    loadModelFields(modelId, widgetType);
+                    addFilterBtn.disabled = false;
+                } else {
+                    addFilterBtn.disabled = true;
+                    clearFilters(widgetType);
+                }
+            });
+            
+            // Trigger change on load if value is pre-selected
+            if(select.value) {
+                select.dispatchEvent(new Event('change'));
+            }
+        });
+
+        // Add Filter Button Handler
+        document.querySelectorAll('.add-filter-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const widgetType = this.dataset.widgetType;
+                const modelSelect = document.querySelector(`.model-select[data-widget-type="${widgetType}"]`);
+                const modelId = modelSelect.value;
+
+                if (modelId && modelFieldsCache[modelId]) {
+                    addFilterRow(widgetType, modelFieldsCache[modelId]);
+                }
+            });
+        });
+
+        // Aggregation Change Handler
+        document.querySelectorAll('.aggregation-select').forEach(select => {
+            select.addEventListener('change', function () {
+                const widgetType = this.dataset.widgetType;
+                const container = this.closest('.row').querySelector('.aggregation-field-container');
+                const fieldSelect = container.querySelector('select');
+
+                if (this.value !== 'count') {
+                    container.style.display = 'block';
+                    fieldSelect.required = true;
+
+                    // Filter fields for aggregation (numeric only)
+                    const modelSelect = document.querySelector(`.model-select[data-widget-type="${widgetType}"]`);
+                    const modelId = modelSelect.value;
+                    if (modelId && modelFieldsCache[modelId]) {
+                        updateAggregationFields(fieldSelect, modelFieldsCache[modelId]);
+                    }
+                } else {
+                    container.style.display = 'none';
+                    fieldSelect.required = false;
+                }
+            });
+        });
+
+        // Function to load model fields via AJAX
+        function loadModelFields(modelId, widgetType) {
+            if (modelFieldsCache[modelId]) {
+                // Use cached fields
+                return;
+            }
+
+            fetch(`{% url 'dashboard:wizard_model_fields_api' %}?model=${modelId}`)
+                .then(response => response.json())
+                .then(data => {
+                    modelFieldsCache[modelId] = data.fields;
+
+                    // Update aggregation fields if needed
+                    const aggSelect = document.querySelector(`.aggregation-select[data-widget-type="${widgetType}"]`);
+                    if (aggSelect.value !== 'count') {
+                        const fieldSelect = aggSelect.closest('.row').querySelector('.field-select');
+                        updateAggregationFields(fieldSelect, data.fields);
+                    }
+                })
+                .catch(error => console.error('Error loading fields:', error));
+        }
+
+        // Function to add a new filter row
+        function addFilterRow(widgetType, fields) {
+            const container = document.getElementById(`filters-container-${widgetType}`);
+            const noFiltersMsg = container.querySelector('.no-filters-msg');
+
+            if (noFiltersMsg) {
+                noFiltersMsg.style.display = 'none';
+            }
+
+            const rowId = 'filter-' + Date.now();
+            const row = document.createElement('div');
+            row.className = 'row g-2 mb-2 align-items-center filter-row';
+            row.id = rowId;
+
+            // Field Select
+            let fieldOptions = '<option value="">Select Field</option>';
+            fields.forEach(field => {
+                if (field.filterable) {
+                    fieldOptions += `<option value="${field.name}" data-type="${field.type}">${field.verbose_name}</option>`;
+                }
+            });
+
+            row.innerHTML = `
+                <div class="col-md-4">
+                    <select class="form-select form-select-sm filter-field" name="${widgetType}_filter_field" required>
+                        ${fieldOptions}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select form-select-sm filter-operator" name="${widgetType}_filter_operator">
+                        <option value="exact">Equals</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <input type="text" class="form-control form-control-sm filter-value" name="${widgetType}_filter_value" placeholder="Value">
+                </div>
+                <div class="col-md-1">
+                    <button type="button" class="btn btn-outline-danger btn-sm w-100 remove-filter" onclick="this.closest('.filter-row').remove()">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            `;
+
+            container.appendChild(row);
+
+            // Add change listener for field selection to update operators
+            const fieldSelect = row.querySelector('.filter-field');
+            fieldSelect.addEventListener('change', function () {
+                const selectedOption = this.options[this.selectedIndex];
+                const fieldType = selectedOption.dataset.type;
+                const operatorSelect = row.querySelector('.filter-operator');
+                const valueInput = row.querySelector('.filter-value');
+
+                updateOperators(operatorSelect, fieldType);
+
+                // Update value input type based on field type
+                if (fieldType === 'boolean') {
+                    const select = document.createElement('select');
+                    select.className = valueInput.className;
+                    select.name = valueInput.name;
+                    select.innerHTML = '<option value="true">True</option><option value="false">False</option>';
+                    valueInput.replaceWith(select);
+                } else if (valueInput.tagName === 'SELECT') {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = valueInput.className;
+                    input.name = valueInput.name;
+                    input.placeholder = 'Value';
+                    valueInput.replaceWith(input);
+                }
+            });
+        }
+
+        // Function to update operators based on field type
+        function updateOperators(select, fieldType) {
+            let operators = [
+                { value: 'exact', label: 'Equals' },
+                { value: 'isnull', label: 'Is Null' }
+            ];
+
+            if (['char', 'text', 'email'].includes(fieldType)) {
+                operators.push(
+                    { value: 'icontains', label: 'Contains' },
+                    { value: 'istartswith', label: 'Starts With' }
+                );
+            } else if (['integer', 'decimal', 'float', 'date', 'datetime'].includes(fieldType)) {
+                operators.push(
+                    { value: 'gt', label: 'Greater Than' },
+                    { value: 'lt', label: 'Less Than' }
+                );
+            }
+
+            select.innerHTML = operators.map(op =>
+                `<option value="${op.value}">${op.label}</option>`
+            ).join('');
+        }
+
+        // Function to update aggregation field options
+        function updateAggregationFields(select, fields) {
+            let options = '<option value="">Select field...</option>';
+            fields.forEach(field => {
+                if (field.aggregatable) {
+                    options += `<option value="${field.name}">${field.verbose_name}</option>`;
+                }
+            });
+            select.innerHTML = options;
+        }
+
+        function clearFilters(widgetType) {
+            const container = document.getElementById(`filters-container-${widgetType}`);
+            container.innerHTML = `
+                <div class="alert alert-light border text-center p-3 no-filters-msg">
+                    <span class="text-muted">No filters applied. All records will be included.</span>
+                </div>
+            `;
+        }
+
+        // Auto-expand first accordion item
+        const firstAccordion = document.querySelector('.accordion-collapse.show');
+        if (firstAccordion) {
+            firstAccordion.classList.add('show');
+        }
+    });
+</script>
+{% endblock %}

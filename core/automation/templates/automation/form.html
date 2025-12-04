@@ -1,0 +1,385 @@
+{% extends 'automation/base.html' %}
+{% load static %}
+
+{% block title %}Form-based Workflow Builder - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Form-based Workflow Builder</h1>
+            <p class="text-muted">Define your automation workflow step by step.</p>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <a href="{% url 'automation:list' %}" class="btn btn-outline-secondary">Cancel</a>
+            <button class="btn btn-primary" onclick="saveWorkflow()">
+                <i class="fas fa-save me-1"></i> Save Workflow
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Workflow Steps</h5>
+                </div>
+                <div class="card-body">
+                    <div id="workflow-steps-container">
+                        <!-- Steps will be added here dynamically -->
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button class="btn btn-outline-primary" onclick="addStep()">
+                            <i class="fas fa-plus me-1"></i> Add Step
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Settings Card -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Workflow Settings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="workflowName" class="form-label">Workflow Name</label>
+                        <input type="text" class="form-control" id="workflowName"
+                            value="{{ workflow.name|default:'New Workflow' }}" placeholder="Enter name...">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="workflowDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="workflowDescription" rows="3"
+                            placeholder="Describe what this workflow does...">{{ workflow.description|default:'' }}</textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Available Modules -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Available Modules</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for key, module in module_config.items %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ module.label }}</strong>
+                                <span class="badge bg-secondary">{{ module.triggers|length }} triggers, {{ module.actions|length }} actions</span>
+                            </div>
+                            
+                            {% if module.triggers %}
+                            <small class="text-muted d-block mt-1">Triggers:</small>
+                            <ul class="mb-0 small">
+                                {% for trigger in module.triggers %}
+                                <li>{{ trigger.label }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                            
+                            {% if module.actions %}
+                            <small class="text-muted d-block mt-1">Actions:</small>
+                            <ul class="mb-0 small">
+                                {% for action in module.actions %}
+                                <li>{{ action.label }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Global variables
+let workflowSteps = [];
+let stepCounter = 0;
+
+// Module configuration passed from backend
+const moduleConfig = {{ module_config_json|safe }};
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize with a trigger step if creating new workflow
+    {% if not workflow_data %}
+    addStep('trigger');
+    {% else %}
+    // Load existing workflow data
+    loadExistingWorkflow({{ workflow_data|safe }});
+    {% endif %}
+});
+
+function addStep(stepType = null) {
+    stepCounter++;
+    const stepId = `step-${stepCounter}`;
+    
+    let stepHtml = `
+        <div class="card mb-3 step-card" id="${stepId}">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Step ${stepCounter}</h6>
+                <button class="btn btn-sm btn-outline-danger" onclick="removeStep('${stepId}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Step Type</label>
+                    <select class="form-select step-type-selector" onchange="changeStepType('${stepId}', this.value)">
+                        <option value="">Select step type...</option>
+                        <option value="trigger"${stepType === 'trigger' ? ' selected' : ''}>Trigger (Start)</option>
+                        <option value="condition"${stepType === 'condition' ? ' selected' : ''}>Condition (If/Else)</option>
+                        <option value="action"${stepType === 'action' ? ' selected' : ''}>Action</option>
+                    </select>
+                </div>
+                
+                <div class="step-details-container">
+                    ${getStepDetailsHtml(stepType, stepId)}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('workflow-steps-container').insertAdjacentHTML('beforeend', stepHtml);
+    workflowSteps.push(stepId);
+}
+
+function changeStepType(stepId, stepType) {
+    const container = document.querySelector(`#${stepId} .step-details-container`);
+    container.innerHTML = getStepDetailsHtml(stepType, stepId);
+}
+
+function getStepDetailsHtml(stepType, stepId) {
+    if (stepType === 'trigger') {
+        return getTriggerStepHtml(stepId);
+    } else if (stepType === 'condition') {
+        return getConditionStepHtml(stepId);
+    } else if (stepType === 'action') {
+        return getActionStepHtml(stepId);
+    }
+    return '<p class="text-muted">Select a step type to configure...</p>';
+}
+
+function getTriggerStepHtml(stepId) {
+    let optionsHtml = '<option value="">Select a trigger...</option>';
+    
+    for (const [key, module] of Object.entries(moduleConfig)) {
+        if (module.triggers && module.triggers.length > 0) {
+            optionsHtml += `<optgroup label="${module.label || key}">`;
+            module.triggers.forEach(trigger => {
+                if (trigger && trigger.id) {
+                    optionsHtml += `<option value="${key}.${trigger.id}">${trigger.label || trigger.id}</option>`;
+                }
+            });
+            optionsHtml += `</optgroup>`;
+        }
+    }
+    
+    return `
+        <div class="mb-3">
+            <label class="form-label">Trigger Event</label>
+            <select class="form-select" name="trigger-event">
+                ${optionsHtml}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <input type="text" class="form-control" name="trigger-description" placeholder="What triggers this workflow?">
+        </div>
+    `;
+}
+
+function getConditionStepHtml(stepId) {
+    return `
+        <div class="mb-3">
+            <label class="form-label">Field Name</label>
+            <input type="text" class="form-control" name="condition-field" placeholder="e.g., status, priority">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Operator</label>
+            <select class="form-select" name="condition-operator">
+                <option value="equals">Equals</option>
+                <option value="not_equals">Not Equals</option>
+                <option value="greater_than">Greater Than</option>
+                <option value="less_than">Less Than</option>
+                <option value="contains">Contains</option>
+                <option value="starts_with">Starts With</option>
+                <option value="ends_with">Ends With</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Value</label>
+            <input type="text" class="form-control" name="condition-value" placeholder="Value to compare against">
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">True Path</label>
+                    <select class="form-select" name="true-path">
+                        <option value="next">Next Step</option>
+                        <option value="end">End Workflow</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">False Path</label>
+                    <select class="form-select" name="false-path">
+                        <option value="next">Next Step</option>
+                        <option value="end">End Workflow</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function getActionStepHtml(stepId) {
+    let optionsHtml = '<option value="">Select an action...</option>';
+    
+    for (const [key, module] of Object.entries(moduleConfig)) {
+        if (module.actions && module.actions.length > 0) {
+            optionsHtml += `<optgroup label="${module.label || key}">`;
+            module.actions.forEach(action => {
+                if (action && action.id) {
+                    optionsHtml += `<option value="${key}.${action.id}">${action.label || action.id}</option>`;
+                }
+            });
+            optionsHtml += `</optgroup>`;
+        }
+    }
+    
+    return `
+        <div class="mb-3">
+            <label class="form-label">Action Type</label>
+            <select class="form-select" name="action-type">
+                ${optionsHtml}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Action Parameters</label>
+            <textarea class="form-control" name="action-params" rows="3" placeholder='{"param1": "value1", "param2": "value2"}'></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <input type="text" class="form-control" name="action-description" placeholder="What does this action do?">
+        </div>
+    `;
+}
+
+function removeStep(stepId) {
+    if (confirm('Are you sure you want to remove this step?')) {
+        document.getElementById(stepId).remove();
+        workflowSteps = workflowSteps.filter(id => id !== stepId);
+    }
+}
+
+function saveWorkflow() {
+    const workflowName = document.getElementById('workflowName').value;
+    const workflowDescription = document.getElementById('workflowDescription').value;
+    
+    if (!workflowName.trim()) {
+        alert('Please enter a workflow name');
+        return;
+    }
+    
+    // Collect workflow steps data
+    const steps = [];
+    document.querySelectorAll('.step-card').forEach(card => {
+        const stepType = card.querySelector('.step-type-selector').value;
+        if (!stepType) return;
+        
+        const stepData = {
+            type: stepType,
+            id: card.id
+        };
+        
+        // Collect step-specific data
+        if (stepType === 'trigger') {
+            stepData.event = card.querySelector('[name="trigger-event"]')?.value;
+            stepData.description = card.querySelector('[name="trigger-description"]')?.value;
+        } else if (stepType === 'condition') {
+            stepData.field = card.querySelector('[name="condition-field"]')?.value;
+            stepData.operator = card.querySelector('[name="condition-operator"]')?.value;
+            stepData.value = card.querySelector('[name="condition-value"]')?.value;
+            stepData.truePath = card.querySelector('[name="true-path"]')?.value;
+            stepData.falsePath = card.querySelector('[name="false-path"]')?.value;
+        } else if (stepType === 'action') {
+            stepData.actionType = card.querySelector('[name="action-type"]')?.value;
+            stepData.parameters = card.querySelector('[name="action-params"]')?.value;
+            stepData.description = card.querySelector('[name="action-description"]')?.value;
+        }
+        
+        steps.push(stepData);
+    });
+    
+    if (steps.length === 0) {
+        alert('Please add at least one step');
+        return;
+    }
+    
+    // Prepare data for saving
+    const workflowData = {
+        name: workflowName,
+        description: workflowDescription,
+        steps: steps
+    };
+    
+    // Send to server (similar to your existing save function)
+    fetch('{% url "automation:save_workflow" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            id: {% if workflow_id %}{{ workflow_id }}{% else %}null{% endif %},
+            name: workflowName,
+            workflow_data: workflowData
+        })
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) {
+            alert('Workflow saved successfully!');
+            if (res.workflow_id) {
+                window.location.href = '{% url "automation:workflow_builder" %}' + res.workflow_id + '/';
+            }
+        } else {
+            alert('Error: ' + res.error);
+        }
+    })
+    .catch(err => {
+        alert('Error saving workflow: ' + err.message);
+    });
+}
+
+function loadExistingWorkflow(workflowData) {
+    document.getElementById('workflowName').value = workflowData.name || '';
+    document.getElementById('workflowDescription').value = workflowData.description || '';
+    
+    // Clear existing steps
+    document.getElementById('workflow-steps-container').innerHTML = '';
+    
+    // Load stepsorm-based Workflow Builder
+
+
+    if (workflowData.steps) {
+        workflowData.steps.forEach(step => {
+            addStep(step.type);
+            // You would need to populate the fields with existing data here
+        });
+    }
+}
+</script>
+{% endblock %}

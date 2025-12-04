@@ -1,0 +1,107 @@
+{% extends 'billing/base.html' %}
+{% load billing_tags %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-clock-history me-2"></i>Subscription Lifecycle Events</h2>
+            <p class="text-muted">Recent subscription changes and activity</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Recent Activity</h5>
+        </div>
+        <div class="card-body">
+            {% if subscriptions %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Tenant ID</th>
+                            <th>Plan</th>
+                            <th>Status</th>
+                            <th>Last Updated</th>
+                            <th>MRR</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sub in subscriptions %}
+                        <tr>
+                            <td><code>{{ sub.tenant_id }}</code></td>
+                            <td>{{ sub.plan.name }}</td>
+                            <td>
+                                {% if sub.status == 'active' %}
+                                <span class="badge bg-success">Active</span>
+                                {% elif sub.status == 'trialing' %}
+                                <span class="badge bg-info">Trial</span>
+                                {% elif sub.status == 'canceled' %}
+                                <span class="badge bg-danger">Canceled</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ sub.status|title }}</span>
+                                {% endif %}
+
+                                {% if sub.cancel_at_period_end %}
+                                <span class="badge bg-warning text-dark ms-1" title="Scheduled for cancellation">
+                                    <i class="bi bi-exclamation-triangle"></i> Ending
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ sub.updated_at|date:"Y-m-d H:i" }}</td>
+                            <td>${{ sub.plan.price_monthly }}</td>
+                            <td>
+                                <a href="{% url 'billing:subscription_detail' subscription_id=sub.id %}"
+                                    class="btn btn-sm btn-outline-primary">
+                                    View Details
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No recent subscription activity.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Subscriptions</h6>
+                    <h3>{{ subscriptions.count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Active</h6>
+                    <h3 class="text-success">{{ subscriptions|filter_by_status:'active'|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Trial</h6>
+                    <h3 class="text-info">{{ subscriptions|filter_by_status:'trialing'|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Canceled</h6>
+                    <h3 class="text-danger">{{ subscriptions|filter_by_status:'canceled'|length }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

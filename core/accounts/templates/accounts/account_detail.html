@@ -1,0 +1,310 @@
+{% extends "accounts/base.html" %}
+{% load auth_extras %}
+
+{% block title %}{{ account.name }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h1 class="block-title fw-bold mb-0">{{ account.name }}</h1>
+        <span class="badge bg-primary">{{ account.get_tier_display }}</span>
+        <span class="badge bg-secondary">{{ account.get_industry_display }}</span>
+    </div>
+    <div>
+        {% if request.user.is_authenticated and request.user|has_perm:"accounts:write" %}
+        <a href="{% url 'accounts:update' account.pk %}" class="btn btn-outline-secondary">Edit</a>
+        <a href="{% url 'accounts:delete' account.pk %}" class="btn btn-outline-danger">Delete</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        {% comment %} account details {% endcomment %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Account Detail</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th>Website</th>
+                        <td>{{ account.website|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Country</th>
+                        <td>{{ account.country }}</td>
+                    </tr>
+                    <tr>
+                        <th>Address</th>
+                        <td>{{ account.address|linebreaksbr|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Renewal Date</th>
+                        <td>{{ account.renewal_date|default:"Not set" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Owner</th>
+                        <td>{{ account.owner.email|default:"Unassigned" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status</th>
+                        <td>{{ account.get_status_display }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        {% comment %} esg_engagement {% endcomment %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>ESG Engagement</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Level:</strong> {{ account.get_esg_engagement_display }}</p>
+                {% if account.sustainability_goals %}
+                <p><strong>Goals:</strong> {{ account.sustainability_goals|linebreaks }}</p>
+                {% endif %}
+
+                {% if account.esg_score %}
+                <h4>ESG Metrics</h4>
+                <ul>
+                    <li>Overall Score: {{ account.esg_score.overall_esg_score|floatformat:1 }}/100</li>
+                    <li>tCO2e Saved: {{ account.esg_score.tco2e_saved|floatformat:2 }}</li>
+                    <li>CSRD Ready: {% if account.esg_score.csr_ready %}✅ Yes{% else %}❌ No{% endif %}</li>
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+
+
+    </div>
+
+    <div class="col-md-4">
+        <!-- Intelligence Widgets -->
+        {% include "includes/account_health.html" with health=account.health_score %}
+
+        {% include "includes/next_best_action.html" %}
+
+        <div class="card">
+            <div class="card-header">Compliance</div>
+            <div class="card-body">
+                <p>GDPR: {% if account.gdpr_consent %}✅ Consent given{% else %}❌ Not provided{% endif %}</p>
+                <p>CCPA: {% if account.ccpa_consent %}✅ Consent given{% else %}❌ Not provided{% endif %}</p>
+            </div>
+        </div>
+
+        <!-- Add to Account Detail Page -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>Lead Generation</h5>
+                <span class="badge bg-info">Upsell/Cross-sell</span>
+            </div>
+            <div class="card-body">
+                <p>Create new leads for additional business opportunities with {{ account.name }}.</p>
+                <div class="d-grid gap-2">
+
+                    <button class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#quick-lead-form">
+                        <i class="bi bi-lightning"></i> Quick Lead
+                    </button>
+                </div>
+
+                <!-- Quick Lead Form with Contact Selection -->
+                <div class="collapse mt-3" id="quick-lead-form">
+                    <form method="post" action="{% url 'leads:quick_create_from_account' account.pk %}">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <!-- Contact Selection -->
+                                <div class="mb-3">
+                                    <label class="form-label">Select Contact</label>
+                                    <select name="contact_id" class="form-select" id="contact-select">
+                                        <option value="">Create new contact...</option>
+                                        {% for contact in account.contacts.all %}
+                                        <option value="{{ contact.id }}" data-first-name="{{ contact.first_name }}"
+                                            data-last-name="{{ contact.last_name }}" data-email="{{ contact.email }}">
+                                            {{ contact.first_name }} {{ contact.last_name }} ({{
+                                            contact.email|default:"No email" }})
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <!-- Manual Entry Fields (shown when "Create new contact" is selected) -->
+                                <div id="manual-fields">
+                                    <input type="text" name="first_name" id="manual-first-name"
+                                        class="form-control mb-2" placeholder="First Name" required>
+                                    <input type="text" name="last_name" id="manual-last-name" class="form-control mb-2"
+                                        placeholder="Last Name" required>
+                                    <input type="email" name="email" id="manual-email" class="form-control mb-2"
+                                        placeholder="Email">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <select name="lead_source" class="form-select mb-2">
+                                    <option value="upsell">Upsell Opportunity</option>
+                                    <option value="cross_sell">Cross-sell Opportunity</option>
+                                    <option value="renewal">Renewal Discussion</option>
+                                </select>
+                                <button type="submit" class="btn btn-success w-100">Create Quick Lead</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Add Timeline Section to Account Detail -->
+<div class="card">
+    <div class="card-header">
+        <h5>
+            <i class="bi bi-clock-history"></i> Account Timeline
+            <span class="badge bg-secondary ms-2">{{ timeline_events.count }}</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if timeline_events %}
+        <div class="timeline">
+            {% for event in timeline_events %}
+            <div class="timeline-item">
+                <div class="timeline-icon">
+                    {% if event.event_type == 'lead_created' %}
+                    <i class="bi bi-person-plus text-primary"></i>
+                    {% elif event.event_type == 'lead_converted' %}
+                    <i class="bi bi-arrow-right-circle text-success"></i>
+                    {% elif event.event_type == 'account_created' %}
+                    <i class="bi bi-building text-info"></i>
+                    {% elif event.event_type == 'opportunity_created' %}
+                    <i class="bi bi-graph-up text-warning"></i>
+                    {% else %}
+                    <i class="bi bi-activity text-muted"></i>
+                    {% endif %}
+                </div>
+                <div class="timeline-content">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="mb-1">{{ event.title }}</h6>
+                        <small class="text-muted">{{ event.created_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                    <p class="mb-2">{{ event.description }}</p>
+                    {% if event.event_type == 'lead_created' %}
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'leads:detail' event.lead_id %}" class="btn btn-sm btn-outline-primary">View
+                            Lead</a>
+                        {% if event.lead_status == 'new' %}
+                        <a href="" class="btn btn-sm btn-outline-success">Qualify</a>
+                        {% endif %}
+                    </div>
+                    {% elif event.event_type == 'lead_converted' %}
+                    <span class="badge bg-success">Converted to Account</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">No timeline events yet.</p>
+        {% endif %}
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const contactSelect = document.getElementById('contact-select');
+        const manualFields = document.getElementById('manual-fields');
+        const manualFirstName = document.getElementById('manual-first-name');
+        const manualLastName = document.getElementById('manual-last-name');
+        const manualEmail = document.getElementById('manual-email');
+
+        // Helper function to show/hide fields and manage the 'required' attribute
+        function toggleManualFields(show) {
+            if (show) {
+                manualFields.style.display = 'block';
+                manualFirstName.required = true;
+                manualLastName.required = true;
+            } else {
+                manualFields.style.display = 'none';
+                manualFirstName.required = false;
+                manualLastName.required = false;
+            }
+        }
+
+        // Initial check on page load
+        console.log("DOM Loaded. Initial select value:", contactSelect.value);
+        toggleManualFields(contactSelect.value === ''); // Show if no value is selected initially
+
+        contactSelect.addEventListener('change', function () {
+            console.log("Dropdown changed. New value:", this.value);
+            const selectedOption = this.options[this.selectedIndex];
+
+            if (this.value === '') {
+                // Show manual fields for new contact
+                toggleManualFields(true);
+                // Clear manual fields when switching back to "Create new"
+                manualFirstName.value = '';
+                manualLastName.value = '';
+                manualEmail.value = '';
+            } else {
+                // Hide manual fields and auto-fill them in the DOM (even if hidden)
+                toggleManualFields(false);
+                manualFirstName.value = selectedOption.dataset.firstName;
+                manualLastName.value = selectedOption.dataset.lastName;
+                manualEmail.value = selectedOption.dataset.email;
+                console.log(`Auto-filled: ${manualFirstName.value} ${manualLastName.value}, ${manualEmail.value}`);
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+
+    .timeline:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e9ecef;
+        left: 20px;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+        padding-left: 60px;
+    }
+
+    .timeline-icon {
+        position: absolute;
+        left: 7px;
+        top: 0;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: white;
+        border: 2px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2em;
+    }
+
+    .timeline-content {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 0.5rem;
+        border-left: 3px solid #6f42c1;
+    }
+
+    .timeline-content h6 {
+        margin-bottom: 0.5rem;
+        color: #495057;
+    }
+</style>
+{% endblock %}

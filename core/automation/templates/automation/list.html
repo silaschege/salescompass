@@ -1,0 +1,65 @@
+{% extends "automation/base.html" %}
+
+{% block title %}Automation Rules - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Automation Rules</h1>
+        <p class="text-white text-center lead">Create and manage automated workflows across your CRM</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Automation Library</h2>
+        <a href="{% url 'automation:create' %}" class="btn btn-primary">+ New Automation</a>
+    </div>
+
+    {% if automations %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Trigger</th>
+                        <th>Actions</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for automation in automations %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'automation:detail' automation.pk %}">{{ automation.name }}</a>
+                            {% if automation.is_system %}
+                                <span class="badge bg-info">System</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ automation.get_trigger_type_display }}</td>
+                        <td>{{ automation.actions.count }}</td>
+                        <td>
+                            {% if automation.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'automation:detail' automation.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                            <a href="{% url 'automation:workflow_builder_edit' automation.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center">
+            <p class="text-muted">No automations found.</p>
+            <a href="{% url 'automation:create' %}" class="btn btn-primary">Create your first automation</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

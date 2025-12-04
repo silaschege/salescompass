@@ -1,0 +1,109 @@
+{% extends "public/base.html" %}
+
+{% block title %}Customers | SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="text-center mb-5">
+    <h1 class="fw-bold mb-3" style="color: #6f42c1;">Trusted by California's Best</h1>
+    <p class="lead text-muted">From startups to enterprises, sales teams rely on SalesCompass.</p>
+  </div>
+
+  <!-- Logo Grid -->
+  <div class="row justify-content-center mb-5">
+    <div class="col-lg-10">
+      <div class="row row-cols-2 row-cols-md-4 g-4 align-items-center opacity-75 grayscale">
+        <div class="col text-center">
+          <h3 class="text-muted fw-bold">ACME Corp</h3>
+        </div>
+        <div class="col text-center">
+          <h3 class="text-muted fw-bold">Globex</h3>
+        </div>
+        <div class="col text-center">
+          <h3 class="text-muted fw-bold">Soylent</h3>
+        </div>
+        <div class="col text-center">
+          <h3 class="text-muted fw-bold">Initech</h3>
+        </div>
+        <div class="col text-center">
+          <h3 class="text-muted fw-bold">Umbrella</h3>
+        </div>
+        <div class="col text-center">
+          <h3 class="text-muted fw-bold">Stark Ind</h3>
+        </div>
+        <div class="col text-center">
+          <h3 class="text-muted fw-bold">Wayne Ent</h3>
+        </div>
+        <div class="col text-center">
+          <h3 class="text-muted fw-bold">Cyberdyne</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Testimonials -->
+  <div class="row g-4 mb-5">
+    <div class="col-md-4">
+      <div class="card h-100 border-0 shadow-sm p-4">
+        <div class="mb-3 text-warning">
+          <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+            class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+        </div>
+        <p class="mb-4">"SalesCompass completely transformed how we manage our pipeline. The Wazo integration is a game
+          changer for our SDRs."</p>
+        <div class="d-flex align-items-center">
+          <div class="bg-secondary rounded-circle" style="width: 40px; height: 40px;"></div>
+          <div class="ms-3">
+            <h6 class="mb-0 fw-bold">Sarah Johnson</h6>
+            <small class="text-muted">VP Sales, TechFlow</small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100 border-0 shadow-sm p-4">
+        <div class="mb-3 text-warning">
+          <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+            class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+        </div>
+        <p class="mb-4">"The pricing is transparent and fair. We scaled from 5 to 50 users without breaking the bank.
+          Highly recommended."</p>
+        <div class="d-flex align-items-center">
+          <div class="bg-secondary rounded-circle" style="width: 40px; height: 40px;"></div>
+          <div class="ms-3">
+            <h6 class="mb-0 fw-bold">Michael Chen</h6>
+            <small class="text-muted">CEO, GrowthLabs</small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100 border-0 shadow-sm p-4">
+        <div class="mb-3 text-warning">
+          <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+            class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+        </div>
+        <p class="mb-4">"Finally, a CRM that doesn't feel like a spreadsheet. The interface is intuitive and the support
+          team is amazing."</p>
+        <div class="d-flex align-items-center">
+          <div class="bg-secondary rounded-circle" style="width: 40px; height: 40px;"></div>
+          <div class="ms-3">
+            <h6 class="mb-0 fw-bold">Jessica Davis</h6>
+            <small class="text-muted">Sales Manager, BrightSide</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Locations -->
+  <div class="bg-light rounded-4 p-5 text-center">
+    <h3 class="fw-bold mb-4">Serving Teams Across California</h3>
+    <div class="d-flex flex-wrap justify-content-center gap-2">
+      {% for location in california_locations %}
+      <span class="badge bg-white text-dark border rounded-pill px-3 py-2 fw-normal">{{ location }}</span>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

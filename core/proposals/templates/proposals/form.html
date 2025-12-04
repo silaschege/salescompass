@@ -1,0 +1,109 @@
+{% extends "proposals/base.html" %}
+
+{% block title %}{% if object %}Edit {{ object.title }}{% else %}New Proposal{% endif %} - SalesCompass{% endblock %}
+
+{% block content %}
+
+
+<div class="card p-4 mb-4 shadow-lg border-0" style="border-radius: 1rem;">
+    <div class="block-title fw-bold mb-0" style="border-radius: 0.75rem;">
+        <h2 class="block-title fw-bold mb-0">{% if object %}Edit Proposal{% else %}New Proposal{% endif %}</h2>
+
+    </div>
+    <div class="card-body bg-white">
+    <form method="post" enctype="multipart/form-data" >
+    {% csrf_token %}
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="{{ form.title.id_for_label }}" class="form-label fw-semibold">Proposal Title *</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <div class="text-danger form-label fw-semibold" >{{ form.title.errors }}</div>
+                {% endif %}
+                <div class="form-text">e.g., "Q3 Enterprise Solution Proposal" or "Annual Service Renewal"</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.opportunity.id_for_label }}" class="form-label fw-semibold">Opportunity *</label>
+                {{ form.opportunity }}
+                {% if form.opportunity.errors %}
+                    <div class="text-danger">{{ form.opportunity.errors }}</div>
+                {% endif %}
+                <div class="form-text">Select the opportunity this proposal is for</div>
+            </div>
+
+            {% if form.status %}
+            <div class="mb-3">
+                <label for="{{ form.status.id_for_label }}" class="form-label fw-semibold">Status</label>
+                {{ form.status }}
+                <div class="form-text">Current status of the proposal</div>
+                {% if form.status.errors %}
+                    <div class="text-danger">{{ form.status.errors }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="mb-3">
+                <label for="{{ form.esg_section_content.id_for_label }}" class="form-label fw-semibold">ESG Impact Statement</label>
+                {{ form.esg_section_content }}
+                <div class="form-text">
+                    Describe the environmental and social benefits of this proposal. 
+                    This content will be highlighted in a dedicated ESG section and tracked for engagement.
+                </div>
+                {% if form.esg_section_content.errors %}
+                    <div class="text-danger">{{ form.esg_section_content.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="{{ form.content.id_for_label }}" class="form-label fw-semibold">Proposal Content *</label>
+                {{ form.content }}
+                <div class="form-text">
+                    <p><strong>Formatting Tips:</strong></p>
+                    <ul>
+                        <li>You can use HTML tags for formatting (e.g., p, h2, ul)</li>
+                        <li>Use <!-- ESG_START --> and <!-- ESG_END --> to mark ESG sections</li>
+                        <li>Include tables, lists, and bold/italic text as needed</li>
+                    </ul>
+                </div>
+                {% if form.content.errors %}
+                    <div class="text-danger">{{ form.content.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary">
+            {% if object %}Update Proposal{% else %}Create Proposal{% endif %}
+        </button>
+        <a href="{% url 'proposals:list' %}" class="btn btn-secondary">Cancel</a>
+        {% if object %}
+        <a href="{% url 'proposals:detail' object.pk %}" class="btn btn-outline-primary">View Proposal</a>
+        {% endif %}
+    </div>
+</form>
+    </div>
+</div>
+
+
+<script>
+// Add real-time preview functionality (optional)
+document.addEventListener('DOMContentLoaded', function() {
+    const contentField = document.getElementById('{{ form.content.id_for_label }}');
+    if (contentField) {
+        // You can add a preview tab here if desired
+        // For now, we'll just ensure proper height
+        contentField.style.minHeight = '300px';
+    }
+    
+    const esgField = document.getElementById('{{ form.esg_section_content.id_for_label }}');
+    if (esgField) {
+        esgField.style.minHeight = '150px';
+    }
+});
+</script>
+{% endblock %}

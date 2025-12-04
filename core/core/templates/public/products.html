@@ -1,0 +1,271 @@
+{% extends "public/base.html" %}
+{% load static %}
+
+{% block title %}Products - Sales Tools That Work For You | SalesCompass{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/public-design-system.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="section-large text-center">
+  <div class="container">
+    <h1 class="mb-6">Everything your sales team needs. Nothing they don't.</h1>
+    <p class="text-large text-gray mb-8" style="max-width: 800px; margin-left: auto; margin-right: auto;">
+      A complete platform where calls, emails, and deals manage themselves—so your team can focus on selling.
+    </p>
+    <a href="{% url 'try_free' %}" class="btn btn-primary btn-large">
+      Start free trial
+    </a>
+  </div>
+</section>
+
+<!-- Key Features Grid -->
+<section class="section">
+  <div class="container">
+    <div class="grid grid-2" style="gap: var(--space-16);">
+
+      <!-- CRM -->
+      <div>
+        <div
+          style="width: 56px; height: 56px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
+          <i class="bi bi-people" style="font-size: 28px; color: var(--color-purple);"></i>
+        </div>
+        <h2 class="mb-4">Core CRM</h2>
+        <p class="text-large text-gray mb-6">
+          Centralize customer data in one place. Every interaction is tracked and organized automatically—no manual
+          entry required.
+        </p>
+        <ul style="list-style: none; padding: 0;">
+          <li class="mb-3" style="display: flex; align-items: start;">
+            <i class="bi bi-check-circle-fill text-purple" style="margin-right: var(--space-3); margin-top: 4px;"></i>
+            <div>
+              <strong>Contact Management</strong><br>
+              <span class="text-gray">360° customer profiles with complete history</span>
+            </div>
+          </li>
+          <li class="mb-3" style="display: flex; align-items: start;">
+            <i class="bi bi-check-circle-fill text-purple" style="margin-right: var(--space-3); margin-top: 4px;"></i>
+            <div>
+              <strong>Visual Pipeline</strong><br>
+              <span class="text-gray">Drag-and-drop deal stages that update instantly</span>
+            </div>
+          </li>
+          <li class="mb-3" style="display: flex; align-items: start;">
+            <i class="bi bi-check-circle-fill text-purple" style="margin-right: var(--space-3); margin-top: 4px;"></i>
+            <div>
+              <strong>Smart Automation</strong><br>
+              <span class="text-gray">Workflows that save hours every week</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Voice -->
+      <div>
+        <div
+          style="width: 56px; height: 56px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
+          <i class="bi bi-telephone" style="font-size: 28px; color: var(--color-purple);"></i>
+        </div>
+        <h2 class="mb-4">Smart Calling</h2>
+        <p class="text-large text-gray mb-6">
+          Cloud telephony powered by Wazo. Make calls from your browser. Logging and recording happen automatically.
+        </p>
+        <ul style="list-style: none; padding: 0;">
+          <li class="mb-3" style="display: flex; align-items: start;">
+            <i class="bi bi-check-circle-fill text-purple" style="margin-right: var(--space-3); margin-top: 4px;"></i>
+            <div>
+              <strong>Click-to-Dial</strong><br>
+              <span class="text-gray">Call any contact with a single click</span>
+            </div>
+          </li>
+          <li class="mb-3" style="display: flex; align-items: start;">
+            <i class="bi bi-check-circle-fill text-purple" style="margin-right: var(--space-3); margin-top: 4px;"></i>
+            <div>
+              <strong>Auto Recording</strong><br>
+              <span class="text-gray">Every call logged and transcribed</span>
+            </div>
+          </li>
+          <li class="mb-3" style="display: flex; align-items: start;">
+            <i class="bi bi-check-circle-fill text-purple" style="margin-right: var(--space-3); margin-top: 4px;"></i>
+            <div>
+              <strong>Voicemail Drop</strong><br>
+              <span class="text-gray">Pre-recorded messages for efficiency</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Email -->
+      <div>
+        <div
+          style="width: 56px; height: 56px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
+          <i class="bi bi-envelope" style="font-size: 28px; color: var(--color-purple);"></i>
+        </div>
+        <h2 class="mb-4">Auto Email</h2>
+        <p class="text-large text-gray mb-6">
+          Powered by Mailcow. Send personalized sequences, track engagement, and sync everything to your timeline.
+        </p>
+        <ul style="list-style: none; padding: 0;">
+          <li class="mb-3" style="display: flex; align-items: start;">
+            <i class="bi bi-check-circle-fill text-purple" style="margin-right: var(--space-3); margin-top: 4px;"></i>
+            <div>
+              <strong>Smart Sequences</strong><br>
+              <span class="text-gray">Automated follow-up campaigns</span>
+            </div>
+          </li>
+          <li class="mb-3" style="display: flex; align-items: start;">
+            <i class="bi bi-check-circle-fill text-purple" style="margin-right: var(--space-3); margin-top: 4px;"></i>
+            <div>
+              <strong>Engagement Tracking</strong><br>
+              <span class="text-gray">Know when prospects open and click</span>
+            </div>
+          </li>
+          <li class="mb-3" style="display: flex; align-items: start;">
+            <i class="bi bi-check-circle-fill text-purple" style="margin-right: var(--space-3); margin-top: 4px;"></i>
+            <div>
+              <strong>Template Library</strong><br>
+              <span class="text-gray">Proven emails that convert</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Intelligence -->
+      <div>
+        <div
+          style="width: 56px; height: 56px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
+          <i class="bi bi-lightbulb" style="font-size: 28px; color: var(--color-purple);"></i>
+        </div>
+        <h2 class="mb-4">Sales Intelligence</h2>
+        <p class="text-large text-gray mb-6">
+          Data-driven insights to close more deals. Forecast revenue, analyze patterns, and coach your team effectively.
+        </p>
+        <ul style="list-style: none; padding: 0;">
+          <li class="mb-3" style="display: flex; align-items: start;">
+            <i class="bi bi-check-circle-fill text-purple" style="margin-right: var(--space-3); margin-top: 4px;"></i>
+            <div>
+              <strong>Revenue Forecasting</strong><br>
+              <span class="text-gray">AI-powered pipeline predictions</span>
+            </div>
+          </li>
+          <li class="mb-3" style="display: flex; align-items: start;">
+            <i class="bi bi-check-circle-fill text-purple" style="margin-right: var(--space-3); margin-top: 4px;"></i>
+            <div>
+              <strong>Win/Loss Analysis</strong><br>
+              <span class="text-gray">Understand what drives success</span>
+            </div>
+          </li>
+          <li class="mb-3" style="display: flex; align-items: start;">
+            <i class="bi bi-check-circle-fill text-purple" style="margin-right: var(--space-3); margin-top: 4px;"></i>
+            <div>
+              <strong>Team Performance</strong><br>
+              <span class="text-gray">Real-time activity and quota tracking</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Integration Message -->
+<section class="section-large bg-gray text-center">
+  <div class="container">
+    <h2 class="mb-4">It all works together.</h2>
+    <p class="text-large text-gray mb-12" style="max-width: 700px; margin-left: auto; margin-right: auto;">
+      SalesCompass isn't just a collection of tools—it's one unified platform where every component syncs automatically.
+    </p>
+
+    <div style="max-width: 900px; margin: 0 auto;">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-8);">
+        <!-- Voice -->
+        <div class="text-center">
+          <div
+            style="width: 72px; height: 72px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--space-3);">
+            <i class="bi bi-telephone" style="font-size: 32px; color: var(--color-purple);"></i>
+          </div>
+          <div class="fw-bold">Calling</div>
+        </div>
+
+        <div style="color: var(--gray-400); font-size: var(--text-2xl);">+</div>
+
+        <!-- Email -->
+        <div class="text-center">
+          <div
+            style="width: 72px; height: 72px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--space-3);">
+            <i class="bi bi-envelope" style="font-size: 32px; color: var(--color-purple);"></i>
+          </div>
+          <div class="fw-bold">Email</div>
+        </div>
+
+        <div style="color: var(--gray-400); font-size: var(--text-2xl);">+</div>
+
+        <!-- CRM -->
+        <div class="text-center">
+          <div
+            style="width: 72px; height: 72px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--space-3);">
+            <i class="bi bi-people" style="font-size: 32px; color: var(--color-purple);"></i>
+          </div>
+          <div class="fw-bold">CRM</div>
+        </div>
+
+        <div style="color: var(--color-purple); font-size: var(--text-2xl);">→</div>
+
+        <!-- Result -->
+        <div class="text-center">
+          <div
+            style="width: 80px; height: 80px; background: var(--color-purple); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--space-3);">
+            <i class="bi bi-trophy" style="font-size: 40px; color: white;"></i>
+          </div>
+          <div class="fw-bold text-purple">More Revenue</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-12">
+      <div style="display: flex; justify-content: center; gap: var(--space-16); flex-wrap: wrap;">
+        <div class="text-center">
+          <div style="font-size: var(--text-4xl); font-weight: var(--font-extrabold); color: var(--color-purple);">100%
+          </div>
+          <div class="text-gray">Data sync</div>
+        </div>
+        <div class="text-center">
+          <div style="font-size: var(--text-4xl); font-weight: var(--font-extrabold); color: var(--color-purple);">
+            Real-time</div>
+          <div class="text-gray">Updates</div>
+        </div>
+        <div class="text-center">
+          <div style="font-size: var(--text-4xl); font-weight: var(--font-extrabold); color: var(--color-purple);">Zero
+          </div>
+          <div class="text-gray">Manual work</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="section-large bg-purple text-center" style="color: white;">
+  <div class="container">
+    <h2 class="mb-4" style="color: white;">Ready to simplify your sales process?</h2>
+    <p class="text-large mb-8"
+      style="color: rgba(255,255,255,0.9); max-width: 600px; margin-left: auto; margin-right: auto;">
+      Join 10,000+ sales teams using one platform for everything.
+    </p>
+    <div class="flex flex-center gap-4" style="flex-wrap: wrap;">
+      <a href="{% url 'try_free' %}" class="btn btn-large"
+        style="background-color: white; color: var(--color-purple); border-color: white;">
+        Start free trial
+      </a>
+      <a href="{% url 'support' %}" class="btn btn-large"
+        style="background-color: transparent; color: white; border-color: white;">
+        Talk to sales
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

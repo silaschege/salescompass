@@ -1,0 +1,152 @@
+{% extends 'billing/base.html' %}
+
+{% block title %}Tenant Billing Search - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-1">Tenant Billing Search</h2>
+            <p class="text-muted">Search and view billing information for any tenant</p>
+        </div>
+    </div>
+
+    <!-- Search Form -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-search me-2"></i>Search Criteria</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="tenant_id" class="form-label">Tenant ID</label>
+                            <input type="text" class="form-control" id="tenant_id" name="tenant_id"
+                                placeholder="Enter tenant ID" value="{{ request.GET.tenant_id }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="status" class="form-label">Subscription Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">All Statuses</option>
+                                <option value="active" {% if request.GET.status=="active" %}selected{% endif %}>Active
+                                </option>
+                                <option value="trialing" {% if request.GET.status=="trialing" %}selected{% endif %}>
+                                    Trialing</option>
+                                <option value="past_due" {% if request.GET.status=="past_due" %}selected{% endif %}>Past
+                                    Due</option>
+                                <option value="canceled" {% if request.GET.status=="canceled" %}selected{% endif %}>
+                                    Canceled</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="plan" class="form-label">Plan</label>
+                            <select class="form-select" id="plan" name="plan">
+                                <option value="">All Plans</option>
+                                {% for plan in plans %}
+                                <option value="{{ plan.id }}" {% if request.GET.plan==plan.id|stringformat:"s"
+                                    %}selected{% endif %}>
+                                    {{ plan.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search me-2"></i>Search
+                            </button>
+                            <a href="{% url 'billing:tenant_billing_search' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results -->
+    {% if subscriptions %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Search Results</h5>
+                    <span class="badge bg-primary">{{ subscriptions|length }} result{{ subscriptions|length|pluralize
+                        }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Tenant ID</th>
+                                    <th>Plan</th>
+                                    <th>Status</th>
+                                    <th>MRR</th>
+                                    <th>Current Period</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subscription in subscriptions %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ subscription.tenant_id }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ subscription.plan.name }}</span>
+                                    </td>
+                                    <td>
+                                        {% if subscription.status == 'active' %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% elif subscription.status == 'trialing' %}
+                                        <span class="badge bg-info">Trialing</span>
+                                        {% elif subscription.status == 'past_due' %}
+                                        <span class="badge bg-warning">Past Due</span>
+                                        {% elif subscription.status == 'canceled' %}
+                                        <span class="badge bg-danger">Canceled</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ subscription.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>${{ subscription.plan.price_monthly|floatformat:2 }}</strong>
+                                    </td>
+                                    <td>
+                                        <small>
+                                            {{ subscription.current_period_start|date:"M d, Y" }} -
+                                            {{ subscription.current_period_end|date:"M d, Y" }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'billing:billing_history' subscription.tenant_id %}"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-clock-history"></i> History
+                                        </a>
+                                        <a href="{% url 'billing:subscription_detail' subscription.id %}"
+                                            class="btn btn-sm btn-outline-info">
+                                            <i class="bi bi-eye"></i> Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif request.GET.tenant_id or request.GET.status or request.GET.plan %}
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                No subscriptions found matching your search criteria.
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

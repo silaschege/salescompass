@@ -1,0 +1,50 @@
+<div class="card h-100">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">{{ widget.name }}</h5>
+        <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                    data-bs-toggle="dropdown">
+                <i class="bi bi-gear"></i>
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'reports:widget_edit' widget.pk %}">Edit</a></li>
+                <li><a class="dropdown-item" href="{% url 'reports:widget_delete' widget.pk %}">Delete</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{% url 'reports:export_report' widget.report.pk %}?format=csv">Export CSV</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if widget.widget_type == 'kpi_card' %}
+            <div class="text-center">
+                <h2 class="display-4">{{ widget.data.value }}</h2>
+                <p class="text-muted">{{ widget.data.label }}</p>
+            </div>
+        {% elif widget.widget_type == 'chart' %}
+            <canvas id="chart-{{ widget.pk }}" height="200"></canvas>
+        {% elif widget.widget_type == 'table' %}
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            {% for header in widget.data.headers %}
+                                <th>{{ header }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in widget.data.rows %}
+                            <tr>
+                                {% for cell in row %}
+                                    <td>{{ cell }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% elif widget.widget_type == 'trend' %}
+            <canvas id="trend-{{ widget.pk }}" height="200"></canvas>
+        {% endif %}
+    </div>
+</div>

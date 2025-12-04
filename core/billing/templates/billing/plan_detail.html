@@ -1,0 +1,138 @@
+{% extends 'billing/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-card-list me-2"></i>{{ plan.name }} Plan</h2>
+            <p class="text-muted">Plan details and subscription metrics</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'billing:plan_edit' plan_id=plan.id %}" class="btn btn-primary">
+                <i class="bi bi-pencil me-2"></i>Edit Plan
+            </a>
+            <a href="{% url 'billing:plan_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Plans
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Plan Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Name:</strong> {{ plan.name }}</p>
+                            <p><strong>Tier:</strong> <span class="badge bg-info">{{ plan.get_tier_display }}</span></p>
+                            <p><strong>Status:</strong>
+                                {% if plan.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Monthly Price:</strong> ${{ plan.price_monthly }}</p>
+                            <p><strong>Yearly Price:</strong> ${{ plan.price_yearly }}</p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6>Plan Limits</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-people me-2"></i>Max Users: {{ plan.max_users }}</li>
+                        <li><i class="bi bi-person-badge me-2"></i>Max Leads: {{ plan.max_leads }}</li>
+                        <li><i class="bi bi-hdd me-2"></i>Storage: {{ plan.max_storage_gb }}GB</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Active Subscribers ({{ active_count }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if active_subscriptions %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Tenant ID</th>
+                                    <th>Period Start</th>
+                                    <th>Period End</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sub in active_subscriptions %}
+                                <tr>
+                                    <td>{{ sub.tenant_id }}</td>
+                                    <td>{{ sub.current_period_start|date:"Y-m-d"|default:"N/A" }}</td>
+                                    <td>{{ sub.current_period_end|date:"Y-m-d"|default:"N/A" }}</td>
+                                    <td>
+                                        <a href="{% url 'billing:subscription_detail' subscription_id=sub.id %}"
+                                            class="btn btn-sm btn-outline-primary">View</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No active subscriptions yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Revenue Metrics</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Monthly Revenue</small>
+                        <h4>${{ monthly_revenue|floatformat:2 }}</h4>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Annual Revenue</small>
+                        <h4>${{ annual_revenue|floatformat:2 }}</h4>
+                    </div>
+                    <div>
+                        <small class="text-muted">Subscribers</small>
+                        <h4>{{ total_subscribers }}</h4>
+                        <small>{{ active_count }} active, {{ trial_count }} trial</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Actions</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'billing:plan_toggle_active' plan_id=plan.id %}">
+                        {% csrf_token %}
+                        {% if plan.is_active %}
+                        <button type="submit" class="btn btn-outline-warning w-100 mb-2">
+                            <i class="bi bi-pause-circle me-2"></i>Deactivate Plan
+                        </button>
+                        {% else %}
+                        <button type="submit" class="btn btn-outline-success w-100 mb-2">
+                            <i class="bi bi-play-circle me-2"></i>Activate Plan
+                        </button>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

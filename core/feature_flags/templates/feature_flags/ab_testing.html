@@ -1,0 +1,24 @@
+{% extends "feature_flags/base.html" %}
+
+{% block title %}A/B Testing{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">AB Testing</h1>
+    <p>Flags configured for AB testing (30-70% rollout)</p>
+
+    <div class="card">
+        <div class="card-body">
+            {% for test in ab_tests %}
+            <div class="mb-3">
+                <h5>{{ test.name }}</h5>
+                <p>Variant A: {{ test.rollout_percentage }}% | Variant B: {{ 100|add:test.rollout_percentage|add:"-100"
+                    }}%</p>
+            </div>
+            {% empty %}
+            <p class="text-muted">No AB tests configured.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

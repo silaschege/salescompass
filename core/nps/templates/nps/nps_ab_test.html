@@ -1,0 +1,84 @@
+{% extends "nps/base.html" %}
+
+{% block title %}Create NPS A/B Test - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Create NPS A/B Test</h1>
+        <p class="text-white text-center lead">Test different survey variations to optimize response rates</p>
+    </div>
+</div>
+
+<div class="container">
+    <form method="post">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-8">
+                <!-- A/B Test Configuration -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>A/B Test Configuration</h5>
+                    </div>
+                    <div class="card-body">
+                        {{ form.survey }}
+                        {{ form.name }}
+                        {{ form.is_active }}
+                        {{ form.auto_winner }}
+                        {{ form.min_responses }}
+                        {{ form.confidence_level }}
+                    </div>
+                </div>
+
+                <!-- Variants -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Survey Variants</h5>
+                    </div>
+                    <div class="card-body">
+                        {{ variants.management_form }}
+                        {% for variant_form in variants %}
+                        <div class="variant-section mb-3 p-3 border rounded">
+                            <h6>Variant {{ variant_form.variant.value|default:forloop.counter }}</h6>
+                            {{ variant_form.variant }}
+                            {{ variant_form.question_text }}
+                            {{ variant_form.follow_up_question }}
+                            {{ variant_form.delivery_delay_hours }}
+                            {{ variant_form.assignment_rate }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Help</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>A/B Test Best Practices:</h6>
+                        <ul>
+                            <li>Test one variable at a time</li>
+                            <li>Minimum 100 responses per variant</li>
+                            <li>Run tests for at least 2 weeks</li>
+                            <li>Use 95% confidence level for reliable results</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+            <button type="submit" class="btn btn-primary">Create A/B Test</button>
+            <a href="{% url 'nps:nps_dashboard' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}

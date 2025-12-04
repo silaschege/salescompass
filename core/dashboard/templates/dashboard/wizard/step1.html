@@ -1,0 +1,296 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Create Dashboard - Step 1{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Wizard Progress -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="wizard-progress d-flex justify-content-center align-items-center">
+                <div class="step active">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Choose Template</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Configure</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Arrange</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-grid-3x3-gap me-2"></i>Create Your Dashboard</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" id="wizardStep1Form">
+                        {% csrf_token %}
+
+                        <!-- Dashboard Name -->
+                        <div class="mb-4">
+                            <label for="dashboard_name" class="form-label fw-bold fs-5">
+                                <i class="bi bi-pencil me-2"></i>Dashboard Name
+                            </label>
+                            <input type="text" class="form-control form-control-lg" id="dashboard_name"
+                                name="dashboard_name" placeholder="e.g., Sales Performance Dashboard"
+                                value="{{ wizard_data.dashboard_name|default:'' }}" required>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Preset Templates -->
+                        <div class="mb-4">
+                            <h5 class="fw-bold mb-3">
+                                <i class="bi bi-layout-text-window-reverse me-2"></i>Choose a Template
+                            </h5>
+                            <p class="text-muted">Select a preset template or start from scratch</p>
+
+                            <div class="row g-3">
+                                {% for template in preset_templates %}
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="template-card card h-100 border-2" data-template-id="{{ template.id }}"
+                                        data-modules='{{ template.modules|safe }}'>
+                                        <div class="card-body text-center">
+                                            <div class="template-icon mb-3">
+                                                <i class="bi {{ template.icon }} fs-1 text-primary"></i>
+                                            </div>
+                                            <h6 class="card-title fw-bold">{{ template.name }}</h6>
+                                            <p class="card-text small text-muted">{{ template.description }}</p>
+
+                                            {% if template.modules %}
+                                            <div class="mt-2">
+                                                <small class="text-muted">Includes:</small>
+                                                <div class="d-flex flex-wrap gap-1 justify-content-center mt-1">
+                                                    {% for module in template.modules %}
+                                                    <span class="badge bg-secondary">{{ module }}</span>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="card-footer bg-transparent border-0 text-center pb-3">
+                                            <button type="button"
+                                                class="btn btn-outline-primary btn-sm select-template-btn">
+                                                Select Template
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="template_id" id="template_id" value="blank">
+
+                        <hr class="my-4">
+
+                        <!-- Module Selection -->
+                        <div class="mb-4">
+                            <h5 class="fw-bold mb-3">
+                                <i class="bi bi-puzzle me-2"></i>Select Modules
+                            </h5>
+                            <p class="text-muted">Choose which modules to include in your dashboard</p>
+
+                            <div class="row g-3" id="moduleSelection">
+                                {% for widget in available_modules %}
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="form-check module-checkbox">
+                                        <input class="form-check-input" type="checkbox" name="modules"
+                                            value="{{ widget.widget_type }}" id="module_{{ widget.widget_type }}">
+                                        <label class="form-check-label w-100" for="module_{{ widget.widget_type }}">
+                                            <div class="card h-100 module-card">
+                                                <div class="card-body text-center p-3">
+                                                    <i class="bi {{ widget.icon }} fs-3 text-primary mb-2"></i>
+                                                    <h6 class="mb-1">{{ widget.name }}</h6>
+                                                    <small class="text-muted">{{ widget.get_category_display }}</small>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Navigation Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'dashboard:cockpit' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg" id="nextBtn">
+                                Next Step <i class="bi bi-arrow-right ms-1"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Wizard Progress */
+    .wizard-progress {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .wizard-progress .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+    }
+
+    .wizard-progress .step-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #e9ecef;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s;
+    }
+
+    .wizard-progress .step.active .step-circle {
+        background: #0d6efd;
+        color: white;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.2);
+    }
+
+    .wizard-progress .step.completed .step-circle {
+        background: #198754;
+        color: white;
+    }
+
+    .wizard-progress .step-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .wizard-progress .step.active .step-label {
+        color: #0d6efd;
+        font-weight: 600;
+    }
+
+    .wizard-progress .step-line {
+        width: 100px;
+        height: 2px;
+        background: #e9ecef;
+        margin: 0 1rem;
+        align-self: flex-start;
+        margin-top: 24px;
+    }
+
+    /* Template Cards */
+    .template-card {
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .template-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .template-card.selected {
+        border-color: #0d6efd !important;
+        background: #f0f7ff;
+    }
+
+    .template-card.selected .select-template-btn {
+        background: #0d6efd;
+        color: white;
+    }
+
+    /* Module Cards */
+    .module-checkbox {
+        margin-bottom: 0;
+    }
+
+    .module-checkbox input[type="checkbox"] {
+        display: none;
+    }
+
+    .module-card {
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 2px solid #dee2e6;
+    }
+
+    .module-card:hover {
+        border-color: #0d6efd;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .module-checkbox input[type="checkbox"]:checked+label .module-card {
+        border-color: #0d6efd;
+        background: #f0f7ff;
+    }
+
+    .module-checkbox input[type="checkbox"]:checked+label .module-card i {
+        color: #0d6efd !important;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const templateCards = document.querySelectorAll('.template-card');
+        const templateIdInput = document.getElementById('template_id');
+        const moduleCheckboxes = document.querySelectorAll('input[name="modules"]');
+        const form = document.getElementById('wizardStep1Form');
+
+        // Template selection
+        templateCards.forEach(card => {
+            card.querySelector('.select-template-btn').addEventListener('click', function (e) {
+                e.preventDefault();
+
+                // Remove selected class from all cards
+                templateCards.forEach(c => c.classList.remove('selected'));
+
+                // Add selected class to clicked card
+                card.classList.add('selected');
+
+                // Set template ID
+                const templateId = card.dataset.templateId;
+                templateIdInput.value = templateId;
+
+                // Auto-select modules for this template
+                const modules = JSON.parse(card.dataset.modules || '[]');
+                moduleCheckboxes.forEach(checkbox => {
+                    checkbox.checked = modules.includes(checkbox.value);
+                });
+            });
+        });
+
+        // Form validation
+        form.addEventListener('submit', function (e) {
+            const checkedModules = Array.from(moduleCheckboxes).filter(cb => cb.checked);
+
+            if (checkedModules.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one module for your dashboard.');
+                return false;
+            }
+        });
+    });
+</script>
+{% endblock %}

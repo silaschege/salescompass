@@ -1,0 +1,182 @@
+{% extends "marketing/base.html" %}
+
+{% block title %}{{ performance.campaign.name }} Performance - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">{{ performance.campaign.name }} Performance</h1>
+        <p class="text-white text-center lead">Detailed performance metrics for {{ performance.date }}</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Performance Metrics -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Performance Metrics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <strong>Campaign:</strong>
+                                <a href="{% url 'marketing:detail' performance.campaign.pk %}">
+                                    {{ performance.campaign.name }}
+                                </a>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Date:</strong> {{ performance.date }}
+                            </div>
+                            <div class="mb-3">
+                                <strong>Total Sent:</strong> {{ performance.total_sent|intcomma }}
+                            </div>
+                            <div class="mb-3">
+                                <strong>Total Opened:</strong> {{ performance.total_opened|intcomma }}
+                            </div>
+                            <div class="mb-3">
+                                <strong>Total Clicked:</strong> {{ performance.total_clicked|intcomma }}
+                            </div>
+                            <div class="mb-3">
+                                <strong>Total Conversions:</strong> {{ performance.total_conversions|intcomma }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <strong>Open Rate:</strong> {{ performance.open_rate|floatformat:2 }}%
+                            </div>
+                            <div class="mb-3">
+                                <strong>Click Rate:</strong> {{ performance.click_rate|floatformat:2 }}%
+                            </div>
+                            <div class="mb-3">
+                                <strong>Conversion Rate:</strong> {{ performance.conversion_rate|floatformat:2 }}%
+                            </div>
+                            <div class="mb-3">
+                                <strong>Revenue Generated:</strong> ${{ performance.revenue_generated|intcomma }}
+                            </div>
+                            <div class="mb-3">
+                                <strong>Created:</strong> {{ performance.created_at|date:"M d, Y H:i" }}
+                            </div>
+                            <div class="mb-3">
+                                <strong>Updated:</strong> {{ performance.updated_at|date:"M d, Y H:i" }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Analysis -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Performance Analysis</h5>
+                </div>
+                <div class="card-body">
+                    {% if performance.open_rate > 25 %}
+                        <div class="alert alert-success">
+                            <strong>Excellent Open Rate!</strong> Your open rate of {{ performance.open_rate|floatformat:2 }}% is well above the industry average of 21%.
+                        </div>
+                    {% elif performance.open_rate > 15 %}
+                        <div class="alert alert-warning">
+                            <strong>Good Open Rate.</strong> Your open rate of {{ performance.open_rate|floatformat:2 }}% is above average. Consider A/B testing subject lines for improvement.
+                        </div>
+                    {% else %}
+                        <div class="alert alert-danger">
+                            <strong>Low Open Rate.</strong> Your open rate of {{ performance.open_rate|floatformat:2 }}% is below average. Review your subject lines and sender reputation.
+                        </div>
+                    {% endif %}
+
+                    {% if performance.click_rate > 3 %}
+                        <div class="alert alert-success">
+                            <strong>Excellent CTR!</strong> Your click-through rate of {{ performance.click_rate|floatformat:2 }}% is well above the industry average of 2.6%.
+                        </div>
+                    {% elif performance.click_rate > 1.5 %}
+                        <div class="alert alert-warning">
+                            <strong>Good CTR.</strong> Your click-through rate of {{ performance.click_rate|floatformat:2 }}% is above average. Consider optimizing your call-to-action buttons.
+                        </div>
+                    {% else %}
+                        <div class="alert alert-danger">
+                            <strong>Low CTR.</strong> Your click-through rate of {{ performance.click_rate|floatformat:2 }}% is below average. Review your email content and link placement.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'marketing:performance_update' performance.pk %}" class="btn btn-outline-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil me-1" viewBox="0 0 16 16">
+                                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5z"/>
+                            </svg>
+                            Edit Record
+                        </a>
+                        <a href="{% url 'marketing:performance_list' %}" class="btn btn-outline-secondary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                            </svg>
+                            Back to List
+                        </a>
+                        <form method="post" action="{% url 'marketing:performance_delete' performance.pk %}" onsubmit="return confirm('Are you sure you want to delete this performance record?')">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash me-1" viewBox="0 0 16 16">
+                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                </svg>
+                                Delete Record
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campaign Info -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Campaign Info</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Status:</strong>
+                        {% if performance.campaign.status == 'sent' %}
+                            <span class="badge bg-success">Sent</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ performance.campaign.get_status_display }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Owner:</strong>
+                        {% if performance.campaign.owner %}
+                            {{ performance.campaign.owner.email }}
+                        {% else %}
+                            <span class="text-muted">Unassigned</span>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Send Date:</strong>
+                        {% if performance.campaign.send_date %}
+                            {{ performance.campaign.send_date|date:"M d, Y H:i" }}
+                        {% else %}
+                            <span class="text-muted">Not scheduled</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}

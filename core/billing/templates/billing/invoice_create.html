@@ -1,0 +1,38 @@
+{% extends 'billing/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-plus-circle me-2"></i>Create Invoice</h2>
+            <p class="text-muted">Generate a new invoice for a subscription</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Select Subscription</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="subscription_id" class="form-label">Subscription</label>
+                    <select name="subscription_id" id="subscription_id" class="form-select" required>
+                        <option value="">-- Select Subscription --</option>
+                        {% for sub in subscriptions %}
+                        <option value="{{ sub.id }}">
+                            {{ sub.tenant_id }} - {{ sub.plan.name }} (${{ sub.plan.price_monthly }}/month)
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-2"></i>Create Invoice
+                </button>
+                <a href="{% url 'billing:invoice_list' %}" class="btn btn-outline-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

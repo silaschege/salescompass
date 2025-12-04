@@ -1,0 +1,58 @@
+{% extends "marketing/base.html" %}
+
+{% block title %}{{ campaign.name }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>{{ campaign.name }}</h2>
+        <div>
+            <a href="{% url 'marketing:update' campaign.pk %}" class="btn btn-primary">Edit</a>
+            <a href="{% url 'marketing:list' %}" class="btn btn-secondary">Back to List</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Campaign Details</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Status:</strong> <span class="badge bg-{{ campaign.status }}">{{
+                            campaign.get_status_display }}</span></p>
+                    <p><strong>Type:</strong> {{ campaign.get_campaign_type_display }}</p>
+                    <p><strong>Owner:</strong> {{ campaign.owner.get_full_name|default:campaign.owner.email }}</p>
+                    <p><strong>Created:</strong> {{ campaign.created_at|date:"M d, Y" }}</p>
+                    {% if campaign.send_date %}
+                    <p><strong>Scheduled for:</strong> {{ campaign.send_date|date:"M d, Y g:i A" }}</p>
+                    {% endif %}
+                    {% if campaign.description %}
+                    <p><strong>Description:</strong> {{ campaign.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    {% if campaign.status == 'draft' %}
+                    <form method="post" action="{% url 'marketing:send_campaign' campaign.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success w-100 mb-2">Send Campaign</button>
+                    </form>
+                    {% endif %}
+                    <a href="{% url 'marketing:recipient_list' campaign.pk %}"
+                        class="btn btn-outline-primary w-100 mb-2">View Recipients</a>
+                    <a href="{% url 'marketing:delete' campaign.pk %}" class="btn btn-outline-danger w-100">Delete
+                        Campaign</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

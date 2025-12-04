@@ -1,0 +1,152 @@
+{% extends "audit_logs/base.html" %}
+
+{% block title %}Audit Log Detail - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Audit Log Detail</h1>
+        <a href="{% url 'audit_logs:log_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Logs
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="30%">Timestamp:</th>
+                            <td>{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+                        </tr>
+                        <tr>
+                            <th>User Email:</th>
+                            <td>{{ log.user_email }}</td>
+                        </tr>
+                        <tr>
+                            <th>User ID:</th>
+                            <td>{{ log.user_id|default:"N/A" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Tenant ID:</th>
+                            <td>{{ log.tenant_id }}</td>
+                        </tr>
+                        <tr>
+                            <th>Severity:</th>
+                            <td>
+                                {% if log.severity == 'critical' %}
+                                <span class="badge bg-danger">Critical</span>
+                                {% elif log.severity == 'error' %}
+                                <span class="badge bg-warning">Error</span>
+                                {% elif log.severity == 'warning' %}
+                                <span class="badge bg-info">Warning</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Info</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Action Details</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="30%">Action Type:</th>
+                            <td><code>{{ log.action_type }}</code></td>
+                        </tr>
+                        <tr>
+                            <th>Resource Type:</th>
+                            <td>{{ log.resource_type }}</td>
+                        </tr>
+                        <tr>
+                            <th>Resource ID:</th>
+                            <td>{{ log.resource_id|default:"N/A" }}</td>
+                        </tr>
+                        <tr>
+                            <th>IP Address:</th>
+                            <td>{{ log.ip_address }}</td>
+                        </tr>
+                        <tr>
+                            <th>User Agent:</th>
+                            <td><small>{{ log.user_agent|default:"N/A" }}</small></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Description</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ log.description }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if log.state_before or log.state_after %}
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">State Before</h5>
+                </div>
+                <div class="card-body">
+                    {% if log.state_before %}
+                    <pre
+                        class="bg-light p-3 rounded"><code>{{ log.state_before|json_script:"state-before" }}</code></pre>
+                    {% else %}
+                    <p class="text-muted">No state recorded</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">State After</h5>
+                </div>
+                <div class="card-body">
+                    {% if log.state_after %}
+                    <pre class="bg-light p-3 rounded"><code>{{ log.state_after|json_script:"state-after" }}</code></pre>
+                    {% else %}
+                    <p class="text-muted">No state recorded</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if log.metadata %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Additional Metadata</h5>
+                </div>
+                <div class="card-body">
+                    <pre class="bg-light p-3 rounded"><code>{{ log.metadata|json_script:"metadata" }}</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

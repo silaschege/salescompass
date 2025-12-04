@@ -1,0 +1,29 @@
+<div class="kanban-card card mb-2 shadow-sm" data-account-id="{{ account.id }}" draggable="true">
+    <div class="card-body p-2">
+        <div class="d-flex justify-content-between align-items-start">
+            <h6 class="card-title mb-1">
+                <a href="{% url 'accounts:detail' account.pk %}" class="text-decoration-none">
+                    {{ account.name }}
+                </a>
+            </h6>
+            <span class="health-badge 
+                {% if account.health_score >= 70 %}health-high
+                {% elif account.health_score >= 40 %}health-medium
+                {% else %}health-low{% endif %}">
+                {{ account.health_score|floatformat:0 }}
+            </span>
+        </div>
+        <p class="card-text small mb-1">
+            <span class="badge bg-primary">{{ account.get_tier_display }}</span>
+            {{ account.get_industry_display }}
+        </p>
+        <p class="card-text small mb-1">
+            Owner: {{ account.owner.email|default:"Unassigned" }}
+        </p>
+        {% if account.esg_engagement != 'low' %}
+            <span class="badge bg-success">
+                🌱 {{ account.get_esg_engagement_display }}
+            </span>
+        {% endif %}
+    </div>
+</div>

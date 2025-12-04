@@ -1,0 +1,328 @@
+from typing import Any, Type
+from django.db import models
+from core.models import User
+
+class ObjectPermissionPolicy:
+    """
+    Base class for defining object-level access rules.
+    
+    Subclass per model to define:
+      - can_view(user, obj)
+      - can_change(user, obj)
+      - can_delete(user, obj)
+      - get_viewable_queryset(user, queryset)
+    """
+    
+    @classmethod
+    def can_view(cls, user: User, obj: Any) -> bool:
+        """Return True if user can view this object."""
+        raise NotImplementedError
+
+    @classmethod
+    def can_change(cls, user: User, obj: Any) -> bool:
+        """Return True if user can edit this object."""
+        return cls.can_view(user, obj)  # by default, view implies edit for many models
+
+    @classmethod
+    def can_delete(cls, user: User, obj: Any) -> bool:
+        """Return True if user can delete this object."""
+        return cls.can_change(user, obj)
+
+    @classmethod
+    def get_viewable_queryset(cls, user: User, queryset: models.QuerySet) -> models.QuerySet:
+        """
+        Return filtered queryset of objects the user can view.
+        Must be efficient (use Q objects, not Python loops).
+        """
+        # 1. Superuser sees all
+        if user.is_superuser:
+            return queryset
+            
+        # 2. Enforce Tenant Isolation
+        if hasattr(user, 'tenant_id') and user.tenant_id:
+            # Ensure model has tenant_id field (or handle gracefully)
+            # We assume most models here are TenantModels
+            if hasattr(queryset.model, 'tenant_id'):
+                queryset = queryset.filter(tenant_id=user.tenant_id)
+        
+        return cls._get_policy_queryset(user, queryset)
+
+    @classmethod
+    def _get_policy_queryset(cls, user: User, queryset: models.QuerySet) -> models.QuerySet:
+        """
+        Subclasses implement specific logic here (after tenant filter).
+        """
+        raise NotImplementedError
+
+class AccountObjectPolicy(ObjectPermissionPolicy):
+    """
+    Object-level permission policy for Account model.
+    """
+    @classmethod
+    def can_view(cls, user: User, obj: Any) -> bool:
+        if user.is_superuser:
+            return True
+        if user.has_perm('accounts:*'):
+            return True
+        # Owner can view their accounts
+        if obj.owner == user:
+            return True
+        return False
+    @classmethod
+    def _get_policy_queryset(cls, user: User, queryset: models.QuerySet) -> models.QuerySet:
+        if user.has_perm('accounts:*'):
+            return queryset
+        # Return only accounts owned by the user
+        return queryset.filter(owner=user)
+
+
+
+class LeadsObjectPolicy(ObjectPermissionPolicy):
+    """
+    Object-level permission policy for Leads model.
+    """
+    @classmethod
+    def can_view(cls, user: User, obj: Any) -> bool:
+        if user.is_superuser:
+            return True
+        if user.has_perm('leads:*'):
+            return True
+        # Owner can view their leads
+        if obj.owner == user:
+            return True
+        return False
+    @classmethod
+    def _get_policy_queryset(cls, user: User, queryset: models.QuerySet) -> models.QuerySet:
+        if user.has_perm('leads:*'):
+            return queryset
+        # Return only leads owned by the user
+        return queryset.filter(owner=user)
+
+class ProductsObjectPolicy(ObjectPermissionPolicy):
+    """
+    Object-level permission policy for Products model.
+    """
+    @classmethod
+    def can_view(cls, user: User, obj: Any) -> bool:
+        if user.is_superuser:
+            return True
+        if user.has_perm('products:*'):
+            return True
+        # Owner can view their products
+        if obj.owner == user:
+            return True
+        return False
+    @classmethod
+    def _get_policy_queryset(cls, user: User, queryset: models.QuerySet) -> models.QuerySet:
+        if user.has_perm('products:*'):
+            return queryset
+        # Return only product owned by the user
+        return queryset.filter(owner=user)
+
+class OpportunitiesObjectPolicy(ObjectPermissionPolicy):
+    """
+    Object-level permission policy for opportunities model.
+    """
+    @classmethod
+    def can_view(cls, user: User, obj: Any) -> bool:
+        if user.is_superuser:
+            return True
+        if user.has_perm('opportunities:*'):
+            return True
+        # Owner can view their opportunities
+        if obj.owner == user:
+            return True
+        return False
+    @classmethod
+    def _get_policy_queryset(cls, user: User, queryset: models.QuerySet) -> models.QuerySet:
+        if user.has_perm('opportunities:*'):
+            return queryset
+        # Return only opportunities owned by the user
+        return queryset.filter(owner=user)
+
+# Add the Opportunity policy here
+class OpportunityObjectPolicy(ObjectPermissionPolicy):
+    """
+    Object-level permission policy for opportunities model.
+    """
+    @classmethod
+    def can_view(cls, user: User, obj: Any) -> bool:
+        if user.is_superuser:
+            return True
+        if user.has_perm('opportunities:*'):
+            return True
+        # Owner can view their opportunities
+        if obj.owner == user:
+            return True
+        # Account owner can view opportunities for their accounts
+        if hasattr(obj, 'account') and obj.account.owner == user:
+            return True
+        return False
+    
+    @classmethod
+    def _get_policy_queryset(cls, user: User, queryset: models.QuerySet) -> models.QuerySet:
+        if user.has_perm('opportunities:*'):
+            return queryset
+        # Return opportunities owned by user OR opportunities for accounts owned by user
+        return queryset.filter(
+            models.Q(owner=user) | 
+            models.Q(account__owner=user)
+        )
+
+class ProposalObjectPolicy(ObjectPermissionPolicy):
+    """
+    Object-level permission policy for proposals model.
+    """
+    @classmethod
+    def can_view(cls, user: User, obj: Any) -> bool:
+        if user.is_superuser:
+            return True
+        if user.has_perm('proposals:*'):
+            return True
+        # Sent by user can view their proposals
+        if obj.sent_by == user:
+            return True
+        # Owner of related opportunity can view proposals
+        if hasattr(obj, 'opportunity') and hasattr(obj.opportunity, 'owner') and obj.opportunity.owner == user:
+            return True
+        return False
+    @classmethod
+    def _get_policy_queryset(cls, user: User, queryset: models.QuerySet) -> models.QuerySet:
+        if user.has_perm('proposals:*'):
+            return queryset
+        # Return only proposals sent by the user or for opportunities they own
+        return queryset.filter(
+            models.Q(sent_by=user) | 
+            models.Q(opportunity__owner=user)
+        )
+
+class CaseObjectPolicy(ObjectPermissionPolicy):
+    """
+    Object-level permission policy for cases model.
+    """
+    @classmethod
+    def can_view(cls, user: User, obj: Any) -> bool:
+        if user.is_superuser:
+            return True
+        if user.has_perm('cases:*'):
+            return True
+        # Owner can view their cases
+        if obj.owner == user:
+            return True
+        return False
+    @classmethod
+    def _get_policy_queryset(cls, user: User, queryset: models.QuerySet) -> models.QuerySet:
+        if user.has_perm('cases:*'):
+            return queryset
+        # Return only cases owned by the user
+        return queryset.filter(owner=user)
+
+class MarketingCampaignObjectPolicy(ObjectPermissionPolicy):
+    """ 
+    Object-level permission policy for marketing model.
+    """
+    @classmethod
+    def can_view(cls, user: User, obj: Any) -> bool:
+        if user.is_superuser:
+            return True
+        if user.has_perm('marketing:*'):
+            return True
+        # Owner can view their marketing
+        if obj.owner == user:
+            return True
+        return False
+    @classmethod
+    def _get_policy_queryset(cls, user: User, queryset: models.QuerySet) -> models.QuerySet:
+        if user.has_perm('marketing:*'):
+            return queryset
+        # Return only marketing owned by the user
+        return queryset.filter(owner=user)
+
+class TeamObjectPolicy(ObjectPermissionPolicy):
+    """ 
+    Object-level permission policy for teamMember model.
+    """
+    @classmethod
+    def can_view(cls, user: User, obj: Any) -> bool:
+        if user.is_superuser:
+            return True
+        if user.has_perm('teamMember:*'):
+            return True
+        # Owner can view their teamMember
+        if obj.owner == user:
+            return True
+        return False
+    @classmethod
+    def _get_policy_queryset(cls, user: User, queryset: models.QuerySet) -> models.QuerySet:
+        if user.has_perm('teamMember:*'):
+            return queryset
+        # Return only teamMember owned by the user
+        return queryset.filter(owner=user)
+
+class LearnObjectPolicy(ObjectPermissionPolicy):
+    """ 
+    Object-level permission policy for article model.
+    """
+    @classmethod
+    def can_view(cls, user: User, obj: Any) -> bool:
+        if user.is_superuser:
+            return True
+        if user.has_perm('article:*'):
+            return True
+        # Public articles can be viewed by anyone
+        if obj.is_public:
+            return True
+        # Author can view their article
+        if obj.author == user:
+            return True
+        return False
+    @classmethod
+    def _get_policy_queryset(cls, user: User, queryset: models.QuerySet) -> models.QuerySet:
+        if user.has_perm('article:*'):
+            return queryset
+        # Return public articles or articles authored by the user
+        return queryset.filter(
+            models.Q(is_public=True) | 
+            models.Q(author=user)
+        )
+
+
+
+class ContactObjectPolicy(ObjectPermissionPolicy):
+    """
+    Object-level permission policy for Contact model.
+    """
+    @classmethod
+    def can_view(cls, user: User, obj: Any) -> bool:
+        if user.is_superuser:
+            return True
+        if user.has_perm('accounts:*'):
+            return True
+        # Owner of the account can view contacts
+        if obj.account.owner == user:
+            return True
+        return False
+
+    @classmethod
+    def _get_policy_queryset(cls, user: User, queryset: models.QuerySet) -> models.QuerySet:
+        if user.has_perm('accounts:*'):
+            return queryset
+        # Return contacts for accounts owned by the user
+        return queryset.filter(account__owner=user)
+
+
+# Registry for easy lookup
+OBJECT_POLICIES = {
+    'accounts.Account': AccountObjectPolicy,
+    'accounts.Contact': ContactObjectPolicy,
+    'leads.Lead': LeadsObjectPolicy,
+    'leads.WebToLeadForm': LeadsObjectPolicy,
+    'products.Product': ProductsObjectPolicy,
+    'opportunities.Opportunity': OpportunitiesObjectPolicy,
+    'opportunities.Opportunity': OpportunityObjectPolicy,
+    'proposals.Proposal': ProposalObjectPolicy,
+    'cases.Case': CaseObjectPolicy,
+    'marketing.MarketingCampaign': MarketingCampaignObjectPolicy,
+    'team.TeamMember': TeamObjectPolicy,
+    'learn.Article': LearnObjectPolicy,
+}

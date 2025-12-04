@@ -1,0 +1,71 @@
+{% extends "feature_flags/base.html" %}
+
+{% block title %}Feature Flags - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Feature Flags</h1>
+        <a href="{% url 'feature_flags:flag_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Create New Flag
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Key</th>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Rollout %</th>
+                            <th>Targets</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for flag in flags %}
+                        <tr>
+                            <td><code>{{ flag.key }}</code></td>
+                            <td>{{ flag.name }}</td>
+                            <td>
+                                {% if flag.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Disabled</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar" role="progressbar"
+                                        style="width: {{ flag.rollout_percentage }}%">
+                                        {{ flag.rollout_percentage }}%
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ flag.targets.count }}</td>
+                            <td>
+                                <a href="{% url 'feature_flags:flag_detail' flag.pk %}"
+                                    class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                <a href="{% url 'feature_flags:flag_update' flag.pk %}"
+                                    class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">No feature flags found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

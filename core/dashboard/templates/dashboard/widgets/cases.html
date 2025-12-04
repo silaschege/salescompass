@@ -1,0 +1,39 @@
+<div class="card h-100">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Support Cases</h5>
+        <span class="badge bg-secondary">{{ total_open }} Open</span>
+    </div>
+    <div class="card-body">
+        {% if by_priority %}
+        <div class="d-flex flex-column gap-3">
+            {% for item in by_priority %}
+            <div>
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="text-capitalize">
+                        {% if item.priority == 'critical' %}
+                        <i class="bi bi-exclamation-circle-fill text-danger me-1"></i>
+                        {% elif item.priority == 'high' %}
+                        <i class="bi bi-arrow-up-circle-fill text-warning me-1"></i>
+                        {% else %}
+                        <i class="bi bi-circle text-info me-1"></i>
+                        {% endif %}
+                        {{ item.priority }}
+                    </span>
+                    <span class="fw-bold">{{ item.count }}</span>
+                </div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar {% if item.priority == 'critical' %}bg-danger{% elif item.priority == 'high' %}bg-warning{% else %}bg-info{% endif %}"
+                        role="progressbar" style="width: {% widthratio item.count total_open 100 %}%">
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-4">
+            <i class="bi bi-check-circle fs-1 mb-2"></i>
+            <p>No open cases</p>
+        </div>
+        {% endif %}
+    </div>
+</div>

@@ -1,0 +1,40 @@
+{% extends "settings_app/base.html" %}
+
+{% block title %}CRM Settings - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">CRM Settings</h1>
+        <p class="text-white text-center lead">Configure pipeline stages, ESG thresholds, and automation rules</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        {% for group in groups %}
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5>{{ group.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">{{ group.description }}</p>
+                    <div class="list-group list-group-flush">
+                        {% for setting in group.settings.all %}
+                        <a href="{% url 'settings_app:update' setting.pk %}"
+                            class="list-group-item list-group-item-action">
+                            {{ setting.name }}
+                            {% if not setting.is_active %}
+                            <span class="badge bg-secondary">Disabled</span>
+                            {% endif %}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "infrastructure/base.html" %}
+
+{% block title %}System Health - Infrastructure{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">System Health Monitoring</h1>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">CPU Usage</h5>
+                    <div class="display-4 my-3">{{ cpu_usage }}%</div>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar {% if cpu_usage > 80 %}bg-danger{% elif cpu_usage > 50 %}bg-warning{% else %}bg-success{% endif %}"
+                            role="progressbar" style="width: {{ cpu_usage }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Memory Usage</h5>
+                    <div class="display-4 my-3">{{ memory_usage }}%</div>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar {% if memory_usage > 80 %}bg-danger{% elif memory_usage > 50 %}bg-warning{% else %}bg-success{% endif %}"
+                            role="progressbar" style="width: {{ memory_usage }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Disk Usage</h5>
+                    <div class="display-4 my-3">{{ disk_usage }}%</div>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar {% if disk_usage > 80 %}bg-danger{% elif disk_usage > 50 %}bg-warning{% else %}bg-success{% endif %}"
+                            role="progressbar" style="width: {{ disk_usage }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">Service Status</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Status</th>
+                            <th>Uptime</th>
+                            <th>Last Check</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Database</td>
+                            <td><span class="badge bg-success">Operational</span></td>
+                            <td>99.9%</td>
+                            <td>Just now</td>
+                        </tr>
+                        <tr>
+                            <td>Cache (Redis)</td>
+                            <td><span class="badge bg-success">Operational</span></td>
+                            <td>99.9%</td>
+                            <td>Just now</td>
+                        </tr>
+                        <tr>
+                            <td>Celery Workers</td>
+                            <td><span class="badge bg-success">Operational</span></td>
+                            <td>99.8%</td>
+                            <td>1 min ago</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

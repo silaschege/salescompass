@@ -1,0 +1,86 @@
+{% extends "billing/base.html" %}
+
+{% block title %}Add Payment Method - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-1">Add Payment Method</h2>
+            <p class="text-muted">Add a new payment method for your subscription billing</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 col-xl-6">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label for="provider" class="form-label">Payment Provider</label>
+                            <select name="provider" id="provider" class="form-select" required>
+                                <option value="">Select a provider...</option>
+                                {% for provider in available_providers %}
+                                <option value="{{ provider.name }}">{{ provider.display_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="form-text text-muted">Choose your preferred payment provider</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="type" class="form-label">Payment Type</label>
+                            <select name="type" id="type" class="form-select" required>
+                                <option value="">Select type...</option>
+                                <option value="card">Credit/Debit Card</option>
+                                <option value="mobile_money">Mobile Money</option>
+                                <option value="bank_account">Bank Account</option>
+                                <option value="wallet">Digital Wallet</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="display_info" class="form-label">Display Information</label>
+                            <input type="text" name="display_info" id="display_info" class="form-control"
+                                placeholder="e.g., **** 4242 or +254 *** 1234" required>
+                            <small class="form-text text-muted">Masked information for display purposes</small>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Note:</strong> This is a simplified form. In production, you would use the
+                            provider's SDK
+                            (e.g., Stripe Elements, M-Pesa STK Push) to securely collect and tokenize payment
+                            information.
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-2"></i>Add Payment Method
+                            </button>
+                            <a href="{% url 'billing:payment_method_list' %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Security Information</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Your payment information is encrypted and stored securely</li>
+                        <li>We never store your full card number or CVV</li>
+                        <li>Payment processing is handled by certified providers</li>
+                        <li>You can remove payment methods at any time</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

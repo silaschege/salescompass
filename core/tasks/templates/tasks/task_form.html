@@ -1,0 +1,378 @@
+{% extends "tasks/base.html" %}
+
+{% block title %}{% if object %}Edit {{ object.title }}{% else %}New Task{% endif %} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">{% if object %}Edit Task{% else %}Create New Task{% endif %}</h1>
+        <p class="text-white text-center lead">
+            {% if object %}Update task details{% else %}Create a new task for your team{% endif %}
+        </p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data" id="task-form">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <!-- Title -->
+                                <div class="mb-4">
+                                    <label for="{{ form.title.id_for_label }}" class="form-label fw-bold text-primary">
+                                        Task Title <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.title }}
+                                    {% if form.title.errors %}
+                                        <div class="text-danger mt-1">{{ form.title.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Description -->
+                                <div class="mb-4">
+                                    <label for="{{ form.description.id_for_label }}" class="form-label fw-bold text-primary">
+                                        Description
+                                    </label>
+                                    {{ form.description }}
+                                    {% if form.description.errors %}
+                                        <div class="text-danger mt-1">{{ form.description.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Assigned To -->
+                                <div class="mb-4">
+                                    <label for="{{ form.assigned_to.id_for_label }}" class="form-label fw-bold text-primary">
+                                        Assigned To
+                                    </label>
+                                    {{ form.assigned_to }}
+                                    {% if form.assigned_to.errors %}
+                                        <div class="text-danger mt-1">{{ form.assigned_to.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Task Type -->
+                                <div class="mb-4">
+                                    <label for="{{ form.task_type.id_for_label }}" class="form-label fw-bold text-primary">
+                                        Task Type <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.task_type }}
+                                    {% if form.task_type.errors %}
+                                        <div class="text-danger mt-1">{{ form.task_type.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Priority -->
+                                <div class="mb-4">
+                                    <label for="{{ form.priority.id_for_label }}" class="form-label fw-bold text-primary">
+                                        Priority
+                                    </label>
+                                    {{ form.priority }}
+                                    {% if form.priority.errors %}
+                                        <div class="text-danger mt-1">{{ form.priority.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <!-- Due Date -->
+                                <div class="mb-4">
+                                    <label for="{{ form.due_date.id_for_label }}" class="form-label fw-bold text-primary">
+                                        Due Date <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.due_date }}
+                                    {% if form.due_date.errors %}
+                                        <div class="text-danger mt-1">{{ form.due_date.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Estimated Hours -->
+                                <div class="mb-4">
+                                    <label for="{{ form.estimated_hours.id_for_label }}" class="form-label fw-bold text-primary">
+                                        Estimated Hours
+                                    </label>
+                                    {{ form.estimated_hours }}
+                                    {% if form.estimated_hours.errors %}
+                                        <div class="text-danger mt-1">{{ form.estimated_hours.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Tags -->
+                                <div class="mb-4">
+                                    <label for="{{ form.tags.id_for_label }}" class="form-label fw-bold text-primary">
+                                        Tags
+                                    </label>
+                                    {{ form.tags }}
+                                    {% if form.tags.errors %}
+                                        <div class="text-danger mt-1">{{ form.tags.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text text-muted small">
+                                        Comma-separated tags (e.g., sales, urgent, follow-up)
+                                    </div>
+                                </div>
+
+                                <!-- Related Object Selection -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold text-primary">Related To</label>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            {{ form.account }}
+                                            <div class="form-text text-muted small">Account</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            {{ form.opportunity }}
+                                            <div class="form-text text-muted small">Opportunity</div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-md-6">
+                                            {{ form.related_lead }}
+                                            <div class="form-text text-muted small">Lead</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            {{ form.case }}
+                                            <div class="form-text text-muted small">Case</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Reminder Settings -->
+                                <div class="mb-4">
+                                    <div class="form-check mb-2">
+                                        {{ form.reminder_enabled }}
+                                        <label class="form-check-label fw-bold text-primary" for="{{ form.reminder_enabled.id_for_label }}">
+                                            Enable Reminder
+                                        </label>
+                                    </div>
+                                    {% if form.reminder_enabled.errors %}
+                                        <div class="text-danger mt-1">{{ form.reminder_enabled.errors }}</div>
+                                    {% endif %}
+                                    
+                                    <div id="reminder-settings" class="{% if not form.reminder_enabled.value %}d-none{% endif %}">
+                                        <div class="input-group">
+                                            {{ form.reminder_time }}
+                                            <span class="input-group-text">minutes before due</span>
+                                        </div>
+                                        {% if form.reminder_time.errors %}
+                                            <div class="text-danger mt-1">{{ form.reminder_time.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recurrence Settings -->
+                        <div class="mb-4">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="id_is_recurring" name="is_recurring" {% if form.is_recurring.value %}checked{% endif %}>
+                                <label class="form-check-label fw-bold text-primary" for="id_is_recurring">
+                                    Recurring Task
+                                </label>
+                            </div>
+                            
+                            <div id="recurrence-settings" class="{% if not form.is_recurring.value %}d-none{% endif %}">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Recurrence Pattern</label>
+                                        {{ form.recurrence_pattern }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">End Date</label>
+                                        {{ form.recurrence_end_date }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <div>
+                                {% if object %}
+                                <a href="{% url 'tasks:detail' object.pk %}" class="btn btn-outline-primary">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye me-1" viewBox="0 0 16 16">
+                                        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.172-.195.254a14.33 14.33 0 0 0-.195-.254C13.12 9.332 11.361 10.5 8 10.5c-2.12 0-3.88-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
+                                        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+                                    </svg>
+                                    View Task
+                                </a>
+                                {% endif %}
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'tasks:list' %}" class="btn btn-light">Cancel</a>
+                                <button type="submit" class="btn btn-primary">
+                                    {% if object %}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle me-1" viewBox="0 0 16 16">
+                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                        <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
+                                    </svg>
+                                    Update Task
+                                    {% else %}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle me-1" viewBox="0 0 16 16">
+                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                                    </svg>
+                                    Create Task
+                                    {% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}
+{% block extra_head %}
+<style>
+    /* Form-specific styling */
+    .form-label {
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-control, .form-select {
+        border: 1px solid #e3e6f3;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #6f42c1;
+        box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+    }
+    
+    .form-control:focus-visible, .form-select:focus-visible {
+        outline: none;
+    }
+    
+    textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+    }
+    
+    .text-danger {
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+    
+    .form-text {
+        font-size: 0.8125rem;
+        margin-top: 0.25rem;
+    }
+    
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.3em 0.6em;
+    }
+    
+    .btn {
+        padding: 0.5rem 1.25rem;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary:hover {
+        background-color: #5a32a3;
+        border-color: #5a32a3;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
+    }
+    
+    .btn-light:hover {
+        background-color: #f8f9fa;
+        border-color: #d1c5e6;
+        color: #5a32a3;
+    }
+    
+    /* Card styling */
+    .card {
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .card {
+            margin: 0 -1rem;
+            border-radius: 0;
+        }
+        
+        .header-bar {
+            border-radius: 0;
+        }
+        
+        .footer-bar {
+            border-radius: 0;
+        }
+        
+        .row > [class*="col-"] {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Reminder toggle
+    const reminderCheckbox = document.getElementById('id_reminder_enabled');
+    const reminderSettings = document.getElementById('reminder-settings');
+    
+    if (reminderCheckbox) {
+        reminderCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                reminderSettings.classList.remove('d-none');
+            } else {
+                reminderSettings.classList.add('d-none');
+            }
+        });
+    }
+    
+    // Recurrence toggle
+    const recurringCheckbox = document.getElementById('id_is_recurring');
+    const recurrenceSettings = document.getElementById('recurrence-settings');
+    
+    if (recurringCheckbox) {
+        recurringCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                recurrenceSettings.classList.remove('d-none');
+            } else {
+                recurrenceSettings.classList.add('d-none');
+            }
+        });
+    }
+    
+    // Form validation
+    const taskForm = document.getElementById('task-form');
+    if (taskForm) {
+        taskForm.addEventListener('submit', function(e) {
+            // Check that at least one related object is selected
+            const account = document.getElementById('id_account')?.value;
+            const opportunity = document.getElementById('id_opportunity')?.value;
+            const lead = document.getElementById('id_related_lead')?.value;
+            const case = document.getElementById('id_case')?.value;
+            
+            if (!account && !opportunity && !lead && !case) {
+                e.preventDefault();
+                alert('Please select at least one related object (Account, Opportunity, Lead, or Case).');
+                return false;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

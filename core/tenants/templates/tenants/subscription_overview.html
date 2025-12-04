@@ -1,0 +1,87 @@
+{% extends 'tenants/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-credit-card me-2"></i>Subscription Overview</h2>
+            <p class="text-muted">Monitor tenant subscriptions and billing status</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Total Tenants</h6>
+                    <h2>{{ tenants.count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Active Subscriptions</h6>
+                    <h2>{{ subscriptions.count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Trial Tenants</h6>
+                    <h2>{{ tenants|length }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Subscription Details</h5>
+        </div>
+        <div class="card-body">
+            {% if subscriptions %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Tenant</th>
+                            <th>Plan</th>
+                            <th>Status</th>
+                            <th>Price</th>
+                            <th>Created</th>
+                            <th>Next Billing</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subscription in subscriptions %}
+                        <tr>
+                            <td>{{ subscription.tenant.name }}</td>
+                            <td>{{ subscription.plan.name }}</td>
+                            <td>
+                                {% if subscription.status == 'active' %}
+                                <span class="badge bg-success">Active</span>
+                                {% elif subscription.status == 'trialing' %}
+                                <span class="badge bg-info">Trial</span>
+                                {% elif subscription.status == 'suspended' %}
+                                <span class="badge bg-warning">Suspended</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ subscription.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>${{ subscription.plan.price|floatformat:2 }}</td>
+                            <td>{{ subscription.created_at|date:"Y-m-d" }}</td>
+                            <td>-</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No subscriptions found</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "infrastructure/base.html" %}
+
+{% block title %}Infrastructure Dashboard - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Infrastructure & Resource Monitoring</h1>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-graph-up text-primary"></i> API Calls</h5>
+                    <h2 class="mb-0">0</h2>
+                    <small class="text-muted">Total today</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-hdd text-info"></i> Storage Used</h5>
+                    <h2 class="mb-0">0 GB</h2>
+                    <small class="text-muted">Across all tenants</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-database text-success"></i> DB Connections</h5>
+                    <h2 class="mb-0">0</h2>
+                    <small class="text-muted">Active connections</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Tenant Resource Usage</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">No usage data available. Start monitoring tenant resources.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

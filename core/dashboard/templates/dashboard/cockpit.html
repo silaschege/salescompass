@@ -1,0 +1,152 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-0">Cockpit</h1>
+            <p class="text-muted">Welcome back, {{ request.user.first_name }}</p>
+        </div>
+        <div>
+            <span class="badge bg-success fs-6">Pipeline: ${{ pipeline_value|floatformat:0 }}</span>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Column: Urgent Actions -->
+        <div class="col-lg-8">
+
+            <!-- My Tasks Widget -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-check2-square me-2 text-primary"></i>My Day</h5>
+                    {% if overdue_tasks_count > 0 %}
+                    <span class="badge bg-danger">{{ overdue_tasks_count }} Overdue</span>
+                    {% endif %}
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for task in my_tasks %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="" id="task{{ task.id }}">
+                                <label class="form-check-label" for="task{{ task.id }}">
+                                    {{ task.title }}
+                                </label>
+                            </div>
+                            <small class="text-muted ms-4">{{ task.due_date|date:"M d" }} • {{ task.get_priority_display
+                                }}</small>
+                        </div>
+                        <a href="#" class="btn btn-sm btn-outline-secondary">View</a>
+                    </div>
+                    {% empty %}
+                    <div class="list-group-item text-center text-muted py-4">
+                        No tasks for today. Enjoy the calm!
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Hot Leads with NBA -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-fire me-2 text-danger"></i>Hot Leads</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Lead</th>
+                                    <th>Score</th>
+                                    <th>Next Best Action</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in hot_leads %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ item.lead.full_name }}</div>
+                                        <div class="small text-muted">{{ item.lead.company }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-warning text-dark">{{ item.lead.lead_score }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi {{ item.nba.icon }} me-2 text-primary"></i>
+                                            <div>
+                                                <div class="small fw-bold">{{ item.nba.action }}</div>
+                                                <div class="small text-muted" style="font-size: 0.75rem;">{{
+                                                    item.nba.description|truncatechars:40 }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'leads:lead_detail' item.lead.id %}"
+                                            class="btn btn-sm btn-light">Open</a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">No hot leads right now. Time to
+                                        prospect!</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Risks & Alerts -->
+        <div class="col-lg-4">
+
+            <!-- At Risk Accounts -->
+            <div class="card shadow-sm mb-4 border-warning">
+                <div class="card-header bg-warning bg-opacity-10 text-warning-emphasis">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>At Risk Accounts</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for account in at_risk_accounts %}
+                    <a href="{% url 'accounts:detail' account.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ account.name }}</h6>
+                            <small class="text-danger fw-bold">{{ account.health_score }}%</small>
+                        </div>
+                        <small class="text-muted">Last interaction: 3 days ago</small>
+                    </a>
+                    {% empty %}
+                    <div class="list-group-item text-muted">All accounts are healthy!</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Urgent Cases -->
+            <div class="card shadow-sm mb-4 border-danger">
+                <div class="card-header bg-danger bg-opacity-10 text-danger-emphasis">
+                    <h5 class="mb-0"><i class="bi bi-life-preserver me-2"></i>Urgent Cases</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for case in urgent_cases %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ case.subject|truncatechars:30 }}</h6>
+                            <span class="badge bg-danger">SLA</span>
+                        </div>
+                        <small class="text-muted">{{ case.account.name }}</small>
+                    </div>
+                    {% empty %}
+                    <div class="list-group-item text-muted">No urgent cases.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

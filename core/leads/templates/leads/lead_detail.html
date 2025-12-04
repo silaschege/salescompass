@@ -1,0 +1,187 @@
+{% extends "leads/base.html" %}
+
+
+{% block title %}{{ lead.full_name }} - Lead Details{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="block-title">{{ lead.full_name }}</h1>
+                <p class="text-white lead mb-0">{{ lead.job_title|default:"Lead" }} {% if lead.company %}at {{
+                    lead.company }}{% endif %}</p>
+            </div>
+            <div>
+                <a href="{% url 'leads:update' lead.pk %}" class="btn btn-light">
+                    <i class="bi bi-pencil"></i> Edit
+                </a>
+                <a href="{% url 'leads:delete' lead.pk %}" class="btn btn-outline-light ms-2">
+                    <i class="bi bi-trash"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <!-- Main Info -->
+        <div class="col-md-8">
+            <!-- Status & Score Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">Current Status</h6>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-{{ lead.status_ref.color|default:'primary' }} fs-6 me-3">
+                                    {{ lead.status_ref.label|default:lead.status|title }}
+                                </span>
+                                <!-- Status Change Dropdown could go here -->
+                            </div>
+                        </div>
+                        <div class="col-md-6 border-start">
+                            <h6 class="text-muted mb-2">Lead Score</h6>
+                            <div class="d-flex align-items-center">
+                                <h2
+                                    class="mb-0 me-3 {% if lead.lead_score > 70 %}text-success{% elif lead.lead_score > 40 %}text-warning{% else %}text-danger{% endif %}">
+                                    {{ lead.lead_score }}
+                                </h2>
+                                <div class="progress flex-grow-1" style="height: 8px;">
+                                    <div class="progress-bar bg-{% if lead.lead_score > 70 %}success{% elif lead.lead_score > 40 %}warning{% else %}danger{% endif %}"
+                                        style="width: {{ lead.lead_score }}%;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Details Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0">Contact Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="text-muted small">Email</label>
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-envelope text-primary me-2"></i>
+                                <a href="mailto:{{ lead.email }}" class="text-decoration-none">{{ lead.email }}</a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Phone</label>
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-telephone text-primary me-2"></i>
+                                {% if lead.phone %}
+                                <a href="tel:{{ lead.phone }}" class="text-decoration-none">{{ lead.phone }}</a>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="text-muted small">Source</label>
+                            <div>{{ lead.get_lead_source_display|default:"-" }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Industry</label>
+                            <div>{{ lead.industry|default:"-" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tasks/Activities -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Upcoming Tasks</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary">Add Task</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if lead_tasks %}
+                    <div class="list-group list-group-flush">
+                        {% for task in lead_tasks %}
+                        <div class="list-group-item border-0">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ task.title }}</h6>
+                                <small class="text-muted">{{ task.due_date|date:"M d" }}</small>
+                            </div>
+                            <p class="mb-1 small text-muted">{{ task.description|truncatechars:50 }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center p-4">
+                        <p class="text-muted mb-0">No upcoming tasks</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Scoring Recommendations -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0">Recommendations</h5>
+                </div>
+                <div class="card-body">
+                    {% if scoring_recommendations %}
+                    <ul class="list-unstyled mb-0">
+                        {% for rec in scoring_recommendations %}
+                        <li class="mb-2 d-flex align-items-start">
+                            <i class="bi bi-lightbulb text-warning me-2 mt-1"></i>
+                            <small>{{ rec }}</small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted small mb-0">No specific recommendations at this time.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Owner Info -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0">Owner</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-circle bg-primary text-white me-3">
+                            {{ lead.owner.get_initials|default:"?" }}
+                        </div>
+                        <div>
+                            <h6 class="mb-0">{{ lead.owner.get_full_name|default:"Unassigned" }}</h6>
+                            <small class="text-muted">{{ lead.owner.email }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .avatar-circle {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,253 @@
+{% extends "public/base.html" %}
+
+{% block title %}Support Center - SalesCompass{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="bg-light py-5">
+  <div class="container py-5">
+    <div class="row align-items-center">
+      <div class="col-lg-8">
+        <h1 class="display-4 fw-bold mb-4">How can we help you?</h1>
+        <p class="lead text-muted mb-4">
+          Search our knowledge base, browse guides, or contact our support team for assistance.
+        </p>
+        <div class="row">
+          <div class="col-lg-10">
+            <div class="input-group input-group-lg shadow-sm">
+              <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
+              <input type="text" class="form-control border-0"
+                placeholder="Search documentation, guides, and articles...">
+              <button class="btn btn-primary px-4">Search</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4 text-center">
+        <i class="bi bi-headset display-1 text-accent"></i>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Resource Categories -->
+<section class="py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold">Browse by Topic</h2>
+      <p class="text-muted">Find answers to common questions and learn how to use SalesCompass</p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
+              <i class="bi bi-rocket-takeoff fs-1 text-accent"></i>
+            </div>
+            <h4 class="fw-bold mb-3">Getting Started</h4>
+            <p class="text-muted mb-4">New to SalesCompass? Start here to set up your account and invite your team.</p>
+            <a href="#" class="btn btn-outline-primary rounded-pill">View Guides <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
+              <i class="bi bi-people fs-1 text-accent"></i>
+            </div>
+            <h4 class="fw-bold mb-3">Account Management</h4>
+            <p class="text-muted mb-4">Learn how to manage your CRM data, contacts, and customer relationships.</p>
+            <a href="#" class="btn btn-outline-primary rounded-pill">View Guides <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
+              <i class="bi bi-credit-card fs-1 text-accent"></i>
+            </div>
+            <h4 class="fw-bold mb-3">Billing & Plans</h4>
+            <p class="text-muted mb-4">Manage your subscription, update payment methods, and view invoices.</p>
+            <a href="#" class="btn btn-outline-primary rounded-pill">View Guides <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
+              <i class="bi bi-code-slash fs-1 text-accent"></i>
+            </div>
+            <h4 class="fw-bold mb-3">API & Integrations</h4>
+            <p class="text-muted mb-4">Developer documentation for API access and third-party integrations.</p>
+            <a href="{% url 'api_docs' %}" class="btn btn-outline-primary rounded-pill">View Docs <i
+                class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
+              <i class="bi bi-telephone fs-1 text-accent"></i>
+            </div>
+            <h4 class="fw-bold mb-3">Voice & Communication</h4>
+            <p class="text-muted mb-4">Set up and configure your VoIP system, call tracking, and SMS features.</p>
+            <a href="#" class="btn btn-outline-primary rounded-pill">View Guides <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
+              <i class="bi bi-shield-check fs-1 text-accent"></i>
+            </div>
+            <h4 class="fw-bold mb-3">Security & Privacy</h4>
+            <p class="text-muted mb-4">Learn about our security practices, data protection, and compliance.</p>
+            <a href="#" class="btn btn-outline-primary rounded-pill">View Guides <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Popular Articles -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold">Popular Articles</h2>
+      <p class="text-muted">Most frequently accessed help articles</p>
+    </div>
+
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="list-group">
+          <a href="#"
+            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center border-0 mb-2 shadow-sm">
+            <div>
+              <i class="bi bi-file-text text-accent me-2"></i>
+              <strong>How to import contacts from CSV</strong>
+            </div>
+            <i class="bi bi-chevron-right text-muted"></i>
+          </a>
+          <a href="#"
+            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center border-0 mb-2 shadow-sm">
+            <div>
+              <i class="bi bi-file-text text-accent me-2"></i>
+              <strong>Setting up email integration with Mailcow</strong>
+            </div>
+            <i class="bi bi-chevron-right text-muted"></i>
+          </a>
+          <a href="#"
+            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center border-0 mb-2 shadow-sm">
+            <div>
+              <i class="bi bi-file-text text-accent me-2"></i>
+              <strong>Configuring VoIP with Wazo</strong>
+            </div>
+            <i class="bi bi-chevron-right text-muted"></i>
+          </a>
+          <a href="#"
+            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center border-0 mb-2 shadow-sm">
+            <div>
+              <i class="bi bi-file-text text-accent me-2"></i>
+              <strong>Creating custom reports and dashboards</strong>
+            </div>
+            <i class="bi bi-chevron-right text-muted"></i>
+          </a>
+          <a href="#"
+            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center border-0 mb-2 shadow-sm">
+            <div>
+              <i class="bi bi-file-text text-accent me-2"></i>
+              <strong>Managing user roles and permissions</strong>
+            </div>
+            <i class="bi bi-chevron-right text-muted"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Contact Support -->
+<section class="py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold">Still need help?</h2>
+      <p class="text-muted">Our team is here to assist you</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
+              <i class="bi bi-chat-dots fs-1 text-success"></i>
+            </div>
+            <h5 class="fw-bold mb-3">Technical Support</h5>
+            <p class="text-muted mb-4">For existing customers facing issues</p>
+            <a href="mailto:support@salescompass.local" class="btn btn-outline-success rounded-pill w-100 mb-3">Contact
+              Support</a>
+            <div class="small text-muted">
+              <i class="bi bi-clock me-1"></i>Avg. response: 2 hours
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
+              <i class="bi bi-telephone fs-1 text-primary"></i>
+            </div>
+            <h5 class="fw-bold mb-3">Sales Inquiry</h5>
+            <p class="text-muted mb-4">Questions about plans and pricing</p>
+            <a href="mailto:sales@salescompass.local" class="btn btn-outline-primary rounded-pill w-100 mb-3">Contact
+              Sales</a>
+            <div class="small text-muted">
+              <i class="bi bi-telephone me-1"></i>+1 (800) 555-0199
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
+              <i class="bi bi-book fs-1 text-accent"></i>
+            </div>
+            <h5 class="fw-bold mb-3">Documentation</h5>
+            <p class="text-muted mb-4">Comprehensive guides and tutorials</p>
+            <a href="#" class="btn btn-outline-primary rounded-pill w-100 mb-3">Browse Docs</a>
+            <div class="small text-muted">
+              <i class="bi bi-collection me-1"></i>200+ articles
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Community CTA -->
+<section class="bg-accent text-white py-5">
+  <div class="container text-center py-5">
+    <h2 class="fw-bold mb-4">Join Our Community</h2>
+    <p class="lead mb-4">
+      Connect with other SalesCompass users, share best practices, and get tips from our team.
+    </p>
+    <a href="#" class="btn btn-light btn-lg px-5 rounded-pill">Join Community Forum</a>
+  </div>
+</section>
+{% endblock %}

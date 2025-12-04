@@ -1,0 +1,121 @@
+{% extends "billing/base.html" %}
+
+{% block title %}Payment Gateways - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">Payment Gateways</h2>
+                    <p class="text-muted">Manage platform-wide payment provider configurations</p>
+                </div>
+                <a href="{% url 'billing:payment_gateway_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Add Provider
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    {% if providers %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Provider</th>
+                                    <th>Status</th>
+                                    <th>Features</th>
+                                    <th>Currencies</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for provider in providers %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if provider.logo_url %}
+                                            <img src="{{ provider.logo_url }}" alt="{{ provider.display_name }}"
+                                                style="height: 32px; margin-right: 12px;">
+                                            {% else %}
+                                            <i class="bi bi-credit-card fs-4 me-3"></i>
+                                            {% endif %}
+                                            <div>
+                                                <strong>{{ provider.display_name }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ provider.name }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if provider.is_active %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle me-1"></i>Active
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-x-circle me-1"></i>Inactive
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            {% if provider.supports_subscriptions %}
+                                            <span class="badge bg-info" title="Supports recurring subscriptions">
+                                                <i class="bi bi-arrow-repeat"></i> Subscriptions
+                                            </span>
+                                            {% endif %}
+                                            {% if provider.supports_one_time %}
+                                            <span class="badge bg-info" title="Supports one-time payments">
+                                                <i class="bi bi-cash"></i> One-time
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small>
+                                            {% for currency in provider.supported_currencies %}
+                                            <span class="badge bg-secondary">{{ currency }}</span>
+                                            {% empty %}
+                                            <span class="text-muted">Not configured</span>
+                                            {% endfor %}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'billing:payment_gateway_config' provider.id %}"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-gear"></i> Configure
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No payment providers configured yet. Click "Add Provider" to get started.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-warning">
+                <i class="bi bi-shield-exclamation me-2"></i>
+                <strong>Security Reminder:</strong> API keys and secrets should be encrypted in production.
+                Never commit sensitive credentials to version control.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

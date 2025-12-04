@@ -1,0 +1,76 @@
+{% extends "infrastructure/base.html" %}
+
+{% block title %}Tenant Usage - Infrastructure{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Tenant Usage Overview</h1>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Tenant ID</th>
+                            <th>API Calls</th>
+                            <th>Storage Used</th>
+                            <th>DB Connections</th>
+                            <th>Measured At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usage in tenant_usages %}
+                        <tr>
+                            <td>{{ usage.tenant_id }}</td>
+                            <td>
+                                {{ usage.api_calls_count }} / {{ usage.api_calls_limit }}
+                                <div class="progress" style="height: 5px;">
+                                    <div class="progress-bar {% if usage.is_over_api_limit %}bg-danger{% else %}bg-success{% endif %}"
+                                        role="progressbar" style="width: {{ usage.api_usage_percentage }}%"></div>
+                                </div>
+                            </td>
+                            <td>
+                                {{ usage.storage_used_gb }} / {{ usage.storage_limit_gb }} GB
+                                <div class="progress" style="height: 5px;">
+                                    <div class="progress-bar {% if usage.is_over_storage_limit %}bg-danger{% else %}bg-info{% endif %}"
+                                        role="progressbar" style="width: {{ usage.storage_usage_percentage }}%"></div>
+                                </div>
+                            </td>
+                            <td>{{ usage.active_db_connections }} / {{ usage.max_db_connections }}</td>
+                            <td>{{ usage.measured_at|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No usage data available.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if is_paginated %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>{% block title %}Billing - SalesCompass{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f7f8fc 0%, #e3e6f3 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: #fff;
+            border-right: 1px solid #e3e6f3;
+            padding: 1.5rem 1rem;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
+        .sidebar .navbar-brand {
+            color: #6f42c1 !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+            text-decoration: none;
+        }
+
+        .sidebar .nav-link {
+            color: #333;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link:focus,
+        .sidebar .nav-link.active {
+            color: #6f42c1;
+            background-color: #f0e6ff;
+            font-weight: 500;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .sidebar .section-title {
+            color: #6c757d;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 1.5rem 0 0.5rem 1rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 2rem;
+            flex-grow: 1;
+            transition: margin-left 0.3s ease;
+            width: 100%;
+        }
+
+        .main-content.sidebar-hidden {
+            margin-left: 0;
+        }
+
+        /* Toggle Button */
+        .toggle-sidebar {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: #6f42c1;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .card {
+            border-radius: 1rem;
+            box-shadow: 0 2px 16px rgba(111, 66, 193, 0.08);
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: #6f42c1;
+            border-color: #6f42c1;
+        }
+
+        .btn-primary:hover {
+            background-color: #5a34a0;
+            border-color: #5a34a0;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.visible {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 2rem 1rem;
+            }
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+
+    <!-- Toggle Button -->
+    <button class="toggle-sidebar" id="toggleSidebar">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <a class="navbar-brand" href="{% url 'app_selection' %}">
+            <i class="bi bi-compass me-2"></i> SalesCompass
+        </a>
+
+        <nav class="nav flex-column">
+            <!-- Revenue Dashboard -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#revenueMenu">
+                <i class="bi bi-speedometer2"></i> Revenue Dashboard
+            </a>
+            <div class="collapse" id="revenueMenu">
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'revenue_overview' %}active{% endif %}"
+                    href="{% url 'billing:revenue_overview' %}">
+                    Revenue Overview
+                </a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'mrr_analytics' %}active{% endif %}"
+                    href="{% url 'billing:mrr_analytics' %}">MRR Analytics</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'arr_analytics' %}active{% endif %}"
+                    href="{% url 'billing:arr_analytics' %}">ARR Analytics</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'churn_rates' %}active{% endif %}"
+                    href="{% url 'billing:churn_rates' %}">Churn Rates</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'revenue_forecast' %}active{% endif %}"
+                    href="{% url 'billing:revenue_forecast' %}">Revenue Forecast</a>
+            </div>
+
+            <!-- Invoice Management -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#invoiceMenu">
+                <i class="bi bi-file-earmark-text"></i> Invoice Management
+            </a>
+            <div class="collapse" id="invoiceMenu">
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'invoice_list' %}active{% endif %}"
+                    href="{% url 'billing:invoice_list' %}">All Invoices</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'invoice_create' %}active{% endif %}"
+                    href="{% url 'billing:invoice_create' %}">Create Invoice</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'invoice_paid' %}active{% endif %}"
+                    href="{% url 'billing:invoice_paid' %}">Paid Invoices</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'invoice_overdue' %}active{% endif %}"
+                    href="{% url 'billing:invoice_overdue' %}">Overdue Invoices</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'invoice_void_list' %}active{% endif %}"
+                    href="{% url 'billing:invoice_void_list' %}">Void Invoices</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'reconciliation' %}active{% endif %}"
+                    href="{% url 'billing:reconciliation' %}">Reconciliation</a>
+            </div>
+
+            <!-- Subscription Plans -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#plansMenu">
+                <i class="bi bi-list-ul"></i> Subscription Plans
+            </a>
+            <div class="collapse" id="plansMenu">
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'plan_list' %}active{% endif %}"
+                    href="{% url 'billing:plan_list' %}">All Plans</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'plan_create' %}active{% endif %}"
+                    href="{% url 'billing:plan_create' %}">Create New Plan</a>
+                <a class="nav-link ms-3" href="{% url 'billing:plan_list' %}">Pricing Configuration</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'plan_limits' %}active{% endif %}"
+                    href="{% url 'billing:plan_limits' %}">Plan Limits & Features</a>
+            </div>
+
+            <!-- Subscription Management -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#subscriptionMenu">
+                <i class="bi bi-collection"></i> Subscription Management
+            </a>
+            <div class="collapse" id="subscriptionMenu">
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'subscription_list' %}active{% endif %}"
+                    href="{% url 'billing:subscription_list' %}">All Subscriptions</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'upgrade_downgrade' %}active{% endif %}"
+                    href="{% url 'billing:upgrade_downgrade' %}">Upgrades/Downgrades</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'proration_calculator' %}active{% endif %}"
+                    href="{% url 'billing:proration_calculator' %}">Proration Calculator</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'lifecycle_events' %}active{% endif %}"
+                    href="{% url 'billing:lifecycle_events' %}">Lifecycle Events</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'renewal_tracking' %}active{% endif %}"
+                    href="{% url 'billing:renewal_tracking' %}">Renewal Tracking</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'cancellation_management' %}active{% endif %}"
+                    href="{% url 'billing:cancellation_management' %}">Cancellations</a>
+            </div>
+
+            <!-- Invoicing Engine -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#invoicingMenu">
+                <i class="bi bi-file-earmark-plus"></i> Invoicing Engine
+            </a>
+            <div class="collapse" id="invoicingMenu">
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'invoice_generation' %}active{% endif %}"
+                    href="{% url 'billing:invoice_generation' %}">Invoice Generation</a>
+                <a class="nav-link ms-3" href="#pdf-templates">PDF Templates</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'dunning_management' %}active{% endif %}"
+                    href="{% url 'billing:dunning_management' %}">Dunning Management</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'failed_payments' %}active{% endif %}"
+                    href="{% url 'billing:failed_payments' %}">Failed Payments</a>
+                <a class="nav-link ms-3" href="#payment-retry">Payment Retry Logic</a>
+            </div>
+
+            <!-- Payment Methods -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#paymentMenu">
+                <i class="bi bi-credit-card"></i> Payment Methods
+            </a>
+            <div class="collapse" id="paymentMenu">
+                {% if user.is_superuser %}
+                <!-- Superadmin: Platform Payment Gateway Configuration -->
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'payment_gateway_list' %}active{% endif %}"
+                    href="{% url 'billing:payment_gateway_list' %}">Payment Gateways</a>
+                {% endif %}
+
+                <!-- Tenant Admin: Payment Configuration -->
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'tenant_payment_config' %}active{% endif %}"
+                    href="{% url 'billing:tenant_payment_config' %}">Payment Settings</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'payment_method_list' %}active{% endif %}"
+                    href="{% url 'billing:payment_method_list' %}">My Payment Methods</a>
+                <a class="nav-link ms-3" href="#payment-support">Payment Support Tools</a>
+            </div>
+
+            <!-- Tenant Billing -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#tenantBillingMenu">
+                <i class="bi bi-search"></i> Tenant Billing
+            </a>
+            <div class="collapse" id="tenantBillingMenu">
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'tenant_billing_search' %}active{% endif %}"
+                    href="{% url 'billing:tenant_billing_search' %}">Search Tenant Billing</a>
+                <a class="nav-link ms-3" href="{% url 'billing:tenant_billing_search' %}">Billing History</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'credit_adjustment' %}active{% endif %}"
+                    href="{% url 'billing:credit_adjustment' %}">Credits & Adjustments</a>
+            </div>
+
+            <div class="section-title mt-4">NAVIGATION</div>
+
+            <a class="nav-link" href="{% url 'dashboard:admin_dashboard' %}">
+                <i class="bi bi-house-door"></i> Admin Dashboard
+            </a>
+
+            <a class="nav-link" href="{% url 'app_selection' %}">
+                <i class="bi bi-grid"></i> Control Plane Apps
+            </a>
+
+            <div class="mt-auto pt-4 border-top">
+                <a class="nav-link text-danger" href="{% url 'logout' %}">
+                    <i class="bi bi-box-arrow-right"></i> Log Out
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        {% if messages %}
+        <div class="container-fluid mb-3">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const toggleBtn = document.getElementById('toggleSidebar');
+
+            toggleBtn.addEventListener('click', function () {
+                sidebar.classList.toggle('hidden');
+                mainContent.classList.toggle('sidebar-hidden');
+            });
+
+            if (window.innerWidth <= 768) {
+                document.addEventListener('click', function (e) {
+                    if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+                        sidebar.classList.remove('visible');
+                    }
+                });
+            }
+        });
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+
+</html>

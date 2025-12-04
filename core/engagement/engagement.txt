@@ -1,0 +1,35 @@
+Integration with Other Modules 
+Example: Proposal View Tracking 
+
+# In apps/proposals/utils.py
+from engagement.utils import log_engagement_event
+
+def record_proposal_view(proposal_id: int, ip: str = None, user_agent: str = None) -> None:
+    proposal = Proposal.objects.get(id=proposal_id)
+    
+    log_engagement_event(
+        account_id=proposal.opportunity.account_id,
+        opportunity_id=proposal.opportunity_id,
+        event_type='proposal_viewed',
+        description=f'Proposal "{proposal.title}" viewed',
+        metadata={'proposal_id': proposal_id},
+        engagement_score=25.0,
+        tenant_id=proposal.tenant_id
+    )
+
+# In apps/proposals/utils.py
+def track_email_open(email_token: str) -> None:
+    email_record = ProposalEmail.objects.get(open_tracking_token=email_token)
+    
+    log_engagement_event(
+        account_id=email_record.proposal.opportunity.account_id,
+        opportunity_id=email_record.proposal.opportunity_id,
+        event_type='email_opened',
+        description=f'Email for proposal "{email_record.proposal.title}" opened',
+        metadata={'email_id': email_record.id},
+        engagement_score=10.0,
+        tenant_id=email_record.tenant_id
+    )
+
+    Lead Creation → Task Assignment → Engagement Tracking → 
+Opportunity Conversion → NPS Feedback → Next Best Action

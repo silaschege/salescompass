@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1>{{ article.title }}</h1>
+            <span class="badge bg-primary">{{ article.get_article_type_display }}</span>
+            <span class="badge bg-secondary">{{ article.category.name }}</span>
+            {% if article.tags %}
+                {% for tag in article.get_tags_list %}
+                    <span class="badge bg-info text-dark">{{ tag }}</span>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div>
+            <a href="{% url 'learn:export_pdf' article.slug %}" class="btn btn-outline-secondary">
+                📄 Export PDF
+            </a>
+            {% if request.user|has_perm:"learn:write" %}
+                <a href="{% url 'learn:update' article.pk %}" class="btn btn-outline-secondary">Edit</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="article-content">
+                {{ current_version.content|safe }}
+            </div>
+            
+            <!-- Rating Form -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5>Was this article helpful?</h5>
+                    <form method="post" action="{% url 'learn:rate_article' article.slug %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Rating (1-5 stars)</label>
+                            {{ rating_form.rating }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Comments (optional)</label>
+                            {{ rating_form.comment }}
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Article Info</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Author:</strong> {{ article.author.email|default:"Team SalesCompass" }}</p>
+                    <p><strong>Last Updated:</strong> {{ article.updated_at|date:"F d, Y" }}</p>
+                    <p><strong>Version:</strong> {{ current_version.version_number|default:"1.0" }}</p>
+                </div>
+            </div>
+
+            {% if related_articles %}
+            <div class="card">
+                <div class="card-header">
+                    <h5>Related Articles</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for related in related_articles %}
+                        <li class="list-group-item">
+                            <a href="{% url 'learn:detail' related.slug %}">{{ related.title }}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

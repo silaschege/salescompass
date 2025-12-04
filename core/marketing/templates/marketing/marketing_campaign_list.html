@@ -1,0 +1,224 @@
+{% extends "marketing/base.html" %}
+{%  load auth_extras math filters_extras %}
+{% block title %}Marketing Campaigns - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Marketing Campaigns</h1>
+        <p class="text-white text-center lead">Create, manage, and analyze your marketing campaigns</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Action Buttons and Filters -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="d-flex gap-2">
+                <a href="{% url 'marketing:create' %}" class="btn btn-primary">+ New Campaign</a>
+                <a href="{% url 'marketing:template_list' %}" class="btn btn-outline-secondary">Email Templates</a>
+                <a href="{% url 'marketing:landing_page_list' %}" class="btn btn-outline-secondary">Landing Pages</a>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex gap-2 justify-content-end">
+                <a href="{% url 'marketing:campaign_calendar' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-calendar"></i> Calendar View
+                </a>
+                <a href="{% url 'marketing:performance_list' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-graph-up"></i> Performance Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campaigns Table -->
+    {% if campaigns %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Campaign</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Owner</th>
+                        <th>Schedule</th>
+                        <th>Performance</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for campaign in campaigns %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'marketing:detail' campaign.pk %}" class="text-decoration-none">
+                                <strong>{{ campaign.name }}</strong>
+                            </a>
+                            <br>
+                            <small class="text-muted">{{ campaign.description|truncatewords:8 }}</small>
+                        </td>
+                        <td>
+                            {% if campaign.email_campaigns.exists %}
+                                <span class="badge bg-info">Email</span>
+                            {% endif %}
+                            {% if campaign.landing_pages.exists %}
+                                <span class="badge bg-success">Landing Page</span>
+                            {% endif %}
+                            {% if campaign.ab_tests.exists %}
+                                <span class="badge bg-warning">A/B Test</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if campaign.status == 'draft' %}
+                                <span class="badge bg-secondary">Draft</span>
+                            {% elif campaign.status == 'scheduled' %}
+                                <span class="badge bg-info">Scheduled</span>
+                            {% elif campaign.status == 'sending' %}
+                                <span class="badge bg-warning">Sending</span>
+                            {% elif campaign.status == 'sent' %}
+                                <span class="badge bg-success">Sent</span>
+                            {% elif campaign.status == 'paused' %}
+                                <span class="badge bg-warning">Paused</span>
+                            {% else %}
+                                <span class="badge bg-danger">Cancelled</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if campaign.owner %}
+                                {{ campaign.owner.email }}
+                            {% else %}
+                                <span class="text-muted">Unassigned</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if campaign.send_date %}
+                                {{ campaign.send_date|date:"M d, Y H:i" }}
+                            {% else %}
+                                <span class="text-muted">Not scheduled</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if campaign.total_sent > 0 %}
+                                <div class="d-flex flex-column">
+                                    <small>
+                                        <strong>Sent:</strong> {{ campaign.total_sent|intcomma }}
+                                    </small>
+                                    <small>
+                                        <strong>Open Rate:</strong> 
+                                        {% if campaign.total_sent > 0 %}
+                                            {{ campaign.total_opened|div:campaign.total_sent|mul:100|floatformat:1 }}%
+                                        {% else %}
+                                            0%
+                                        {% endif %}
+                                    </small>
+                                    <small>
+                                        <strong>CTR:</strong>
+                                        {% if campaign.total_opened > 0 %}
+                                            {{ campaign.total_clicked|div:campaign.total_opened|mul:100|floatformat:1 }}%
+                                        {% else %}
+                                            0%
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            {% else %}
+                                <span class="text-muted">No data</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column gap-1">
+                                <a href="{% url 'marketing:detail' campaign.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                {% if campaign.status == 'draft' or campaign.status == 'scheduled' or campaign.status == 'paused' %}
+                                    <a href="{% url 'marketing:update' campaign.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                {% endif %}
+                                {% if campaign.status == 'draft' %}
+                                    <form method="post" action="{% url 'marketing:send_campaign' campaign.pk %}" class="d-inline" onsubmit="return confirm('Send this campaign to all recipients?')">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-success">Send</button>
+                                    </form>
+                                {% endif %}
+                                {% if  campaign.status == 'scheduled' and campaign.status == 'paused' %}
+                                    <form method="post" action="{% url 'marketing:send_campaign' campaign.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-warning">Resume</button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center">
+            <div class="mb-4">
+                <i class="bi bi-megaphone display-1 text-muted"></i>
+            </div>
+            <h3 class="text-muted">No campaigns found</h3>
+            <p class="text-muted mb-4">Create your first marketing campaign to get started.</p>
+            <a href="{% url 'marketing:create' %}" class="btn btn-primary">Create Your First Campaign</a>
+        </div>
+    {% endif %}
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.table-hover tbody tr:hover {
+    background-color: rgba(111, 66, 193, 0.05);
+}
+.badge {
+    font-size: 0.75em;
+    padding: 0.3em 0.6em;
+}
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

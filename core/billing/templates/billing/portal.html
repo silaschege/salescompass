@@ -1,0 +1,120 @@
+{% extends "billing/base.html" %}
+
+{% block title %}Billing Portal - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <h1 class="h3">Billing & Subscription</h1>
+        <p class="text-muted">Manage your subscription, view invoices, and update payment methods</p>
+    </div>
+
+    <div class="row">
+        <!-- Current Subscription -->
+        <div class="col-md-8">
+            <div class="card shadow mb-4" id="subscription">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Current Plan</h5>
+                </div>
+                <div class="card-body">
+                    {% if subscription %}
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h3 class="font-weight-bold">{{ subscription.plan.name }}</h3>
+                            <p class="text-muted mb-0">${{ subscription.plan.price }}/{{ subscription.plan.interval }}
+                            </p>
+                            <span class="badge bg-success">{{ subscription.status|title }}</span>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <form method="post" class="d-inline"
+                                onsubmit="return confirm('Are you sure you want to cancel?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="cancel">
+                                <button type="submit" class="btn btn-outline-danger">Cancel Subscription</button>
+                            </form>
+                        </div>
+                    </div>
+                    <hr>
+                    <h6 class="font-weight-bold">Plan Features</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success me-2"></i>{{ subscription.plan.max_users }} Users</li>
+                        <li><i class="fas fa-check text-success me-2"></i>{{ subscription.plan.max_leads }} Leads</li>
+                        <li><i class="fas fa-check text-success me-2"></i>{{ subscription.plan.storage_limit_gb }}GB
+                            Storage</li>
+                    </ul>
+                    {% else %}
+                    <div class="alert alert-warning">No active subscription found.</div>
+                    <a href="{% url 'tenants:plan_selection' %}" class="btn btn-primary">Select a Plan</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Invoice History -->
+            <div class="card shadow" id="invoices">
+                <div class="card-header">
+                    <h5 class="mb-0">Invoice History</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Invoice ID</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for invoice in invoices %}
+                                <tr>
+                                    <td>{{ invoice.date }}</td>
+                                    <td>{{ invoice.id }}</td>
+                                    <td>${{ invoice.amount }}</td>
+                                    <td><span class="badge bg-success">{{ invoice.status }}</span></td>
+                                    <td><a href="#" class="btn btn-sm btn-link">Download</a></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No invoices found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Plans -->
+        <div class="col-md-4">
+            <div class="card shadow mb-4" id="payment-methods">
+                <div class="card-header">
+                    <h5 class="mb-0">Change Plan</h5>
+                </div>
+                <div class="card-body">
+                    {% for plan in plans %}
+                    {% if subscription.plan.id != plan.id %}
+                    <div class="border rounded p-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">{{ plan.name }}</h6>
+                            <span class="font-weight-bold">${{ plan.price }}</span>
+                        </div>
+                        <p class="small text-muted mb-2">{{ plan.description|truncatechars:50 }}</p>
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="change_plan">
+                            <input type="hidden" name="plan_id" value="{{ plan.id }}">
+                            <button type="submit" class="btn btn-sm btn-outline-primary w-100">Switch to {{ plan.name
+                                }}</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

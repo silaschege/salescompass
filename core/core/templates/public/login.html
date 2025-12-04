@@ -1,0 +1,89 @@
+{% extends "public/base.html" %}
+{% load static %}
+
+{% block title %}Log In | SalesCompass{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/public-design-system.css' %}">
+<style>
+  .login-container {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--gray-50);
+  }
+
+  .login-card {
+    background-color: var(--color-white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-xl);
+    padding: var(--space-10);
+    width: 100%;
+    max-width: 480px;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .form-label-clean {
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    color: var(--gray-700);
+    margin-bottom: var(--space-2);
+    display: block;
+  }
+
+  .form-input-clean {
+    width: 100%;
+    padding: var(--space-4);
+    font-size: var(--text-base);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+  }
+
+  .form-input-clean:focus {
+    outline: none;
+    border-color: var(--color-purple);
+    box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.1);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+  <div class="login-card">
+    <div class="text-center mb-8">
+      <h2 class="mb-2">Welcome back</h2>
+      <p class="text-gray">Sign in to your account</p>
+    </div>
+
+    <form method="post" action="{% url 'login' %}">
+      {% csrf_token %}
+
+      <div class="mb-6">
+        <label class="form-label-clean">Email address</label>
+        <input type="email" name="email" class="form-input-clean" placeholder="name@company.com" required>
+      </div>
+
+      <div class="mb-6">
+        <div class="flex justify-content-between align-items-center mb-2">
+          <label class="form-label-clean mb-0">Password</label>
+          <a href="#" class="text-purple" style="font-size: var(--text-sm); text-decoration: none;">Forgot password?</a>
+        </div>
+        <input type="password" name="password" class="form-input-clean" placeholder="••••••••" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-large w-100 mb-6">
+        Sign in
+      </button>
+
+      <div class="text-center">
+        <p class="text-gray" style="font-size: var(--text-sm);">
+          Don't have an account? <a href="{% url 'try_free' %}" class="text-purple"
+            style="text-decoration: none; font-weight: var(--font-semibold);">Start free trial</a>
+        </p>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

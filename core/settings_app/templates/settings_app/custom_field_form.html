@@ -1,0 +1,403 @@
+{% extends 'settings_app/base.html' %}
+{% load static %}
+
+{% block title %}{{ form_title|default:"Create Custom Field" }} - Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+
+    .form-section h3 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 20px 0;
+        color: #333;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 10px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: #374151;
+    }
+
+    .form-group label.required::after {
+        content: " *";
+        color: #ef4444;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .help-text {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+
+    .radio-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 12px;
+    }
+
+    .radio-option {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .radio-option:hover {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+
+    .radio-option input[type="radio"] {
+        margin-right: 8px;
+    }
+
+    .radio-option input[type="radio"]:checked+label {
+        color: #3b82f6;
+        font-weight: 600;
+    }
+
+    .checkbox-wrapper {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        background: #f9fafb;
+        border-radius: 6px;
+    }
+
+    .checkbox-wrapper input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 30px;
+    }
+
+    .btn {
+        padding: 10px 24px;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+    }
+
+    .btn-primary {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #2563eb;
+    }
+
+    .btn-secondary {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .btn-secondary:hover {
+        background: #d1d5db;
+    }
+
+    .options-preview {
+        margin-top: 12px;
+        padding: 12px;
+        background: #f9fafb;
+        border-radius: 6px;
+        border-left: 3px solid #3b82f6;
+    }
+
+    .options-preview h4 {
+        font-size: 14px;
+        margin: 0 0 8px 0;
+        color: #374151;
+    }
+
+    .options-preview ul {
+        margin: 0;
+        padding-left: 20px;
+        font-size: 13px;
+        color: #6b7280;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>{{ form_title|default:"Create Custom Field" }}</h1>
+            <p class="text-muted">Define custom fields for your CRM modules</p>
+        </div>
+    </div>
+
+    <form method="post" id="customFieldForm">
+        {% csrf_token %}
+
+        <!-- Basic Information -->
+        <div class="form-section">
+            <h3>Basic Information</h3>
+
+            <!-- Model Selection -->
+            <div class="form-group">
+                <label for="model_name" class="required">Module</label>
+                <select name="model_name" id="model_name" class="form-control" required>
+                    <option value="">Select a module...</option>
+                    <option value="Account" {% if form.model_name.value=='Account' %}selected{% endif %}>Account
+                    </option>
+                    <option value="Lead" {% if form.model_name.value=='Lead' %}selected{% endif %}>Lead</option>
+                    <option value="Opportunity" {% if form.model_name.value=='Opportunity' %}selected{% endif %}>
+                        Opportunity</option>
+                    <option value="Product" {% if form.model_name.value=='Product' %}selected{% endif %}>Product
+                    </option>
+                    <option value="Case" {% if form.model_name.value=='Case' %}selected{% endif %}>Case</option>
+                </select>
+                <div class="help-text">Choose which module this custom field applies to</div>
+                {% if form.model_name.errors %}
+                <div class="text-danger">{{ form.model_name.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Field Name -->
+            <div class="form-group">
+                <label for="field_name" class="required">Field Name</label>
+                <input type="text" name="field_name" id="field_name" class="form-control"
+                    placeholder="e.g., industry_sector" value="{{ form.field_name.value|default:'' }}" required
+                    pattern="[a-z_][a-z0-9_]*"
+                    title="Use lowercase letters, numbers, and underscores only. Must start with a letter.">
+                <div class="help-text">Internal field name (lowercase, underscores only, e.g., 'industry_sector')</div>
+                {% if form.field_name.errors %}
+                <div class="text-danger">{{ form.field_name.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Field Label -->
+            <div class="form-group">
+                <label for="field_label" class="required">Field Label</label>
+                <input type="text" name="field_label" id="field_label" class="form-control"
+                    placeholder="e.g., Industry Sector" value="{{ form.field_label.value|default:'' }}" required>
+                <div class="help-text">Display label shown to users</div>
+                {% if form.field_label.errors %}
+                <div class="text-danger">{{ form.field_label.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Field Configuration -->
+        <div class="form-section">
+            <h3>Field Configuration</h3>
+
+            <!-- Field Type -->
+            <div class="form-group">
+                <label class="required">Field Type</label>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" name="field_type" id="type_text" value="text" {% if not
+                            form.field_type.value or form.field_type.value=='text' %}checked{% endif %}>
+                        <label for="type_text">Text</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" name="field_type" id="type_number" value="number" {% if
+                            form.field_type.value=='number' %}checked{% endif %}>
+                        <label for="type_number">Number</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" name="field_type" id="type_date" value="date" {% if
+                            form.field_type.value=='date' %}checked{% endif %}>
+                        <label for="type_date">Date</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" name="field_type" id="type_boolean" value="boolean" {% if
+                            form.field_type.value=='boolean' %}checked{% endif %}>
+                        <label for="type_boolean">Checkbox</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" name="field_type" id="type_select" value="select" {% if
+                            form.field_type.value=='select' %}checked{% endif %}>
+                        <label for="type_select">Dropdown</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" name="field_type" id="type_textarea" value="textarea" {% if
+                            form.field_type.value=='textarea' %}checked{% endif %}>
+                        <label for="type_textarea">Text Area</label>
+                    </div>
+                </div>
+                {% if form.field_type.errors %}
+                <div class="text-danger">{{ form.field_type.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Options (for select fields) -->
+            <div class="form-group" id="optionsGroup" style="display: none;">
+                <label for="options">Dropdown Options</label>
+                <textarea name="options" id="options" class="form-control" rows="6"
+                    placeholder="Enter each option on a new line, e.g.:&#10;Enterprise&#10;Mid-Market&#10;SMB&#10;Startup">{{ form.options.value|default:'' }}</textarea>
+                <div class="help-text">Enter each option on a new line</div>
+                {% if form.options.errors %}
+                <div class="text-danger">{{ form.options.errors }}</div>
+                {% endif %}
+
+                <div class="options-preview" id="optionsPreview" style="display: none;">
+                    <h4>Preview:</h4>
+                    <ul id="optionsList"></ul>
+                </div>
+            </div>
+
+            <!-- Is Required -->
+            <div class="form-group">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" name="is_required" id="is_required" {% if form.is_required.value %}checked{%
+                        endif %}>
+                    <label for="is_required">Make this field required</label>
+                </div>
+                <div class="help-text">If checked, users must fill this field</div>
+                {% if form.is_required.errors %}
+                <div class="text-danger">{{ form.is_required.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Help Text -->
+            <div class="form-group">
+                <label for="help_text">Help Text (Optional)</label>
+                <textarea name="help_text" id="help_text" class="form-control" rows="2"
+                    placeholder="Provide guidance to users filling this field">{{ form.help_text.value|default:'' }}</textarea>
+                <div class="help-text">Additional guidance shown below the field</div>
+                {% if form.help_text.errors %}
+                <div class="text-danger">{{ form.help_text.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Default Value -->
+            <div class="form-group">
+                <label for="default_value">Default Value (Optional)</label>
+                <input type="text" name="default_value" id="default_value" class="form-control"
+                    placeholder="Pre-fill with this value" value="{{ form.default_value.value|default:'' }}">
+                <div class="help-text">Pre-filled value for new records</div>
+                {% if form.default_value.errors %}
+                <div class="text-danger">{{ form.default_value.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="btn-group">
+            <button type="submit" class="btn btn-primary">
+                <svg width="16" height="16" fill="currentColor" class="mr-2" style="vertical-align: text-bottom;"
+                    viewBox="0 0 16 16">
+                    <path
+                        d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm10.03 4.97a.75.75 0 0 1 .011 1.05l- 3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.75.75 0 0 1 1.08-.022z" />
+                </svg>
+                Save Custom Field
+            </button>
+            <a href="{% url 'settings_app:list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const fieldTypeInputs = document.querySelectorAll('input[name="field_type"]');
+        const optionsGroup = document.getElementById('optionsGroup');
+        const optionsTextarea = document.getElementById('options');
+        const optionsPreview = document.getElementById('optionsPreview');
+        const optionsList = document.getElementById('optionsList');
+
+        // Show/hide options field based on type selection
+        function toggleOptionsField() {
+            const selectedType = document.querySelector('input[name="field_type"]:checked').value;
+            if (selectedType === 'select') {
+                optionsGroup.style.display = 'block';
+            } else {
+                optionsGroup.style.display = 'none';
+            }
+        }
+
+        // Update options preview
+        function updateOptionsPreview() {
+            const optionsText = optionsTextarea.value.trim();
+            if (optionsText) {
+                const options = optionsText.split('\n').filter(opt => opt.trim());
+                if (options.length > 0) {
+                    optionsList.innerHTML = options.map(opt => `<li>${opt.trim()}</li>`).join('');
+                    optionsPreview.style.display = 'block';
+                } else {
+                    optionsPreview.style.display = 'none';
+                }
+            } else {
+                optionsPreview.style.display = 'none';
+            }
+        }
+
+        // Add event listeners
+        fieldTypeInputs.forEach(input => {
+            input.addEventListener('change', toggleOptionsField);
+        });
+
+        optionsTextarea.addEventListener('input', updateOptionsPreview);
+
+        // Auto-generate field_name from field_label
+        const fieldLabelInput = document.getElementById('field_label');
+        const fieldNameInput = document.getElementById('field_name');
+
+        fieldLabelInput.addEventListener('input', function () {
+            if (!fieldNameInput.value || fieldNameInput.dataset.autoGenerated) {
+                const generatedName = this.value
+                    .toLowerCase()
+                    .replace(/[^a-z0-9\s]/g, '')
+                    .replace(/\s+/g, '_')
+                    .replace(/^_+|_+$/g, '');
+                fieldNameInput.value = generatedName;
+                fieldNameInput.dataset.autoGenerated = 'true';
+            }
+        });
+
+        fieldNameInput.addEventListener('input', function () {
+            if (this.value) {
+                delete this.dataset.autoGenerated;
+            }
+        });
+
+        // Initialize on load
+        toggleOptionsField();
+        updateOptionsPreview();
+    });
+</script>
+{% endblock %}

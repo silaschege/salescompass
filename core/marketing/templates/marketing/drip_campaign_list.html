@@ -1,0 +1,94 @@
+{% extends 'core/base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Drip Campaigns</h1>
+        <a href="{% url 'marketing:drip_campaign_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Drip Campaign
+        </a>
+    </div>
+
+    {% if campaigns %}
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Steps</th>
+                        <th>Active Enrollments</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for campaign in campaigns %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'marketing:drip_campaign_detail' campaign.pk %}">
+                                {{ campaign.name }}
+                            </a>
+                        </td>
+                        <td>{{ campaign.steps.count }}</td>
+                        <td>{{ campaign.enrollments.filter.count }}</td>
+                        <td>
+                            {% if campaign.is_active %}
+                            <span class="badge badge-success">Active</span>
+                            {% else %}
+                            <span class="badge badge-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ campaign.created_at|naturaltime }}</td>
+                        <td>
+                            <a href="{% url 'marketing:drip_campaign_detail' campaign.pk %}"
+                                class="btn btn-sm btn-info">View</a>
+                            <a href="{% url 'marketing:drip_campaign_update' campaign.pk %}"
+                                class="btn btn-sm btn-warning">Edit</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if is_paginated %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center mt-4">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="alert alert-info">
+        <h4>No Drip Campaigns Yet</h4>
+        <p>Create your first automated email sequence to engage leads over time.</p>
+        <a href="{% url 'marketing:drip_campaign_create' %}" class="btn btn-primary">Create Drip Campaign</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

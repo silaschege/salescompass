@@ -1,0 +1,23 @@
+{% extends 'core/base_module.html' %}
+
+{% block module_nav %}
+<!-- Sales Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#salesMenu">
+    <i class="bi bi-graph-up"></i> Sales
+</a>
+<div class="collapse show" id="salesMenu">
+    <a class="nav-link ms-3" href="{% url 'sales:sales_dashboard' %}">Dashboard</a>
+    <a class="nav-link ms-3" href="{% url 'sales:sale_list' %}">Sales List</a>
+    <a class="nav-link ms-3" href="{% url 'sales:sale_create' %}">Create Sale</a>
+</div>
+
+<!-- Products Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#productsMenu">
+    <i class="bi bi-box-seam"></i> Products
+</a>
+<div class="collapse" id="productsMenu">
+    <a class="nav-link ms-3" href="{% url 'sales:product_dashboard' %}">Dashboard</a>
+    <a class="nav-link ms-3" href="{% url 'sales:product_list' %}">Products List</a>
+    <a class="nav-link ms-3" href="{% url 'sales:product_create' %}">Create Product</a>
+</div>
+{% endblock %}

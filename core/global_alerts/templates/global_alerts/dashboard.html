@@ -1,0 +1,58 @@
+{% extends "global_alerts/base.html" %}
+
+{% block title %}Global Alerts Dashboard - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Global Alerts & System Communication</h1>
+
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-bell text-primary"></i> Total Alerts</h5>
+                    <h2 class="mb-0">0</h2>
+                    <small class="text-muted">All time</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-broadcast text-success"></i> Active Now</h5>
+                    <h2 class="mb-0">0</h2>
+                    <small class="text-muted">Currently showing</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-clock text-info"></i> Scheduled</h5>
+                    <h2 class="mb-0">0</h2>
+                    <small class="text-muted">Upcoming alerts</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-exclamation-triangle text-danger"></i> Critical</h5>
+                    <h2 class="mb-0">0</h2>
+                    <small class="text-muted">High priority</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Recent Alerts</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">No alerts created. Create your first global alert to communicate with tenants.</p>
+            <button class="btn btn-primary">Create Alert</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

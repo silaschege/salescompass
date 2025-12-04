@@ -1,0 +1,209 @@
+# apps/engagement/
+# ├── __init__.py
+# ├── admin.py
+# ├── apps.py
+# ├── forms.py
+# ├── models.py
+# ├── urls.py
+# ├── views.py
+# ├── utils.py
+# ├── tasks.py
+# ├── consumers.py
+# ├── routing.py
+# └── templates/engagement/
+#     ├── feed.html
+#     ├── dashboard.html
+#     ├── next_best_action.html
+#     └── engagement_detail.html
+
+from django.db import models
+from core.models import TenantModel
+from core.models import User
+from accounts.models import Account
+from opportunities.models import Opportunity
+
+
+
+ACTION_TYPES = [
+    ('send_email', 'Send Email'),
+    ('schedule_call', 'Schedule Call'),
+    ('send_proposal', 'Send Proposal'),
+    ('share_esg_brief', 'Share ESG Brief'),
+    ('check_in', 'Check In'),
+    ('create_task', 'Create Task'),
+]
+
+
+class EngagementEvent(TenantModel):
+    """
+    Unified activity log for all customer interactions.
+    """
+    EVENT_TYPES = [
+        # RESTORE legacy event types so dashboards don’t break
+    ('task_lead_contact_completed', 'Lead Contact Completed'),
+    ('task_lead_review_completed', 'Task Lead Review Completed'),
+    ('task_lead_qualify_completed', 'Lead Qualification Completed'),
+    ('task_opportunity_demo_completed', 'Opportunity Demo Completed'),
+    ('task_case_escalation_completed', 'Case Escalation Completed'),
+    ('task_account_followup_completed', 'Account Follow-up Completed'),
+    ('task_proposal_followup_completed', 'Proposal Follow-up Completed'),
+
+
+    ('lead_created', 'Lead Created'),
+    ('lead_contacted', 'Lead Contacted'),
+    ('account_followup_completed', 'Account Follow-up Completed'),
+    ('demo_completed', 'Demo Completed'),
+    ('case_escalation_handled', 'Case Escalation Handled'),
+    ('detractor_followup_completed', 'Detractor Follow-up Completed'),
+    ('proposal_viewed', 'Proposal Viewed'),
+    ('email_opened', 'Email Opened'),
+    ('link_clicked', 'Link Clicked'),
+    ('landing_page_visited', 'Landing Page Visited'),
+    ('form_submitted', 'Form Submitted'),
+    ('content_downloaded', 'Content Downloaded'),
+    ('renewal_reminder', 'Renewal Reminder'),
+    ('nps_submitted', 'NPS Submitted'),
+    ]
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='engagement_events')
+    opportunity = models.ForeignKey(
+        Opportunity, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='engagement_events'
+    )
+    event_type = models.CharField(max_length=50, choices=EVENT_TYPES)
+    description = models.TextField()
+    title = models.CharField(max_length=255, blank=True)  # e.g., "Q3 Proposal Viewed"
+    case = models.ForeignKey('cases.Case', on_delete=models.CASCADE, null=True, blank=True)
+    nps_response = models.ForeignKey('nps.NpsResponse', on_delete=models.CASCADE, null=True, blank=True)
+    contact = models.ForeignKey('accounts.Contact', on_delete=models.CASCADE, null=True, blank=True)
+    # Context
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)  # internal user
+    contact_email = models.EmailField(blank=True)  # external contact
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    priority = models.CharField(max_length=20, choices=[('low', 'Low'), ('medium', 'Medium'), ('high', 'High'), ('critical', 'Critical')])
+    is_important = models.BooleanField(default=False)
+    # Metadata (structured data)
+    metadata = models.JSONField(default=dict, blank=True)  # e.g., {'proposal_id': 123, 'duration_sec': 120}
+    
+    # Engagement scoring
+    engagement_score = models.FloatField(default=0.0)  # 0–100
+    is_important = models.BooleanField(default=False)  # for highlighting
+    
+    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.event_type} - {self.account.name}"
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        
+        if is_new:
+            from automation.utils import emit_event
+            
+            # Emit generic event for all engagement events
+            emit_event('engagement.event_logged', {
+                'event_id': self.id,
+                'event_type': self.event_type,
+                'title': self.title,
+                'account_id': self.account_id,
+                'engagement_score': self.engagement_score,
+                'tenant_id': self.tenant_id
+            })
+            
+            # Emit milestone event for important events
+            if self.is_important or self.engagement_score >= 80:
+                emit_event('engagement.milestone', {
+                    'event_id': self.id,
+                    'event_type': self.event_type,
+                    'title': self.title,
+                    'account_id': self.account_id,
+                    'engagement_score': self.engagement_score,
+                    'tenant_id': self.tenant_id
+                })
+
+    @property
+    def account_name(self):
+        return self.account.name
+
+    @property
+    def opportunity_name(self):
+        return self.opportunity.name if self.opportunity else None
+
+    def get_event_data_for_websocket(self):
+        """Get event data formatted for WebSocket broadcast."""
+        return {
+            'id': self.id,
+            'account_id': self.account.id if self.account else None,
+            'account_name': self.account.name if self.account else 'Unknown Account',
+            'title': self.title or f'{self.get_event_type_display()} Event',
+            'event_type': self.get_event_type_display(),
+            'engagement_score': self.engagement_score,
+            'is_important': self.is_important,
+            'created_at': self.created_at.isoformat(),
+        }
+
+class EngagementStatus(TenantModel):
+    """
+    Aggregated engagement status per account.
+    """
+    account = models.OneToOneField(Account, on_delete=models.CASCADE, related_name='engagement_status')
+    last_engaged_at = models.DateTimeField(null=True, blank=True)
+    engagement_score = models.FloatField(default=0.0)  # rolling 30-day score
+    notes = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"{self.account.name} - {self.engagement_score}"
+    
+
+class NextBestAction(TenantModel):
+    """
+    AI or rule-based recommended action for an account.
+    """
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='next_actions')
+    opportunity = models.ForeignKey(
+        Opportunity, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True
+    )
+    action_type = models.CharField(max_length=50, choices=ACTION_TYPES)
+    contact = models.ForeignKey('accounts.Contact', on_delete=models.CASCADE, null=True, blank=True)
+    description = models.TextField()
+    due_date = models.DateTimeField()
+    completed = models.BooleanField(default=False)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    source = models.CharField(max_length=100, blank=True)  # e.g., "ESG Engine", "Health Predictor"
+    priority = models.CharField(
+        max_length=20,
+        choices=[('low', 'Low'), ('medium', 'Medium'), ('high', 'High'), ('critical', 'Critical')],
+        default='medium'
+    )
+    status = models.CharField(max_length=20, choices=[('open', 'Open'), ('in_progress', 'In Progress'), ('resolved', 'Resolved')])
+    engagement_event = models.ForeignKey('EngagementEvent', on_delete=models.CASCADE, null=True, blank=True)
+    assigned_to = models.ForeignKey('core.User', on_delete=models.CASCADE)
+    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.action_type} for {self.account.name}"
+
+    class Meta:
+        ordering = ['-due_date', 'priority']
+
+
+class EngagementWebhook(TenantModel):
+    """
+    Webhook configuration for external engagement data.
+    """
+    name = models.CharField(max_length=255)
+    webhook_url = models.URLField()
+    secret_key = models.CharField(max_length=255, blank=True)
+    event_types = models.JSONField(default=list)  # e.g., ["web_visit", "social_mention"]
+    is_active = models.BooleanField(default=True)
+    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
+
+    def __str__(self):
+        return self.name

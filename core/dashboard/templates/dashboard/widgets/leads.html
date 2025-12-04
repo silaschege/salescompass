@@ -1,0 +1,38 @@
+<div class="card h-100">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Lead Metrics</h5>
+    </div>
+    <div class="card-body">
+        <div class="row text-center mb-4">
+            <div class="col-4">
+                <div class="display-6 fw-bold text-primary">{{ total_leads }}</div>
+                <div class="text-muted small">Total Leads</div>
+            </div>
+            <div class="col-4">
+                <div class="display-6 fw-bold text-success">{{ qualified_leads }}</div>
+                <div class="text-muted small">Qualified</div>
+            </div>
+            <div class="col-4">
+                <div class="display-6 fw-bold text-info">{{ conversion_rate }}%</div>
+                <div class="text-muted small">Conversion</div>
+            </div>
+        </div>
+
+        {% if by_source %}
+        <h6 class="text-uppercase text-muted small fw-bold mb-3">By Source</h6>
+        <div class="list-group list-group-flush">
+            {% for source in by_source %}
+            <div class="list-group-item px-0 d-flex justify-content-between align-items-center border-0 py-1">
+                <div>
+                    {% if source.icon %}
+                    <i class="bi bi-{{ source.icon }} me-2 text-muted"></i>
+                    {% endif %}
+                    {{ source.source }}
+                </div>
+                <span class="badge bg-light text-dark">{{ source.count }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>

@@ -1,0 +1,33 @@
+{% extends "public/base.html" %}
+
+{% block title %}MFA Verification - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">Two-Factor Authentication</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-center">Please enter the verification code sent to your email.</p>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="code" class="form-label">Verification Code</label>
+                            <input type="text" class="form-control text-center" id="code" name="code"
+                                placeholder="123456" required maxlength="6"
+                                style="letter-spacing: 5px; font-size: 1.5rem;">
+                            <div class="form-text text-center">For testing, use: 123456</div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Verify</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

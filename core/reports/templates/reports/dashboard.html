@@ -1,0 +1,40 @@
+{% extends "reports/base.html" %}
+
+{% block title %}Reports Dashboard - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Reports Dashboard</h1>
+        <p class="text-white text-center lead">Customizable analytics and KPI tracking</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Main Content Area -->
+    <div class="row">
+        {% for widget in widget_groups.main %}
+        <div class="col-md-6 mb-4">
+            {% include "reports/widget.html" with widget=widget %}
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Sidebar Area -->
+    <div class="row">
+        <div class="col-md-4">
+            {% for widget in widget_groups.sidebar %}
+            <div class="mb-4">
+                {% include "reports/widget.html" with widget=widget %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}

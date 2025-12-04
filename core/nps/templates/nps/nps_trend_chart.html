@@ -1,0 +1,118 @@
+{% extends "nps/base.html" %}
+{% load auth_extras math %} 
+{% block title %}NPS Trend Charts - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">NPS Trend Charts</h1>
+        <p class="text-white text-center lead">Historical Net Promoter Score trends</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Period Selector -->
+    <form method="get" class="mb-3">
+        <div class="btn-group" role="group">
+            <a href="?period=daily" class="btn btn-outline-primary {% if period == 'daily' %}active{% endif %}">Daily</a>
+            <a href="?period=weekly" class="btn btn-outline-primary {% if period == 'weekly' %}active{% endif %}">Weekly</a>
+            <a href="?period=monthly" class="btn btn-outline-primary {% if period == 'monthly' %}active{% endif %}">Monthly</a>
+            <a href="?period=yearly" class="btn btn-outline-primary {% if period == 'yearly' %}active{% endif %}">Yearly</a>
+        </div>
+    </form>
+
+    <!-- Chart -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>NPS Trend ({{ period|title }})</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="npsChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Benchmark Comparison -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Industry Benchmarks</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded">
+                                <h6>Technology</h6>
+                                <p class="display-6">42</p>
+                                <small>Your Score: {{ nps_score }}</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded">
+                                <h6>Finance</h6>
+                                <p class="display-6">38</p>
+                                <small>Your Score: {{ nps_score }}</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded">
+                                <h6>Healthcare</h6>
+                                <p class="display-6">45</p>
+                                <small>Your Score: {{ nps_score }}</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded">
+                                <h6>Manufacturing</h6>
+                                <p class="display-6">36</p>
+                                <small>Your Score: {{ nps_score }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('npsChart').getContext('2d');
+const data = {{ trend_data_json|safe }};
+new Chart(ctx, {
+    type: 'line',
+     {
+        labels: data.map(d => d.date),
+         data.map(d => d.nps),
+        borderColor: '#0d6efd',
+        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+        fill: true,
+        tension: 0.3
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                min: -100,
+                max: 100,
+                ticks: {
+                    callback: function(value) {
+                        return value + ' NPS';
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "proposals/base.html" %}
+{% load auth_extras %}
+
+{% block title %}{{ proposal.title }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h1 class="block-title fw-bold mb-0">{{ proposal.title }}</h1>
+        <span class="badge bg-{% if proposal.status == 'accepted' %}success{% elif proposal.status == 'rejected' %}danger{% elif proposal.status == 'viewed' %}info{% elif proposal.status == 'sent' %}warning{% else %}secondary{% endif %}">
+            {{ proposal.get_status_display }}
+        </span>
+        {% if proposal.esg_section_viewed %}
+            <span class="badge bg-success">🌱 ESG Viewed</span>
+        {% endif %}
+    </div>
+    <div>
+        {% if request.user.is_authenticated and request.user|has_perm:"proposals:write" %}
+            <a href="{% url 'proposals:update' proposal.pk %}" class="btn btn-outline-secondary">Edit</a>
+            <a href="{% url 'proposals:delete' proposal.pk %}" class="btn btn-outline-danger">Delete</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <h3>Proposal Content</h3>
+        <div class="proposal-content">
+            {{ proposal.content|safe }}
+        </div>
+        
+        {% if proposal.esg_section_content %}
+        <div class="esg-box">
+            <h4>ESG Impact Statement</h4>
+            {{ proposal.esg_section_content|safe }}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header">Engagement Metrics</div>
+            <div class="card-body">
+                <p><strong>Views:</strong> {{ proposal.view_count }}</p>
+                <p><strong>Total View Time:</strong> {{ proposal.total_view_time_sec }} seconds</p>
+                <p><strong>ESG Section Viewed:</strong> 
+                    {% if proposal.esg_section_viewed %}✅ Yes{% else %}❌ No{% endif %}
+                </p>
+                <p><strong>Email Opened:</strong> 
+                    {% if proposal.email_opened %}✅ Yes{% else %}❌ No{% endif %}
+                </p>
+                <p><strong>Email Clicks:</strong> {{ proposal.email_click_count }}</p>
+                <div class="progress" style="height: 20px;">
+                    <div class="progress-bar bg-primary" style="width: {{ proposal.engagement_score }}%;">
+                        {{ proposal.engagement_score|floatformat:0 }}% engagement
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Actions</div>
+            <div class="card-body">
+                <a href="{% url 'proposals:generate_pdf' proposal.pk %}" class="btn btn-outline-primary w-100 mb-2">
+                    📄 Generate PDF
+                </a>
+                <a href="{% url 'proposals:send_email' proposal.pk %}" class="btn btn-outline-secondary w-100">
+                    📧 Send Email
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>{% block title %}Tenant Management - SalesCompass{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f7f8fc 0%, #e3e6f3 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: #fff;
+            border-right: 1px solid #e3e6f3;
+            padding: 1.5rem 1rem;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
+        .sidebar .navbar-brand {
+            color: #6f42c1 !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+            text-decoration: none;
+        }
+
+        .sidebar .nav-link {
+            color: #333;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link:focus,
+        .sidebar .nav-link.active {
+            color: #6f42c1;
+            background-color: #f0e6ff;
+            font-weight: 500;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .sidebar .section-title {
+            color: #6c757d;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 1.5rem 0 0.5rem 1rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 2rem;
+            flex-grow: 1;
+            transition: margin-left 0.3s ease;
+            width: 100%;
+        }
+
+        .main-content.sidebar-hidden {
+            margin-left: 0;
+        }
+
+        /* Toggle Button */
+        .toggle-sidebar {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: #6f42c1;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .card {
+            border-radius: 1rem;
+            box-shadow: 0 2px 16px rgba(111, 66, 193, 0.08);
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: #6f42c1;
+            border-color: #6f42c1;
+        }
+
+        .btn-primary:hover {
+            background-color: #5a34a0;
+            border-color: #5a34a0;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.visible {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 2rem 1rem;
+            }
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+
+    <!-- Toggle Button -->
+    <button class="toggle-sidebar" id="toggleSidebar">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <a class="navbar-brand" href="{% url 'app_selection' %}">
+            <i class="bi bi-compass me-2"></i> SalesCompass
+        </a>
+
+        <nav class="nav flex-column">
+            <!-- Tenant Management -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#tenantMgmtMenu">
+                <i class="bi bi-building"></i> Tenant Management
+            </a>
+            <div class="collapse" id="tenantMgmtMenu">
+                <a class="nav-link ms-3" href="{% url 'tenants:list' %}">All Tenants</a>
+                <a class="nav-link ms-3" href="{% url 'tenants:create' %}">Create New Tenant</a>
+                <a class="nav-link ms-3" href="{% url 'tenants:search' %}">Search Tenants</a>
+            </div>
+
+            <!-- Provisioning & Onboarding -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#provisioningMenu">
+                <i class="bi bi-rocket-takeoff"></i> Provisioning & Onboarding
+            </a>
+            <div class="collapse" id="provisioningMenu">
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'provision_tenant' %}active{% endif %}"
+                    href="{% url 'tenants:provision_tenant' %}">
+                    Provision Tenant
+                </a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'subdomain_assignment' %}active{% endif %}"
+                    href="{% url 'tenants:subdomain_assignment' %}">Subdomain Assignment</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'database_initialization' %}active{% endif %}"
+                    href="{% url 'tenants:database_initialization' %}">Database Initialization</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'admin_user_setup' %}active{% endif %}"
+                    href="{% url 'tenants:admin_user_setup' %}">Admin User Setup</a>
+            </div>
+
+            <!-- Lifecycle Management -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#lifecycleMenu">
+                <i class="bi bi-arrow-repeat"></i> Lifecycle Management
+            </a>
+            <div class="collapse" id="lifecycleMenu">
+                <a class="nav-link ms-3" href="{% url 'tenants:list' %}">Suspend Tenant</a>
+                <a class="nav-link ms-3" href="{% url 'tenants:list' %}">Archive Tenant</a>
+                <a class="nav-link ms-3" href="{% url 'tenants:list' %}">Reactivate Tenant</a>
+                <a class="nav-link ms-3" href="{% url 'tenants:list' %}">Delete Tenant</a>
+            </div>
+
+            <!-- Module Entitlements -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#entitlementsMenu">
+                <i class="bi bi-puzzle"></i> Module Entitlements
+            </a>
+            <div class="collapse" id="entitlementsMenu">
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'plan_selection' %}active{% endif %}"
+                    href="{% url 'tenants:plan_selection' %}">
+                    Manage Modules
+                </a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'feature_toggles' %}active{% endif %}"
+                    href="{% url 'tenants:feature_toggles' %}">Feature Toggles</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'usage_limits' %}active{% endif %}"
+                    href="{% url 'tenants:usage_limits' %}">Usage Limits</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'entitlement_templates' %}active{% endif %}"
+                    href="{% url 'tenants:entitlement_templates' %}">Entitlement Templates</a>
+            </div>
+
+            <!-- Domain & Branding -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#brandingMenu">
+                <i class="bi bi-palette"></i> Domain & Branding
+            </a>
+            <div class="collapse" id="brandingMenu">
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'domain_management' %}active{% endif %}"
+                    href="{% url 'tenants:domain_management' %}">Custom Domains</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'ssl_certificates' %}active{% endif %}"
+                    href="{% url 'tenants:ssl_certificates' %}">SSL Certificates</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'branding_config' %}active{% endif %}"
+                    href="{% url 'tenants:branding_config' %}">Branding Configuration</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'logo_management' %}active{% endif %}"
+                    href="{% url 'tenants:logo_management' %}">Logo Management</a>
+            </div>
+
+            <!-- Billing Oversight -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse"
+                data-bs-target="#billingOversightMenu">
+                <i class="bi bi-credit-card"></i> Billing Oversight
+            </a>
+            <div class="collapse" id="billingOversightMenu">
+                <a class="nav-link ms-3" href="{% url 'billing:portal' %}">Billing Portal</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'subscription_overview' %}active{% endif %}"
+                    href="{% url 'tenants:subscription_overview' %}">Subscription Overview</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'revenue_analytics' %}active{% endif %}"
+                    href="{% url 'tenants:revenue_analytics' %}">Revenue Analytics</a>
+            </div>
+
+            <div class="section-title mt-4">NAVIGATION</div>
+
+            <a class="nav-link" href="{% url 'dashboard:admin_dashboard' %}">
+                <i class="bi bi-house-door"></i> Admin Dashboard
+            </a>
+
+            <a class="nav-link" href="{% url 'app_selection' %}">
+                <i class="bi bi-grid"></i> Control Plane Apps
+            </a>
+
+            <div class="mt-auto pt-4 border-top">
+                <a class="nav-link text-danger" href="{% url 'logout' %}">
+                    <i class="bi bi-box-arrow-right"></i> Log Out
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        {% if messages %}
+        <div class="container-fluid mb-3">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const toggleBtn = document.getElementById('toggleSidebar');
+
+            toggleBtn.addEventListener('click', function () {
+                sidebar.classList.toggle('hidden');
+                mainContent.classList.toggle('sidebar-hidden');
+            });
+
+            if (window.innerWidth <= 768) {
+                document.addEventListener('click', function (e) {
+                    if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+                        sidebar.classList.remove('visible');
+                    }
+                });
+            }
+        });
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+
+</html>

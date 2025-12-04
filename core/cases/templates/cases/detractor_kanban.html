@@ -1,0 +1,166 @@
+{% extends "cases/base.html" %}
+{% load auth_extras filters_extras%}
+{% block title %}Detractor Alert Kanban - SalesCompass{% endblock %}
+
+{% block content %}
+        <h1 class="block-title">CSAT Detractor Alert Kanban</h1>
+        <p class="text-small text-center lead">
+            Manage customer satisfaction detractors requiring immediate follow-up
+        </p>
+ 
+<div class="container">
+    <div class="alert alert-info mb-4">
+        <strong>Detractor Alert:</strong> CSAT scores of 3 or below automatically create alerts that require follow-up.
+        <span class="badge bg-danger">Action Required</span>
+    </div>
+
+    <div id="kanban-board" class="d-flex flex-wrap gap-3">
+        <!-- Open Column -->
+        <div class="kanban-column" data-status="open">
+            <div class="card bg-light">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">🔴 Open Alerts
+                        <span class="badge bg-white text-danger ms-2">{{ alerts|status_count:"open" }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-2">
+                    {% for alert in alerts %}
+                        {% if alert.status == 'open' %}
+                            {% include "cases/detractor_kanban_card.html" with alert=alert %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- In Progress Column -->
+        <div class="kanban-column" data-status="in_progress">
+            <div class="card bg-light">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">🟡 In Progress
+                        <span class="badge bg-white text-warning ms-2">{{ alerts|status_count:"in_progress" }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-2">
+                    {% for alert in alerts %}
+                        {% if alert.status == 'in_progress' %}
+                            {% include "cases/detractor_kanban_card.html" with alert=alert %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Resolved Column -->
+        <div class="kanban-column" data-status="resolved">
+            <div class="card bg-light">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">🟢 Resolved
+                        <span class="badge bg-white text-success ms-2">{{ alerts|status_count:"resolved" }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-2">
+                    {% for alert in alerts %}
+                        {% if alert.status == 'resolved' %}
+                            {% include "cases/detractor_kanban_card.html" with alert=alert %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<style>
+.kanban-column { min-width: 300px; flex: 1; }
+.kanban-card { cursor: move; background: white; border-left: 4px solid #dc3545; margin-bottom: 8px; }
+.kanban-card.dragging { opacity: 0.5; }
+.csat-badge { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; color: white; }
+.csat-low { background-color: #dc3545; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Make cards draggable
+    const cards = document.querySelectorAll('.kanban-card');
+    cards.forEach(card => {
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragend', handleDragEnd);
+    });
+
+    // Make columns droppable
+    const columns = document.querySelectorAll('.kanban-column');
+    columns.forEach(col => {
+        col.addEventListener('dragover', handleDragOver);
+        col.addEventListener('dragenter', handleDragEnter);
+        col.addEventListener('dragleave', handleDragLeave);
+        col.addEventListener('drop', handleDrop);
+    });
+
+    let draggedCard = null;
+
+    function handleDragStart(e) {
+        draggedCard = this;
+        setTimeout(() => this.classList.add('dragging'), 0);
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragEnd() {
+        this.classList.remove('dragging');
+        draggedCard = null;
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+
+    function handleDragEnter(e) {
+        this.classList.add('bg-light');
+    }
+
+    function handleDragLeave() {
+        this.classList.remove('bg-light');
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        this.classList.remove('bg-light');
+        
+        if (draggedCard) {
+            const cardContainer = this.querySelector('.card-body');
+            cardContainer.appendChild(draggedCard);
+            
+            const targetStatus = this.dataset.status;
+            const alertId = draggedCard.dataset.alertId;
+            
+            // Update status via AJAX
+            updateDetractorStatus(alertId, targetStatus);
+        }
+    }
+
+    function updateDetractorStatus(alertId, status) {
+        fetch('{% url "cases:update_detractor_status" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ alert_id: alertId, status: status })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                alert('Failed to update status: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            alert('Network error: ' + error);
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends "global_alerts/base.html" %}
+
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Alert{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">{% if object %}Edit{% else %}Create{% endif %} Alert</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label for="id_title" class="form-label">Title *</label>
+                    <input type="text" class="form-control" id="id_title" name="title"
+                        value="{{ form.title.value|default:'' }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_message" class="form-label">Message *</label>
+                    <textarea class="form-control" id="id_message" name="message" rows="4"
+                        required>{{ form.message.value|default:'' }}</textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="id_alert_type" class="form-label">Alert Type</label>
+                        <select class="form-select" id="id_alert_type" name="alert_type">
+                            <option value="general">General Notice</option>
+                            <option value="maintenance">Scheduled Maintenance</option>
+                            <option value="outage">Critical Outage</option>
+                            <option value="announcement">New Feature Announcement</option>
+                            <option value="security">Security Alert</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="id_severity" class="form-label">Severity</label>
+                        <select class="form-select" id="id_severity" name="severity">
+                            <option value="info">Info</option>
+                            <option value="warning">Warning</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="id_start_time" class="form-label">Start Time</label>
+                        <input type="datetime-local" class="form-control" id="id_start_time" name="start_time"
+                            value="{{ form.start_time.value|date:'Y-m-d\TH:i' }}">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="id_end_time" class="form-label">End Time (Optional)</label>
+                        <input type="datetime-local" class="form-control" id="id_end_time" name="end_time"
+                            value="{{ form.end_time.value|date:'Y-m-d\TH:i' }}">
+                    </div>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="id_is_global" name="is_global" {{
+                        form.is_global.value|yesno:"checked," }}>
+                    <label class="form-check-label" for="id_is_global">Global (show to all tenants)</label>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="id_is_dismissible" name="is_dismissible" {{
+                        form.is_dismissible.value|yesno:"checked," }}>
+                    <label class="form-check-label" for="id_is_dismissible">Dismissible</label>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="id_show_on_all_pages" name="show_on_all_pages"
+                        {{ form.show_on_all_pages.value|yesno:"checked," }}>
+                    <label class="form-check-label" for="id_show_on_all_pages">Show on all pages</label>
+                </div>
+
+                {% if object %}
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="id_is_active" name="is_active" {{
+                        form.is_active.value|yesno:"checked," }}>
+                    <label class="form-check-label" for="id_is_active">Active</label>
+                </div>
+                {% endif %}
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">Save Alert</button>
+                    <a href="{% url 'global_alerts:alert_list' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

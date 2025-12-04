@@ -1,0 +1,57 @@
+{% extends "audit_logs/base.html" %}
+
+{% block title %}Audit Logs Dashboard - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Audit Logs & Compliance</h1>
+
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-file-text text-primary"></i> Total Logs</h5>
+                    <h2 class="mb-0">0</h2>
+                    <small class="text-muted">All time</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-exclamation-triangle text-warning"></i> Warnings</h5>
+                    <h2 class="mb-0">0</h2>
+                    <small class="text-muted">Last 24 hours</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-x-circle text-danger"></i> Critical</h5>
+                    <h2 class="mb-0">0</h2>
+                    <small class="text-muted">Last 24 hours</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-shield-check text-success"></i> Compliant</h5>
+                    <h2 class="mb-0">100%</h2>
+                    <small class="text-muted">SOC2/HIPAA</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Recent Audit Logs</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">No audit logs available. Logs will appear here as actions are performed.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "global_alerts/base.html" %}
+
+{% block title %}Global Alerts - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Global Alerts</h1>
+        <a href="{% url 'global_alerts:alert_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Create New Alert
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Severity</th>
+                            <th>Status</th>
+                            <th>Scope</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alert in alerts %}
+                        <tr>
+                            <td>{{ alert.title }}</td>
+                            <td><span class="badge bg-secondary">{{ alert.get_alert_type_display }}</span></td>
+                            <td><span class="badge bg-{{ alert.severity }}">{{ alert.get_severity_display }}</span></td>
+                            <td>
+                                {% if alert.is_currently_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{% if alert.is_global %}Global{% else %}Tenant-Specific{% endif %}</td>
+                            <td>
+                                <a href="{% url 'global_alerts:alert_detail' alert.pk %}"
+                                    class="btn btn-sm btn-outline-primary">View</a>
+                                <a href="{% url 'global_alerts:alert_update' alert.pk %}"
+                                    class="btn btn-sm btn-outline-secondary">Edit</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">No alerts found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

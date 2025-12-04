@@ -1,0 +1,50 @@
+{% extends "audit_logs/base.html" %}
+
+{% block title %}Recent Actions - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Recent Actions (Last 24 Hours)</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Resource</th>
+                            <th>Severity</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td>{{ log.timestamp|date:"H:i:s" }}</td>
+                            <td>{{ log.user_email }}</td>
+                            <td>{{ log.action_type }}</td>
+                            <td>{{ log.resource_type }}</td>
+                            <td>
+                                <span class="badge bg-{{ log.severity|default:'secondary' }}">{{ log.severity|title
+                                    }}</span>
+                            </td>
+                            <td>
+                                <a href="{% url 'audit_logs:log_detail' log.pk %}"
+                                    class="btn btn-sm btn-outline-primary">View</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">No recent actions.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

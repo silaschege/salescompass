@@ -1,0 +1,23 @@
+<div class="kanban-card {% if task.is_overdue %}overdue-task{% endif %} 
+                    {% if task.priority == 'high' %}high-priority{% elif task.priority == 'medium' %}medium-priority{% else %}low-priority{% endif %}"
+     data-task-id="{{ task.id }}" 
+     data-status="{{ task.status }}">
+    <h6 class="card-title">
+        <a href="{% url 'tasks:detail' task.pk %}" class="text-decoration-none">
+            {{ task.title|truncatechars:40 }}
+        </a>
+    </h6>
+    <p class="card-text">{{ task.description|truncatewords:10 }}</p>
+    <div class="card-meta">
+        <span>
+            {% if task.due_date %}
+                {{ task.due_date|date:"M d" }}
+            {% else %}
+                No due date
+            {% endif %}
+        </span>
+        <span class="badge bg-{% if task.priority == 'high' %}danger{% elif task.priority == 'medium' %}warning{% elif task.priority == 'low' %}secondary{% else %}info{% endif %}">
+            {{ task.get_priority_display|slice:":1" }}
+        </span>
+    </div>
+</div>

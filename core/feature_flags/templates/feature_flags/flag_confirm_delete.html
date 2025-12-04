@@ -1,0 +1,25 @@
+{% extends "feature_flags/base.html" %}
+
+{% block title %}Delete Feature Flag - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Delete Feature Flag</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i>
+                Are you sure you want to delete the feature flag "<strong>{{ object.name }}</strong>" ({{ object.key
+                }})?
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                <a href="{% url 'feature_flags:flag_list' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

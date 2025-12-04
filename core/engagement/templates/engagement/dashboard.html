@@ -1,0 +1,447 @@
+{% extends "engagement/base.html" %}
+{% load auth_extras math filters_extras %}
+{% block title %}Engagement Dashboard - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Engagement Dashboard</h1>
+        <p class="text-white text-center lead">Real-time insights into customer engagement and next best actions</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Action Buttons and Date Range -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="d-flex gap-2">
+                <a href="{% url 'engagement:feed' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-activity"></i> Live Feed
+                </a>
+                <a href="{% url 'engagement:next_best_action' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-lightning"></i> Next Best Actions
+                </a>
+                <a href="" class="btn btn-outline-secondary">
+                    <i class="bi bi-webhook"></i> Webhooks
+                </a>
+            </div>
+        </div>
+        <div class="col-md-6 text-end">
+            <div class="btn-group" role="group">
+                <a href="#" class="btn btn-outline-secondary" data-range="7">7 Days</a>
+                <a href="#" class="btn btn-outline-secondary active" data-range="30">30 Days</a>
+                <a href="#" class="btn btn-outline-secondary" data-range="90">90 Days</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards with Trends -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Events</h6>
+                            <h3 class="mb-0">{{ total_events|intcomma }}</h3>
+                        </div>
+                        <div class="icon bg-primary text-white rounded-circle p-2">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-success">
+                            <i class="bi bi-arrow-up"></i> {{ events_trend }}% vs last period
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Important Events</h6>
+                            <h3 class="mb-0">{{ important_events|intcomma }}</h3>
+                        </div>
+                        <div class="icon bg-warning text-white rounded-circle p-2">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-warning">
+                            <i class="bi bi-arrow-up"></i> {{ important_events_trend }}% vs last period
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Avg Engagement Score</h6>
+                            <h3 class="mb-0">{{ engagement_score|floatformat:1 }}</h3>
+                        </div>
+                        <div class="icon bg-success text-white rounded-circle p-2">
+                            <i class="bi bi-bar-chart-line"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-success">
+                            <i class="bi bi-arrow-up"></i> {{ engagement_score_trend }}% vs last period
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Pending Actions</h6>
+                            <h3 class="mb-0">{{ pending_actions_count|length|intcomma }}</h3>
+                        </div>
+                        <div class="icon bg-info text-white rounded-circle p-2">
+                            <i class="bi bi-lightning"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-danger">
+                            {% if overdue_actions > 0 %}
+                                <i class="bi bi-exclamation-circle"></i> {{ overdue_actions }} overdue
+                            {% else %}
+                                <i class="bi bi-check-circle"></i> All on track
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header border-0 bg-white">
+                    <h5 class="mb-0">Engagement Events Over Time</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="engagementChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header border-0 bg-white">
+                    <h5 class="mb-0">Event Type Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="eventTypeChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="row">
+        <!-- Recent Events -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header border-0 bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Engagement Events</h5>
+                    <a href="{% url 'engagement:feed' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_events %}
+                        <div class="table-responsive">
+                            <table class="table mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Account</th>
+                                        <th>Event</th>
+                                        <th>Type</th>
+                                        <th>Score</th>
+                                        <th>When</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for event in recent_events %}
+                                    <tr class="{% if event.is_important %}table-warning{% endif %}">
+                                        <td>
+                                            <a href="{% url 'accounts:detail' event.account.pk %}" class="text-decoration-none">
+                                                {{ event.account.name|truncatechars:20 }}
+                                            </a>
+                                        </td>
+                                        <td>{{ event.title|default:event.description|truncatechars:30 }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if event.priority == 'critical' %}danger{% elif event.priority == 'high' %}warning{% elif event.priority == 'medium' %}info{% else %}secondary{% endif %}">
+                                                {{ event.get_event_type_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="progress" style="height: 6px; width: 60px;">
+                                                <div class="progress-bar bg-{% if event.engagement_score > 70 %}success{% elif event.engagement_score > 40 %}warning{% else %}danger{% endif %}" 
+                                                     style="width: {{ event.engagement_score|floatformat:0 }}%;">
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ event.created_at|timesince }} ago</td>
+                                        <td>
+                    
+                                            <a href="{% url 'engagement:event_detail' event.pk %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center p-4">
+                            <i class="bi bi-activity display-4 text-muted"></i>
+                            <p class="text-muted mt-2">No recent events found.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Next Best Actions -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header border-0 bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Next Best Actions</h5>
+                    <a href="{% url 'engagement:next_best_action' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if pending_actions %}
+                        <div class="list-group list-group-flush">
+                            {% for action in pending_actions|slice:":5" %}
+                            <div class="list-group-item border-0">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">
+                                            <span class="badge bg-{% if action.priority == 'critical' %}danger{% elif action.priority == 'high' %}warning{% elif action.priority == 'medium' %}info{% else %}secondary{% endif %} me-2">
+                                                {{ action.get_priority_display|slice:":1" }}
+                                            </span>
+                                            {{ action.description|truncatechars:40 }}
+                                        </h6>
+                                        <small class="text-muted d-block">
+                                            Due: {{ action.due_date|date:"M d, Y" }}
+                                        </small>
+                                        {% if action.account %}
+                                            <small class="text-muted">
+                                                Account: {{ action.account.name|truncatechars:20 }}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                    <div class="ms-2">
+                                        {% if action.due_date < now %}
+                                            <span class="badge bg-danger">Overdue</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-primary complete-action" data-action-id="{{ action.id }}">
+                                        <i class="bi bi-check-circle"></i> Complete
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center p-4">
+                            <i class="bi bi-lightning display-4 text-muted"></i>
+                            <p class="text-muted mt-2">No pending actions.</p>
+                            <a href="{% url 'engagement:next_best_action_create' %}" class="btn btn-sm btn-primary mt-2">
+                                <i class="bi bi-plus"></i> Create Action
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% block extra_head %}
+<style>
+.card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.card-header {
+    border-bottom: 1px solid #e9ecef;
+    padding: 1rem 1.25rem;
+}
+
+.icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.table thead th {
+    font-weight: 600;
+    color: #495057;
+}
+
+.list-group-item {
+    padding: 1rem 1.25rem;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.3em 0.6em;
+}
+
+.btn-group .btn {
+    border-radius: 0.375rem !important;
+}
+
+.btn-group .btn.active {
+    background-color: #6f42c1;
+    border-color: #6f42c1;
+    color: white;
+}
+</style>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Date range buttons
+    document.querySelectorAll('[data-range]').forEach(button => {
+        button.addEventListener('click', function() {
+            document.querySelectorAll('[data-range]').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            const days = this.dataset.range;
+            // In a real app, this would trigger an AJAX call to update the dashboard
+            console.log(`Switching to ${days} day range`);
+        });
+    });
+
+    // Complete action buttons
+    document.querySelectorAll('.complete-action').forEach(button => {
+        button.addEventListener('click', function() {
+            const actionId = this.dataset.actionId;
+            if (confirm('Mark this action as completed?')) {
+                completeNextBestAction(actionId);
+            }
+        });
+    });
+
+    // Engagement Chart
+    const engagementCtx = document.getElementById('engagementChart').getContext('2d');
+    const engagementChart = new Chart(engagementCtx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_labels|safe }},
+            datasets: [{
+                label: 'Engagement Events',
+                data: {{ chart_data|safe }},
+                borderColor: '#6f42c1',
+                backgroundColor: 'rgba(111, 66, 193, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        drawBorder: false
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Event Type Chart
+    const eventTypeCtx = document.getElementById('eventTypeChart').getContext('2d');
+    const eventTypeChart = new Chart(eventTypeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ event_type_labels|safe }},
+            datasets: [{
+                data: {{ event_type_data|safe }},
+                backgroundColor: [
+                    '#6f42c1', '#007bff', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6c757d'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
+
+    // Complete Next Best Action function
+    function completeNextBestAction(actionId) {
+        fetch('{% url "engagement:complete_next_best_action" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ action_id: actionId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Failed to complete action: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            alert('Network error: ' + error);
+        });
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,153 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 text-gray-800">Sales Manager Dashboard</h1>
+        <div class="btn-group">
+            <button class="btn btn-outline-secondary btn-sm">This Week</button>
+            <button class="btn btn-outline-secondary btn-sm active">This Month</button>
+            <button class="btn btn-outline-secondary btn-sm">This Quarter</button>
+        </div>
+    </div>
+
+    <!-- Team Performance Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Team Revenue</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ team_revenue|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Deals Closed</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ deals_closed_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Pipeline Value</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ pipeline_value|floatformat:2 }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">At-Risk Accounts
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ at_risk_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Rep Performance Table -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Rep Performance</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Rep Name</th>
+                                    <th>Revenue</th>
+                                    <th>Deals Closed</th>
+                                    <th>Open Pipeline</th>
+                                    <th>Activity Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rep in rep_performance %}
+                                <tr>
+                                    <td>{{ rep.name }}</td>
+                                    <td>${{ rep.revenue|floatformat:0 }}</td>
+                                    <td>{{ rep.deals_closed }}</td>
+                                    <td>${{ rep.pipeline|floatformat:0 }}</td>
+                                    <td>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-info" role="progressbar"
+                                                style="width: {{ rep.activity_score }}%"
+                                                aria-valuenow="{{ rep.activity_score }}" aria-valuemin="0"
+                                                aria-valuemax="100">{{ rep.activity_score }}%</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Escalations -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-danger">Critical Escalations</h6>
+                </div>
+                <div class="card-body">
+                    {% for case in critical_cases %}
+                    <div class="mb-3">
+                        <div class="small text-gray-500">{{ case.created_at|date:"M d, Y" }}</div>
+                        <div class="font-weight-bold">{{ case.subject }}</div>
+                        <div class="small"><a href="{% url 'accounts:detail' case.account.id %}">{{ case.account.name
+                                }}</a> - {{ case.owner.get_full_name }}</div>
+                        <hr>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No critical escalations.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

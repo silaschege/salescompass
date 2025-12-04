@@ -1,0 +1,40 @@
+Integration with Cases Module
+# In apps/cases/utils.py
+def close_case_with_csat(case_id: int, csat_score: int, csat_comment: str = ""):
+    # ... existing CSAT logic ...
+    
+    # Also send NPS survey if configured
+    from engagement.utils import send_nps_survey
+    from engagement.models import NpsSurvey
+    
+    nps_survey = NpsSurvey.objects.filter(
+        trigger_event='case.closed',
+        is_active=True,
+        tenant_id=case.tenant_id
+    ).first()
+    
+    if nps_survey:
+        send_nps_survey(
+            survey_id=nps_survey.id,
+            account_id=case.account_id,
+            contact_email=case.contact.email if case.contact else None
+        )
+
+# apps/engagement/
+# ├── __init__.py
+# ├── admin.py
+# ├── apps.py
+# ├── forms.py 
+# ├── models.py
+# ├── urls.py
+# ├── views.py
+# ├── utils.py
+# ├── tasks.py
+# └── templates/engagement/
+#     ├── nps_dashboard.html
+#     ├── nps_survey.html
+#     ├── nps_responses.html
+#     ├── nps_ab_test.html
+#     ├── nps_trend_charts.html
+#     └── detractor_kanban.html
+

@@ -1,0 +1,75 @@
+{% extends "cases/base.html" %}
+
+{% block title %}Cases - SalesCompass{% endblock %}
+
+{% block content %}
+   <h1 class="block-title">Customer Support Cases</h1>
+    <p class="text-muted text-center lead">Manage and track all customer support tickets</p>
+
+<div class="container">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Case List</h2>
+        <a href="{% url 'cases:create' %}" class="btn btn-primary">+ New Case</a>
+    </div>
+
+    {% if cases %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Account</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Owner</th>
+                        <th>SLA</th>
+                        <th>CSAT</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for case in cases %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'cases:detail' case.pk %}">{{ case.subject }}</a>
+                        </td>
+                        <td>{{ case.account.name }}</td>
+                        <td>
+                            <span class="badge bg-{% if case.priority == 'critical' %}danger{% elif case.priority == 'high' %}warning{% elif case.priority == 'medium' %}info{% else %}secondary{% endif %}">
+                                {{ case.get_priority_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if case.status == 'closed' %}success{% elif case.status == 'resolved' %}primary{% elif case.status == 'in_progress' %}warning{% else %}secondary{% endif %}">
+                                {{ case.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ case.owner.email|default:"Unassigned" }}</td>
+                        <td>
+                            {% if case.is_overdue %}
+                                <span class="badge bg-danger">Overdue</span>
+                            {% else %}
+                                {{ case.sla_remaining_hours|default:"—" }}h
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if case.csat_score %}
+                                <span class="badge bg-{% if case.csat_score >= 4 %}success{% elif case.csat_score >= 3 %}warning{% else %}danger{% endif %}">
+                                    {{ case.csat_score }}/5
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'cases:detail' case.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted">No cases found.</p>
+        <a href="{% url 'cases:create' %}" class="btn btn-primary">Create your first case</a>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,272 @@
+{% extends "settings_app/base.html" %}
+{% load static %}
+
+{% block title %}Settings Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-3">
+                <i class="bi bi-gear-fill text-primary"></i> Settings Dashboard
+            </h1>
+            <p class="text-muted">Configure your CRM to match your business processes</p>
+        </div>
+    </div>
+
+    <!-- Phase 1: Customization & Branding -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="h5 mb-3">
+                <i class="bi bi-palette-fill text-purple"></i> Customization & Branding
+            </h2>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title">Branding & Locale</h5>
+                            <p class="card-text text-muted small">Logo, colors, currency, timezone</p>
+                        </div>
+                        <i class="bi bi-palette fs-3 text-purple"></i>
+                    </div>
+                    <a href="{% url 'settings_app:tenant_settings' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-pencil"></i> Configure
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title">Custom Fields</h5>
+                            <p class="card-text text-muted small">Add fields to modules</p>
+                        </div>
+                        <span class="badge bg-primary fs-6">{{ custom_fields_count }}</span>
+                    </div>
+                    <a href="{% url 'settings_app:custom_field_list' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-list"></i> Manage Fields
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title">Module Labels</h5>
+                            <p class="card-text text-muted small">Rename modules</p>
+                        </div>
+                        <span class="badge bg-primary fs-6">{{ module_labels_count }}</span>
+                    </div>
+                    <a href="{% url 'settings_app:module_label_list' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-tag"></i> Configure Labels
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phase 2: Team Management -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="h5 mb-3">
+                <i class="bi bi-people-fill text-success"></i> Team Management & Security
+            </h2>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title">Users & Teams</h5>
+                            <p class="card-text text-muted small">Manage team members</p>
+                        </div>
+                        <span class="badge bg-success fs-6">{{ team_members_count }}</span>
+                    </div>
+                    <a href="{% url 'settings_app:team_list' %}" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-people"></i> Manage Team
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title">Roles & Permissions</h5>
+                            <p class="card-text text-muted small">Configure access control</p>
+                        </div>
+                        <i class="bi bi-shield-check fs-3 text-success"></i>
+                    </div>
+                    <a href="{% url 'settings_app:role_list' %}" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-shield"></i> Manage Roles
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title">Assignment Rules</h5>
+                            <p class="card-text text-muted small">Automate lead/case assignment</p>
+                        </div>
+                        <span class="badge bg-success fs-6">{{ assignment_rules_count }}</span>
+                    </div>
+                    <a href="{% url 'settings_app:assignment_rule_list' %}" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-arrow-repeat"></i> Configure Rules
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phase 3: Business Processes -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="h5 mb-3">
+                <i class="bi bi-diagram-3-fill text-info"></i> Business Process Configuration
+            </h2>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title">Pipeline Management</h5>
+                            <p class="card-text text-muted small">Configure workflow stages</p>
+                        </div>
+                        <span class="badge bg-info fs-6">{{ pipeline_stages_count }}</span>
+                    </div>
+                    <a href="{% url 'settings_app:pipeline_stage_list' %}" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-diagram-3"></i> Manage Stages
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title">Lead Settings</h5>
+                            <p class="card-text text-muted small">Statuses and sources</p>
+                        </div>
+                        <i class="bi bi-funnel fs-3 text-info"></i>
+                    </div>
+                    <a href="{% url 'settings_app:lead_status_list' %}" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-gear"></i> Configure Leads
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title">Opportunity Stages</h5>
+                            <p class="card-text text-muted small">Sales pipeline stages</p>
+                        </div>
+                        <i class="bi bi-trophy fs-3 text-info"></i>
+                    </div>
+                    <a href="{% url 'settings_app:opportunity_stage_list' %}" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-list-check"></i> Configure Stages
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phase 4: Communication & Integration -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="h5 mb-3">
+                <i class="bi bi-plug-fill text-warning"></i> Communication & Integration
+            </h2>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title">API Keys</h5>
+                            <p class="card-text text-muted small">Manage API access</p>
+                        </div>
+                        <span class="badge bg-warning text-dark fs-6">{{ api_keys_count }}</span>
+                    </div>
+                    <a href="{% url 'settings_app:apikey_list' %}" class="btn btn-outline-warning btn-sm">
+                        <i class="bi bi-key"></i> Manage Keys
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title">Webhooks</h5>
+                            <p class="card-text text-muted small">Event notifications</p>
+                        </div>
+                        <span class="badge bg-warning text-dark fs-6">{{ webhooks_count }}</span>
+                    </div>
+                    <a href="{% url 'settings_app:webhook_list' %}" class="btn btn-outline-warning btn-sm">
+                        <i class="bi bi-broadcast"></i> Configure Webhooks
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title">Territories</h5>
+                            <p class="card-text text-muted small">Geographic assignments</p>
+                        </div>
+                        <i class="bi bi-geo-alt fs-3 text-warning"></i>
+                    </div>
+                    <a href="{% url 'settings_app:territory_list' %}" class="btn btn-outline-warning btn-sm">
+                        <i class="bi bi-map"></i> Manage Territories
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-lift {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .text-purple {
+        color: #6f42c1;
+    }
+</style>
+{% endblock %}

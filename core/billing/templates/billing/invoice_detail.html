@@ -1,0 +1,140 @@
+{% extends 'billing/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-file-earmark-text me-2"></i>Invoice #{{ invoice.invoice_number }}</h2>
+            <p class="text-muted">Invoice details and actions</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'billing:invoice_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Invoices
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Invoice Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>Tenant ID:</strong> {{ invoice.tenant_id }}</p>
+                            <p><strong>Subscription:</strong> {{ invoice.subscription.plan.name }}</p>
+                            <p><strong>Created:</strong> {{ invoice.created_at|date:"Y-m-d H:i" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Status:</strong>
+                                {% if invoice.status == 'paid' %}
+                                <span class="badge bg-success">Paid</span>
+                                {% elif invoice.status == 'overdue' %}
+                                <span class="badge bg-danger">Overdue</span>
+                                {% elif invoice.status == 'void' %}
+                                <span class="badge bg-secondary">Void</span>
+                                {% else %}
+                                <span class="badge bg-info">{{ invoice.status|title }}</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Due Date:</strong> {{ invoice.due_date }}</p>
+                            {% if invoice.paid_at %}
+                            <p><strong>Paid At:</strong> {{ invoice.paid_at|date:"Y-m-d H:i" }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6>Line Items</h6>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in invoice.line_items.all %}
+                            <tr>
+                                <td>{{ item.description }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>${{ item.unit_price}}</td>
+                                <td class="text-end">${{ item.amount }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                <td class="text-end"><strong>${{ invoice.subtotal }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Tax:</strong></td>
+                                <td class="text-end"><strong>${{ invoice.tax }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                <td class="text-end"><strong>${{ invoice.total }}</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Actions</h5>
+                </div>
+                <div class="card-body">
+                    {% if invoice.status != 'paid' and invoice.status != 'void' %}
+                    <form method="post" action="{% url 'billing:invoice_mark_paid' invoice_id=invoice.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success w-100 mb-2">
+                            <i class="bi bi-check-circle me-2"></i>Mark as Paid
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {% if invoice.status != 'paid' and invoice.status != 'void' %}
+                    <form method="post" action="{% url 'billing:invoice_void' invoice_id=invoice.id %}"
+                        onsubmit="return confirm('Are you sure you want to void this invoice?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger w-100">
+                            <i class="bi bi-x-circle me-2"></i>Void Invoice
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if invoice.payments.exists %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Payment History</h6>
+                </div>
+                <div class="card-body">
+                    {% for payment in invoice.payments.all %}
+                    <div class="mb-2">
+                        <small>
+                            <strong>${{ payment.amount }}</strong> -
+                            <span class="badge bg-{{ payment.status == 'succeeded' and 'success' or 'danger' }}">
+                                {{ payment.status }}
+                            </span><br>
+                            <span class="text-muted">{{ payment.created_at|date:"Y-m-d H:i" }}</span>
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

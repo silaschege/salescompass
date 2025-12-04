@@ -1,0 +1,74 @@
+{% extends "infrastructure/base.html" %}
+
+{% block title %}Storage Usage - Infrastructure{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Storage Usage Monitoring</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Tenant ID</th>
+                            <th>Used (GB)</th>
+                            <th>Limit (GB)</th>
+                            <th>Usage %</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usage in tenant_usages %}
+                        <tr>
+                            <td>{{ usage.tenant_id }}</td>
+                            <td>{{ usage.storage_used_gb }}</td>
+                            <td>{{ usage.storage_limit_gb }}</td>
+                            <td>
+                                {{ usage.storage_usage_percentage }}%
+                                <div class="progress" style="height: 5px;">
+                                    <div class="progress-bar {% if usage.is_over_storage_limit %}bg-danger{% else %}bg-info{% endif %}"
+                                        role="progressbar" style="width: {{ usage.storage_usage_percentage }}%"></div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if usage.is_over_storage_limit %}
+                                <span class="badge bg-danger">Over Limit</span>
+                                {% else %}
+                                <span class="badge bg-success">Normal</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No data available.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if is_paginated %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

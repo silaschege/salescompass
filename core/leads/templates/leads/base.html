@@ -1,0 +1,13 @@
+{% extends 'core/base_module.html' %}
+
+{% block extra_css %}{% endblock %}
+
+{% block module_nav %}
+<a class="nav-link ms-3" href="{% url 'leads:leads_analytics' %}">Analytics</a>
+<a class="nav-link ms-3" href="{% url 'leads:pipeline' %}">Pipeline</a>
+
+<a class="nav-link ms-3" href="{% url 'leads:leads_list' %}">List</a>
+<a class="nav-link ms-3" href="{% url 'leads:create' %}">Create</a>
+<a class="nav-link ms-3" href="{% url 'leads:web_to_lead_builder' %}">Web TO Lead Builder</a>
+<a class="nav-link ms-3" href="{% url 'leads:web_to_lead_list' %}">Web To Lead List</a>
+{% endblock %}

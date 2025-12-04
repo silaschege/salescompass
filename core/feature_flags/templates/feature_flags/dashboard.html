@@ -1,0 +1,58 @@
+{% extends "feature_flags/base.html" %}
+
+{% block title %}Feature Flags Dashboard - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Feature Flags & Release Management</h1>
+
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-flag text-primary"></i> Total Flags</h5>
+                    <h2 class="mb-0">0</h2>
+                    <small class="text-muted">All time</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-toggle-on text-success"></i> Active Flags</h5>
+                    <h2 class="mb-0">0</h2>
+                    <small class="text-muted">Currently enabled</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-arrow-right-circle text-info"></i> In Rollout</h5>
+                    <h2 class="mb-0">0</h2>
+                    <small class="text-muted">Partial deployment</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-diagram-3 text-warning"></i> Targeted</h5>
+                    <h2 class="mb-0">0</h2>
+                    <small class="text-muted">With targeting rules</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Feature Flags</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">No feature flags defined. Create your first flag to start managing releases.</p>
+            <button class="btn btn-primary">Create Feature Flag</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

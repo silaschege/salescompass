@@ -1,0 +1,33 @@
+{% extends "audit_logs/base.html" %}
+
+{% block title %}State Changes - Forensics{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">State Changes</h1>
+    <p class="text-muted">Logs showing before/after state changes for forensic analysis</p>
+
+    <div class="card">
+        <div class="card-body">
+            {% for log in logs %}
+            <div class="mb-4 pb-4 border-bottom">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5>{{ log.action_type }} - {{ log.resource_type }} #{{ log.resource_id }}</h5>
+                        <small class="text-muted">
+                            {{ log.timestamp|date:"Y-m-d H:i:s" }} by {{ log.user_email }}
+                        </small>
+                    </div>
+                    <a href="{% url 'audit_logs:log_detail' log.pk %}" class="btn btn-sm btn-outline-primary">
+                        View Full Details
+                    </a>
+                </div>
+                <p class="mt-2">{{ log.description }}</p>
+            </div>
+            {% empty %}
+            <p class="text-center text-muted">No state changes recorded.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

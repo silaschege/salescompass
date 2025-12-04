@@ -1,0 +1,94 @@
+{% extends "accounts/base.html" %}
+{% load auth_extras  %}
+
+{% block title %}Accounts - SalesCompass{% endblock %}
+
+{% block content %}
+ 
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="block-title fw-bold mb-0">Accounts List</h2>
+
+    {% if request.user.is_authenticated and request.user|has_perm:"accounts:write" %}
+        <a href="{% url 'accounts:create' %}" class="btn btn-primary">+ New Account</a>
+    {% endif %}
+</div>
+
+{% if accounts %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Industry</th>
+                    <th>Tier</th>
+                    <th>Owner</th>
+                    <th>Health</th>
+                    <th>ESG</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for account in accounts %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'accounts:detail' account.pk %}">{{ account.name }}</a>
+                        </td>
+                        <td>{{ account.get_industry_display }}</td>
+                        <td>{{ account.get_tier_display }}</td>
+                        <td>{{ account.owner.email|default:"Unassigned" }}</td>
+                        <td>
+                            <span class="health-badge 
+                                {% if account.health_score >= 70 %}health-high
+                                {% elif account.health_score >= 40 %}health-medium
+                                {% else %}health-low{% endif %}">
+                                {{ account.health_score|floatformat:0 }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if account.esg_engagement == 'high' %}
+                                <span class="badge bg-success">High</span>
+                            {% elif account.esg_engagement == 'medium' %}
+                                <span class="badge bg-warning text-dark">Medium</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Low</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'accounts:detail' account.pk %}" class="btn  btn-primary">View</a>
+                            {% if request.user.is_authenticated and request.user|has_perm:"accounts:write" %}
+                                <a href="{% url 'accounts:update' account.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+                {% endif %}
+
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+
+{% else %}
+    <p class="text-muted">No accounts found.</p>
+     {% if request.user.is_authenticated and request.user|has_perm:"accounts:write" %}
+        <a href="{% url 'accounts:create' %}" class="btn btn-primary">Create your first account</a>
+    {% endif %}
+{% endif %}
+{% endblock %}

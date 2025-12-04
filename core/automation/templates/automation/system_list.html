@@ -1,0 +1,77 @@
+{% extends "automation/base.html" %}
+
+{% block title %}System Automations - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">System Automations</h1>
+        <p class="text-white text-center lead">Platform-managed automations that cannot be deleted</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="alert alert-info">
+        <strong>System Automations:</strong> These automations are essential for core SalesCompass functionality and are managed by the platform. They cannot be deleted or disabled.
+    </div>
+
+    <!-- System Automations Table -->
+    {% if automations %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Automation Name</th>
+                        <th>Trigger</th>
+                        <th>Conditions</th>
+                        <th>Actions</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for automation in automations %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'automation:detail' automation.pk %}" class="text-decoration-none">
+                                <strong>{{ automation.name }}</strong>
+                            </a>
+                            <br>
+                            <small class="text-muted">{{ automation.description|truncatewords:8 }}</small>
+                        </td>
+                        <td>{{ automation.get_trigger_type_display }}</td>
+                        <td>{{ automation.conditions.count }}</td>
+                        <td>{{ automation.actions.count }}</td>
+                        <td>
+                            {% if automation.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'automation:detail' automation.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                            <a href="{% url 'automation:update' automation.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center">
+            <div class="mb-4">
+                <i class="bi bi-gear-fill display-1 text-muted"></i>
+            </div>
+            <h3 class="text-muted">No system automations found</h3>
+            <p class="text-muted mb-4">System automations will appear here when they are created by the platform.</p>
+        </div>
+    {% endif %}
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "settings_app/base.html" %}
+{% load auth_extras math filters_extras %}
+
+{% block title %}Team Member Details - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Team Member Details</h1>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">{{ member.user.get_full_name|default:member.user.email }}</h6>
+            <div>
+                <a href="{% url 'settings_app:team_update' member.pk %}" class="btn btn-sm btn-primary">Edit</a>
+                <a href="{% url 'settings_app:team_list' %}" class="btn btn-sm btn-secondary">Back to List</a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="mb-3">Profile</h5>
+                    <p><strong>Email:</strong> {{ member.user.email }}</p>
+                    <p><strong>Phone:</strong> {{ member.phone|default:"—" }}</p>
+                    <p><strong>Hire Date:</strong> {{ member.hire_date|date }}</p>
+                    <p><strong>Status:</strong>
+                        <span
+                            class="badge bg-{% if member.status == 'active' %}success{% elif member.status == 'onboarding' %}info{% elif member.status == 'leave' %}warning{% else %}danger{% endif %}">
+                            {{ member.get_status_display }}
+                        </span>
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="mb-3">Role & Territory</h5>
+                    <p><strong>Role:</strong> {{ member.role.name|default:"—" }}</p>
+                    <p><strong>Territory:</strong> {{ member.territory.get_name_display|default:"—" }}</p>
+                    <p><strong>Manager:</strong> {{
+                        member.manager.user.get_full_name|default:member.manager.user.email|default:"—" }}</p>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="mb-3">Performance</h5>
+                    <p><strong>Quota Period:</strong> {{ member.get_quota_period_display }}</p>
+                    <p><strong>Quota Amount:</strong> ${{ member.quota_amount|intcomma }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

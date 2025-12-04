@@ -1,0 +1,34 @@
+{% extends "automation/base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 text-gray-800">{{ workflow.name }}</h1>
+        <div>
+            <a href="{% url 'automation:update' workflow.pk %}" class="btn btn-primary btn-sm">Edit</a>
+            <a href="{% url 'automation:list' %}" class="btn btn-secondary btn-sm">Back to List</a>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Rule Details</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Trigger:</strong> {{ workflow.get_trigger_type_display }}</p>
+                    <p><strong>Active:</strong> {% if workflow.is_active %}<span class="badge bg-success">Yes</span>{% else%}<span class="badge bg-secondary">No</span>{% endif %}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Created At:</strong> {{ workflow.created_at }}</p>
+                    <p><strong>Last Updated:</strong> {{ workflow.updated_at }}</p>
+                </div>
+            </div>
+            <hr>
+            <h5>Description</h5>
+            <p>{{ workflow.description|default:"No description provided." }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

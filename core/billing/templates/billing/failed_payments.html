@@ -1,0 +1,60 @@
+{% extends 'billing/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-exclamation-triangle me-2"></i>Failed Payments</h2>
+            <p class="text-muted">Track and retry failed payment attempts</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Failed Payment Transactions</h5>
+        </div>
+        <div class="card-body">
+            {% if payments %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Invoice #</th>
+                            <th>Amount</th>
+                            <th>Error Message</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td>{{ payment.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <a href="{% url 'billing:invoice_detail' invoice_id=payment.invoice.id %}">
+                                    {{ payment.invoice.invoice_number }}
+                                </a>
+                            </td>
+                            <td>${{ payment.amount }}</td>
+                            <td><small class="text-danger">{{ payment.error_message|truncatewords:10 }}</small></td>
+                            <td>
+                                <form method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="payment_id" value="{{ payment.id }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-arrow-clockwise"></i> Retry
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No failed payments found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

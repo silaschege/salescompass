@@ -1,0 +1,91 @@
+{% extends "opportunities/base.html" %}
+
+{% block title %}Win/Loss Analysis - SalesCompass{% endblock %}
+
+{% block content %}
+<h1>Win/Loss Analysis</h1>
+
+<!-- KPI Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body text-center">
+                <h6>Total Opportunities</h6>
+                <h3>{{ total_opportunities }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body text-center">
+                <h6>Won Opportunities</h6>
+                <h3>{{ won_opportunities }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body text-center">
+                <h6>Win Rate</h6>
+                <h3>{{ win_rate }}%</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Win Rate by Deal Size -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Win Rate by Deal Size</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Deal Size</th>
+                                <th>Total</th>
+                                <th>Won</th>
+                                <th>Win Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for size, stats in deal_size_stats.items %}
+                            <tr>
+                                <td>{{ size|capfirst }}</td>
+                                <td>{{ stats.total }}</td>
+                                <td>{{ stats.won }}</td>
+                                <td>{{ stats.win_rate|floatformat:1 }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Loss Reasons -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Top Loss Reasons</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group">
+                    {% for reason in top_loss_reasons %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ reason.loss_reason }}
+                        <span class="badge bg-danger rounded-pill">{{ reason.count }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,163 @@
+{% extends "marketing/base.html" %}
+{% load auth_extras math filters_extras%}
+{% block title %}Landing Pages - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Landing Pages</h1>
+        <p class="text-white text-center lead">Create and manage marketing landing pages for your campaigns</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Action Buttons -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <a href="{% url 'marketing:landing_page_create' %}" class="btn btn-primary">+ New Landing Page</a>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{% url 'marketing:list' %}" class="btn btn-outline-secondary">← Back to Campaigns</a>
+        </div>
+    </div>
+
+    <!-- Landing Pages Table -->
+    {% if landing_pages %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Landing Page</th>
+                        <th>Campaign</th>
+                        <th>Views</th>
+                        <th>Conversions</th>
+                        <th>Conversion Rate</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for landing_page in landing_pages %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'marketing:landing_page_update' landing_page.pk %}" class="text-decoration-none">
+                                <strong>{{ landing_page.title }}</strong>
+                            </a>
+                            <br>
+                            <small class="text-muted">
+                                <strong>URL:</strong> {{ landing_page.get_absolute_url }}
+                            </small>
+                        </td>
+                        <td>
+                            {% if landing_page.campaign %}
+                                <a href="{% url 'marketing:detail' landing_page.campaign.pk %}">
+                                    {{ landing_page.campaign.name }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Unassigned</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ landing_page.views|intcomma }}</td>
+                        <td>{{ landing_page.conversions|intcomma }}</td>
+                        <td>
+                            {% if landing_page.views > 0 %}
+                                {{ landing_page.conversions|div:landing_page.views|mul:100|floatformat:2 }}%
+                            {% else %}
+                                0.00%
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if landing_page.is_published %}
+                                <span class="badge bg-success">Published</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Draft</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column gap-1">
+                                <a href="{% url 'marketing:landing_page_update' landing_page.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="{% url 'marketing:landing_builder' landing_page.pk %}" class="btn btn-sm btn-outline-secondary">Builder</a>
+                                {% if landing_page.is_published %}
+                                    <a href="{{ landing_page.get_absolute_url }}" target="_blank" class="btn btn-sm btn-success">View Live</a>
+                                {% else %}
+                                    <span class="text-muted small">Not published</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center">
+            <div class="mb-4">
+                <i class="bi bi-window-display display-1 text-muted"></i>
+            </div>
+            <h3 class="text-muted">No landing pages found</h3>
+            <p class="text-muted mb-4">Create your first landing page to use in marketing campaigns.</p>
+            <a href="{% url 'marketing:landing_page_create' %}" class="btn btn-primary">Create Your First Landing Page</a>
+        </div>
+    {% endif %}
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}
+{% block extra_head %}
+<style>
+.table-hover tbody tr:hover {
+    background-color: rgba(111, 66, 193, 0.05);
+}
+.badge {
+    font-size: 0.75em;
+    padding: 0.3em 0.6em;
+}
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

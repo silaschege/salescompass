@@ -1,0 +1,65 @@
+{% extends "settings_app/base.html" %}
+{% load auth_extras math filters_extras %}
+{% block title %}Team Management - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Team Management</h1>
+        <p class="text-white text-center lead">Manage users, territories, and quotas</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Team Members</h2>
+        <a href="{% url 'settings_app:team_create' %}" class="btn btn-primary">+ New Member</a>
+    </div>
+
+    {% if team_members %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>Territory</th>
+                    <th>Manager</th>
+                    <th>Status</th>
+                    <th>Quota</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in team_members %}
+                <tr>
+                    <td><a href="{% url 'settings_app:team_detail' member.pk %}">{{ member.user.email }}</a></td>
+                    <td>{{ member.role.name|default:"—" }}</td>
+                    <td>{{ member.territory.get_name_display|default:"—" }}</td>
+                    <td>{{ member.manager.user.email|default:"—" }}</td>
+                    <td>
+                        <span
+                            class="badge bg-{% if member.status == 'active' %}success{% elif member.status == 'onboarding' %}info{% elif member.status == 'leave' %}warning{% else %}danger{% endif %}">
+                            {{ member.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if member.quota_amount %}
+                        ${{ member.quota_amount|intcomma }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'settings_app:team_update' member.pk %}"
+                            class="btn btn-sm btn-outline-primary">Edit</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No team members found.</p>
+    <a href="{% url 'settings_app:team_create' %}" class="btn btn-primary">Create your first team member</a>
+    {% endif %}
+</div>
+{% endblock %}

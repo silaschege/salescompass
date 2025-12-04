@@ -1,0 +1,49 @@
+{% extends "audit_logs/base.html" %}
+
+{% block title %}Export Audit Logs - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Export Audit Logs</h1>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Export Options</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="start_date" class="form-label">Start Date</label>
+                        <input type="datetime-local" class="form-control" id="start_date" name="start_date">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="end_date" class="form-label">End Date</label>
+                        <input type="datetime-local" class="form-control" id="end_date" name="end_date">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="format" class="form-label">Export Format</label>
+                    <select class="form-select" id="format" name="format">
+                        <option value="csv">CSV</option>
+                        <option value="json">JSON</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-download"></i> Export Logs
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="alert alert-info mt-4">
+        <i class="bi bi-info-circle"></i>
+        <strong>Note:</strong> Exported logs will include all fields for the selected date range.
+        Large exports may take some time to process.
+    </div>
+</div>
+{% endblock %}

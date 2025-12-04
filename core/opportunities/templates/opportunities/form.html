@@ -1,0 +1,96 @@
+{% extends "opportunities/base.html" %}
+
+{% block title %}{% if object %}Edit {{ object.name }}{% else %}New Opportunity{% endif %} - SalesCompass{% endblock %}
+
+{% block content %}
+<h1 class="block-title fw-bold mb-0">{% if object %}Edit Opportunity{% else %}New Opportunity{% endif %}</h1>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="{{ form.name.id_for_label }}" class="form-label">Opportunity Name *</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <div class="text-danger">{{ form.name.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.account.id_for_label }}" class="form-label">Account *</label>
+                {{ form.account }}
+                {% if form.account.errors %}
+                    <div class="text-danger">{{ form.account.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.amount.id_for_label }}" class="form-label">Amount *</label>
+                {{ form.amount }}
+                {% if form.amount.errors %}
+                    <div class="text-danger">{{ form.amount.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.close_date.id_for_label }}" class="form-label">Close Date *</label>
+                {{ form.close_date }}
+                {% if form.close_date.errors %}
+                    <div class="text-danger">{{ form.close_date.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.probability.id_for_label }}" class="form-label">Probability</label>
+                {{ form.probability }}
+                <div class="form-text">0.0 to 1.0 (e.g., 0.75 = 75%)</div>
+                {% if form.probability.errors %}
+                    <div class="text-danger">{{ form.probability.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="{{ form.stage.id_for_label }}" class="form-label">Stage</label>
+                {{ form.stage }}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.owner.id_for_label }}" class="form-label">Owner</label>
+                {{ form.owner }}
+            </div>
+
+            <div class="mb-3 form-check">
+                {{ form.esg_tagged }}
+                <label class="form-check-label" for="{{ form.esg_tagged.id_for_label }}">
+                    {{ form.esg_tagged.label }}
+                </label>
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.esg_impact_description.id_for_label }}" class="form-label">ESG Impact Description</label>
+                {{ form.esg_impact_description }}
+                <div class="form-text">Describe the environmental or social impact of this opportunity</div>
+                {% if form.esg_impact_description.errors %}
+                    <div class="text-danger">{{ form.esg_impact_description.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Products</label>
+                {{ form.products }}
+                <div class="form-text">Select products associated with this opportunity</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary">
+            {% if object %}Update Opportunity{% else %}Create Opportunity{% endif %}
+        </button>
+        <a href="{% url 'opportunities:opportunities_list' %}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,177 @@
+{% extends "billing/base.html" %}
+
+{% block title %}{{ object.display_name|default:"Payment Gateway" }} Configuration - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-1">{{ object.display_name|default:"New Payment Gateway" }}</h2>
+            <p class="text-muted">Configure payment provider settings and API credentials</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">Provider Name</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="text-danger">{{ form.name.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Internal identifier (e.g., stripe, mpesa)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.display_name.id_for_label }}" class="form-label">Display Name</label>
+                            {{ form.display_name }}
+                            {% if form.display_name.errors %}
+                            <div class="text-danger">{{ form.display_name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    Enable this provider globally
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.config.id_for_label }}" class="form-label">Configuration (JSON)</label>
+                            {{ form.config }}
+                            {% if form.config.errors %}
+                            <div class="text-danger">{{ form.config.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                API keys and secrets in JSON format. Example:<br>
+                                <code>{"api_key": "sk_test_...", "publishable_key": "pk_test_..."}</code>
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.supported_currencies.id_for_label }}" class="form-label">Supported
+                                Currencies</label>
+                            {{ form.supported_currencies }}
+                            {% if form.supported_currencies.errors %}
+                            <div class="text-danger">{{ form.supported_currencies.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                JSON array of currency codes. Example: <code>["USD", "KES", "EUR"]</code>
+                            </small>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    {{ form.supports_subscriptions }}
+                                    <label class="form-check-label"
+                                        for="{{ form.supports_subscriptions.id_for_label }}">
+                                        Supports Subscriptions
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    {{ form.supports_one_time }}
+                                    <label class="form-check-label" for="{{ form.supports_one_time.id_for_label }}">
+                                        Supports One-time Payments
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.logo_url.id_for_label }}" class="form-label">Logo URL (Optional)</label>
+                            {{ form.logo_url }}
+                            {% if form.logo_url.errors %}
+                            <div class="text-danger">{{ form.logo_url.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description
+                                (Optional)</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="text-danger">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-2"></i>Save Configuration
+                            </button>
+                            <a href="{% url 'billing:payment_gateway_list' %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Configuration Guide</h6>
+                </div>
+                <div class="card-body">
+                    <h6>Stripe</h6>
+                    <pre class="bg-light p-2 rounded"><code>{
+  "api_key": "sk_test_...",
+  "publishable_key": "pk_test_..."
+}</code></pre>
+
+                    <h6 class="mt-3">M-Pesa</h6>
+                    <pre class="bg-light p-2 rounded"><code>{
+  "consumer_key": "...",
+  "consumer_secret": "...",
+  "business_short_code": "174379",
+  "passkey": "..."
+}</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    textarea,
+    input[type="text"],
+    input[type="url"],
+    select {
+        width: 100%;
+    }
+
+    .form-control,
+    .form-select {
+        display: block;
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+    }
+
+    textarea.form-control {
+        min-height: 100px;
+    }
+</style>
+{% endblock %}

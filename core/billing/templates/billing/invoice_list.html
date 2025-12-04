@@ -1,0 +1,91 @@
+{% extends 'billing/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-file-earmark-text me-2"></i>All Invoices</h2>
+            <p class="text-muted">Manage and search all invoices</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'billing:invoice_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Create Invoice
+            </a>
+            <a href="{% url 'billing:revenue_overview' %}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Revenue Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                {{ search_form.tenant_id.label_tag }}
+                {{ search_form.tenant_id }}
+
+                {{ search_form.status.label_tag }}
+                {{ search_form.status }}
+
+                {{ search_form.date_from.label_tag }}
+                {{ search_form.date_from }}
+
+                {{ search_form.date_to.label_tag }}
+                {{ search_form.date_to }}
+
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Invoice List</h5>
+        </div>
+        <div class="card-body">
+            {% if invoices %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Tenant</th>
+                            <th>Due Date</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in invoices %}
+                        <tr>
+                            <td><code>{{ invoice.invoice_number }}</code></td>
+                            <td>{{ invoice.tenant_id }}</td>
+                            <td>{{ invoice.due_date }}</td>
+                            <td>${{ invoice.total }}</td>
+                            <td>
+                                {% if invoice.status == 'paid' %}
+                                <span class="badge bg-success">Paid</span>
+                                {% elif invoice.status == 'overdue' %}
+                                <span class="badge bg-danger">Overdue</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ invoice.status|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'billing:invoice_detail' invoice_id=invoice.id %}"
+                                    class="btn btn-sm btn-outline-primary">View</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No invoices found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends "automation/base.html" %}
+{% load core_extras %}
+
+{% block title %}{{ log.automation.name }} Log - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Automation Execution Log</h1>
+        <p class="text-white text-center lead">Detailed execution information for {{ log.automation.name }}</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Log Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Execution Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <strong>Automation:</strong>
+                                <a href="{% url 'automation:detail' log.automation.pk %}">
+                                    {{ log.automation.name }}
+                                </a>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Status:</strong>
+                                <span
+                                    class="badge bg-{% if log.status == 'failed' %}danger{% elif log.status == 'completed' %}success{% elif log.status == 'skipped' %}warning{% elif log.status == 'executing' %}info{% else %}secondary{% endif %}">
+                                    {{ log.get_status_display }}
+                                </span>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Executed By:</strong>
+                                {% if log.executed_by %}
+                                {{ log.executed_by.email }}
+                                {% else %}
+                                <span class="text-muted">System</span>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <strong>Created:</strong> {{ log.created_at|date:"M d, Y H:i:s" }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <strong>Execution Time:</strong>
+                                {% if log.execution_time_ms %}
+                                {{ log.execution_time_ms }} milliseconds
+                                {% else %}
+                                <span class="text-muted">Not completed</span>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <strong>Trigger Payload:</strong>
+                                <pre
+                                    class="bg-light p-2 rounded">{{ log.trigger_payload|dict_to_json|linebreaks }}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Details (if failed) -->
+            {% if log.error_message %}
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5>Error Details</h5>
+                </div>
+                <div class="card-body">
+                    <pre class="bg-dark text-white p-3 rounded">{{ log.error_message }}</pre>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-4">
+            <!-- Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'automation:detail' log.automation.pk %}" class="btn btn-outline-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
+                            </svg>
+                            Back to Automation
+                        </a>
+                        <a href="{% url 'automation:log_list' %}" class="btn btn-outline-secondary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                class="bi bi-list me-1" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z" />
+                            </svg>
+                            View All Logs
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Automation Info -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Automation Info</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Trigger:</strong> {{ log.automation.get_trigger_type_display }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Conditions:</strong> {{ log.automation.conditions.count }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Actions:</strong> {{ log.automation.actions.count }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Status:</strong>
+                        {% if log.automation.is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}

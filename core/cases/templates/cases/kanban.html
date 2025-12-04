@@ -1,0 +1,140 @@
+{% extends "cases/base.html" %}
+{% load auth_extras filters_extras %}
+
+
+{% block title %}Case Kanban - SalesCompass{% endblock %}
+
+{% block content %}
+      <h1 class="block-title">Customer Support Kanban</h1>
+        <p class="text-small text-center lead">
+            Drag and drop cases between statuses to update their workflow
+        </p>
+
+<div class="container">
+    <div class="d-flex justify-content-between mb-3">
+        <div>
+            <a href="{% url 'cases:create' %}" class="btn btn-primary">+ New Case</a>
+        </div>
+        <div>
+            <a href="{% url 'cases:sla_dashboard' %}" class="btn btn-outline-secondary">SLA Dashboard</a>
+            <a href="{% url 'cases:detractor_kanban' %}" class="btn btn-outline-danger">Detractor Alerts</a>
+        </div>
+    </div>
+
+    <div id="kanban-board" class="d-flex flex-wrap gap-3">
+        {% for status_code, status_name in status_choices %}
+        <div class="kanban-column" data-status="{{ status_code }}">
+            <div class="card bg-light">
+                <div class="card-header bg-{{ status_code|status_color }}">
+                    <h5 class="mb-0">{{ status_name }}
+                        <span class="badge bg-white text-{{ status_code|status_color_text }} ms-2">
+                            {{ cases|status_count:status_code }}
+                        </span>
+                    </h5>
+                </div>
+                <div class="card-body p-2">
+                    {% for case in cases %}
+                        {% if case.status == status_code %}
+                            {% include "cases/case_kanban_card.html" with case=case %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+
+<style>
+.kanban-column { min-width: 280px; flex: 1; }
+.kanban-card { cursor: move; background: white; border-left: 4px solid #0d6efd; margin-bottom: 8px; }
+.kanban-card.dragging { opacity: 0.5; }
+.priority-badge { font-size: 0.7rem; padding: 2px 6px; }
+.overdue-badge { background-color: #dc3545 !important; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Make cards draggable
+    const cards = document.querySelectorAll('.kanban-card');
+    cards.forEach(card => {
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragend', handleDragEnd);
+    });
+
+    // Make columns droppable
+    const columns = document.querySelectorAll('.kanban-column');
+    columns.forEach(col => {
+        col.addEventListener('dragover', handleDragOver);
+        col.addEventListener('dragenter', handleDragEnter);
+        col.addEventListener('dragleave', handleDragLeave);
+        col.addEventListener('drop', handleDrop);
+    });
+
+    let draggedCard = null;
+
+    function handleDragStart(e) {
+        draggedCard = this;
+        setTimeout(() => this.classList.add('dragging'), 0);
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragEnd() {
+        this.classList.remove('dragging');
+        draggedCard = null;
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+
+    function handleDragEnter(e) {
+        this.classList.add('bg-light');
+    }
+
+    function handleDragLeave() {
+        this.classList.remove('bg-light');
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        this.classList.remove('bg-light');
+        
+        if (draggedCard) {
+            const cardContainer = this.querySelector('.card-body');
+            cardContainer.appendChild(draggedCard);
+            
+            const targetStatus = this.dataset.status;
+            const caseId = draggedCard.dataset.caseId;
+            
+            // Update status via AJAX
+            updateCaseStatus(caseId, targetStatus);
+        }
+    }
+
+    function updateCaseStatus(caseId, status) {
+        fetch('{% url "cases:update_case_status" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ case_id: caseId, status: status })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                alert('Failed to update status: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            alert('Network error: ' + error);
+        });
+    }
+});
+</script>
+{% endblock %}

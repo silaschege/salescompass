@@ -1,0 +1,112 @@
+{% extends "tasks/base.html" %}
+
+{% block title %}Task Templates - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Task Templates</h1>
+        <p class="text-white text-center lead">Manage reusable task templates</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Action Buttons -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <a href="{% url 'tasks:template_create' %}" class="btn btn-primary">+ New Template</a>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{% url 'tasks:list' %}" class="btn btn-outline-secondary">← Back to Tasks</a>
+        </div>
+    </div>
+
+    <!-- Templates Table -->
+    {% if templates %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Template Name</th>
+                        <th>Type</th>
+                        <th>Priority</th>
+                        <th>Est. Hours</th>
+                        <th>Due Offset</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for template in templates %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'tasks:template_update' template.pk %}">
+                                {{ template.name }}
+                            </a>
+                            <br>
+                            <small class="text-muted">{{ template.description|truncatewords:8 }}</small>
+                        </td>
+                        <td>{{ template.get_task_type_display }}</td>
+                        <td>
+                            <span class="badge bg-{% if template.priority == 'high' %}danger{% elif template.priority == 'medium' %}warning{% else %}secondary{% endif %}">
+                                {{ template.get_priority_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if template.estimated_hours %}
+                                {{ template.estimated_hours }}
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ template.default_due_offset }} days</td>
+                        <td>
+                            {% if template.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a href="{% url 'tasks:template_update' template.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <form method="post" action="{% url 'tasks:template_delete' template.pk %}" class="d-inline" onsubmit="return confirm('Delete this template?')">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center">
+            <div class="mb-4">
+                <i class="bi bi-file-earmark-post display-1 text-muted"></i>
+            </div>
+            <h3 class="text-muted">No task templates found</h3>
+            <p class="text-muted mb-4">Create your first task template to standardize your workflows.</p>
+            <a href="{% url 'tasks:template_create' %}" class="btn btn-primary">Create Template</a>
+        </div>
+    {% endif %}
+</div>
+
+
+{% endblock %}
+{% block extra_head %}
+<style>
+.table-hover tbody tr:hover {
+    background-color: rgba(111, 66, 193, 0.05);
+}
+.badge {
+    font-size: 0.75em;
+    padding: 0.3em 0.6em;
+}
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

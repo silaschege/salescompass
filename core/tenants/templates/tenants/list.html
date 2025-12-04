@@ -1,0 +1,135 @@
+{% extends 'tenants/base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>All Tenants</h2>
+            <a href="{% url 'tenants:create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Create New Tenant
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Tenants List</h5>
+        </div>
+        <div class="card-body">
+            {% if tenants %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Slug</th>
+                            <th>Domain</th>
+                            <th>Plan</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tenant in tenants %}
+                        <tr>
+                            <td><strong>{{ tenant.name }}</strong></td>
+                            <td><code>{{ tenant.slug }}</code></td>
+                            <td>{{ tenant.domain|default:"N/A" }}</td>
+                            <td>{{ tenant.plan.name|default:"No Plan" }}</td>
+                            <td>
+                                {% if tenant.subscription_status == 'active' %}
+                                <span class="badge bg-success">Active</span>
+                                {% elif tenant.subscription_status == 'trialing' %}
+                                <span class="badge bg-info">Trial</span>
+                                {% elif tenant.subscription_status == 'suspended' %}
+                                <span class="badge bg-warning">Suspended</span>
+                                {% elif tenant.subscription_status == 'archived' %}
+                                <span class="badge bg-secondary">Archived</span>
+                                {% elif tenant.subscription_status == 'deleted' %}
+                                <span class="badge bg-danger">Deleted</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ tenant.subscription_status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ tenant.created_at|date:"Y-m-d" }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                        data-bs-toggle="dropdown">
+                                        <i class="bi bi-gear"></i> Actions
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        {% if tenant.is_suspended or tenant.is_archived %}
+                                        <li>
+                                            <a class="dropdown-item"
+                                                href="{% url 'tenants:reactivate_tenant' tenant_id=tenant.id %}">
+                                                <i class="bi bi-arrow-clockwise text-success me-2"></i>Reactivate
+                                            </a>
+                                        </li>
+                                        {% else %}
+                                        <li>
+                                            <a class="dropdown-item"
+                                                href="{% url 'tenants:suspend_tenant' tenant_id=tenant.id %}">
+                                                <i class="bi bi-pause-circle text-warning me-2"></i>Suspend
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item"
+                                                href="{% url 'tenants:archive_tenant' tenant_id=tenant.id %}">
+                                                <i class="bi bi-archive text-secondary me-2"></i>Archive
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                        <li>
+                                            <hr class="dropdown-divider">
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item text-danger"
+                                                href="{% url 'tenants:delete_tenant' tenant_id=tenant.id %}">
+                                                <i class="bi bi-trash me-2"></i>Delete
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav>
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <p class="text-muted">No tenants found. <a href="{% url 'tenants:create' %}">Create one now</a>.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

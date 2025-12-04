@@ -1,0 +1,148 @@
+{% extends 'billing/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-arrow-left-right me-2"></i>Upgrade / Downgrade Plans</h2>
+            <p class="text-muted">Change subscription plans with automatic proration</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Select Subscription and New Plan</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="subscription_id" class="form-label">Subscription to Change</label>
+                            <select name="subscription_id" id="subscription_id" class="form-select" required>
+                                <option value="">-- Select Subscription --</option>
+                                {% for sub in subscriptions %}
+                                <option value="{{ sub.id }}" data-current-plan="{{ sub.plan.name }}"
+                                    data-current-price="{{ sub.plan.price_monthly }}">
+                                    {{ sub.tenant_id }} - {{ sub.plan.name }} (${{ sub.plan.price_monthly }}/mo)
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div id="current-plan-info" class="mt-2"></div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="new_plan_id" class="form-label">New Plan</label>
+                            <select name="new_plan_id" id="new_plan_id" class="form-select" required>
+                                <option value="">-- Select New Plan --</option>
+                                {% for plan in plans %}
+                                <option value="{{ plan.id }}" data-price="{{ plan.price_monthly }}">
+                                    {{ plan.name }} - ${{ plan.price_monthly }}/month
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div id="new-plan-info" class="mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="proration-preview" class="alert alert-info" style="display: none;">
+                    <h6><i class="bi bi-calculator me-2"></i>Proration Estimate</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <small class="text-muted">Current</small>
+                            <p class="mb-0" id="current-display"></p>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted">New</small>
+                            <p class="mb-0" id="new-display"></p>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted">Estimated Change</small>
+                            <p class="mb-0" id="change-display"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>Change Plan
+                    </button>
+                    <a href="{% url 'billing:proration_calculator' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-calculator me-2"></i>Calculate Exact Proration
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h6 class="mb-0">Available Plans</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for plan in plans %}
+                <div class="col-md-4 mb-3">
+                    <div
+                        class="card h-100 {% if plan.tier == 'pro' %}border-primary{% elif plan.tier == 'enterprise' %}border-success{% endif %}">
+                        <div class="card-body">
+                            <h6>{{ plan.name }}</h6>
+                            <h4 class="text-primary">${{ plan.price_monthly }}<small>/mo</small></h4>
+                            <ul class="list-unstyled small">
+                                <li><i class="bi bi-check text-success"></i> {{ plan.max_users }} Users</li>
+                                <li><i class="bi bi-check text-success"></i> {{ plan.max_leads }} Leads</li>
+                                <li><i class="bi bi-check text-success"></i> {{ plan.max_storage_gb }}GB Storage</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Show proration preview when both selections are made
+    const subSelect = document.getElementById('subscription_id');
+    const planSelect = document.getElementById('new_plan_id');
+    const preview = document.getElementById('proration-preview');
+
+    function updatePreview() {
+        if (subSelect.value && planSelect.value) {
+            const currentOption = subSelect.options[subSelect.selectedIndex];
+            const newOption = planSelect.options[planSelect.selectedIndex];
+
+            const currentPrice = parseFloat(currentOption.dataset.currentPrice);
+            const newPrice = parseFloat(newOption.dataset.price);
+            const difference = newPrice - currentPrice;
+
+            document.getElementById('current-display').innerHTML = `<strong>${currentOption.dataset.currentPlan}</strong><br>$${currentPrice}/mo`;
+            document.getElementById('new-display').innerHTML = `<strong>${newOption.textContent.split(' - ')[0]}</strong><br>$${newPrice}/mo`;
+
+            const changeClass = difference > 0 ? 'text-success' : 'text-danger';
+            const changeIcon = difference > 0 ? 'bi-arrow-up' : 'bi-arrow-down';
+            const changeText = difference > 0 ? 'Upgrade' : 'Downgrade';
+
+            document.getElementById('change-display').innerHTML = `
+            <strong class="${changeClass}">
+                <i class="bi ${changeIcon}"></i> ${changeText}
+            </strong><br>
+            <span class="${changeClass}">$${Math.abs(difference).toFixed(2)}/mo difference</span>
+        `;
+
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+        }
+    }
+
+    subSelect.addEventListener('change', updatePreview);
+    planSelect.addEventListener('change', updatePreview);
+</script>
+{% endblock %}

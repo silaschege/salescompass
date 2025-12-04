@@ -1,0 +1,235 @@
+{% extends "marketing/base.html" %}
+{%load auth_extras filters_extras math%}
+{% block title %}Campaign Performance Analytics - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Campaign Performance Analytics</h1>
+        <p class="text-white text-center lead">Comprehensive analytics and trend visualization for your marketing campaigns</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- KPI Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body text-center">
+                    <h6>Total Revenue</h6>
+                    <h2 class="display-6">${{ total_revenue|intcomma }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                    <h6>Total Sent</h6>
+                    <h2 class="display-6">{{ total_sent|intcomma }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body text-center">
+                    <h6>Avg Open Rate</h6>
+                    <h2 class="display-6">{{ avg_open_rate }}%</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body text-center">
+                    <h6>Avg CTR</h6>
+                    <h2 class="display-6">{{ avg_click_rate }}%</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Actions -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <form method="get" class="d-flex gap-2">
+                <input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+                <input type="date" name="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+                <button type="submit" class="btn btn-primary">Apply</button>
+            </form>
+        </div>
+        <div class="col-md-6 text-end">
+            <div class="btn-group" role="group">
+                <a href="{% url 'marketing:performance_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-list"></i> Performance Records
+                </a>
+                <a href="{% url 'marketing:performance_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add Record
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trend Charts -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Performance Trends ({{ start_date|date:'M d' }} - {{ end_date|date:'M d, Y' }})</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Campaigns -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Top Performing Campaigns</h5>
+                </div>
+                <div class="card-body">
+                    {% if top_campaigns %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Campaign</th>
+                                        <th>Revenue</th>
+                                        <th>Sent</th>
+                                        <th>Open Rate</th>
+                                        <th>CTR</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for campaign in top_campaigns %}
+                                    <tr>
+                                        <td>{{ campaign.campaign__name }}</td>
+                                        <td>${{ campaign.total_revenue|intcomma }}</td>
+                                        <td>{{ campaign.total_sent|intcomma }}</td>
+                                        <td>{{ campaign.avg_open_rate|floatformat:2 }}%</td>
+                                        <td>{{ campaign.avg_click_rate|floatformat:2 }}%</td>
+                                        <td>
+                                            <a href="{% url 'marketing:detail' campaign.campaign_id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No campaign performance data available for the selected period.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Options -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Export Data</h5>
+                </div>
+                <div class="card-body">
+                    <div class="btn-group" role="group">
+                        <a href="{}?format=csv" class="btn btn-outline-primary">
+                            <i class="bi bi-filetype-csv"></i> CSV
+                        </a>
+                        <a href="{}?format=xlsx" class="btn btn-outline-success">
+                            <i class="bi bi-filetype-xlsx"></i> Excel
+                        </a>
+                        <a href="{}?format=pdf" class="btn btn-outline-danger">
+                            <i class="bi bi-filetype-pdf"></i> PDF
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('performanceChart').getContext('2d');
+const data = {{ trend_data_json|safe }};
+
+new Chart(ctx, {
+    type: 'line',
+     {
+        labels: data.map(d => {
+            const date = new Date(d.date);
+            return date.toLocaleString('default', { month: 'short', day: 'numeric' });
+        }),
+         data.map(d => d.revenue),
+        borderColor: '#0d6efd',
+        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.3,
+        yAxisID: 'y'
+    },
+    {
+         data.map(d => d.open_rate),
+        borderColor: '#28a745',
+        borderWidth: 2,
+        tension: 0.3,
+        yAxisID: 'y1'
+    },
+    {
+         data.map(d => d.click_rate),
+        borderColor: '#ffc107',
+        borderWidth: 2,
+        tension: 0.3,
+        yAxisID: 'y1'
+    }
+],
+    options: {
+        responsive: true,
+        interaction: {
+            mode: 'index',
+            intersect: false
+        },
+        scales: {
+            y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                title: {
+                    display: true,
+                    text: 'Revenue ($)'
+                }
+            },
+            y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                title: {
+                    display: true,
+                    text: 'Rate (%)'
+                },
+                grid: {
+                    drawOnChartArea: false,
+                },
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
+{% block extra_head %}
+<style>
+.card-header h5 {
+    margin-bottom: 0;
+}
+</style>
+{% endblock %}

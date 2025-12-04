@@ -1,0 +1,125 @@
+{% extends 'billing/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-calculator me-2"></i>Proration Calculator</h2>
+            <p class="text-muted">Calculate proration amounts for plan changes</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Calculate Plan Change Cost</h5>
+        </div>
+        <div class="card-body">
+            <form method="get">
+                <div class="row">
+                    <div class="col-md-5">
+                        <div class="mb-3">
+                            <label for="subscription_id" class="form-label">Select Subscription</label>
+                            <select name="subscription_id" id="subscription_id" class="form-select" required>
+                                <option value="">-- Select Subscription --</option>
+                                {% for sub in subscriptions %}
+                                <option value="{{ sub.id }}" {% if request.GET.subscription_id==sub.id|stringformat:"s"
+                                    %}selected{% endif %}>
+                                    {{ sub.tenant_id }} - {{ sub.plan.name }} (${{ sub.plan.price_monthly }}/mo)
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="mb-3">
+                            <label for="new_plan_id" class="form-label">New Plan</label>
+                            <select name="new_plan_id" id="new_plan_id" class="form-select" required>
+                                <option value="">-- Select New Plan --</option>
+                                {% for plan in plans %}
+                                <option value="{{ plan.id }}" {% if request.GET.new_plan_id==plan.id|stringformat:"s"
+                                    %}selected{% endif %}>
+                                    {{ plan.name }} (${{ plan.price_monthly }}/mo)
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-calculator me-2"></i>Calculate
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            {% if request.GET.subscription_id and request.GET.new_plan_id %}
+            <hr>
+
+            <div class="alert alert-info">
+                <h6><i class="bi bi-info-circle me-2"></i>Proration Details</h6>
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <small class="text-muted">Current Plan</small>
+                        <p class="mb-0"><strong>{{ subscription.plan.name }}</strong></p>
+                        <small>${{ subscription.plan.price_monthly }}/month</small>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">New Plan</small>
+                        <p class="mb-0"><strong>{{ new_plan.name }}</strong></p>
+                        <small>${{ new_plan.price_monthly }}/month</small>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">Proration Amount</small>
+                        <h4 class="mb-0 {% if proration_amount > 0 %}text-success{% else %}text-danger{% endif %}">
+                            ${{ proration_amount|floatformat:2 }}
+                        </h4>
+                        <small>
+                            {% if proration_amount > 0 %}
+                            <i class="bi bi-arrow-up text-success"></i> Charge
+                            {% else %}
+                            <i class="bi bi-arrow-down text-danger"></i> Credit
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <p class="mb-0"><small>
+                            <i class="bi bi-lightbulb me-1"></i>
+                            Proration is calculated based on the unused time in the current billing period.
+                        </small></p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h6 class="mb-0">How Proration Works</h6>
+        </div>
+        <div class="card-body">
+            <ul class="mb-0">
+                <li><strong>Upgrade:</strong> You'll be charged the prorated difference for the remaining days in the
+                    billing cycle.</li>
+                <li><strong>Downgrade:</strong> The unused amount will be credited to future invoices.</li>
+                <li><strong>Calculation:</strong> Based on daily rate × remaining days in current period.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-submit form when both selects have values
+    document.querySelectorAll('#subscription_id, #new_plan_id').forEach(select => {
+        select.addEventListener('change', function () {
+            const subId = document.getElementById('subscription_id').value;
+            const planId = document.getElementById('new_plan_id').value;
+            if (subId && planId) {
+                this.form.submit();
+            }
+        });
+    });
+</script>
+{% endblock %}

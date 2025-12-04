@@ -1,0 +1,75 @@
+{% extends 'billing/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-speedometer2 me-2"></i>Revenue Overview</h2>
+            <p class="text-muted">System-wide revenue metrics and analytics</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Monthly Recurring Revenue</h6>
+                    <h2>${{ mrr|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Annual Recurring Revenue</h6>
+                    <h2>${{ arr|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Active Subscriptions</h6>
+                    <h2>{{ active_subscriptions }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Trial Subscriptions</h6>
+                    <h2>{{ trial_subscriptions }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Revenue (Last 30 Days)</h5>
+                </div>
+                <div class="card-body">
+                    <h3>${{ recent_revenue|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'billing:invoice_list' %}" class="btn btn-outline-primary mb-2 w-100">
+                        <i class="bi bi-file-earmark-text me-2"></i>View All Invoices
+                    </a>
+                    <a href="{% url 'billing:subscription_list' %}" class="btn btn-outline-info w-100">
+                        <i class="bi bi-collection me-2"></i>View All Subscriptions
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

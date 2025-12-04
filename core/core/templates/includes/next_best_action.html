@@ -1,0 +1,28 @@
+{# Intelligence Widget: Next Best Action (NBA) #}
+{# Usage: {% include "includes/next_best_action.html" with action=lead.next_action %} #}
+
+<div class="card border-0 shadow-sm mb-3 bg-light">
+    <div class="card-body">
+        <h6 class="card-subtitle mb-3 text-primary text-uppercase small fw-bold">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                class="bi bi-lightning-charge-fill me-1" viewBox="0 0 16 16">
+                <path
+                    d="M11.251.068a.5.5 0 0 1 .227.58L9.677 6.5H13a.5.5 0 0 1 .364.843l-8 8.5a.5.5 0 0 1-.842-.49L6.323 9.5H3a.5.5 0 0 1-.364-.843l8-8.5a.5.5 0 0 1 .615-.09z" />
+            </svg>
+            Next Best Action
+        </h6>
+
+        <div class="d-flex align-items-start">
+            <div class="flex-grow-1">
+                <h5 class="card-title h6 mb-1">{{ action.title|default:"Review Account Status" }}</h5>
+                <p class="card-text small text-muted mb-2">
+                    {{ action.description|default:"AI suggests reviewing recent interactions to determine the next
+                    step." }}
+                </p>
+                <a href="{{ action.url|default:'#' }}" class="btn btn-sm btn-outline-primary">
+                    {{ action.button_text|default:"Execute Action" }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

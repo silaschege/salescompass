@@ -1,0 +1,32 @@
+{% extends 'core/base_module.html' %}
+
+{% block module_nav %}
+<!-- General Task Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#marketingCampaignMenu">
+    General Task
+</a>
+<div class="collapse show" id="marketingCampaignMenu">
+    <a class="nav-link ms-3" href="{% url 'tasks:list' %}">List</a>
+    <a class="nav-link ms-3" href="{% url 'tasks:create' %}">Create</a>
+</div>
+
+<!--Campaign Performance Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#campaignPerformanceMenu">
+    Tasks
+</a>
+<div class="collapse" id="campaignPerformanceMenu">
+    <a class="nav-link ms-3" href="{% url 'tasks:dashboard' %}">Dashboard</a>
+    <a class="nav-link ms-3" href="{% url 'tasks:calendar' %}">Calendar</a>
+    <a class="nav-link ms-3" href="{% url 'tasks:my_tasks' %}">My Tasks</a>
+    <a class="nav-link ms-3" href="{% url 'tasks:kanban' %}">Kanban</a>
+</div>
+
+<!--template_list Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#emailTemplateMenu">
+    Template
+</a>
+<div class="collapse" id="emailTemplateMenu">
+    <a class="nav-link ms-3" href="{% url 'tasks:template_list' %}">List</a>
+    <a class="nav-link ms-3" href="{% url 'tasks:template_create' %}">Create</a>
+</div>
+{% endblock %}

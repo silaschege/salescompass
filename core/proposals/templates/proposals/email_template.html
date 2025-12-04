@@ -1,0 +1,26 @@
+{% extends "proposals/base.html" %}
+{% load auth_extras %}
+
+{% block title %}{{ proposal.title }} - SalesCompass{% endblock %}
+
+{% block content %}
+
+
+    <h2 class="block-title fw-bold mb-0">Hello,</h2>
+    
+    <p>I'm excited to share our proposal: <strong>{{ proposal.title }}</strong></p>
+    
+    <p><a href="{% url 'proposals:track_click' click_token %}?url={% url 'proposals:detail' proposal.pk %}" 
+          style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+        View Proposal
+    </a></p>
+    
+    <p>If you have any questions, please don't hesitate to reach out.</p>
+    
+    <p>Best regards,<br>
+    {{ proposal.sent_by.email|default:"Sales Team" }}</p>
+    
+    <!-- Tracking pixel -->
+    <img src="{% url 'proposals:track_open' open_token %}" 
+         width="1" height="1" alt="" style="display:none;">
+{% endblock %}

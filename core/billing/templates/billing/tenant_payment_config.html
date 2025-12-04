@@ -1,0 +1,124 @@
+{% extends "billing/base.html" %}
+
+{% block title %}Payment Settings - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-1">Payment Settings</h2>
+            <p class="text-muted">Configure which payment providers you want to use for your subscription and customer
+                checkout</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Available Payment Providers</h5>
+                </div>
+                <div class="card-body">
+                    {% if providers %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Provider</th>
+                                    <th>Description</th>
+                                    <th>Supported Currencies</th>
+                                    <th class="text-center">For Subscription</th>
+                                    <th class="text-center">For Customers</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in providers %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if item.provider.logo_url %}
+                                            <img src="{{ item.provider.logo_url }}"
+                                                alt="{{ item.provider.display_name }}"
+                                                style="height: 24px; margin-right: 10px;">
+                                            {% else %}
+                                            <i class="bi bi-credit-card me-2"></i>
+                                            {% endif %}
+                                            <strong>{{ item.provider.display_name }}</strong>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ item.provider.description|default:"Payment
+                                            provider" }}</small>
+                                    </td>
+                                    <td>
+                                        <small>
+                                            {% for currency in item.provider.supported_currencies %}
+                                            <span class="badge bg-secondary">{{ currency }}</span>
+                                            {% empty %}
+                                            <span class="text-muted">N/A</span>
+                                            {% endfor %}
+                                        </small>
+                                    </td>
+                                    <td class="text-center">
+                                        <form method="post" style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="provider_id" value="{{ item.provider.id }}">
+                                            <input type="hidden" name="action" value="toggle_subscription">
+                                            <button type="submit"
+                                                class="btn btn-sm {{ item.is_enabled_for_subscription|yesno:'btn-success,btn-outline-secondary' }}">
+                                                <i
+                                                    class="bi bi-{{ item.is_enabled_for_subscription|yesno:'check-circle,circle' }}"></i>
+                                                {{ item.is_enabled_for_subscription|yesno:"Enabled,Disabled" }}
+                                            </button>
+                                        </form>
+                                    </td>
+                                    <td class="text-center">
+                                        <form method="post" style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="provider_id" value="{{ item.provider.id }}">
+                                            <input type="hidden" name="action" value="toggle_customers">
+                                            <button type="submit"
+                                                class="btn btn-sm {{ item.is_enabled_for_customers|yesno:'btn-success,btn-outline-secondary' }}">
+                                                <i
+                                                    class="bi bi-{{ item.is_enabled_for_customers|yesno:'check-circle,circle' }}"></i>
+                                                {{ item.is_enabled_for_customers|yesno:"Enabled,Disabled" }}
+                                            </button>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        {% if item.tenant_config %}
+                                        <a href="#" class="btn btn-sm btn-outline-primary"
+                                            title="Configure credentials">
+                                            <i class="bi bi-gear"></i> Configure
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="alert alert-info mt-4">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>How it works:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li><strong>For Subscription:</strong> Use this provider to pay for your SalesCompass
+                                subscription</li>
+                            <li><strong>For Customers:</strong> Allow your customers to use this provider when they
+                                purchase from you</li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        No payment providers are currently available. Please contact your platform administrator.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

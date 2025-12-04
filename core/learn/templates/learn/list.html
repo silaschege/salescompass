@@ -1,0 +1,83 @@
+{% extends "learn/base.html" %}
+{% load auth_extras math filters_extras %}
+
+{% block title %}Documentation - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">SalesCompass Documentation</h1>
+        <p class="text-white text-center lead">User guides, API docs, and ESG compliance manuals</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Search and Filters -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <form method="get" action="{% url 'learn:search' %}">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" 
+                           placeholder="Search documentation..." value="{{ request.GET.q }}">
+                    <button class="btn btn-primary" type="submit">Search</button>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-3">
+            <select id="category-filter" class="form-select">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3 text-end">
+            {% if request.user.is_authenticated and request.user|has_perm:"accounts:write" %}
+                <a href="{% url 'learn:create' %}" class="btn btn-primary">+ New Article</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Articles -->
+    <div class="row">
+        {% for article in articles %}
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="{% url 'learn:detail' article.slug %}">{{ article.title }}</a>
+                    </h5>
+                    <p class="card-text">{{ article.summary|truncatewords:20 }}</p>
+                    <small class="text-muted">
+                        {{ article.get_article_type_display }} |
+                        {{ article.category.name }}
+                        {% if article.tags %}
+                            | {% for tag in article.get_tags_list %}
+                                <span class="badge bg-secondary">{{ tag }}</span>
+                            {% endfor %}
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+{% endblock %}

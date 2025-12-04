@@ -1,0 +1,60 @@
+{% extends "settings_app/base.html" %}
+
+{% block title %}Automation Rules - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Automation Rules</h1>
+        <p class="text-white text-center lead">Configure event-driven workflows and automations</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Automation Rules</h2>
+        <a href="{% url 'settings_app:automation_rule_create' %}" class="btn btn-primary">+ New Rule</a>
+    </div>
+
+    {% if rules %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Trigger</th>
+                        <th>Conditions</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rule in rules %}
+                    <tr>
+                        <td>{{ rule.name }}</td>
+                        <td>{{ rule.trigger_event }}</td>
+                        <td>{{ rule.conditions|length }} conditions</td>
+                        <td>
+                            {% if rule.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'settings_app:automation_rule_detail' rule.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                            <a href="{% url 'settings_app:automation_rule_update' rule.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <strong>No automation rules found.</strong>
+            Create rules to automate CRM workflows based on triggers like account changes, opportunity updates, or case escalations.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

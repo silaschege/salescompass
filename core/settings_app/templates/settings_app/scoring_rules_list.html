@@ -1,0 +1,141 @@
+{% extends 'settings_app/base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Lead Scoring Rules</h1>
+    </div>
+
+    <div class="row">
+        <!-- Behavioral Scoring Rules -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Behavioral Scoring Rules</h5>
+                    <a href="{% url 'settings_app:behavioral_scoring_create' %}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus"></i> Add Rule
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if behavioral_rules %}
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Rule</th>
+                                <th>Action</th>
+                                <th>Points</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rule in behavioral_rules %}
+                            <tr>
+                                <td>{{ rule.name }}</td>
+                                <td>{{ rule.get_action_type_display }}</td>
+                                <td>{{ rule.points }}</td>
+                                <td>
+                                    {% if rule.is_active %}
+                                    <span class="badge badge-success">Active</span>
+                                    {% else %}
+                                    <span class="badge badge-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'settings_app:behavioral_scoring_update' rule.pk %}"
+                                        class="btn btn-sm btn-warning">Edit</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p class="text-muted">No behavioral scoring rules configured.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Demographic Scoring Rules -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Demographic Scoring Rules</h5>
+                    <a href="{% url 'settings_app:demographic_scoring_create' %}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus"></i> Add Rule
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if demographic_rules %}
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Rule</th>
+                                <th>Condition</th>
+                                <th>Points</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rule in demographic_rules %}
+                            <tr>
+                                <td>{{ rule.name }}</td>
+                                <td>{{ rule.field_name }} {{ rule.operator }} "{{ rule.field_value }}"</td>
+                                <td>{{ rule.points }}</td>
+                                <td>
+                                    {% if rule.is_active %}
+                                    <span class="badge badge-success">Active</span>
+                                    {% else %}
+                                    <span class="badge badge-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'settings_app:demographic_scoring_update' rule.pk %}"
+                                        class="btn btn-sm btn-warning">Edit</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p class="text-muted">No demographic scoring rules configured.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Score Decay Configuration -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Score Decay Configuration</h5>
+            <a href="{% url 'settings_app:score_decay_config' %}" class="btn btn-sm btn-primary">
+                <i class="fas fa-cog"></i> Configure
+            </a>
+        </div>
+        <div class="card-body">
+            {% if decay_config %}
+            <p><strong>Status:</strong>
+                {% if decay_config.decay_enabled %}
+                <span class="badge badge-success">Enabled</span>
+                {% else %}
+                <span class="badge badge-secondary">Disabled</span>
+                {% endif %}
+            </p>
+            {% if decay_config.decay_enabled %}
+            <p><strong>Decay Rate:</strong> {{ decay_config.decay_rate }}% every {{ decay_config.decay_period_days }}
+                days</p>
+            <p><strong>Minimum Score:</strong> {{ decay_config.min_score }}</p>
+            {% if decay_config.last_decay_run %}
+            <p><strong>Last Run:</strong> {{ decay_config.last_decay_run|naturaltime }}</p>
+            {% endif %}
+            {% endif %}
+            {% else %}
+            <p class="text-muted">Score decay not configured.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

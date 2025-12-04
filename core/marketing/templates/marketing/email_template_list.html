@@ -1,0 +1,194 @@
+{% extends "marketing/base.html" %}
+
+{% block title %}Email Templates - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Email Templates</h1>
+        <p class="text-white text-center lead">Create and manage reusable email templates for your campaigns</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Action Buttons -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <a href="{% url 'marketing:template_create' %}" class="btn btn-primary">+ New Email Template</a>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{% url 'marketing:list' %}" class="btn btn-outline-secondary">← Back to Campaigns</a>
+        </div>
+    </div>
+
+    <!-- Email Templates Table -->
+    {% if object_list %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Template Name</th>
+                        <th>Subject</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for template in object_list %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'marketing:template_update' template.pk %}" class="text-decoration-none">
+                                <strong>{{ template.name }}</strong>
+                            </a>
+                            <br>
+                            <small class="text-muted">
+                                {% if template.html_content %}
+                                    {{ template.html_content|striptags|truncatewords:10 }}
+                                {% else %}
+                                    No content
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td>{{ template.subject|truncatechars:30 }}</td>
+                        <td>
+                            {% if template.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ template.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <div class="d-flex flex-column gap-1">
+                                <a href="{% url 'marketing:template_update' template.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="#" class="btn btn-sm btn-outline-secondary preview-template" data-template-id="{{ template.id }}">
+                                    Preview
+                                </a>
+                                {% if template.is_active %}
+                                    <form method="post" action="{% url 'marketing:deactivate_template' template.pk %}" class="d-inline" onsubmit="return confirm('Deactivate this template?')">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-warning">Deactivate</button>
+                                    </form>
+                                {% else %}
+                                    <form method="post" action="{% url 'marketing:activate_template' template.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-success">Activate</button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center">
+            <div class="mb-4">
+                <i class="bi bi-envelope-open display-1 text-muted"></i>
+            </div>
+            <h3 class="text-muted">No email templates found</h3>
+            <p class="text-muted mb-4">Create your first email template to use in marketing campaigns.</p>
+            <a href="{% url 'marketing:template_create' %}" class="btn btn-primary">Create Your First Template</a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Email Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Email Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="previewContent">
+                <!-- Preview content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+
+<script>
+// Preview email template
+document.querySelectorAll('.preview-template').forEach(button => {
+    button.addEventListener('click', function(e) {
+        e.preventDefault();
+        const templateId = this.dataset.templateId;
+        fetch(`/marketing/templates/${templateId}/preview/`)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('previewContent').innerHTML = html;
+                new bootstrap.Modal(document.getElementById('previewModal')).show();
+            })
+            .catch(error => {
+                alert('Error loading preview: ' + error);
+            });
+    });
+});
+</script>
+{% endblock %}
+{% block extra_head %}
+<style>
+.table-hover tbody tr:hover {
+    background-color: rgba(111, 66, 193, 0.05);
+}
+.badge {
+    font-size: 0.75em;
+    padding: 0.3em 0.6em;
+}
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

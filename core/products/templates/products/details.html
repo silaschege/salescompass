@@ -1,0 +1,163 @@
+{% extends "accounts/base.html" %}
+{% load auth_extras %}
+
+{% block title %}{{ product.name }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h1 class="block-title fw-bold mb-0">{{ product.name }}</h1>
+        <span class="badge bg-primary">{{ product.sku }}</span>
+        {% if product.esg_certified %}
+            <span class="badge bg-success">🌱 ESG Certified</span>
+        {% endif %}
+        {% if not product.is_active %}
+            <span class="badge bg-secondary">Inactive</span>
+        {% endif %}
+    </div>
+    <div>
+        {% if request.user.is_authenticated and request.user|has_perm:"products:write" %}
+            <a href="{% url 'products:update' product.pk %}" class="btn btn-outline-secondary">Edit</a>
+            <a href="{% url 'products:delete' product.pk %}" class="btn btn-outline-danger">Delete</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <h3>Product Details</h3>
+        <table class="table table-borderless">
+            <tr><th>Description</th><td>{{ product.description|linebreaks }}</td></tr>
+            <tr><th>Category</th><td>{{ product.category|default:"—" }}</td></tr>
+            <tr><th>Base Price</th><td>${{ product.base_price|intcomma }} {{ product.currency }}</td></tr>
+            <tr><th>Pricing Model</th><td>{{ product.get_pricing_model_display }}</td></tr>
+            <tr><th>Availability</th><td>
+                {% if product.available_from and product.available_to %}
+                    {{ product.available_from }} to {{ product.available_to }}
+                {% elif product.available_from %}
+                    From {{ product.available_from }}
+                {% elif product.available_to %}
+                    Until {{ product.available_to }}
+                {% else %}
+                    Always available
+                {% endif %}
+            </td></tr>
+        </table>
+
+        {% if product.pricing_tiers.exists %}
+        <h4>Pricing Tiers</h4>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Discount</th>
+                        <th>Total (10 units)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tier in product.pricing_tiers.all %}
+                    <tr>
+                        <td>
+                            {% if tier.max_quantity %}
+                                {{ tier.min_quantity }}–{{ tier.max_quantity }}
+                            {% else %}
+                                {{ tier.min_quantity }}+
+                            {% endif %}
+                        </td>
+                        <td>${{ tier.unit_price|intcomma }}</td>
+                        <td>{{ tier.discount_percent }}%</td>
+                        <td>
+                            {% with price=pricing_info.10.total_price %}
+                                ${{ price|intcomma }}
+                            {% endwith %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if product.esg_certified %}
+        <h4>ESG Impact Metrics</h4>
+        <ul>
+            <li><strong>Carbon Footprint:</strong> {{ product.carbon_footprint }} kg CO2e per unit</li>
+            <li><strong>tCO2e Saved:</strong> {{ product.tco2e_saved }} tonnes</li>
+            {% if product.esg_certifications %}
+                <li><strong>Certifications:</strong> 
+                    {% for cert in product.get_certifications_list %}
+                        <span class="badge bg-info text-dark">{{ cert }}</span>
+                    {% endfor %}
+                </li>
+            {% endif %}
+            {% if product.sustainability_notes %}
+                <li><strong>Sustainability Notes:</strong> {{ product.sustainability_notes }}</li>
+            {% endif %}
+        </ul>
+        {% endif %}
+
+        {% if bundles %}
+        <h4>Bundling Rules</h4>
+        <div class="row">
+            {% for bundle in bundles %}
+            <div class="col-md-6 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ bundle.name }}</h5>
+                        <p class="card-text">{{ bundle.description|truncatewords:20 }}</p>
+                        <p><strong>Price:</strong> ${{ bundle.bundle_price|intcomma }}</p>
+                        <ul>
+                            {% for item in bundle.bundleitem_set.all %}
+                                <li>{{ item.quantity }}x {{ item.product.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header">Quick Actions</div>
+            <div class="card-body">
+                <a href="{% url 'products:comparison' %}?product={{ product.id }}" class="btn btn-outline-primary w-100 mb-2">
+                    Compare with Other Products
+                </a>
+                <a href="{% url 'products:competitor_mapping' %}?product_id={{ product.id }}" class="btn btn-outline-secondary w-100">
+                    View Competitor Mapping
+                </a>
+            </div>
+        </div>
+
+        {% if competitors %}
+        <div class="card">
+            <div class="card-header">Competitor Mapping</div>
+            <div class="card-body">
+                <ul class="list-group">
+                    {% for competitor in competitors %}
+                    <li class="list-group-item">
+                        <strong>{{ competitor.competitor_name }}</strong><br>
+                        {{ competitor.name }} ({{ competitor.competitor_sku|default:"—" }})
+                        {% if competitor.price_difference_percent != 0 %}
+                            <br><small>
+                                {% if competitor.price_difference_percent > 0 %}
+                                    {{ competitor.price_difference_percent }}% more expensive
+                                {% else %}
+                                    {{ competitor.price_difference_percent|abs }}% cheaper
+                                {% endif %}
+                            </small>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

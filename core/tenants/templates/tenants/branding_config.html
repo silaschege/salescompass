@@ -1,0 +1,106 @@
+{% extends 'tenants/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-palette me-2"></i>Branding Configuration</h2>
+            <p class="text-muted">Customize tenant branding and appearance</p>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Select Tenant</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="{% url 'tenants:branding_config_detail' tenant_id=object.id %}"
+                        id="tenantSelectForm">
+                        <select name="tenant_id" class="form-select"
+                            onchange="if(this.value) window.location.href='{% url 'tenants:branding_config' %}?tenant=' + this.value">
+                            <option value="">-- Select Tenant --</option>
+                            {% for t in tenants %}
+                            <option value="{{ t.id }}" {% if object.id==t.id %}selected{% endif %}>
+                                {{ t.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if object %}
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Branding Settings for {{ object.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.logo.id_for_label }}" class="form-label">Logo</label>
+                            {{ form.logo }}
+                            {% if object.logo %}
+                            <div class="mt-2">
+                                <img src="{{ object.logo.url }}" alt="Logo" style="max-height: 100px;">
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.primary_color.id_for_label }}" class="form-label">Primary Color</label>
+                            {{ form.primary_color }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.secondary_color.id_for_label }}" class="form-label">Secondary
+                                Color</label>
+                            {{ form.secondary_color }}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Save Branding</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Preview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Primary Color:</strong>
+                        <div class="d-inline-block ms-2"
+                            style="width: 50px; height: 30px; background-color: {{ object.primary_color }}; border: 1px solid #ddd;">
+                        </div>
+                        <code class="ms-2">{{ object.primary_color }}</code>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Secondary Color:</strong>
+                        <div class="d-inline-block ms-2"
+                            style="width: 50px; height: 30px; background-color: {{ object.secondary_color }}; border: 1px solid #ddd;">
+                        </div>
+                        <code class="ms-2">{{ object.secondary_color }}</code>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        These branding settings will be applied across the tenant's interface.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

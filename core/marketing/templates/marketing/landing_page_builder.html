@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ landing_page.title }} Landing Page Builder</h1>
+
+<!-- Builder -->
+<div class="d-flex" id="builder-container">
+    <!-- Sidebar: Block Palette -->
+    <div class="builder-sidebar bg-light p-3" style="width: 250px; height: 100vh; overflow-y: auto;">
+        <h5>Blocks</h5>
+        <div class="block-palette">
+            {% for value, label in block_types %}
+            <div class="block-item" draggable="true" data-type="{{ value }}">
+                <div class="card mb-2">
+                    <div class="card-body p-2">
+                        <strong>{{ label }}</strong>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <button id="save-page" class="btn btn-primary mt-3 w-100">💾 Save Page</button>
+    </div>
+
+    <!-- Main: Canvas -->
+    <div class="flex-grow-1">
+        <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+            <h1>{{ landing_page.title }}</h1>
+            <div>
+                <button id="toggle-preview" class="btn btn-outline-secondary me-2">📱 Mobile</button>
+                <a href="{{ landing_page.get_absolute_url }}" target="_blank" class="btn btn-success">👁️ Preview Live</a>
+            </div>
+        </div>
+        
+        <div id="canvas" class="p-4 bg-white">
+            <div id="drop-zone" class="drop-zone">
+                <!-- Blocks will be inserted here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Block Templates (hidden) -->
+<script id="block-templates" type="text/template">
+    {% verbatim %}
+    <div class="block" data-id="{{id}}" data-type="{{type}}">
+        <div class="block-header">
+            <span class="block-type">{{type}}</span>
+            <button class="btn-delete btn btn-sm btn-danger">🗑️</button>
+        </div>
+        <div class="block-content">
+            <!-- Content will be rendered by JS -->
+        </div>
+        <div class="block-resize-handle">⋮⋮</div>
+    </div>
+    {% endverbatim %}
+</script>
+
+<style>
+.builder-sidebar { border-right: 1px solid #ddd; }
+.block-item { cursor: move; }
+.block { 
+    border: 2px dashed #0d6efd; 
+    margin: 15px 0; 
+    border-radius: 8px;
+    position: relative;
+}
+.block-header { 
+    background: #e7f1ff; 
+    padding: 8px 12px; 
+    display: flex; 
+    justify-content: space-between;
+    align-items: center;
+}
+.block-resize-handle { 
+    position: absolute; 
+    bottom: -10px; 
+    left: 50%; 
+    transform: translateX(-50%);
+    cursor: ns-resize;
+}
+.drop-zone { min-height: 200px; }
+.mobile-preview { width: 375px; margin: 0 auto; border: 1px solid #ccc; }
+</style>
+
+<script src="{% static 'marketing/builder.js' %}"></script>
+<script>
+// Initialize builder with existing blocks
+document.addEventListener('DOMContentLoaded', function() {
+    const blocks = {{ blocks_json|safe }};
+    initBuilder(blocks);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends "products/base.html" %}
+
+{% block title %}{% if object %}Edit {{ object.name }}{% else %}New Product{% endif %} - SalesCompass{% endblock %}
+
+{% block content %}
+<h1 class="block-title fw-bold mb-0">{% if object %}Edit Product{% else %}New Product{% endif %}</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="{{ form.name.id_for_label }}" class="form-label">Product Name *</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <div class="text-danger">{{ form.name.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.sku.id_for_label }}" class="form-label">SKU *</label>
+                {{ form.sku }}
+                <div class="form-text">Stock Keeping Unit (e.g., TECH-LAPTOP-001)</div>
+                {% if form.sku.errors %}
+                    <div class="text-danger">{{ form.sku.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.upc.id_for_label }}" class="form-label">UPC</label>
+                {{ form.upc }}
+                <div class="form-text">Universal Product Code (12 digits)</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
+                {{ form.category }}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.tags.id_for_label }}" class="form-label">Tags</label>
+                {{ form.tags }}
+                <div class="form-text">Comma-separated (e.g., laptop, tech, business)</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                {{ form.description }}
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="{{ form.base_price.id_for_label }}" class="form-label">Base Price *</label>
+                {{ form.base_price }}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.currency.id_for_label }}" class="form-label">Currency</label>
+                {{ form.currency }}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.pricing_model.id_for_label }}" class="form-label">Pricing Model</label>
+                {{ form.pricing_model }}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">ESG Certified</label>
+                <div class="form-check">
+                    {{ form.esg_certified }}
+                    <label class="form-check-label">This product is ESG certified</label>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.carbon_footprint.id_for_label }}" class="form-label">Carbon Footprint</label>
+                {{ form.carbon_footprint }}
+                <div class="form-text">kg CO2e per unit</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">ESG Certifications</label>
+                {{ form.esg_certifications }}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.sustainability_notes.id_for_label }}" class="form-label">Sustainability Notes</label>
+                {{ form.sustainability_notes }}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.tco2e_saved.id_for_label }}" class="form-label">tCO2e Saved</label>
+                {{ form.tco2e_saved }}
+                <div class="form-text">Tonnes of CO2e saved by customer</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Availability</label>
+                <div class="row">
+                    <div class="col-md-6">
+                        {{ form.available_from }}
+                        <label for="{{ form.available_from.id_for_label }}" class="form-label">Available From</label>
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.available_to }}
+                        <label for="{{ form.available_to.id_for_label }}" class="form-label">Available To</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3 form-check">
+                {{ form.is_active }}
+                <label class="form-check-label">Active</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary">
+            {% if object %}Update Product{% else %}Create Product{% endif %}
+        </button>
+        <a href="{% url 'products:product_list' %}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}

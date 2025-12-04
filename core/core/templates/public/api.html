@@ -1,0 +1,274 @@
+{% extends "public/base.html" %}
+
+{% block title %}API Documentation - SalesCompass{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="bg-light py-5">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-4">SalesCompass API</h1>
+                <p class="lead text-muted mb-4">
+                    Build powerful integrations with our RESTful API. Access all your CRM data programmatically with
+                    comprehensive documentation and SDKs.
+                </p>
+                <div class="d-flex gap-3">
+                    <a href="#getting-started" class="btn btn-primary btn-lg px-4 rounded-pill">Get Started</a>
+                    <a href="#api-reference" class="btn btn-outline-primary btn-lg px-4 rounded-pill">API Reference</a>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <i class="bi bi-code-slash display-1 text-accent"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Key Features -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">API Features</h2>
+            <p class="text-muted">Everything you need to build powerful integrations</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="text-center">
+                    <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
+                        <i class="bi bi-shield-check fs-1 text-accent"></i>
+                    </div>
+                    <h5 class="fw-bold">Secure Authentication</h5>
+                    <p class="text-muted">OAuth 2.0 and API key authentication</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="text-center">
+                    <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
+                        <i class="bi bi-lightning fs-1 text-accent"></i>
+                    </div>
+                    <h5 class="fw-bold">High Performance</h5>
+                    <p class="text-muted">Fast response times with rate limiting</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="text-center">
+                    <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
+                        <i class="bi bi-file-earmark-code fs-1 text-accent"></i>
+                    </div>
+                    <h5 class="fw-bold">RESTful Design</h5>
+                    <p class="text-muted">Clean, predictable API endpoints</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="text-center">
+                    <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
+                        <i class="bi bi-book fs-1 text-accent"></i>
+                    </div>
+                    <h5 class="fw-bold">Documentation</h5>
+                    <p class="text-muted">Comprehensive guides and examples</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Getting Started -->
+<section id="getting-started" class="py-5 bg-light">
+    <div class="container">
+        <h2 class="fw-bold mb-4">Getting Started</h2>
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h4 class="mb-3">1. Get Your API Key</h4>
+                        <p class="text-muted">Sign in to your SalesCompass account and navigate to Settings → API Keys
+                            to generate your authentication token.</p>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h4 class="mb-3">2. Make Your First Request</h4>
+                        <p class="text-muted mb-3">Use your API key to authenticate requests:</p>
+                        <pre class="bg-dark text-light p-3 rounded"><code>curl -H "Authorization: Bearer YOUR_API_KEY" \
+  https://api.salescompass.com/v1/accounts</code></pre>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h4 class="mb-3">3. Explore the API</h4>
+                        <p class="text-muted">Check out our comprehensive API reference below to see all available
+                            endpoints.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm bg-accent text-white">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3">API Base URL</h5>
+                        <code class="text-white">https://api.salescompass.com/v1</code>
+
+                        <h5 class="fw-bold mt-4 mb-3">Rate Limits</h5>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">• Starter: 1,000 requests/hour</li>
+                            <li class="mb-2">• Professional: 5,000 requests/hour</li>
+                            <li class="mb-2">• Enterprise: Unlimited</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- API Reference -->
+<section id="api-reference" class="py-5">
+    <div class="container">
+        <h2 class="fw-bold mb-4">API Reference</h2>
+
+        <div class="accordion" id="apiAccordion">
+            <!-- Accounts -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#accounts">
+                        <strong>Accounts API</strong>
+                    </button>
+                </h2>
+                <div id="accounts" class="accordion-collapse collapse show" data-bs-parent="#apiAccordion">
+                    <div class="accordion-body">
+                        <h5>List Accounts</h5>
+                        <p><code class="bg-light p-2 rounded">GET /v1/accounts</code></p>
+                        <p class="text-muted">Retrieve a list of all accounts in your CRM.</p>
+
+                        <h5 class="mt-4">Create Account</h5>
+                        <p><code class="bg-light p-2 rounded">POST /v1/accounts</code></p>
+                        <p class="text-muted">Create a new account with the provided data.</p>
+
+                        <h5 class="mt-4">Get Account</h5>
+                        <p><code class="bg-light p-2 rounded">GET /v1/accounts/{id}</code></p>
+                        <p class="text-muted">Retrieve details of a specific account.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leads -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#leads">
+                        <strong>Leads API</strong>
+                    </button>
+                </h2>
+                <div id="leads" class="accordion-collapse collapse" data-bs-parent="#apiAccordion">
+                    <div class="accordion-body">
+                        <h5>List Leads</h5>
+                        <p><code class="bg-light p-2 rounded">GET /v1/leads</code></p>
+                        <p class="text-muted">Retrieve all leads with optional filtering.</p>
+
+                        <h5 class="mt-4">Create Lead</h5>
+                        <p><code class="bg-light p-2 rounded">POST /v1/leads</code></p>
+                        <p class="text-muted">Add a new lead to your pipeline.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Opportunities -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#opportunities">
+                        <strong>Opportunities API</strong>
+                    </button>
+                </h2>
+                <div id="opportunities" class="accordion-collapse collapse" data-bs-parent="#apiAccordion">
+                    <div class="accordion-body">
+                        <h5>List Opportunities</h5>
+                        <p><code class="bg-light p-2 rounded">GET /v1/opportunities</code></p>
+                        <p class="text-muted">Get all sales opportunities.</p>
+
+                        <h5 class="mt-4">Update Opportunity</h5>
+                        <p><code class="bg-light p-2 rounded">PATCH /v1/opportunities/{id}</code></p>
+                        <p class="text-muted">Update opportunity stage, value, or other fields.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cases -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#cases">
+                        <strong>Cases API</strong>
+                    </button>
+                </h2>
+                <div id="cases" class="accordion-collapse collapse" data-bs-parent="#apiAccordion">
+                    <div class="accordion-body">
+                        <h5>List Cases</h5>
+                        <p><code class="bg-light p-2 rounded">GET /v1/cases</code></p>
+                        <p class="text-muted">Retrieve support cases.</p>
+
+                        <h5 class="mt-4">Create Case</h5>
+                        <p><code class="bg-light p-2 rounded">POST /v1/cases</code></p>
+                        <p class="text-muted">Create a new support case.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SDKs -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Official SDKs</h2>
+            <p class="text-muted">Use our official libraries to integrate faster</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-filetype-py fs-1 text-accent mb-3"></i>
+                        <h5 class="fw-bold">Python</h5>
+                        <p class="text-muted">pip install salescompass</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-filetype-js fs-1 text-accent mb-3"></i>
+                        <h5 class="fw-bold">JavaScript</h5>
+                        <p class="text-muted">npm install salescompass-sdk</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-filetype-php fs-1 text-accent mb-3"></i>
+                        <h5 class="fw-bold">PHP</h5>
+                        <p class="text-muted">composer require salescompass/sdk</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Support -->
+<section class="py-5">
+    <div class="container text-center">
+        <h2 class="fw-bold mb-4">Need Help?</h2>
+        <p class="lead text-muted mb-4">
+            Our developer support team is here to help you succeed.
+        </p>
+        <a href="{% url 'support' %}" class="btn btn-primary btn-lg px-5 rounded-pill">Contact Support</a>
+    </div>
+</section>
+{% endblock %}

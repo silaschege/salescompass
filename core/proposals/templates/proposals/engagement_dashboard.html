@@ -1,0 +1,183 @@
+{% extends "proposals/base.html" %}
+
+{% block title %}Proposal Engagement Dashboard - SalesCompass{% endblock %}
+
+{% block content %}
+<h1>Proposal Engagement Dashboard</h1>
+
+<!-- KPI Cards -->
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card text-white bg-primary">
+            <div class="card-body text-center">
+                <h6>Total Proposals</h6>
+                <h3>{{ total_proposals }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-white bg-warning">
+            <div class="card-body text-center">
+                <h6>Sent Proposals</h6>
+                <h3>{{ sent_proposals }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-white bg-info">
+            <div class="card-body text-center">
+                <h6>Viewed Proposals</h6>
+                <h3>{{ viewed_proposals }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-white bg-success">
+            <div class="card-body text-center">
+                <h6>Accepted Proposals</h6>
+                <h3>{{ accepted_proposals }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-white bg-secondary">
+            <div class="card-body text-center">
+                <h6>Email Open Rate</h6>
+                <h3>{{ email_open_rate }}%</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-white bg-dark">
+            <div class="card-body text-center">
+                <h6>Email Click Rate</h6>
+                <h3>{{ email_click_rate }}%</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Proposals -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Proposals ({{ recent_proposals|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_proposals %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Opportunity</th>
+                                <th>Account</th>
+                                <th>Status</th>
+                                <th>Views</th>
+                                <th>Email Opens</th>
+                                <th>ESG Viewed</th>
+                                <th>Engagement Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for proposal in recent_proposals %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'proposals:detail' proposal.pk %}">
+                                        {{ proposal.title|truncatechars:30 }}
+                                    </a>
+                                </td>
+                                <td>{{ proposal.opportunity.name|truncatechars:20 }}</td>
+                                <td>{{ proposal.opportunity.account.name|truncatechars:20 }}</td>
+                                <td>
+                                    <span class="badge bg-{% if proposal.status == 'accepted' %}success{% elif proposal.status == 'rejected' %}danger{% elif proposal.status == 'viewed' %}info{% elif proposal.status == 'sent' %}warning{% else %}secondary{% endif %}">
+                                        {{ proposal.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ proposal.view_count }}</td>
+                                <td>
+                                    {% if proposal.email_opened %}
+                                        <span class="badge bg-success">Yes</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">No</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if proposal.esg_section_viewed %}
+                                        <span class="badge bg-success">Yes</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-primary" style="width: {{ proposal.engagement_score }}%;">
+                                            {{ proposal.engagement_score|floatformat:0 }}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No recent proposals found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Engagement Trends Chart -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Engagement Trends (Last 30 Days)</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Coming Soon:</strong> Historical engagement trends and analytics will be available in the next release.
+                </div>
+                <p>Currently tracking real-time engagement metrics including:</p>
+                <ul>
+                    <li>Proposal views and view duration</li>
+                    <li>ESG section engagement</li>
+                    <li>Email open and click tracking</li>
+                    <li>Proposal status changes</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Performing Proposals -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Top Performing Proposals</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Coming Soon:</strong> Leaderboards and performance rankings will be available in the next release.
+                </div>
+                <p>High engagement scores are calculated based on:</p>
+                <ul>
+                    <li><strong>View Count</strong> (10 points per view, max 50)</li>
+                    <li><strong>View Duration</strong> (1 point per minute, max 50)</li>
+                    <li><strong>ESG Engagement</strong> (bonus points for ESG section views)</li>
+                    <li><strong>Email Interaction</strong> (opens and clicks)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-refresh every 30 seconds
+setTimeout(() => {
+    location.reload();
+}, 30000);
+</script>
+{% endblock %}

@@ -1,0 +1,173 @@
+{% extends "tasks/base.html" %}
+
+{% block title %}Tasks Dashboard - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Tasks Dashboard</h1>
+        <p class="text-white text-center lead">Your task performance and analytics</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- KPI Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body text-center">
+                    <h6>Total Tasks</h6>
+                    <h2 class="display-6">{{ total_tasks }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                    <h6>Completed</h6>
+                    <h2 class="display-6">{{ completed_tasks }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-danger">
+                <div class="card-body text-center">
+                    <h6>Overdue</h6>
+                    <h2 class="display-6">{{ overdue_tasks }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body text-center">
+                    <h6>Completion Rate</h6>
+                    <h2 class="display-6">{{ completion_rate|floatformat:1 }}%</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="d-flex gap-2">
+                <a href="{% url 'tasks:create' %}" class="btn btn-primary">+ New Task</a>
+                <a href="{% url 'tasks:my_tasks' %}" class="btn btn-outline-secondary">My Tasks</a>
+            </div>
+        </div>
+        <div class="col-md-6 text-end">
+            <div class="btn-group" role="group">
+                <a href="{% url 'tasks:calendar' %}" class="btn btn-outline-secondary">Calendar</a>
+                <a href="{% url 'tasks:kanban' %}" class="btn btn-outline-secondary">Kanban</a>
+                <a href="{% url 'tasks:list' %}" class="btn btn-outline-secondary">All Tasks</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Tasks -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Recent Tasks</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_tasks %}
+                        <div class="table-responsive">
+                            <table class="table table-borderless mb-0">
+                                <tbody>
+                                    {% for task in recent_tasks %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'tasks:detail' task.pk %}">
+                                                {{ task.title|truncatechars:30 }}
+                                            </a>
+                                            <br>
+                                            <small class="text-muted">
+                                                {{ task.created_at|date:"M d" }} • 
+                                                {{ task.get_status_display }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if task.priority == 'high' %}danger{% elif task.priority == 'medium' %}warning{% else %}secondary{% endif %}">
+                                                {{ task.get_priority_display|slice:":1" }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No recent tasks.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Tasks -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Upcoming Tasks</h5>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_tasks %}
+                        <div class="table-responsive">
+                            <table class="table table-borderless mb-0">
+                                <tbody>
+                                    {% for task in upcoming_tasks %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'tasks:detail' task.pk %}">
+                                                {{ task.title|truncatechars:30 }}
+                                            </a>
+                                            <br>
+                                            <small class="text-muted">
+                                                Due: {{ task.due_date|date:"M d" }} • 
+                                                {{ task.get_status_display }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            {% if task.is_overdue %}
+                                                <span class="badge bg-danger">Overdue</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No upcoming tasks.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- High Priority Tasks -->
+    {% if high_priority_tasks > 0 %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>High Priority Tasks ({{ high_priority_tasks }})</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <strong>Attention Required!</strong> You have {{ high_priority_tasks }} high priority tasks that need immediate attention.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}

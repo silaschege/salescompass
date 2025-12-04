@@ -1,0 +1,23 @@
+{% extends 'core/base_module.html' %}
+
+{% block module_nav %}
+<!-- Customers Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#accountsMenu">
+    <i class="bi bi-people"></i> Account
+</a>
+<div class="collapse show" id="accountsMenu">
+    <a class="nav-link ms-3" href="{% url 'accounts:accounts_list' %}">List</a>
+    <a class="nav-link ms-3" href="{% url 'accounts:accounts_create' %}">Create</a>
+    <a class="nav-link ms-3" href="{% url 'accounts:accounts_kanban' %}">Dashboard</a>
+    <a class="nav-link ms-3" href="{% url 'accounts:bulk_import_upload' %}">Upload Account</a>
+</div>
+
+<!-- Contacts Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#contactsMenu">
+    <i class="bi bi-person-lines-fill"></i> Contact
+</a>
+<div class="collapse" id="contactsMenu">
+    <a class="nav-link ms-3" href="{% url 'accounts:contact_list' %}">List</a>
+    <a class="nav-link ms-3" href="{% url 'accounts:contact_create' %}">Create</a>
+</div>
+{% endblock %}
