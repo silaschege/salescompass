@@ -172,6 +172,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 
 # Default primary key field type
@@ -182,7 +183,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #################
 
 # added changes 
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
+# Celery configuration (optional - requires Redis)
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_TASK_ALWAYS_EAGER = os.getenv('CELERY_TASK_ALWAYS_EAGER', 'True').lower() == 'true'
 
 # Celery Beat periodic tasks
 from celery.schedules import crontab
@@ -201,13 +204,10 @@ CELERY_BEAT_SCHEDULE = {
 # ASGI application (replace your current WSGI_APPLICATION)
 ASGI_APPLICATION = 'salescompass.routing.application'
 
-# Channels configuration
+# Channels configuration (using in-memory for development)
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [("127.0.0.1", 6379)],  # Your Redis host and port
-        },
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }
 
