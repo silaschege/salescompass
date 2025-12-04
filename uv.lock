@@ -522,6 +522,18 @@ wheels = [
 ]
 
 [[package]]
+name = "django-appconf"
+version = "1.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d1/a2/e58bec8d7941b914af52a67c35b5709eceed2caa2848f28437f1666ed668/django_appconf-1.2.0.tar.gz", hash = "sha256:15a88d60dd942d6059f467412fe4581db632ef03018a3c183fb415d6fc9e5cec", size = 16127, upload-time = "2025-11-08T15:46:27.304Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e8/e6/4c34d94dfb74bbcbc489606e61f1924933de30d22c593dd1f429f35fbd7f/django_appconf-1.2.0-py3-none-any.whl", hash = "sha256:b81bce5ef0ceb9d84df48dfb623a32235d941c78cc5e45dbb6947f154ea277f4", size = 6500, upload-time = "2025-11-08T15:46:25.957Z" },
+]
+
+[[package]]
 name = "django-celery-beat"
 version = "2.8.1"
 source = { registry = "https://pypi.org/simple" }
@@ -536,6 +548,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/aa/11/0c8b412869b4fda72828572068312b10aafe7ccef7b41af3633af31f9d4b/django_celery_beat-2.8.1.tar.gz", hash = "sha256:dfad0201c0ac50c91a34700ef8fa0a10ee098cc7f3375fe5debed79f2204f80a", size = 175802, upload-time = "2025-05-13T06:58:29.246Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/61/e5/3a0167044773dee989b498e9a851fc1663bea9ab879f1179f7b8a827ac10/django_celery_beat-2.8.1-py3-none-any.whl", hash = "sha256:da2b1c6939495c05a551717509d6e3b79444e114a027f7b77bf3727c2a39d171", size = 104833, upload-time = "2025-05-13T06:58:27.309Z" },
+]
+
+[[package]]
+name = "django-cryptography"
+version = "1.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cryptography" },
+    { name = "django" },
+    { name = "django-appconf" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e4/ba/d5e1264c60a86cebb4b63f1dae8220e15dd751e46d24229ee0803f19a66b/django_cryptography-1.1-py2.py3-none-any.whl", hash = "sha256:93702fcf0d75865d55362f20ecd95274c4eef60ccdce46cbdade0420acee07cb", size = 11107, upload-time = "2022-04-06T04:27:28.34Z" },
 ]
 
 [[package]]
@@ -1053,6 +1078,7 @@ dependencies = [
     { name = "daphne" },
     { name = "django" },
     { name = "django-celery-beat" },
+    { name = "django-cryptography" },
     { name = "djangorestframework" },
     { name = "elasticsearch" },
     { name = "gunicorn" },
@@ -1060,6 +1086,7 @@ dependencies = [
     { name = "psycopg2-binary" },
     { name = "redis" },
     { name = "sendgrid" },
+    { name = "sqlparse" },
     { name = "stripe" },
 ]
 
@@ -1071,6 +1098,7 @@ requires-dist = [
     { name = "daphne", specifier = ">=4.2.1" },
     { name = "django", specifier = ">=5.2.9" },
     { name = "django-celery-beat", specifier = ">=2.8.1" },
+    { name = "django-cryptography", specifier = ">=1.1" },
     { name = "djangorestframework", specifier = ">=3.16.1" },
     { name = "elasticsearch", specifier = ">=9.2.0" },
     { name = "gunicorn", specifier = ">=23.0.0" },
@@ -1078,6 +1106,7 @@ requires-dist = [
     { name = "psycopg2-binary", specifier = ">=2.9.11" },
     { name = "redis", specifier = ">=7.1.0" },
     { name = "sendgrid", specifier = ">=6.12.5" },
+    { name = "sqlparse", specifier = ">=0.5.4" },
     { name = "stripe", specifier = ">=14.0.1" },
 ]
 

@@ -44,14 +44,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='engagementevent',
             name='priority',
-            field=models.CharField(choices=[('low', 'Low'), ('medium', 'Medium'), ('high', 'High'), ('critical', 'Critical')], default=1, max_length=20),
-            preserve_default=False,
+            field=models.CharField(choices=[('low', 'Low'), ('medium', 'Medium'), ('high', 'High'), ('critical', 'Critical')], default='medium', max_length=20),
         ),
         migrations.AddField(
             model_name='nextbestaction',
             name='assigned_to',
-            field=models.ForeignKey(default=-1984, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
-            preserve_default=False,
+            field=models.ForeignKey(null=True, blank=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
         ),
         migrations.AddField(
             model_name='nextbestaction',
@@ -66,8 +64,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='nextbestaction',
             name='status',
-            field=models.CharField(choices=[('open', 'Open'), ('in_progress', 'In Progress'), ('resolved', 'Resolved')], default=django.utils.timezone.now, max_length=20),
-            preserve_default=False,
+            field=models.CharField(choices=[('open', 'Open'), ('in_progress', 'In Progress'), ('resolved', 'Resolved')], default='open', max_length=20),
         ),
         migrations.AlterField(
             model_name='engagementevent',
