@@ -12,8 +12,8 @@ SalesCompass is a comprehensive multi-tenant B2B CRM platform built with Django 
 - Access the web interface through the Replit webview
 - Admin panel: `/admin/`
 - Login credentials: 
-  - Username: `admin`
-  - Password: `admin123`
+  - Email: `admin@salescompass.io`
+  - Password: `Admin123!`
 
 ### Development Server
 The Django development server is configured to run on `0.0.0.0:5000` and starts automatically via the workflow.
@@ -44,11 +44,11 @@ salescompass/
 ## Technology Stack
 
 ### Backend
-- **Django 5.1.2** - Web framework
-- **Python 3.11** - Programming language
-- **SQLite** - Database (default for development)
+- **Django 5.2.9** - Web framework
+- **Python 3.12** - Programming language
+- **PostgreSQL** - Database (Replit built-in Neon-backed)
 - **Django REST Framework** - API development
-- **Gunicorn** - Production WSGI server
+- **Gunicorn/Daphne** - Production WSGI/ASGI server
 
 ### Optional Services (not running by default)
 - **Celery** - Asynchronous task processing (configured for eager mode)
@@ -271,7 +271,7 @@ REDIS_URL=redis://localhost:6379
 ```
 
 ## User Preferences
-- Development database: SQLite (can be switched to PostgreSQL)
+- Development database: PostgreSQL (Replit built-in)
 - Async services (Celery/Redis): Disabled by default (can be enabled)
 - Search (Elasticsearch): Not configured (optional)
 
@@ -289,9 +289,60 @@ REDIS_URL=redis://localhost:6379
 - Email Template Builder
 - Report Builder
 
+## Control Plane - ACTIVATED
+
+### Feature Flags (20 flags seeded)
+Access via `/admin/feature_flags/featureflag/`
+
+**Active Flags (13):**
+- API v2, API Rate Limiting, Audit Logging
+- Leads, Opportunities, Cases, NPS, Marketing, Automation, Engagement, Commissions modules
+- Custom Fields, Webhooks
+
+**Inactive Flags (7):** Ready for gradual rollout
+- Beta Features, New Reports, Advanced Analytics
+- Multi-Currency, Email Integration, Telephony Integration, Stripe Billing
+
+### Usage in Code
+
+**URL-based enforcement (settings.py):**
+```python
+FEATURE_FLAG_URL_RULES = {
+    '/beta/': 'beta_features',
+    '/api/v2/': 'api_v2',
+    '/new-reports/': 'new_reports',
+}
+```
+
+**Decorator-based:**
+```python
+from core.feature_flag_middleware import require_feature
+
+@require_feature('new_reports')
+def new_reports_view(request):
+    ...
+```
+
+**Template-based:**
+```django
+{% if features.new_reports %}
+    <a href="/new-reports/">Try New Reports</a>
+{% endif %}
+```
+
+### Audit Logging
+All POST/PUT/PATCH/DELETE requests to sensitive paths are automatically logged:
+- `/admin/`, `/api/`, `/billing/`, `/settings/`, `/users/`, `/roles/`, `/tenants/`
+
+View logs at `/admin/audit_logs/auditlog/`
+
+### Seed New Flags
+```bash
+cd core && python manage.py seed_feature_flags
+```
+
 ## Next Steps
 1. Configure integration API keys (SendGrid, Stripe, Wazo)
 2. Enable Redis for async processing if needed
-3. Consider PostgreSQL for production
-4. Review feature flags in admin panel
-5. Set up audit log retention policy
+3. Review feature flags in admin panel
+4. Set up audit log retention policy
