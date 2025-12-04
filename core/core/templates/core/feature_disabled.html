@@ -1,0 +1,52 @@
+{% extends "core/base_module.html" %}
+{% load static %}
+
+{% block title %}Feature Not Available{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="currentColor" class="text-muted" viewBox="0 0 16 16">
+                            <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM5 8h6a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/>
+                        </svg>
+                    </div>
+                    
+                    <h2 class="h3 mb-3">Feature Not Available</h2>
+                    
+                    <p class="text-muted mb-4">
+                        This feature is not currently available for your account. 
+                        It may be part of a gradual rollout or require a different subscription plan.
+                    </p>
+                    
+                    {% if feature_key %}
+                    <p class="small text-muted mb-4">
+                        Feature: <code>{{ feature_key }}</code>
+                    </p>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                            Go Back
+                        </a>
+                        <a href="{% url 'dashboard:main' %}" class="btn btn-primary">
+                            Dashboard
+                        </a>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <p class="small text-muted mb-0">
+                        Need access to this feature? 
+                        <a href="{% url 'billing:subscription_overview' %}">Upgrade your plan</a>
+                        or contact your administrator.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -187,6 +187,8 @@ Run: `cd core && python manage.py collectstatic --noinput`
 The workflow is configured to use port 5000. If there are issues, restart the workflow.
 
 ## Recent Changes (Dec 4, 2025)
+
+### Initial Setup
 - ✅ Installed Python 3.11 and all required dependencies
 - ✅ Configured Django settings for Replit environment
 - ✅ Ran database migrations (SQLite)
@@ -198,14 +200,98 @@ The workflow is configured to use port 5000. If there are issues, restart the wo
 - ✅ Configured deployment with Gunicorn
 - ✅ Collected static files
 
+### Infrastructure Enhancements (Dec 4, 2025)
+- ✅ **Event Bus System** (`core/core/event_bus.py`)
+  - Centralized event routing to automation, engagement, audit logs
+  - Async/sync processing based on Celery availability
+  - Cross-module communication without tight coupling
+
+- ✅ **Audit Logging Middleware** (`core/core/audit_middleware.py`)
+  - Automatic audit logging for sensitive operations
+  - IP address and user agent tracking
+  - State before/after capture for model changes
+
+- ✅ **Feature Flag Middleware** (`core/core/feature_flag_middleware.py`)
+  - URL-based feature flag enforcement
+  - Template context processor for feature checks
+  - Superuser/staff bypass for testing
+
+- ✅ **Email Service** (`core/communication/email_service.py`)
+  - SendGrid integration with API
+  - SMTP fallback for development
+  - Template-based emails
+
+- ✅ **Wazo Telephony Adapter** (`core/communication/wazo_adapter.py`)
+  - Call initiation and control
+  - SMS messaging
+  - Call logging to CRM
+
+- ✅ **Stripe Payment Adapter** (`core/billing/stripe_adapter.py`)
+  - Customer management
+  - Subscription CRUD
+  - Checkout sessions and billing portal
+  - Webhook handling
+
+- ✅ **Infrastructure Metrics** (`core/infrastructure/metrics.py`)
+  - API call tracking
+  - Model operation tracking
+  - System health checks
+
+- ✅ **Product Catalog Consolidation**
+  - Resolved duplication between sales and products modules
+  - sales module now references products.Product
+
+## Integration Configuration
+
+To enable the integrations, set these environment variables:
+
+### SendGrid (Email)
+```
+SENDGRID_API_KEY=your_sendgrid_api_key
+DEFAULT_FROM_EMAIL=noreply@yourdomain.com
+```
+
+### Stripe (Payments)
+```
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+```
+
+### Wazo (Telephony)
+```
+WAZO_API_URL=https://your-wazo-server.com
+WAZO_API_KEY=your_wazo_api_key
+WAZO_TENANT_UUID=your_tenant_uuid
+```
+
+### Redis (Async Processing)
+```
+REDIS_URL=redis://localhost:6379
+```
+
 ## User Preferences
 - Development database: SQLite (can be switched to PostgreSQL)
 - Async services (Celery/Redis): Disabled by default (can be enabled)
 - Search (Elasticsearch): Not configured (optional)
 
+## Architecture Overview
+
+### Module Categories
+- **Core Apps**: core, tenants, accounts, dashboard, billing
+- **Feature Apps**: sales, leads, products, opportunities, proposals, cases, communication, engagement, nps, marketing, reports, automation, settings_app, learn, tasks, commissions, developer
+- **Control Plane Apps**: infrastructure, audit_logs, feature_flags, global_alerts
+
+### Builders Available
+- Dashboard Builder (widget-based dashboards)
+- Workflow/Automation Builder (visual workflow design)
+- Landing Page Builder (marketing)
+- Email Template Builder
+- Report Builder
+
 ## Next Steps
-1. Explore the application through the webview
-2. Login to admin panel at `/admin/`
-3. Review the various CRM modules
-4. Consider enabling PostgreSQL for production use
-5. Optionally enable Redis and Celery for background tasks
+1. Configure integration API keys (SendGrid, Stripe, Wazo)
+2. Enable Redis for async processing if needed
+3. Consider PostgreSQL for production
+4. Review feature flags in admin panel
+5. Set up audit log retention policy

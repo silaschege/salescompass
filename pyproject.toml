@@ -1,0 +1,21 @@
+[project]
+name = "repl-nix-workspace"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.11"
+dependencies = [
+    "celery>=5.6.0",
+    "channels>=4.3.2",
+    "channels-redis>=4.3.0",
+    "daphne>=4.2.1",
+    "django>=5.2.9",
+    "django-celery-beat>=2.8.1",
+    "djangorestframework>=3.16.1",
+    "elasticsearch>=9.2.0",
+    "gunicorn>=23.0.0",
+    "pillow>=12.0.0",
+    "psycopg2-binary>=2.9.11",
+    "redis>=7.1.0",
+    "sendgrid>=6.12.5",
+    "stripe>=14.0.1",
+]

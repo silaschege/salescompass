@@ -146,6 +146,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.ThreadLocalUserMiddleware',
     'core.middleware.DataVisibilityMiddleware',
+    'core.audit_middleware.AuditLoggingMiddleware',
+    'core.feature_flag_middleware.FeatureFlagMiddleware',
+    'infrastructure.metrics.MetricsMiddleware',
 ]
 
 ROOT_URLCONF = 'salescompass.urls'
@@ -160,7 +163,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'dashboard.context_processors.user_dashboards',  # Add user dashboards to all templates
+                'dashboard.context_processors.user_dashboards',
+                'core.feature_flag_middleware.feature_flag_context_processor',
             ],
         },
     },
@@ -297,3 +301,93 @@ ELASTICSEARCH_USE_SSL = os.getenv('ELASTICSEARCH_USE_SSL', 'False').lower() == '
 ELASTICSEARCH_VERIFY_CERTS = os.getenv('ELASTICSEARCH_VERIFY_CERTS', 'True').lower() == 'true'
 
 
+# =============================================================================
+# INTEGRATION CONFIGURATIONS
+# =============================================================================
+
+# SendGrid Email Configuration
+SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY', None)
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@salescompass.io')
+
+# Email backend (use console for development, sendgrid for production)
+if SENDGRID_API_KEY:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Stripe Payment Configuration
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', None)
+STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY', None)
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', None)
+
+# Wazo Platform Configuration (for telephony)
+WAZO_API_URL = os.getenv('WAZO_API_URL', None)
+WAZO_API_KEY = os.getenv('WAZO_API_KEY', None)
+WAZO_TENANT_UUID = os.getenv('WAZO_TENANT_UUID', None)
+
+# =============================================================================
+# EVENT BUS CONFIGURATION
+# =============================================================================
+
+# Enable async event processing when Redis is available
+EVENT_BUS_ASYNC = not CELERY_TASK_ALWAYS_EAGER
+
+# Enable automation async execution when broker is available
+AUTOMATION_ASYNC = not CELERY_TASK_ALWAYS_EAGER
+
+# =============================================================================
+# FEATURE FLAG CONFIGURATION
+# =============================================================================
+
+# URL patterns that require specific feature flags
+FEATURE_FLAG_URL_RULES = {
+    '/beta/': 'beta_features',
+    '/api/v2/': 'api_v2',
+    '/new-reports/': 'new_reports',
+}
+
+# =============================================================================
+# LOGGING CONFIGURATION
+# =============================================================================
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'core': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'automation': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
