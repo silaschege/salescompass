@@ -60,9 +60,15 @@ salescompass/
 
 ### Settings Modified
 1. **Static Files**: Added `STATIC_ROOT` for collectstatic
-2. **Channels Layer**: Using `InMemoryChannelLayer` instead of Redis
-3. **Celery**: Configured for eager execution (runs tasks synchronously)
-4. **ALLOWED_HOSTS**: Already set to `['*']` for development
+2. **Security**: Production-ready security settings with environment variable support
+   - SECRET_KEY: Mandatory in production (REPLIT_DEPLOYMENT=1)
+   - DEBUG: Forced to False in production
+   - ALLOWED_HOSTS: Dynamic based on Replit environment variables
+   - CSRF_TRUSTED_ORIGINS: Properly configured for production
+   - Security headers: HSTS, secure cookies, proxy SSL header, etc.
+3. **Channels Layer**: Automatically uses Redis when available, falls back to in-memory
+4. **Celery**: Smart configuration - eager mode when no broker, async when Redis available
+5. **ASGI Deployment**: Uses Daphne for WebSocket/Channels support
 
 ## Key Features
 
@@ -114,13 +120,18 @@ DATABASES = {
 
 ### Current Configuration
 - **Type**: Autoscale deployment
-- **Server**: Gunicorn with 4 workers
-- **Command**: `gunicorn --chdir core --bind 0.0.0.0:5000 --workers 4 salescompass.wsgi:application`
+- **Server**: Daphne (ASGI server for Channels/WebSocket support)
+- **Command**: `cd core && daphne -b 0.0.0.0 -p 5000 salescompass.asgi:application`
 
 ### To Deploy
-1. Click the "Deploy" button in Replit
-2. The application will use Gunicorn in production mode
-3. Consider switching to PostgreSQL for production
+1. Set the `SECRET_KEY` environment variable (required for production)
+2. Click the "Deploy" button in Replit
+3. The application will automatically run in production mode with:
+   - DEBUG forced to False
+   - HTTPS enforcement
+   - Secure cookies and headers
+4. Optionally set `REDIS_URL` for async tasks and real-time features
+5. Consider switching to PostgreSQL for production database
 
 ## Common Tasks
 
