@@ -1,5 +1,6 @@
 from django.db import models
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 from accounts.models import Account
 from products.models import Product
 
@@ -15,6 +16,11 @@ from settings_app.models import Territory, TeamMember
 from django.db.models import Sum, Count, Avg
 >>>>>>> Stashed changes
 
+=======
+from core.models import User as Account
+from settings_app.models import Territory, TeamMember
+from django.db.models import Sum, Count, Avg
+>>>>>>> Stashed changes
 
 
 class CommissionRule(models.Model):
@@ -153,6 +159,7 @@ class Commission(models.Model):
     def __str__(self):
         return f"{self.sales_rep.email} - {self.amount} ({self.status})"
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     
     @classmethod
     def create_from_sale(cls, sale, sales_rep=None):
@@ -176,6 +183,8 @@ class Commission(models.Model):
             status='pending',
         )
 =======
+=======
+>>>>>>> Stashed changes
 
 
 class TerritoryPerformance(models.Model):
@@ -527,4 +536,7 @@ class TeamMemberTerritoryMetrics(models.Model):
         self.territory_capacity_utilization = self.territory_revenue_contribution
         
         self.save()
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes

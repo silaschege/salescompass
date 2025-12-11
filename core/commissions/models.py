@@ -37,9 +37,12 @@ class CommissionRule(TenantModel):
     Specific rules within a plan (e.g., 10% on hardware, 5% on software).
     """
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     plan = models.ForeignKey(CommissionPlan, on_delete=models.CASCADE, related_name='rules', null=True, blank=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True, related_name='commission_rules', help_text="Specific product this rule applies to. Leave blank for all.")
 =======
+=======
+>>>>>>> Stashed changes
     commission_rule_plan = models.ForeignKey(CommissionPlan, on_delete=models.CASCADE, related_name='rules', null=True, blank=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True, help_text="Specific product this rule applies to. Leave blank for all.")
 >>>>>>> Stashed changes
