@@ -1,28 +1,16 @@
 from django.db import models
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-from accounts.models import Account
+
+from core.models import User as Account
+from settings_app.models import Territory, TeamMember
+from django.db.models import Sum, Count, Avg
 from products.models import Product
 
-
 SALE_TYPE_CHOICES = [
-    ('hardware', 'Hardware Installation'),
-    ('ship', 'Product Shipment'),
-    ('software', 'Software License'),
+    ('new_business', 'New Business'),
+    ('renewal', 'Renewal'),
+    ('upsell', 'Upsell'),
+    ('cross_sell', 'Cross-sell'),
 ]
-=======
-from core.models import User as Account
-from settings_app.models import Territory, TeamMember
-from django.db.models import Sum, Count, Avg
->>>>>>> Stashed changes
-
-=======
-from core.models import User as Account
-from settings_app.models import Territory, TeamMember
-from django.db.models import Sum, Count, Avg
->>>>>>> Stashed changes
-
-
 class CommissionRule(models.Model):
     """
     Rules for calculating sales commissions.
@@ -158,8 +146,7 @@ class Commission(models.Model):
 
     def __str__(self):
         return f"{self.sales_rep.email} - {self.amount} ({self.status})"
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
+
     
     @classmethod
     def create_from_sale(cls, sale, sales_rep=None):
@@ -182,9 +169,7 @@ class Commission(models.Model):
             amount=amount,
             status='pending',
         )
-=======
-=======
->>>>>>> Stashed changes
+
 
 
 class TerritoryPerformance(models.Model):
@@ -536,7 +521,25 @@ class TeamMemberTerritoryMetrics(models.Model):
         self.territory_capacity_utilization = self.territory_revenue_contribution
         
         self.save()
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
+    def calculate_territory_performance_rank(self):
+        """
+        Calculates the territory's performance rank based on its revenue contribution and capacity utilization.
+        
+        Returns:
+            int: The territory's performance rank.
+        """
+        # This is a placeholder implementation. In a real scenario, you would compare this territory's
+        # metrics against other territories to determine the rank.
+        all_territories = Territory.objects.all()
+        rank = 1
+        for territory in all_territories:
+            if territory != self.territory:
+                try:
+                    other_metrics = territory.performance_metrics.latest('period_end')
+                    if (other_metrics.total_revenue > self.total_revenue) or \
+                       (other_metrics.opportunity_win_rate > self.opportunity_win_rate):
+                        rank += 1
+                except TerritoryPerformance.DoesNotExist:
+                    continue
+        return rank
