@@ -1,6 +1,5 @@
 from django import forms
-from core.models import User
-from accounts.models import Account
+from core.models import User as Account
 from opportunities.models import Opportunity
 from .models import Proposal
 

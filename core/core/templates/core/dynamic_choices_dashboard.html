@@ -1,0 +1,195 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Dynamic Choices Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Dynamic Choices Dashboard</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <h1>Dynamic Choices Dashboard</h1>
+            <p class="lead">Manage all dynamic choices from a single dashboard</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- System Config Types Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">System Config Types</h5>
+                    <p class="card-text">Manage system configuration types</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary">Count: {{ system_config_types_count }}</span>
+                        <a href="{% url 'system_config_type_list' %}" class="btn btn-primary btn-sm">Manage</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Config Categories Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">System Config Categories</h5>
+                    <p class="card-text">Manage system configuration categories</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary">Count: {{ system_config_categories_count }}</span>
+                        <a href="{% url 'system_config_category_list' %}" class="btn btn-primary btn-sm">Manage</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Event Types Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">System Event Types</h5>
+                    <p class="card-text">Manage system event types</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary">Count: {{ system_event_types_count }}</span>
+                        <a href="{% url 'system_event_type_list' %}" class="btn btn-primary btn-sm">Manage</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Event Severities Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">System Event Severities</h5>
+                    <p class="card-text">Manage system event severities</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary">Count: {{ system_event_severities_count }}</span>
+                        <a href="{% url 'system_event_severity_list' %}" class="btn btn-primary btn-sm">Manage</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Health Check Types Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Health Check Types</h5>
+                    <p class="card-text">Manage health check types</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary">Count: {{ health_check_types_count }}</span>
+                        <a href="{% url 'health_check_type_list' %}" class="btn btn-primary btn-sm">Manage</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Health Check Statuses Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Health Check Statuses</h5>
+                    <p class="card-text">Manage health check statuses</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary">Count: {{ health_check_statuses_count }}</span>
+                        <a href="{% url 'health_check_status_list' %}" class="btn btn-primary btn-sm">Manage</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Maintenance Statuses Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Maintenance Statuses</h5>
+                    <p class="card-text">Manage maintenance statuses</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary">Count: {{ maintenance_statuses_count }}</span>
+                        <a href="{% url 'maintenance_status_list' %}" class="btn btn-primary btn-sm">Manage</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Maintenance Types Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Maintenance Types</h5>
+                    <p class="card-text">Manage maintenance types</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary">Count: {{ maintenance_types_count }}</span>
+                        <a href="{% url 'maintenance_type_list' %}" class="btn btn-primary btn-sm">Manage</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Metric Types Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Performance Metric Types</h5>
+                    <p class="card-text">Manage performance metric types</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary">Count: {{ performance_metric_types_count }}</span>
+                        <a href="{% url 'performance_metric_type_list' %}" class="btn btn-primary btn-sm">Manage</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Environments Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Performance Environments</h5>
+                    <p class="card-text">Manage performance environments</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary">Count: {{ performance_environments_count }}</span>
+                        <a href="{% url 'performance_environment_list' %}" class="btn btn-primary btn-sm">Manage</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Types Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Notification Types</h5>
+                    <p class="card-text">Manage notification types</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary">Count: {{ notification_types_count }}</span>
+                        <a href="{% url 'notification_type_list' %}" class="btn btn-primary btn-sm">Manage</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Priorities Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Notification Priorities</h5>
+                    <p class="card-text">Manage notification priorities</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary">Count: {{ notification_priorities_count }}</span>
+                        <a href="{% url 'notification_priority_list' %}" class="btn btn-primary btn-sm">Manage</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

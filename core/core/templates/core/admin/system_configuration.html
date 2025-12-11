@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}System Configuration{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>System Configuration</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
+                    <li class="breadcrumb-item active">System Configuration</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">System Settings</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.company_name.id_for_label }}" class="form-label">Company Name</label>
+                                    {{ form.company_name }}
+                                    {% if form.company_name.errors %}
+                                        <div class="text-danger">{{ form.company_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.company_email.id_for_label }}" class="form-label">Company Email</label>
+                                    {{ form.company_email }}
+                                    {% if form.company_email.errors %}
+                                        <div class="text-danger">{{ form.company_email.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        <div class="mb-3">
+                            <label for="{{ form.company_phone.id_for_label }}" class="form-label">Company Phone</label>
+                            {{ form.company_phone }}
+                            {% if form.company_phone.errors %}
+                                <div class="text-danger">{{ form.company_phone.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <h5 class="mt-4">User Management Settings</h5>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3 form-check">
+                                    {{ form.require_mfa }}
+                                    <label for="{{ form.require_mfa.id_for_label }}" class="form-check-label">Require MFA for all users</label>
+                                </div>
+                            </div>
+                        
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="{{ form.password_min_length.id_for_label }}" class="form-label">Minimum Password Length</label>
+                                    {{ form.password_min_length }}
+                                    {% if form.password_min_length.errors %}
+                                        <div class="text-danger">{{ form.password_min_length.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3 form-check">
+                                    {{ form.password_require_uppercase }}
+                                    <label for="{{ form.password_require_uppercase.id_for_label }}" class="form-check-label">Require Uppercase</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3 form-check">
+                                    {{ form.password_require_lowercase }}
+                                    <label for="{{ form.password_require_lowercase.id_for_label }}" class="form-check-label">Require Lowercase</label>
+                                </div>
+                            <div class="col-md-3">
+                                <div class="mb-3 form-check">
+                                    {{ form.password_require_numbers }}
+                                    <label for="{{ form.password_require_numbers.id_for_label }}" class="form-check-label">Require Numbers</label>
+                                </div>
+                            <div class="col-md-3">
+                                <div class="mb-3 form-check">
+                                    {{ form.password_require_special }}
+                                    <label for="{{ form.password_require_special.id_for_label }}" class="form-check-label">Require Special Characters</label>
+                                </div>
+                            </div>
+                        
+                        <h5 class="mt-4">Session Settings</h5>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.session_timeout.id_for_label }}" class="form-label">Session Timeout (minutes)</label>
+                                    {{ form.session_timeout }}
+                                    {% if form.session_timeout.errors %}
+                                        <div class="text-danger">{{ form.session_timeout.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Time before user is automatically logged out</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.max_login_attempts.id_for_label }}" class="form-label">Max Login Attempts</label>
+                                    {{ form.max_login_attempts }}
+                                    {% if form.max_login_attempts.errors %}
+                                        <div class="text-danger">{{ form.max_login_attempts.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Number of failed attempts before lockout</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.lockout_duration.id_for_label }}" class="form-label">Lockout Duration (minutes)</label>
+                                    {{ form.lockout_duration }}
+                                    {% if form.lockout_duration.errors %}
+                                        <div class="text-danger">{{ form.lockout_duration.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Time user is locked out after max attempts</div>
+                                </div>
+                            </div>
+                        
+                        <h5 class="mt-4">Email Settings</h5>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.smtp_host.id_for_label }}" class="form-label">SMTP Host</label>
+                                    {{ form.smtp_host }}
+                                    {% if form.smtp_host.errors %}
+                                        <div class="text-danger">{{ form.smtp_host.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.smtp_port.id_for_label }}" class="form-label">SMTP Port</label>
+                                    {{ form.smtp_port }}
+                                    {% if form.smtp_port.errors %}
+                                        <div class="text-danger">{{ form.smtp_port.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.smtp_username.id_for_label }}" class="form-label">SMTP Username</label>
+                                    {{ form.smtp_username }}
+                                    {% if form.smtp_username.errors %}
+                                        <div class="text-danger">{{ form.smtp_username.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.smtp_password.id_for_label }}" class="form-label">SMTP Password</label>
+                                    <input type="password" class="form-control" id="smtp_password" name="smtp_password" placeholder="•••••••">
+                                    <div class="form-text">Leave blank to keep current password</div>
+                                </div>
+                            </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3 form-check">
+                                    {{ form.smtp_use_tls }}
+                                    <label for="{{ form.smtp_use_tls.id_for_label }}" class="form-check-label">Use TLS</label>
+                                </div>
+                            <div class="col-md-6">
+                                <div class="mb-3 form-check">
+                                    {{ form.smtp_use_ssl }}
+                                    <label for="{{ form.smtp_use_ssl.id_for_label }}" class="form-check-label">Use SSL</label>
+                                </div>
+                            </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary">Save Configuration</button>
+                            <button type="button" class="btn btn-secondary">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

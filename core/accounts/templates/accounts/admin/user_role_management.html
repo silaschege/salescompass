@@ -1,0 +1,184 @@
+{% extends 'aacounts/base.html' %}
+{% load static %}
+
+{% block title %}Role Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>Role Management</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'accounts:admin_user_dashboard' %}">User Management</a></li>
+                    <li class="breadcrumb-item active">Role Management</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Manage Roles</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Role Name</th>
+                                    <th>Description</th>
+                                    <th>Permissions</th>
+                                    <th>User Count</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for role in roles %}
+                                <tr>
+                                    <td>{{ role.name }}</td>
+                                    <td>{{ role.description|default:"-" }}</td>
+                                    <td>
+                                        {% for perm in role.permissions.all|slice:":3" %}
+                                            <span class="badge bg-secondary">{{ perm.name }}</span>
+                                        {% endfor %}
+                                        {% if role.permissions.count > 3 %}
+                                            <span class="badge bg-light text-dark">+{{ role.permissions.count|add:"-3" }} more</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ role.user_set.count }}</td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5">No roles found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Role Distribution by Tenant</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Tenant</th>
+                                    {% for role in roles %}
+                                    <th>{{ role.name }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tenant in tenants %}
+                                <tr>
+                                    <td>{{ tenant.name }}</td>
+                                    {% for role in roles %}
+                                    <td>{{ tenant.user_set.filter(role=role)|length }}</td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Quick Stats</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card text-white bg-primary mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Total Roles</h5>
+                                    <p class="card-text display-4">{{ roles|length }}</p>
+                                </div>
+                            </div>
+                        <div class="col-md-6">
+                            <div class="card text-white bg-success mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Total Tenants</h5>
+                                    <p class="card-text display-4">{{ tenants|length }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    <div class="d-grid">
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createRoleModal">
+                            <i class="fas fa-plus"></i> Create New Role
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Role Modal -->
+    <div class="modal fade" id="createRoleModal" tabindex="-1" aria-labelledby="createRoleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createRoleModalLabel">Create New Role</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createRoleForm">
+                        <div class="mb-3">
+                            <label for="roleName" class="form-label">Role Name</label>
+                            <input type="text" class="form-control" id="roleName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="roleDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="roleDescription" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Permissions</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="" id="perm1">
+                                <label class="form-check-label" for="perm1">
+                                    View users
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="" id="perm2">
+                                <label class="form-check-label" for="perm2">
+                                    Edit users
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="" id="perm3">
+                                <label class="form-check-label" for="perm3">
+                                    Delete users
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Create Role</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

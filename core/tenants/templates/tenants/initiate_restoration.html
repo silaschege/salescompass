@@ -1,0 +1,72 @@
+{% extends 'logged_in/base.html' %}
+
+{% block title %}Initiate Data Restoration{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Initiate Data Restoration</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Restoration Details</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h5>Preservation Record Details</h5>
+                        <p><strong>Tenant:</strong> {{ preservation.tenant.name }}</p>
+                        <p><strong>Preservation Type:</strong> {{ preservation.preservation_type|title }}</p>
+                        <p><strong>Preservation Date:</strong> {{ preservation.preservation_date|date:"M d, Y H:i" }}</p>
+                        <p><strong>File Size:</strong> {{ preservation.file_size_mb|floatformat:2 }} MB</p>
+                        <p><strong>Status:</strong> 
+                            {% if preservation.status == 'pending' %}
+                                <span class="badge badge-secondary">{{ preservation.status|title }}</span>
+                            {% elif preservation.status == 'in_progress' %}
+                                <span class="badge badge-info">{{ preservation.status|title }}</span>
+                            {% elif preservation.status == 'completed' %}
+                                <span class="badge badge-success">{{ preservation.status|title }}</span>
+                            {% elif preservation.status == 'failed' %}
+                                <span class="badge badge-danger">{{ preservation.status|title }}</span>
+                            {% else %}
+                                <span class="badge badge-warning">{{ preservation.status|title }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="alert alert-warning" role="alert">
+                            <h5 class="alert-heading">Warning!</h5>
+                            <p>Restoring this data will overwrite the current data for tenant <strong>{{ preservation.tenant.name }}</strong>.</p>
+                            <p>Please confirm that you want to proceed with this restoration.</p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="restore_options">Restoration Options</label>
+                            <select name="restore_options" id="restore_options" class="form-control">
+                                <option value="full">Full Restoration</option>
+                                <option value="configuration_only">Configuration Only</option>
+                                <option value="data_only">Data Only</option>
+                            </select>
+                            <small class="form-text text-muted">Select what type of restoration to perform</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="restore_notes">Notes (Optional)</label>
+                            <textarea name="restore_notes" id="restore_notes" class="form-control" rows="3" placeholder="Any additional notes about this restoration..."></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success">Confirm Restoration</button>
+                        <a href="{% url 'tenants:data-preservation' %}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

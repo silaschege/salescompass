@@ -1,7 +1,7 @@
 from django.utils import timezone
 from datetime import timedelta
 from .models import Lead, LeadSourceAnalytics
-from accounts.models import Account
+from core.models import User as  Account
 from django.db.models import Avg
 
 def calculate_lead_score(lead: Lead) -> int:

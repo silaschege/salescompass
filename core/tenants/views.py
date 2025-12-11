@@ -8,7 +8,8 @@ from django.contrib import messages
 from .models import Tenant
 from .forms import TenantSignupForm, TenantBrandingForm, TenantDomainForm, TenantSettingsForm, FeatureToggleForm
 from billing.models import Plan, Subscription
-from core.models import User, Role
+from core.models import User
+from accounts.models import Role
 
 class TenantListView(LoginRequiredMixin, ListView):
     template_name = 'tenants/list.html'

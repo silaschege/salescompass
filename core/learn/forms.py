@@ -9,7 +9,7 @@ class ArticleForm(forms.ModelForm):
     class Meta:
         model = Article
         fields = [
-            'title', 'slug', 'summary', 'category', 'article_type', 
+            'title', 'article_slug', 'summary', 'category', 'article_type', 
             'status', 'is_public', 'required_role', 'tags', 'meta_description',
             'author'
         ]
@@ -18,7 +18,7 @@ class ArticleForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'e.g., Getting Started with SalesCompass'
             }),
-            'slug': forms.TextInput(attrs={
+            'article_slug': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'e.g., getting-started-salescompass'
             }),
@@ -58,7 +58,7 @@ class ArticleForm(forms.ModelForm):
         }
         help_texts = {
             'title': 'Descriptive title for your article',
-            'slug': 'URL-friendly version of the title (letters, numbers, hyphens only)',
+            'article_slug': 'URL-friendly version of the title (letters, numbers, hyphens only)',
             'summary': 'Brief overview that appears in search results and listings',
             'category': 'Organizational category for this article',
             'article_type': 'Type of documentation this represents',
@@ -93,11 +93,11 @@ class ArticleForm(forms.ModelForm):
         
         # Make slug field readonly for existing articles
         if self.instance.pk:
-            self.fields['slug'].widget.attrs['readonly'] = True
+            self.fields['article_slug'].widget.attrs['readonly'] = True
 
-    def clean_slug(self):
+    def clean_article_slug(self):
         """Validate slug format and uniqueness."""
-        slug = self.cleaned_data['slug']
+        slug = self.cleaned_data['article_slug']
         
         # Check for valid slug format (letters, numbers, hyphens, underscores)
         import re
@@ -105,7 +105,7 @@ class ArticleForm(forms.ModelForm):
             raise ValidationError('Slug can only contain letters, numbers, hyphens, and underscores.')
         
         # Check uniqueness within tenant
-        qs = Article.objects.filter(slug=slug, tenant_id=self.instance.tenant_id)
+        qs = Article.objects.filter(article_slug=slug, tenant_id=self.instance.tenant_id)
         if self.instance.pk:
             qs = qs.exclude(pk=self.instance.pk)
         

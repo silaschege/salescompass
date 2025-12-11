@@ -1,0 +1,130 @@
+{% extends 'logged_in/base.html' %}
+
+{% block title %}Tenant Status Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Tenant Status Management</h1>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Filter Tenants</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get">
+                        <div class="form-row align-items-center">
+                            <div class="col-auto">
+                                <label class="sr-only" for="status">Status</label>
+                                <select name="status" id="status" class="form-control mb-2">
+                                    <option value="">All Statuses</option>
+                                    <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                                    <option value="suspended" {% if request.GET.status == 'suspended' %}selected{% endif %}>Suspended</option>
+                                    <option value="archived" {% if request.GET.status == 'archived' %}selected{% endif %}>Archived</option>
+                                    <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                                </select>
+                            </div>
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-primary mb-2">Filter</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tenant List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Tenants</h6>
+                </div>
+                <div class="card-body">
+                    {% if tenants %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="dataTable" width="10%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Domain</th>
+                                        <th>Status</th>
+                                        <th>Subscription</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for tenant in tenants %}
+                                    <tr>
+                                        <td>{{ tenant.name }}</td>
+                                        <td>{{ tenant.domain|default:"-" }}</td>
+                                        <td>
+                                            {% if tenant.is_active and not tenant.is_suspended and not tenant.is_archived %}
+                                                <span class="badge badge-success">Active</span>
+                                            {% elif tenant.is_suspended %}
+                                                <span class="badge badge-warning">Suspended</span>
+                                            {% elif tenant.is_archived %}
+                                                <span class="badge badge-info">Archived</span>
+                                            {% else %}
+                                                <span class="badge badge-secondary">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ tenant.subscription_status|title }}</td>
+                                        <td>{{ tenant.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            {% if tenant.is_suspended %}
+                                                <a href="{% url 'tenants:reactivate' tenant.id %}" class="btn btn-success btn-sm">Reactivate</a>
+                                            {% elif not tenant.is_archived %}
+                                                <a href="{% url 'tenants:suspend' tenant.id %}" class="btn btn-warning btn-sm">Suspend</a>
+                                                <a href="{% url 'tenants:archive' tenant.id %}" class="btn btn-info btn-sm">Archive</a>
+                                            {% endif %}
+                                            {% if tenant.is_archived %}
+                                                <a href="{% url 'tenants:reactivate' tenant.id %}" class="btn btn-success btn-sm">Restore</a>
+                                            {% endif %}
+                                            <a href="{% url 'tenants:delete' tenant.id %}" class="btn btn-danger btn-sm">Delete</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if is_paginated %}
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Previous</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                                    </li>
+                                    
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Next</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <p>No tenants found matching your criteria.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

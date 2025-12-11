@@ -1,0 +1,160 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+
+{% block title %}User List{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>User Management</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'accounts:admin_user_dashboard' %}">User Management</a></li>
+                    <li class="breadcrumb-item active">Users</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'accounts:admin_user_create' %}" class="btn btn-success">
+                    <i class="fas fa-user-plus"></i> Add New User
+                </a>
+                <a href="{% url 'accounts:user_bulk_operations' %}" class="btn btn-info">
+                    <i class="fas fa-users-cog"></i> Bulk Operations
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" name="search" placeholder="Search users..." value="{{ search_query }}">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="tenant_id" class="form-select">
+                                <option value="">All Tenants</option>
+                                {% for tenant in tenants %}
+                                <option value="{{ tenant.id }}" {% if selected_tenant == tenant.id|stringformat:"s" %}selected{% endif %}>{{ tenant.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select name="role_id" class="form-select">
+                                <option value="">All Roles</option>
+                                {% for role in roles %}
+                                <option value="{{ role.id }}" {% if selected_role == role.id|stringformat:"s" %}selected{% endif %}>{{ role.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select name="is_active" class="form-select">
+                                <option value="">All Statuses</option>
+                                <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active</option>
+                                <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                            <a href="{% url 'accounts:admin_user_list' %}" class="btn btn-secondary">Clear</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Users</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th>Name</th>
+                                    <th>Tenant</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Date Joined</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>{{ user.email }}</td>
+                                    <td>{{ user.first_name }} {{ user.last_name }}</td>
+                                    <td>{{ user.tenant.name|default:"-" }}</td>
+                                    <td>{{ user.role.name|default:"-" }}</td>
+                                    <td>
+                                        <span class="badge {% if user.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                            {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                                        </span>
+                                    </td>
+                                    <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'accounts:admin_user_update' user_id=user.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'accounts:admin_user_delete' user_id=user.id %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7">No users found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if is_paginated %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_tenant %}&tenant_id={{ selected_tenant }}{% endif %}{% if selected_role %}&role_id={{ selected_role }}{% endif %}{% if selected_status %}&is_active={{ selected_status }}{% endif %}">First</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_tenant %}&tenant_id={{ selected_tenant }}{% endif %}{% if selected_role %}&role_id={{ selected_role }}{% endif %}{% if selected_status %}&is_active={{ selected_status }}{% endif %}">Previous</a>
+                                </li>
+                            {% endif %}
+
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_tenant %}&tenant_id={{ selected_tenant }}{% endif %}{% if selected_role %}&role_id={{ selected_role }}{% endif %}{% if selected_status %}&is_active={{ selected_status }}{% endif %}">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_tenant %}&tenant_id={{ selected_tenant }}{% endif %}{% if selected_role %}&role_id={{ selected_role }}{% endif %}{% if selected_status %}&is_active={{ selected_status }}{% endif %}">Last</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

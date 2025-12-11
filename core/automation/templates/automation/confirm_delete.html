@@ -1,63 +1,20 @@
 {% extends "automation/base.html" %}
 
-{% block title %}Confirm Delete - SalesCompass{% endblock %}
+{% block title %}Confirm Deletion - SalesCompass{% endblock %}
 
 {% block content %}
-<div class="header-bar mb-4">
-    <div class="container">
-        <h1 class="block-title">Confirm Deletion</h1>
-        <p class="text-white text-center lead">Are you sure you want to delete this automation?</p>
-    </div>
-</div>
-
 <div class="container">
-    <div class="row justify-content-center">
-        <div class="col-lg-6">
-            <div class="card shadow-sm border-0">
-                <div class="card-body p-4 text-center">
-                    <div class="mb-4">
-                        <i class="bi bi-exclamation-triangle text-warning display-1"></i>
-                    </div>
-                    
-                    <h3 class="mb-3">Delete Automation: "{{ object.name }}"</h3>
-                    
-                    {% if object.is_system %}
-                        <div class="alert alert-danger">
-                            <p><strong>Warning:</strong> This is a system automation and cannot be deleted.</p>
-                            <p>System automations are managed by the platform and are essential for core functionality.</p>
-                        </div>
-                    {% else %}
-                        <div class="alert alert-warning">
-                            <p><strong>This action cannot be undone.</strong></p>
-                            <p>Deleting this automation will permanently remove all associated conditions and actions.</p>
-                            <p><strong>Trigger:</strong> {{ object.get_trigger_type_display }}</p>
-                            <p><strong>Conditions:</strong> {{ object.conditions.count }}</p>
-                            <p><strong>Actions:</strong> {{ object.actions.count }}</p>
-                        </div>
-                    {% endif %}
-                    
-                    <div class="d-flex gap-2 justify-content-center">
-                        {% if not object.is_system %}
-                            <form method="post" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-danger">
-                                    <i class="bi bi-trash me-1"></i> Yes, Delete Automation
-                                </button>
-                            </form>
-                        {% endif %}
-                        <a href="{% url 'automation:detail' object.pk %}" class="btn btn-secondary">
-                            <i class="bi bi-x-circle me-1"></i> Cancel
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <h1>Confirm Deletion</h1>
+    
+    <div class="alert alert-warning">
+        <p>Are you sure you want to delete "{{ object }}"?</p>
+        <p>This action cannot be undone.</p>
     </div>
-</div>
-
-<div class="footer-bar mt-5">
-    <div class="container">
-        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
-    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, Delete</button>
+        <a href="{{ request.META.HTTP_REFERER|default:'javascript:history.back()' }}" class="btn btn-secondary">Cancel</a>
+    </form>
 </div>
 {% endblock %}

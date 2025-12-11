@@ -1,0 +1,27 @@
+{% extends 'core/dynamic_choices_base.html' %}
+
+{% block title %}Delete System Config Type{% endblock %}
+
+{% block dynamic_choices_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Delete System Config Type</h5>
+            </div>
+            <div class="card-body">
+                <p>Are you sure you want to delete the system config type "<strong>{{ object.display_name }}</strong>"?</p>
+                <p class="text-muted">This action cannot be undone.</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                        <a href="{% url 'dynamic_choices:system_config_type_list' %}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

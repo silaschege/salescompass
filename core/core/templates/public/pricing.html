@@ -7,216 +7,218 @@
 <link rel="stylesheet" href="{% static 'core/css/public-design-system.css' %}">
 <style>
     .pricing-card {
-        border: 2px solid var(--gray-200);
-        border-radius: var(--radius-xl);
-        padding: var(--space-8);
-        transition: all var(--transition-base);
+        transition: all 0.3s ease;
         height: 100%;
-        display: flex;
-        flex-direction: column;
+        border: 2px solid var(--bs-light);
     }
 
     .pricing-card:hover {
-        border-color: var(--color-purple);
-        box-shadow: var(--shadow-lg);
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, .175) !important;
+        border-color: var(--color-primary);
     }
 
     .pricing-card.featured {
-        border-color: var(--color-purple);
-        background-color: var(--color-purple-light);
+        border-color: var(--color-primary);
+        background-color: var(--color-primary-light);
         position: relative;
     }
 
     .pricing-badge {
         position: absolute;
-        top: -12px;
+        top: -15px;
         left: 50%;
         transform: translateX(-50%);
-        background-color: var(--color-purple);
+        background-color: var(--color-primary);
         color: white;
-        padding: var(--space-1) var(--space-4);
-        border-radius: var(--radius-full);
-        font-size: var(--text-xs);
-        font-weight: var(--font-semibold);
+        padding: 0.5rem 1.5rem;
+        border-radius: 50rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        box-shadow: 0 0.5rem 1rem rgba(124, 58, 237, 0.2);
+    }
+
+    .check-icon {
+        color: var(--color-primary);
+        font-size: 1.25rem;
+        margin-right: 0.75rem;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
-<section class="section-large text-center">
-    <div class="container">
-        <h1 class="mb-4">Simple, transparent pricing</h1>
-        <p class="text-large text-gray mb-8" style="max-width: 700px; margin-left: auto; margin-right: auto;">
-            Choose the plan that fits your team. All plans include 14-day free trial.
+<section class="py-5 text-center bg-white border-bottom">
+    <div class="container py-5">
+        <h1 class="display-4 fw-bold mb-4 text-dark">Simple, transparent pricing</h1>
+        <p class="lead text-muted mb-4 mx-auto" style="max-width: 700px;">
+            Choose the plan that fits your team. All plans include a 14-day free trial.
         </p>
+
+        <!-- Toggle (Optional for future) -->
+        <!-- <div class="d-flex justify-content-center align-items-center gap-3">
+            <span class="text-muted fw-semibold">Monthly</span>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="billingToggle">
+            </div>
+            <span class="text-dark fw-bold">Yearly <span class="badge bg-success-subtle text-success rounded-pill ms-1">-20%</span></span>
+        </div> -->
     </div>
 </section>
 
 <!-- Pricing Cards -->
-<section class="section">
-    <div class="container">
-        <div class="grid grid-3">
+<section class="py-5 bg-light">
+    <div class="container py-4">
+        <div class="row g-4 align-items-stretch">
             <!-- Starter Plan -->
-            <div class="pricing-card">
-                <div class="mb-6">
-                    <h3 class="mb-2">Starter</h3>
-                    <p class="text-gray mb-4">Perfect for small teams getting started</p>
-                    <div class="mb-4">
-                        <span style="font-size: var(--text-5xl); font-weight: var(--font-extrabold);">$29</span>
-                        <span class="text-gray">/user/month</span>
-                    </div>
-                    <a href="{% url 'try_free' %}" class="btn btn-secondary w-100">Start free trial</a>
-                </div>
+            <div class="col-lg-4">
+                <div class="card pricing-card h-100 border rounded-4 bg-white shadow-sm p-4">
+                    <div class="card-body d-flex flex-column">
+                        <div class="mb-4">
+                            <h3 class="h4 fw-bold mb-2">Starter</h3>
+                            <p class="text-muted small mb-4">Perfect for small teams getting started</p>
+                            <div class="mb-4 d-flex align-items-baseline">
+                                <span class="display-5 fw-bold text-dark">$29</span>
+                                <span class="text-muted ms-2">/user/month</span>
+                            </div>
+                            <a href="{% url 'core:try_free' %}"
+                                class="btn btn-outline-primary btn-lg w-100 rounded-pill fw-bold">Start free trial</a>
+                        </div>
 
-                <div style="flex-grow: 1;">
-                    <div class="mb-4"
-                        style="font-size: var(--text-sm); font-weight: var(--font-semibold); color: var(--gray-700);">
-                        What's included:</div>
-                    <ul style="list-style: none; padding: 0;">
-                        <li class="mb-3" style="display: flex; align-items: start;">
-                            <i class="bi bi-check-circle-fill text-purple"
-                                style="margin-right: var(--space-3); margin-top: 2px;"></i>
-                            <span>Up to 5 users</span>
-                        </li>
-                        <li class="mb-3" style="display: flex; align-items: start;">
-                            <i class="bi bi-check-circle-fill text-purple"
-                                style="margin-right: var(--space-3); margin-top: 2px;"></i>
-                            <span>10,000 contacts</span>
-                        </li>
-                        <li class="mb-3" style="display: flex; align-items: start;">
-                            <i class="bi bi-check-circle-fill text-purple"
-                                style="margin-right: var(--space-3); margin-top: 2px;"></i>
-                            <span>Cloud calling (500 min/month)</span>
-                        </li>
-                        <li class="mb-3" style="display: flex; align-items: start;">
-                            <i class="bi bi-check-circle-fill text-purple"
-                                style="margin-right: var(--space-3); margin-top: 2px;"></i>
-                            <span>Email automation</span>
-                        </li>
-                        <li class="mb-3" style="display: flex; align-items: start;">
-                            <i class="bi bi-check-circle-fill text-purple"
-                                style="margin-right: var(--space-3); margin-top: 2px;"></i>
-                            <span>Basic reporting</span>
-                        </li>
-                        <li class="mb-3" style="display: flex; align-items: start;">
-                            <i class="bi bi-check-circle-fill text-purple"
-                                style="margin-right: var(--space-3); margin-top: 2px;"></i>
-                            <span>Email support</span>
-                        </li>
-                    </ul>
+                        <div class="mt-auto">
+                            <p class="text-uppercase fw-bold text-muted small mb-3">What's included:</p>
+                            <ul class="list-unstyled mb-0">
+                                <li class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <span>Up to 5 users</span>
+                                </li>
+                                <li class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <span>10,000 contacts</span>
+                                </li>
+                                <li class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <span>Cloud calling (500 min/month)</span>
+                                </li>
+                                <li class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <span>Email automation</span>
+                                </li>
+                                <li class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <span>Basic reporting</span>
+                                </li>
+                                <li class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <span>Email support</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Professional Plan (Featured) -->
-            <div class="pricing-card featured">
-                <div class="pricing-badge">Most Popular</div>
-                <div class="mb-6">
-                    <h3 class="mb-2">Professional</h3>
-                    <p class="text-gray mb-4">For growing teams that need more</p>
-                    <div class="mb-4">
-                        <span style="font-size: var(--text-5xl); font-weight: var(--font-extrabold);">$59</span>
-                        <span class="text-gray">/user/month</span>
-                    </div>
-                    <a href="{% url 'try_free' %}" class="btn btn-primary w-100">Start free trial</a>
-                </div>
+            <div class="col-lg-4">
+                <div class="card pricing-card featured h-100 border rounded-4 bg-white shadow p-4 pt-5">
+                    <div class="pricing-badge">Most Popular</div>
+                    <div class="card-body d-flex flex-column">
+                        <div class="mb-4">
+                            <h3 class="h4 fw-bold mb-2 text-primary">Professional</h3>
+                            <p class="text-muted small mb-4">For growing teams that need more</p>
+                            <div class="mb-4 d-flex align-items-baseline">
+                                <span class="display-5 fw-bold text-dark">$59</span>
+                                <span class="text-muted ms-2">/user/month</span>
+                            </div>
+                            <a href="{% url 'core:try_free' %}"
+                                class="btn btn-primary btn-lg w-100 rounded-pill fw-bold shadow">Start free trial</a>
+                        </div>
 
-                <div style="flex-grow: 1;">
-                    <div class="mb-4"
-                        style="font-size: var(--text-sm); font-weight: var(--font-semibold); color: var(--gray-700);">
-                        Everything in Starter, plus:</div>
-                    <ul style="list-style: none; padding: 0;">
-                        <li class="mb-3" style="display: flex; align-items: start;">
-                            <i class="bi bi-check-circle-fill text-purple"
-                                style="margin-right: var(--space-3); margin-top: 2px;"></i>
-                            <span>Up to 50 users</span>
-                        </li>
-                        <li class="mb-3" style="display: flex; align-items: start;">
-                            <i class="bi bi-check-circle-fill text-purple"
-                                style="margin-right: var(--space-3); margin-top: 2px;"></i>
-                            <span>Unlimited contacts</span>
-                        </li>
-                        <li class="mb-3" style="display: flex; align-items: start;">
-                            <i class="bi bi-check-circle-fill text-purple"
-                                style="margin-right: var(--space-3); margin-top: 2px;"></i>
-                            <span>Cloud calling (2,000 min/month)</span>
-                        </li>
-                        <li class="mb-3" style="display: flex; align-items: start;">
-                            <i class="bi bi-check-circle-fill text-purple"
-                                style="margin-right: var(--space-3); margin-top: 2px;"></i>
-                            <span>Advanced automation</span>
-                        </li>
-                        <li class="mb-3" style="display: flex; align-items: start;">
-                            <i class="bi bi-check-circle-fill text-purple"
-                                style="margin-right: var(--space-3); margin-top: 2px;"></i>
-                            <span>Custom dashboards</span>
-                        </li>
-                        <li class="mb-3" style="display: flex; align-items: start;">
-                            <i class="bi bi-check-circle-fill text-purple"
-                                style="margin-right: var(--space-3); margin-top: 2px;"></i>
-                            <span>Priority support</span>
-                        </li>
-                        <li class="mb-3" style="display: flex; align-items: start;">
-                            <i class="bi bi-check-circle-fill text-purple"
-                                style="margin-right: var(--space-3); margin-top: 2px;"></i>
-                            <span>API access</span>
-                        </li>
-                    </ul>
+                        <div class="mt-auto">
+                            <p class="text-uppercase fw-bold text-muted small mb-3">Everything in Starter, plus:</p>
+                            <ul class="list-unstyled mb-0">
+                                <li class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <span>Up to 50 users</span>
+                                </li>
+                                <li class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <span>Unlimited contacts</span>
+                                </li>
+                                <li class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <span>Cloud calling (2,000 min/mo)</span>
+                                </li>
+                                <li class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <span>Advanced automation</span>
+                                </li>
+                                <li class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <span>Custom dashboards</span>
+                                </li>
+                                <li class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <span>Priority support</span>
+                                </li>
+                                <li class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <span>API access</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Enterprise Plan -->
-            <div class="pricing-card">
-                <div class="mb-6">
-                    <h3 class="mb-2">Enterprise</h3>
-                    <p class="text-gray mb-4">For large teams with custom needs</p>
-                    <div class="mb-4">
-                        <span style="font-size: var(--text-5xl); font-weight: var(--font-extrabold);">Custom</span>
-                    </div>
-                    <a href="{% url 'support' %}" class="btn btn-secondary w-100">Contact sales</a>
-                </div>
+            <div class="col-lg-4">
+                <div class="card pricing-card h-100 border rounded-4 bg-white shadow-sm p-4">
+                    <div class="card-body d-flex flex-column">
+                        <div class="mb-4">
+                            <h3 class="h4 fw-bold mb-2">Enterprise</h3>
+                            <p class="text-muted small mb-4">For large teams with custom needs</p>
+                            <div class="mb-4 d-flex align-items-baseline">
+                                <span class="display-5 fw-bold text-dark">Custom</span>
+                            </div>
+                            <a href="{% url 'core:support' %}"
+                                class="btn btn-outline-dark btn-lg w-100 rounded-pill fw-bold">Contact sales</a>
+                        </div>
 
-                <div style="flex-grow: 1;">
-                    <div class="mb-4"
-                        style="font-size: var(--text-sm); font-weight: var(--font-semibold); color: var(--gray-700);">
-                        Everything in Professional, plus:</div>
-                    <ul style="list-style: none; padding: 0;">
-                        <li class="mb-3" style="display: flex; align-items: start;">
-                            <i class="bi bi-check-circle-fill text-purple"
-                                style="margin-right: var(--space-3); margin-top: 2px;"></i>
-                            <span>Unlimited users</span>
-                        </li>
-                        <li class="mb-3" style="display: flex; align-items: start;">
-                            <i class="bi bi-check-circle-fill text-purple"
-                                style="margin-right: var(--space-3); margin-top: 2px;"></i>
-                            <span>Unlimited calling minutes</span>
-                        </li>
-                        <li class="mb-3" style="display: flex; align-items: start;">
-                            <i class="bi bi-check-circle-fill text-purple"
-                                style="margin-right: var(--space-3); margin-top: 2px;"></i>
-                            <span>Dedicated account manager</span>
-                        </li>
-                        <li class="mb-3" style="display: flex; align-items: start;">
-                            <i class="bi bi-check-circle-fill text-purple"
-                                style="margin-right: var(--space-3); margin-top: 2px;"></i>
-                            <span>Custom integrations</span>
-                        </li>
-                        <li class="mb-3" style="display: flex; align-items: start;">
-                            <i class="bi bi-check-circle-fill text-purple"
-                                style="margin-right: var(--space-3); margin-top: 2px;"></i>
-                            <span>SSO & SAML</span>
-                        </li>
-                        <li class="mb-3" style="display: flex; align-items: start;">
-                            <i class="bi bi-check-circle-fill text-purple"
-                                style="margin-right: var(--space-3); margin-top: 2px;"></i>
-                            <span>SLA guarantee</span>
-                        </li>
-                        <li class="mb-3" style="display: flex; align-items: start;">
-                            <i class="bi bi-check-circle-fill text-purple"
-                                style="margin-right: var(--space-3); margin-top: 2px;"></i>
-                            <span>On-premise option</span>
-                        </li>
-                    </ul>
+                        <div class="mt-auto">
+                            <p class="text-uppercase fw-bold text-muted small mb-3">Everything in Pro, plus:</p>
+                            <ul class="list-unstyled mb-0">
+                                <li class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <span>Unlimited users</span>
+                                </li>
+                                <li class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <span>Unlimited calling minutes</span>
+                                </li>
+                                <li class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <span>Dedicated account manager</span>
+                                </li>
+                                <li class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <span>Custom integrations</span>
+                                </li>
+                                <li class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <span>SSO & SAML</span>
+                                </li>
+                                <li class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <span>SLA guarantee</span>
+                                </li>
+                                <li class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <span>On-premise option</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -224,60 +226,112 @@
 </section>
 
 <!-- FAQ Section -->
-<section class="section-large bg-gray">
-    <div class="container">
-        <div class="text-center mb-12">
-            <h2 class="mb-4">Frequently asked questions</h2>
+<section class="py-5 bg-white">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold display-6">Frequently asked questions</h2>
         </div>
 
-        <div style="max-width: 800px; margin: 0 auto;">
-            <div class="mb-8">
-                <h4 class="mb-2">Can I change plans later?</h4>
-                <p class="text-gray">Yes, you can upgrade or downgrade at any time. Changes take effect immediately and
-                    we'll prorate the difference.</p>
-            </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="accordion accordion-flush" id="pricingFAQ">
+                    <div class="accordion-item mb-3 border bg-light rounded-3 overflow-hidden">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-light fw-bold" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#faq1">
+                                Can I change plans later?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#pricingFAQ">
+                            <div class="accordion-body text-muted">
+                                Yes, you can upgrade or downgrade at any time. Changes take effect immediately and we'll
+                                prorate the difference.
+                            </div>
+                        </div>
+                    </div>
 
-            <div class="mb-8">
-                <h4 class="mb-2">What happens after the free trial?</h4>
-                <p class="text-gray">After 14 days, you'll be prompted to enter payment details. If you don't upgrade,
-                    your account remains active with read-only access to your data.</p>
-            </div>
+                    <div class="accordion-item mb-3 border bg-light rounded-3 overflow-hidden">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-light fw-bold" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#faq2">
+                                What happens after the free trial?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#pricingFAQ">
+                            <div class="accordion-body text-muted">
+                                After 14 days, you'll be prompted to enter payment details. If you don't upgrade, your
+                                account remains active with read-only access to your data.
+                            </div>
+                        </div>
+                    </div>
 
-            <div class="mb-8">
-                <h4 class="mb-2">Do you offer discounts for annual billing?</h4>
-                <p class="text-gray">Yes, save 20% when you pay annually. Contact sales for a quote.</p>
-            </div>
+                    <div class="accordion-item mb-3 border bg-light rounded-3 overflow-hidden">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-light fw-bold" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#faq3">
+                                Do you offer discounts for annual billing?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#pricingFAQ">
+                            <div class="accordion-body text-muted">
+                                Yes, save 20% when you pay annually. Contact sales for a quote.
+                            </div>
+                        </div>
+                    </div>
 
-            <div class="mb-8">
-                <h4 class="mb-2">Is there a setup fee?</h4>
-                <p class="text-gray">No setup fees. No hidden costs. Just simple per-user pricing.</p>
-            </div>
+                    <div class="accordion-item mb-3 border bg-light rounded-3 overflow-hidden">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-light fw-bold" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#faq4">
+                                Is there a setup fee?
+                            </button>
+                        </h2>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#pricingFAQ">
+                            <div class="accordion-body text-muted">
+                                No setup fees. No hidden costs. Just simple per-user pricing.
+                            </div>
+                        </div>
+                    </div>
 
-            <div class="mb-8">
-                <h4 class="mb-2">What payment methods do you accept?</h4>
-                <p class="text-gray">We accept all major credit cards, ACH transfers, and wire transfers for Enterprise
-                    customers.</p>
-            </div>
-        </div>
+                    <div class="accordion-item mb-3 border bg-light rounded-3 overflow-hidden">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-light fw-bold" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#faq5">
+                                What payment methods do you accept?
+                            </button>
+                        </h2>
+                        <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#pricingFAQ">
+                            <div class="accordion-body text-muted">
+                                We accept all major credit cards, ACH transfers, and wire transfers for Enterprise
+                                customers.
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="text-center mt-12">
-            <p class="text-large mb-4">Still have questions?</p>
-            <a href="{% url 'support' %}" class="btn btn-secondary">Contact us</a>
+                <div class="text-center mt-5">
+                    <p class="mb-3 text-muted">Still have questions?</p>
+                    <a href="{% url 'core:support' %}" class="btn btn-outline-primary rounded-pill px-4">Contact us</a>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
 <!-- CTA Section -->
-<section class="section-large bg-purple text-center" style="color: white;">
-    <div class="container">
-        <h2 class="mb-4" style="color: white;">Start your free trial today</h2>
-        <p class="text-large mb-6" style="color: rgba(255,255,255,0.9);">
-            No credit card required. Full access for 14 days.
-        </p>
-        <a href="{% url 'try_free' %}" class="btn btn-large"
-            style="background-color: white; color: var(--color-purple);">
-            Get started
-        </a>
+<section class="py-5 bg-primary text-center text-white">
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h2 class="mb-4 display-5 fw-bold text-white">Start your free trial today</h2>
+                <p class="lead mb-5 text-white-50">
+                    No credit card required. Full access for 14 days.
+                </p>
+                <a href="{% url 'core:try_free' %}" class="btn btn-light btn-lg px-5 rounded-pill text-primary fw-bold">
+                    Get started
+                </a>
+            </div>
+        </div>
     </div>
 </section>
 {% endblock %}

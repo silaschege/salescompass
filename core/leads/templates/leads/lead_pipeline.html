@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Lead Pipeline{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-2">Lead Pipeline</h1>
+            <p class="mb-4">Track leads through your sales pipeline.</p>
+        </div>
+    </div>
+
+    <!-- Pipeline View -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Sales Pipeline</h6>
+                </div>
+                <div class="card-body">
+                    <div class="kanban-board">
+                        <!-- Pipeline stages would go here -->
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="pipeline-stage">
+                                    <h5>New Leads</h5>
+                                    <div class="lead-cards">
+                                        {% for lead in leads %}
+                                            {% if lead.status == 'new' %}
+                                                <div class="card mb-2">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">{{ lead.first_name }} {{ lead.last_name }}</h6>
+                                                        <p class="card-text">{{ lead.email }}</p>
+                                                        <small class="text-muted">{{ lead.company }}</small>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            <div class="col-md-3">
+                                <div class="pipeline-stage">
+                                    <h5>Contacted</h5>
+                                    <div class="lead-cards">
+                                        {% for lead in leads %}
+                                            {% if lead.status == 'contacted' %}
+                                                <div class="card mb-2">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">{{ lead.first_name }} {{ lead.last_name }}</h6>
+                                                        <p class="card-text">{{ lead.email }}</p>
+                                                        <small class="text-muted">{{ lead.company }}</small>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            <div class="col-md-3">
+                                <div class="pipeline-stage">
+                                    <h5>Qualified</h5>
+                                    <div class="lead-cards">
+                                        {% for lead in leads %}
+                                            {% if lead.status == 'qualified' %}
+                                                <div class="card mb-2">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">{{ lead.first_name }} {{ lead.last_name }}</h6>
+                                                        <p class="card-text">{{ lead.email }}</p>
+                                                        <small class="text-muted">{{ lead.company }}</small>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            <div class="col-md-3">
+                                <div class="pipeline-stage">
+                                    <h5>Converted</h5>
+                                    <div class="lead-cards">
+                                        {% for lead in leads %}
+                                            {% if lead.status == 'converted' %}
+                                                <div class="card mb-2">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">{{ lead.first_name }} {{ lead.last_name }}</h6>
+                                                        <p class="card-text">{{ lead.email }}</p>
+                                                        <small class="text-muted">{{ lead.company }}</small>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -4,18 +4,34 @@ from . import views
 app_name = 'global_alerts'
 
 urlpatterns = [
-    path('', views.GlobalAlertsDashboardView.as_view(), name='dashboard'),
-    path('alerts/', views.AlertListView.as_view(), name='alert_list'),
-    path('alerts/create/', views.AlertCreateView.as_view(), name='alert_create'),
-    path('alerts/<int:pk>/', views.AlertDetailView.as_view(), name='alert_detail'),
-    path('alerts/<int:pk>/edit/', views.AlertUpdateView.as_view(), name='alert_update'),
-    path('alerts/<int:pk>/delete/', views.AlertDeleteView.as_view(), name='alert_delete'),
-    path('alerts/<int:pk>/preview/', views.AlertPreviewView.as_view(), name='alert_preview'),
-    path('active/', views.ActiveAlertsView.as_view(), name='active_alerts'),
-    path('scheduled/', views.ScheduledAlertsView.as_view(), name='scheduled_alerts'),
-    path('type/<str:alert_type>/', views.AlertsByTypeView.as_view(), name='alerts_by_type'),
-    path('severity/<str:severity>/', views.AlertsBySeverityView.as_view(), name='alerts_by_severity'),
-    path('global/', views.GlobalAlertsOnlyView.as_view(), name='global_alerts'),
-    path('tenant-specific/', views.TenantSpecificAlertsView.as_view(), name='tenant_specific'),
-    path('analytics/', views.AlertAnalyticsView.as_view(), name='analytics'),
+    # Dashboard
+    path('admin/dashboard/', views.GlobalAlertsDashboardView.as_view(), name='dashboard'),
+    
+    # Alert Configuration Management
+    path('admin/configurations/', views.AlertConfigurationListView.as_view(), name='alert_config_list'),
+    path('admin/configurations/create/', views.AlertConfigurationCreateView.as_view(), name='alert_config_create'),
+    path('admin/configurations/<int:config_id>/update/', views.AlertConfigurationUpdateView.as_view(), name='alert_config_update'),
+    path('admin/configurations/<int:config_id>/delete/', views.AlertConfigurationDeleteView.as_view(), name='alert_config_delete'),
+    
+    # Alert Instance Management
+    path('admin/instances/', views.AlertInstanceListView.as_view(), name='alert_instance_list'),
+    path('admin/instances/<int:alert_id>/', views.AlertInstanceDetailView.as_view(), name='alert_instance_detail'),
+    path('admin/instances/<int:alert_id>/acknowledge/', views.AcknowledgeAlertView.as_view(), name='acknowledge_alert'),
+    path('admin/instances/<int:alert_id>/resolve/', views.ResolveAlertView.as_view(), name='resolve_alert'),
+    
+    # Escalation Policy Management
+    path('admin/policies/escalation/', views.AlertEscalationPolicyListView.as_view(), name='escalation_policy_list'),
+    path('admin/policies/escalation/create/', views.AlertEscalationPolicyCreateView.as_view(), name='escalation_policy_create'),
+    path('admin/policies/escalation/<int:policy_id>/update/', views.AlertEscalationPolicyUpdateView.as_view(), name='escalation_policy_update'),
+    
+    # Notification Management
+    path('admin/notifications/', views.AlertNotificationListView.as_view(), name='notification_list'),
+    
+    # Correlation Rule Management
+    path('admin/rules/correlation/', views.AlertCorrelationRuleListView.as_view(), name='correlation_rule_list'),
+    path('admin/rules/correlation/create/', views.AlertCorrelationRuleCreateView.as_view(), name='correlation_rule_create'),
+    path('admin/rules/correlation/<int:rule_id>/update/', views.AlertCorrelationRuleUpdateView.as_view(), name='correlation_rule_update'),
+    
+    # Analytics
+    path('admin/analytics/', views.AlertAnalyticsView.as_view(), name='alert_analytics'),
 ]

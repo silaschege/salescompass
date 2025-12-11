@@ -78,7 +78,7 @@ class DashboardWizardStep1View(DashboardWizardMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         
         # Get available modules filtered by permission
-        all_modules = DashboardWidget.objects.filter(is_active=True).order_by('category', 'name')
+        all_modules = DashboardWidget.objects.filter(widget_is_active=True).order_by('category_old', 'widget_name')
         available_modules = [
             widget for widget in all_modules 
             if not widget.required_permission or self.request.user.has_perm(widget.required_permission)
@@ -116,7 +116,7 @@ class DashboardWizardStep2View(DashboardWizardMixin, TemplateView):
         # Get selected modules and add default model for each
         selected_modules = DashboardWidget.objects.filter(
             widget_type__in=selected_module_ids,
-            is_active=True
+            widget_is_active=True
         )
         
         # Create widget configs with default models
@@ -190,7 +190,7 @@ class DashboardWizardStep3View(DashboardWizardMixin, TemplateView):
         selected_module_ids = wizard_data.get('selected_modules', [])
         selected_modules = list(DashboardWidget.objects.filter(
             widget_type__in=selected_module_ids,
-            is_active=True
+            widget_is_active=True
         ))
         
         # Set default position based on index

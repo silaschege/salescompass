@@ -1,143 +1,108 @@
 from django.db import models
-from core.models import TenantModel, User
+from core.models import TimeStampedModel
+from tenants.models import TenantAwareModel as TenantModel
+from core.models import User
+
+# Dynamic models have replaced the hardcoded choices
+# The legacy choices have been removed as they are no longer needed
+
+
+class WidgetType(TenantModel):
+    """
+    Dynamic widget type values - allows tenant-specific widget type tracking.
+    """
+    widget_name = models.CharField(max_length=50, db_index=True, help_text="e.g., 'revenue', 'pipeline'")  # Renamed from 'name' to avoid conflict
+    label = models.CharField(max_length=100)  # e.g., 'Revenue Chart', 'Sales Pipeline'
+    order = models.IntegerField(default=0)
+    widget_type_is_active = models.BooleanField(default=True, help_text="Whether this widget type is active")
+    widget_type_created_at = models.DateTimeField(auto_now_add=True)
+    widget_type_updated_at = models.DateTimeField(auto_now=True)
+    is_system = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['order', 'widget_name']
+        unique_together = [('tenant', 'widget_name')]
+        verbose_name_plural = 'Widget Types'
+    
+    def __str__(self):
+        return self.label
+
+
+class WidgetCategory(TenantModel):
+    """
+    Dynamic widget category values - allows tenant-specific category tracking.
+    """
+    category_name = models.CharField(max_length=50, db_index=True, help_text="e.g., 'leads', 'opportunities'")  # Renamed from 'name' to avoid conflict
+    label = models.CharField(max_length=100)  # e.g., 'Leads', 'Opportunities'
+    order = models.IntegerField(default=0)
+    widget_category_is_active = models.BooleanField(default=True, help_text="Whether this category is active")
+    widget_category_created_at = models.DateTimeField(auto_now_add=True)
+    widget_category_updated_at = models.DateTimeField(auto_now=True)
+    is_system = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['order', 'category_name']
+        unique_together = [('tenant', 'category_name')]
+        verbose_name_plural = 'Widget Categories'
+    
+    def __str__(self):
+        return self.label
+
+
+class DashboardWidget(TenantModel):
+    # Field that was previously using hardcoded choices
+    widget_type_old = models.CharField(max_length=50, verbose_name="Widget Type (Legacy)")
+    # New dynamic field
+    widget_type_ref = models.ForeignKey(
+        WidgetType,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='dashboard_widgets',
+        help_text="Dynamic widget type (replaces widget_type_old field)"
+    )
+    widget_name = models.CharField(max_length=255, verbose_name="Widget Name")  # Renamed from 'name' to avoid conflict
+    widget_description = models.TextField()  # Renamed from 'description' to avoid conflict with base class
+    category_old = models.CharField(max_length=50, default='general', verbose_name="Category (Legacy)")
+    # New dynamic field
+    category_ref = models.ForeignKey(
+        WidgetCategory,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='dashboard_widgets',
+        help_text="Dynamic category (replaces category_old field)"
+    )
+    template_path = models.CharField(max_length=255)
+    widget_is_active = models.BooleanField(default=True) # Renamed from 'is_active' to avoid conflict with base class
+    widget_created_at = models.DateTimeField(auto_now_add=True)  # Renamed from 'created_at' to avoid conflict with base class
+    widget_updated_at = models.DateTimeField(auto_now=True)  # Renamed from 'updated_at' to avoid conflict with base class
+
+    def __str__(self):
+        return self.widget_name
+
+    class Meta:
+        unique_together = [('tenant', 'widget_type_old')]  # Ensuring uniqueness per tenant based on the old field
 
 
 class DashboardConfig(TenantModel):
     """
-    Custom dashboard configuration allowing users to arrange widgets.
-    Part of Dashboard Builder system.
+    User-specific dashboard configuration.
+    Stores dashboard layouts and widget positions for each user.
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='dashboard_configs')
-    name = models.CharField(max_length=255, help_text="Dashboard name, e.g., 'Sales Overview', 'Manager Dashboard'")
-    description = models.TextField(blank=True)
-    
-    is_default = models.BooleanField(default=False, help_text="Set as default dashboard for this user")
-    is_shared = models.BooleanField(default=False, help_text="Share with all users in tenant")
-    
-    # Layout configuration stored as JSON
-    layout = models.JSONField(
-        default=dict,
-        help_text="Grid layout configuration with widget placements"
-    )
-    
-    # Widget-specific settings
-    widget_settings = models.JSONField(
-        default=dict,
-        blank=True,
-        help_text="Custom settings per widget"
-    )
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
-    
-    class Meta:
-        ordering = ['-is_default', '-updated_at']
-        unique_together = [('user', 'name', 'tenant_id')]
-        indexes = [
-            models.Index(fields=['user', 'is_default']),
-            models.Index(fields=['tenant_id', 'is_shared']),
-        ]
-    
-    def __str__(self):
-        return f"{self.name} ({self.user.email})"
-    
-    def set_as_default(self):
-        """Set this dashboard as default."""
-        DashboardConfig.objects.filter(user=self.user, is_default=True).update(is_default=False)
-        self.is_default = True
-        self.save(update_fields=['is_default'])
+    dashboard_name = models.CharField(max_length=255)
+    dashboard_description = models.TextField(blank=True)
+    layout = models.JSONField(default=dict, help_text="Widget layout configuration")
+    widgets = models.JSONField(default=list, help_text="List of widgets with their positions and settings")
+    is_default = models.BooleanField(default=False, help_text="Whether this is the user's default dashboard")
+    is_shared = models.BooleanField(default=False, help_text="Whether this dashboard is shared with others")
+    role_based = models.CharField(max_length=50, blank=True, help_text="Role this dashboard is designed for")
+    config_created_at = models.DateTimeField(auto_now_add=True)
+    config_updated_at = models.DateTimeField(auto_now=True)
 
-
-class DashboardWidget(models.Model):
-    """
-    Registry of available dashboard widgets.
-    """
-    WIDGET_TYPE_CHOICES = [
-        # Core Features
-        ('revenue', 'Revenue Chart'),
-        ('pipeline', 'Sales Pipeline'),
-        ('tasks', 'Task List'),
-        ('leads', 'Lead Metrics'),
-        ('accounts', 'Accounts Overview'),
-        ('opportunities', 'Opportunities Overview'),
-        
-        # Customer Engagement
-        ('cases', 'Support Cases'),
-        ('nps', 'NPS Score'),
-        ('communication', 'Communication Stats'),
-        ('engagement', 'Engagement Metrics'),
-        
-        # Sales & Marketing
-        ('sales', 'Sales Performance'),
-        ('products', 'Product Metrics'),
-        ('proposals', 'Proposal Pipeline'),
-        ('marketing', 'Marketing Campaigns'),
-        ('commissions', 'Commission Tracking'),
-        
-        # Analytics & Reporting
-        ('reports', 'Report Dashboard'),
-        ('leaderboard', 'Sales Leaderboard'),
-        ('activity', 'Recent Activity'),
-        
-        # Automation & Settings
-        ('automation', 'Automation Workflows'),
-        ('settings', 'System Settings'),
-        
-        # Learning & Development
-        ('learn', 'Learning Progress'),
-        
-        # Developer & Admin
-        ('developer', 'Developer Tools'),
-        ('billing', 'Billing Overview'),
-        
-        # Control Plane
-        ('infrastructure', 'Infrastructure Usage'),
-        ('tenants', 'Tenant Management'),
-        ('audit_logs', 'Audit Logs'),
-        ('feature_flags', 'Feature Flags'),
-        ('global_alerts', 'Global Alerts'),
-    ]
-    
-    CATEGORY_CHOICES = [
-        ('leads', 'Leads'),
-        ('opportunities', 'Opportunities'),
-        ('revenue', 'Revenue'),
-        ('sales', 'Sales'),
-        ('tasks', 'Tasks'),
-        ('cases', 'Cases'),
-        ('accounts', 'Accounts'),
-        ('products', 'Products'),
-        ('proposals', 'Proposals'),
-        ('communication', 'Communication'),
-        ('engagement', 'Engagement'),
-        ('nps', 'NPS'),
-        ('analytics', 'Analytics'),
-        ('billing', 'Billing'),
-        ('commissions', 'Commissions'),
-        ('infrastructure', 'Infrastructure'),
-        ('tenants', 'Tenants'),
-        ('marketing', 'Marketing'),
-        ('automation', 'Automation'),
-        ('learn', 'Learning'),
-        ('developer', 'Developer'),
-        ('control_plane', 'Control Plane'),
-        ('general', 'General'),
-    ]
-    
-    widget_type = models.CharField(max_length=50, unique=True, choices=WIDGET_TYPE_CHOICES)
-    name = models.CharField(max_length=255)
-    description = models.TextField()
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='general')
-    template_path = models.CharField(max_length=255)
-    required_permission = models.CharField(max_length=100, blank=True)
-    is_active = models.BooleanField(default=True)
-    icon = models.CharField(max_length=50, default='bi-grid-3x3-gap', help_text="Bootstrap icon class (e.g., 'bi-graph-up')")
-    default_span = models.IntegerField(default=6)
-    
-    class Meta:
-        ordering = ['category', 'name']
-    
     def __str__(self):
-        return self.name
+        return f"{self.dashboard_name} - {self.user.email}"
+
+    class Meta:
+        ordering = ['-is_default', '-config_created_at']

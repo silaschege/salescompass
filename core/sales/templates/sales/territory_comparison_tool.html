@@ -1,0 +1,300 @@
+{% extends 'sales/base.html' %}
+
+{% block title %}Territory Comparison Tool{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-2">Territory Comparison Tool</h1>
+            <p class="mb-4">Compare performance metrics across different territories.</p>
+        </div>
+    </div>
+
+    <!-- Comparison Controls -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Comparison Controls</h6>
+                </div>
+                <div class="card-body">
+                    <form id="comparisonForm">
+                        <div class="form-row align-items-center">
+                            <div class="col-md-3">
+                                <label for="metricSelect">Compare By:</label>
+                                <select class="form-control" id="metricSelect">
+                                    <option value="revenue">Revenue</option>
+                                    <option value="deals">Deals</option>
+                                    <option value="conversion">Conversion Rate</option>
+                                    <option value="win_rate">Win Rate</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="dateRange">Date Range:</label>
+                                <select class="form-control" id="dateRange">
+                                    <option value="last_month">Last Month</option>
+                                    <option value="last_quarter">Last Quarter</option>
+                                    <option value="last_year">Last Year</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="territoriesSelect">Territories:</label>
+                                <select multiple class="form-control" id="territoriesSelect">
+                                    {% for td in territory_comparison_data %}
+                                        <option value="{{ td.territory.id }}" selected>{{ td.territory.label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label>&nbsp;</label>
+                                <div>
+                                    <button type="button" class="btn btn-primary" onclick="updateComparison()">Compare</button>
+                                    <button type="button" class="btn btn-secondary" onclick="resetComparison()">Reset</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comparison Charts -->
+    <div class="row">
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Revenue Comparison</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Deals Comparison</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="dealsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Conversion Rate Comparison</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="conversionChart"></canvas>
+                </div>
+            </div>
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Win Rate Comparison</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="winRateChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Detailed Comparison</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="comparisonTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Territory</th>
+                                    <th>Revenue</th>
+                                    <th>Deals</th>
+                                    <th>Avg. Deal Size</th>
+                                    <th>Conversion Rate</th>
+                                    <th>Win Rate</th>
+                                    <th>Team Size</th>
+                                    <th>Quota Attainment</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for td in territory_comparison_data %}
+                                <tr>
+                                    <td>{{ td.territory.label }}</td>
+                                    <td>${% if td.performance %}{{ td.performance.total_revenue|floatformat:2 }}{% else %}0.00{% endif %}</td>
+                                    <td>{% if td.performance %}{{ td.performance.total_deals }}{% else %}0{% endif %}</td>
+                                    <td>${% if td.performance %}{{ td.performance.average_deal_size|floatformat:2 }}{% else %}0.00{% endif %}</td>
+                                    <td>{% if td.performance %}{{ td.performance.conversion_rate|floatformat:2 }}%{% else %}0.00%{% endif %}</td>
+                                    <td>{% if td.performance %}{{ td.performance.opportunity_win_rate|floatformat:2 }}%{% else %}0.00%{% endif %}</td>
+                                    <td>{% if td.performance %}{{ td.performance.team_member_count }}{% else %}0{% endif %}</td>
+                                    <td>{% if td.performance %}{{ td.performance.quota_attainment|floatformat:2 }}%{% else %}0.00%{% endif %}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js for visualizations -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Initialize comparison data
+    const comparisonData = {{ chart_data|safe }};
+    
+    // Initialize charts
+    document.addEventListener('DOMContentLoaded', function() {
+        createRevenueChart();
+        createDealsChart();
+        createConversionChart();
+        createWinRateChart();
+        initializeDataTable();
+    });
+    
+    function createRevenueChart() {
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: comparisonData.labels,
+                datasets: [{
+                    label: 'Revenue',
+                    data: comparisonData.revenue_data,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function createDealsChart() {
+        const ctx = document.getElementById('dealsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: comparisonData.labels,
+                datasets: [{
+                    label: 'Deals',
+                    data: comparisonData.deal_data,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+    
+    function createConversionChart() {
+        const ctx = document.getElementById('conversionChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: comparisonData.labels,
+                datasets: [{
+                    label: 'Conversion Rate (%)',
+                    data: comparisonData.conversion_data,
+                    backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    }
+    
+    function createWinRateChart() {
+        const ctx = document.getElementById('winRateChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: comparisonData.labels,
+                datasets: [{
+                    label: 'Win Rate (%)',
+                    data: comparisonData.conversion_data, // Placeholder - would need actual win rate data
+                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    }
+    
+    function initializeDataTable() {
+        $('#comparisonTable').DataTable({
+            "pageLength": 25,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
+        });
+    }
+    
+    function updateComparison() {
+        // In a real implementation, this would fetch updated data based on form selections
+        // For now, we'll just show an alert
+        alert('Comparison updated based on selected filters!');
+    }
+    
+    function resetComparison() {
+        // Reset form selections to defaults
+        document.getElementById('metricSelect').value = 'revenue';
+        document.getElementById('dateRange').value = 'last_month';
+        const territorySelect = document.getElementById('territoriesSelect');
+        for (let i = 0; i < territorySelect.options.length; i++) {
+            territorySelect.options[i].selected = true;
+        }
+        
+        // Re-initialize charts with original data
+        createRevenueChart();
+        createDealsChart();
+        createConversionChart();
+        createWinRateChart();
+    }
+</script>
+{% endblock %}

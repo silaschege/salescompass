@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from .models import Tenant
+from .models import Tenant, TenantSettings
 
 User = get_user_model()
 
@@ -23,11 +23,11 @@ class TenantBrandingForm(forms.ModelForm):
     """Form for updating tenant branding"""
     class Meta:
         model = Tenant
-        fields = ['logo', 'primary_color', 'secondary_color']
+        fields = ['logo_url', 'primary_color', 'secondary_color']
         widgets = {
             'primary_color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control'}),
             'secondary_color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control'}),
-            'logo': forms.FileInput(attrs={'class': 'form-control'}),
+            'logo_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://example.com/logo.png'}),
         }
 
 
@@ -45,14 +45,14 @@ class TenantDomainForm(forms.ModelForm):
 
 
 class TenantSettingsForm(forms.ModelForm):
-    """Form for general tenant settings"""
+    """Form for general tenant settings - uses TenantSettings model"""
     class Meta:
-        model = Tenant
+        model = TenantSettings
         fields = ['time_zone', 'default_currency', 'date_format', 'business_hours']
         widgets = {
             'time_zone': forms.Select(attrs={'class': 'form-select'}),
-            'default_currency': forms.TextInput(attrs={'class': 'form-control', 'maxlength': 3}),
-            'date_format': forms.TextInput(attrs={'class': 'form-control'}),
+            'default_currency': forms.Select(attrs={'class': 'form-select'}),
+            'date_format': forms.Select(attrs={'class': 'form-select'}),
             'business_hours': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
         }
 
@@ -71,4 +71,3 @@ class FeatureToggleForm(forms.Form):
         required=False,
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3})
     )
-

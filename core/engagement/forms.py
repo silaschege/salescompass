@@ -1,12 +1,13 @@
 # apps/engagement/forms.py
 from django import forms
 from .models import NextBestAction, EngagementEvent
-from accounts.models import Account, Contact
+from accounts.models import  Contact
 from opportunities.models import Opportunity
 from cases.models import Case
 from core.templatetags.filters_extras import get
 from nps.models import NpsResponse
 from django.utils import timezone
+from core.models import User as Account
 
 class EngagementEventForm(forms.ModelForm):
     """

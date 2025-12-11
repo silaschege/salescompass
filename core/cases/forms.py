@@ -1,6 +1,7 @@
 from django import forms
 from core.models import User
-from accounts.models import Account, Contact
+from core.models import User as Account
+from accounts.models import  Contact
 from .models import Case
 
 PRIORITY_CHOICES = [
@@ -45,14 +46,14 @@ class CaseForm(forms.ModelForm):
     class Meta:
         model = Case
         fields = [
-            'subject', 'description', 'account', 'contact', 
+            'subject', 'case_description', 'account', 'contact', 
             'priority', 'owner', 'assigned_team'
         ]
         widgets = {
             'subject': forms.TextInput(attrs={
                 'placeholder': 'e.g., Login Issue, Billing Question, Feature Request'
             }),
-            'description': forms.Textarea(attrs={
+            'case_description': forms.Textarea(attrs={
                 'rows': 6,
                 'placeholder': 'Provide detailed information about the customer issue...'
             }),
@@ -107,9 +108,9 @@ class CaseForm(forms.ModelForm):
             raise forms.ValidationError("Subject must be at least 5 characters long.")
         return subject.strip()
 
-    def clean_description(self):
+    def clean_case_description(self):
         """Validate case description."""
-        description = self.cleaned_data['description']
+        description = self.cleaned_data['case_description']
         if not description or len(description.strip()) < 10:
             raise forms.ValidationError("Description must be at least 10 characters long.")
         return description.strip()

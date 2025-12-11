@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}IP Whitelist Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>IP Whitelist Management</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'core:security_dashboard' %}">Security</a></li>
+                    <li class="breadcrumb-item active">IP Whitelist</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">IP Address Whitelist</h5>
+                    <p class="text-muted mb-0">Manage allowed IP addresses for system access</p>
+                </div>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addIPModal">
+                    <i class="fas fa-plus"></i> Add IP Address
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="alert alert-info" role="alert">
+                <i class="fas fa-info-circle"></i> IP whitelisting restricts system access to only specified IP addresses. This enhances security by preventing unauthorized access from unknown locations.
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>IP Address</th>
+                                    <th>Description</th>
+                                    <th>Created</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ip in whitelisted_ips %}
+                                <tr>
+                                    <td>{{ ip.id }}</td>
+                                    <td><code>{{ ip.ip_address }}</code></td>
+                                    <td>{{ ip.description }}</td>
+                                    <td>{{ ip.created_at }}</td>
+                                    <td>
+                                        <span class="badge bg-success">Active</span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#removeIPModal{{ ip.id }}">
+                                            <i class="fas fa-trash"></i> Remove
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Remove IP Modal -->
+                                <div class="modal fade" id="removeIPModal{{ ip.id }}" tabindex="-1" aria-labelledby="removeIPModalLabel{{ ip.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="removeIPModalLabel{{ ip.id }}">Remove IP Address</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Are you sure you want to remove the IP address <strong>{{ ip.ip_address }}</strong> from the whitelist?</p>
+                                                <p>This will block access from this IP address unless it's added back.</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form method="post" style="display: inline;">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="remove">
+                                                    <input type="hidden" name="ip_id" value="{{ ip.id }}">
+                                                    <button type="submit" class="btn btn-danger">Remove IP</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6">No IP addresses in whitelist.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Whitelist Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card text-white bg-primary mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Total Whitelisted IPs</h5>
+                                    <p class="card-text display-4">{{ whitelisted_ips|length }}</p>
+                                </div>
+                            </div>
+                        <div class="col-md-6">
+                            <div class="card text-white bg-success mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Active Rules</h5>
+                                    <p class="card-text display-4">{{ whitelisted_ips|length }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title">IP Address Format</h6>
+                            <ul class="mb-0">
+                                <li>Individual IP: <code>192.168.1.1</code></li>
+                                <li>IP Range: <code>192.168.1.0/24</code></li>
+                                <li>Multiple IPs: Separate with commas</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Recent Access Attempts</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>IP Address</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>May 10, 2023 14:30</td>
+                                    <td>192.168.1.100</td>
+                                    <td><span class="badge bg-success">Allowed</span></td>
+                                    <td>Login</td>
+                                </tr>
+                                <tr>
+                                    <td>May 10, 2023 14:25</td>
+                                    <td>203.0.113.45</td>
+                                    <td><span class="badge bg-success">Allowed</span></td>
+                                    <td>Login</td>
+                                </tr>
+                                <tr>
+                                    <td>May 10, 2023 13:45</td>
+                                    <td>198.51.100.25</td>
+                                    <td><span class="badge bg-danger">Blocked</span></td>
+                                    <td>Login Attempt</td>
+                                </tr>
+                                <tr>
+                                    <td>May 10, 2023 12:30</td>
+                                    <td>192.168.1.50</td>
+                                    <td><span class="badge bg-success">Allowed</span></td>
+                                    <td>API Request</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add IP Modal -->
+    <div class="modal fade" id="addIPModal" tabindex="-1" aria-labelledby="addIPModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addIPModalLabel">Add IP Address to Whitelist</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <input type="hidden" name="action" value="add">
+                        <div class="mb-3">
+                            <label for="ipAddress" class="form-label">IP Address</label>
+                            <input type="text" class="form-control" id="ipAddress" name="ip_address" placeholder="e.g., 192.168.1.1 or 192.168.1.0/24" required>
+                            <div class="form-text">Enter a single IP address or IP range in CIDR notation</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <input type="text" class="form-control" id="description" name="description" placeholder="Purpose of this IP address">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">Add to Whitelist</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

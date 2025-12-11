@@ -1,15 +1,16 @@
 from django.db import models
-from core.models import TenantModel
+from django.utils import timezone
+from tenants.models import Tenant
 from core.models import User
-from accounts.models import Account
+from django.core.exceptions import ValidationError
 
-class NpsSurvey(TenantModel):
+class NpsSurvey(Tenant):
     """
     NPS survey configuration.
     """
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    is_active = models.BooleanField(default=True)
+    nps_survey_name = models.CharField(max_length=255)
+    nps_survey_description = models.TextField(blank=True)
+    nps_survey_is_active = models.BooleanField(default=True)
     tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
 
     # Survey content
@@ -27,7 +28,7 @@ class NpsSurvey(TenantModel):
     trigger_event = models.CharField(
         max_length=50,
         choices=[
-            ('account.onboarded', 'Account Onboarded'),
+            ('user.onboarded', 'User Onboarded'),
             ('case.closed', 'Case Closed'),
             ('renewal.completed', 'Renewal Completed'),
             ('manual', 'Manual'),
@@ -36,14 +37,14 @@ class NpsSurvey(TenantModel):
     )
 
     def __str__(self):
-        return self.name
+        return self.nps_survey_name
 
 
-class NpsResponse(TenantModel):
+class NpsResponse(Tenant):
     """
     Individual NPS response.
     """
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='nps_responses')
+    account = models.ForeignKey(User, on_delete=models.CASCADE, related_name='nps_responses')
     contact_email = models.EmailField(blank=True)
     survey = models.ForeignKey(NpsSurvey, on_delete=models.CASCADE, related_name='responses')
     
@@ -74,7 +75,7 @@ class NpsResponse(TenantModel):
             raise ValidationError("NPS score must be between -10 and +10")
 
     def __str__(self):
-        return f"NPS {self.score} for {self.account.name}"
+        return f"NPS {self.score} for {self.account.email}"
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
@@ -99,7 +100,7 @@ class NpsResponse(TenantModel):
                 emit_event('nps.passive_submitted', payload)
 
 
-class NpsDetractorAlert(TenantModel):
+class NpsDetractorAlert(Tenant):
     """
     Alert for NPS detractors requiring follow-up.
     """
@@ -114,10 +115,9 @@ class NpsDetractorAlert(TenantModel):
     notes = models.TextField(blank=True)
 
     def __str__(self):
-        return f"Detractor Alert for {self.response.account.name}"
+        return f"Detractor Alert for {self.response.account.email}"
 
-
-class NpsTrendSnapshot(TenantModel):
+class NpsTrendSnapshot(Tenant):
     """
     Daily snapshot of NPS for trend analysis.
     """
@@ -133,13 +133,13 @@ class NpsTrendSnapshot(TenantModel):
         unique_together = [('date', 'tenant_id')]
 
 
-class NpsAbTest(TenantModel):
+class NpsAbTest(Tenant):
     """
     A/B test for NPS surveys.
     """
     survey = models.ForeignKey(NpsSurvey, on_delete=models.CASCADE, related_name='ab_tests')
-    name = models.CharField(max_length=255)
-    is_active = models.BooleanField(default=True)
+    nps_abtest_name = models.CharField(max_length=255)
+    nps_abtest_is_active = models.BooleanField(default=True)
     winner_variant = models.ForeignKey('NpsAbVariant', on_delete=models.SET_NULL, null=True, blank=True)
     auto_winner = models.BooleanField(default=True)
     min_responses = models.IntegerField(default=100)  # min total responses
@@ -149,7 +149,7 @@ class NpsAbTest(TenantModel):
         return f"{self.survey.name} - {self.name}"
 
 
-class NpsAbVariant(TenantModel):
+class NpsAbVariant(Tenant):
     """
     Variant for A/B test.
     """
@@ -163,7 +163,7 @@ class NpsAbVariant(TenantModel):
     assignment_rate = models.FloatField(default=0.5)  # 0.0–1.0
 
 
-class NpsAbResponse(TenantModel):
+class NpsAbResponse(Tenant):
     """
     Tracks which variant a response came from.
     """

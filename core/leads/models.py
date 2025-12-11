@@ -1,5 +1,7 @@
+
 from django.db import models
-from core.models import TimeStampedModel, TenantModel,User
+from core.models import TimeStampedModel,User
+from tenants.models import TenantAwareModel as TenantModel
 from django.urls import reverse
 from typing import Any
 from django.utils import timezone
@@ -25,6 +27,40 @@ LEAD_STATUS_CHOICES = [
     ('converted', 'Converted'),
 ]
 
+MARKETING_CHANNEL_CHOICES = [
+    ('email', 'Email Marketing'),
+    ('social', 'Social Media'),
+    ('paid_ads', 'Paid Ads'),
+    ('content', 'Content Marketing'),
+    ('seo', 'SEO'),
+    ('referral', 'Referral'),
+    ('event', 'Events'),
+    ('direct', 'Direct Traffic'),
+    ('other', 'Other'),
+]
+
+
+class MarketingChannel(TenantModel):
+    """
+    Dynamic marketing channel values - allows tenant-specific channel tracking.
+    """
+    channel_name = models.CharField(max_length=50, db_index=True, help_text="e.g., 'email', 'social'")  # Renamed from 'name' to avoid conflict
+    label = models.CharField(max_length=100)  # e.g., 'Email Marketing', 'Social Media'
+    order = models.IntegerField(default=0)
+    color = models.CharField(max_length=7, default='#6c757d', help_text="Hex color code")
+    icon = models.CharField(max_length=50, blank=True)
+    channel_is_active = models.BooleanField(default=True, help_text="Whether this channel is active")  # Renamed from 'is_active' to avoid conflict
+    is_system = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['order', 'channel_name']
+        unique_together = [('tenant_id', 'channel_name')]
+        verbose_name_plural = 'Marketing Channels'
+    
+    def __str__(self):
+        return self.label
+
+
 INDUSTRY_CHOICES = [
     ('tech', 'Technology'),
     ('manufacturing', 'Manufacturing'),
@@ -37,23 +73,42 @@ INDUSTRY_CHOICES = [
 ]
 
 
+class Industry(TenantModel):
+    """
+    Dynamic industry values - allows tenant-specific industry tracking.
+    """
+    industry_name = models.CharField(max_length=50, db_index=True, help_text="e.g., 'tech', 'finance'")  # Renamed from 'name' to avoid conflict
+    label = models.CharField(max_length=100)  # e.g., 'Technology', 'Finance'
+    order = models.IntegerField(default=0)
+    industry_is_active = models.BooleanField(default=True, help_text="Whether this industry is active")  # Renamed from 'is_active' to avoid conflict
+    is_system = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['order', 'industry_name']
+        unique_together = [('tenant_id', 'industry_name')]
+        verbose_name_plural = 'Industries'
+    
+    def __str__(self):
+        return self.label
+
+
 class LeadSource(TenantModel):
     """
     Dynamic lead source values - allows tenant-specific source tracking.
     """
-    name = models.CharField(max_length=50, db_index=True)  # e.g., 'web', 'event'
+    source_name = models.CharField(max_length=50, db_index=True, help_text="e.g., 'web', 'event'")  # Renamed from 'name' to avoid conflict
     label = models.CharField(max_length=100)  # e.g., 'Web Form', 'Trade Show'
     order = models.IntegerField(default=0)
     color = models.CharField(max_length=7, default='#6c757d', help_text="Hex color code")
     icon = models.CharField(max_length=50, blank=True)
-    is_active = models.BooleanField(default=True)
+    source_is_active = models.BooleanField(default=True, help_text="Whether this source is active")  # Renamed from 'is_active' to avoid conflict
     is_system = models.BooleanField(default=False)
     # Analytics tracking
     conversion_rate_target = models.FloatField(default=0.0, help_text="Target conversion rate (0-100)")
     
     class Meta:
-        ordering = ['order', 'name']
-        unique_together = [('tenant_id', 'name')]
+        ordering = ['order', 'source_name']
+        unique_together = [('tenant_id', 'source_name')]
         verbose_name_plural = 'Lead Sources'
     
     def __str__(self):
@@ -64,20 +119,20 @@ class LeadStatus(TenantModel):
     """
     Dynamic lead status values - allows tenant-specific lead workflows.
     """
-    name = models.CharField(max_length=50, db_index=True)  # e.g., 'new', 'qualified'
+    status_name = models.CharField(max_length=50, db_index=True, help_text="e.g., 'new', 'qualified'")  # Renamed from 'name' to avoid conflict
     label = models.CharField(max_length=100)  # e.g., 'New Lead', 'Qualified'
     order = models.IntegerField(default=0)
     color = models.CharField(max_length=7, default='#6c757d', help_text="Hex color code")
     icon = models.CharField(max_length=50, blank=True)
-    is_active = models.BooleanField(default=True)
+    status_is_active = models.BooleanField(default=True, help_text="Whether this status is active")  # Renamed from 'is_active' to avoid conflict
     is_system = models.BooleanField(default=False)
     # Workflow flags
     is_qualified = models.BooleanField(default=False, help_text="Indicates lead is qualified")
     is_closed = models.BooleanField(default=False, help_text="Indicates lead is closed (won/lost)")
     
     class Meta:
-        ordering = ['order', 'name']
-        unique_together = [('tenant_id', 'name')]
+        ordering = ['order', 'status_name']
+        unique_together = [('tenant_id', 'status_name')]
         verbose_name_plural = 'Lead Statuses'
     
     def __str__(self):
@@ -90,12 +145,23 @@ class Lead(TenantModel):
     email = models.EmailField()
     phone = models.CharField(max_length=20, blank=True)
     company = models.CharField(max_length=255)
-    industry = models.CharField(max_length=50, choices=INDUSTRY_CHOICES)
+    industry = models.CharField(max_length=50, choices=INDUSTRY_CHOICES)  # Temporary: keeping old field for backward compatibility
     job_title = models.CharField(max_length=100, blank=True)
     country = models.CharField(max_length=100, blank=True)
     
+    # New dynamic industry field
+    industry_ref = models.ForeignKey(
+        Industry,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='leads',
+        help_text="Dynamic industry (replaces industry field)",
+        db_constraint=False
+    )
+    
     # Add missing fields
-    description = models.TextField(blank=True, help_text="Additional notes about the lead")
+    lead_description = models.TextField(blank=True, help_text="Additional notes about the lead")
     title = models.CharField(max_length=255, blank=True, help_text="Custom title for the lead")
     
     # Fix field name consistency
@@ -103,6 +169,12 @@ class Lead(TenantModel):
     lead_source = models.CharField(max_length=20, choices=LEAD_SOURCE_CHOICES)  # Changed from 'source'
     status = models.CharField(max_length=20, choices=LEAD_STATUS_CHOICES, default='new')
     lead_score = models.IntegerField(default=0)  # 0–100
+    
+    # New business metrics fields
+    company_size = models.IntegerField(null=True, blank=True, help_text="Number of employees at the company")
+    annual_revenue = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, help_text="Annual revenue of the company")
+    funding_stage = models.CharField(max_length=50, blank=True, help_text="Funding stage of the company (e.g., Series A, IPO)")
+    business_type = models.CharField(max_length=50, blank=True, help_text="Business type (B2B, B2C, etc.)", default='B2B')
     
     # New dynamic configuration fields
     source_ref = models.ForeignKey(
@@ -133,14 +205,49 @@ class Lead(TenantModel):
     
     # Association - when lead is for an existing account (upsell/cross-sell)
     account = models.ForeignKey(
-        'accounts.Account',
+        'core.User',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='leads'  # This allows Account.leads.all()
     )
+    # Marketing attribution fields
+    cac_cost = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        null=True, 
+        blank=True, 
+        help_text="Customer acquisition cost for this lead"
+    )
+    marketing_channel = models.CharField(
+        max_length=20, 
+        choices=MARKETING_CHANNEL_CHOICES, 
+        blank=True,
+        help_text="Marketing channel that brought this lead (legacy field)"
+    )
+    # New dynamic marketing channel field
+    marketing_channel_ref = models.ForeignKey(
+        'MarketingChannel',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='leads',
+        help_text="Dynamic marketing channel (replaces marketing_channel field)",
+        db_constraint=False
+    )
+    campaign_source = models.CharField(
+        max_length=100, 
+        blank=True,
+        help_text="Specific campaign that generated this lead"
+    )
+    lead_acquisition_date = models.DateTimeField(
+        null=True, 
+        blank=True,
+        help_text="Date when the lead was acquired"
+    )
+    
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
+
 
     objects = VisibilityAwareManager()
 
@@ -245,6 +352,10 @@ class Lead(TenantModel):
             # Calculate initial score for new leads
             self.lead_score = self.calculate_initial_score()
             
+            # Set lead acquisition date if not already set
+            if not self.lead_acquisition_date:
+                self.lead_acquisition_date = timezone.now()
+            
         super().save(*args, **kwargs)
         
         if is_new:
@@ -316,14 +427,133 @@ class Lead(TenantModel):
                 related_lead=self
             )
 
+    def calculate_cac(self):
+        """Calculate Customer Acquisition Cost for this lead."""
+        if self.cac_cost:
+            return self.cac_cost
+        return 0.0
+
+    @classmethod
+    def get_channel_metrics(cls, marketing_channel, tenant_id=None, use_ref=False):
+        """Get performance metrics for a specific marketing channel."""
+        queryset = cls.objects.all()
+        
+        if tenant_id:
+            queryset = queryset.filter(tenant_id=tenant_id)
+        
+        if use_ref:
+            # Filter by marketing channel reference (new field)
+            queryset = queryset.filter(marketing_channel_ref__channel_name=marketing_channel)
+        else:
+            # Filter by marketing channel (legacy field)
+            queryset = queryset.filter(marketing_channel=marketing_channel)
+        
+        total_leads = queryset.count()
+        total_cac = float(queryset.aggregate(total=models.Sum('cac_cost'))['total'] or 0)
+        
+        # Get converted leads for conversion rate
+        converted_leads = queryset.filter(status='converted').count()
+        conversion_rate = (converted_leads / total_leads * 100) if total_leads > 0 else 0
+        
+        return {
+            'channel': marketing_channel,
+            'total_leads': total_leads,
+            'total_cac_spent': total_cac,
+            'average_cac': total_cac / total_leads if total_leads > 0 else 0,
+            'conversion_rate': conversion_rate,
+            'converted_leads': converted_leads
+        }
+
+    @classmethod
+    def get_channel_metrics_by_ref(cls, marketing_channel_ref_id, tenant_id=None):
+        """Get performance metrics for a specific marketing channel reference."""
+        queryset = cls.objects.all()
+        
+        if tenant_id:
+            queryset = queryset.filter(tenant_id=tenant_id)
+            
+        queryset = queryset.filter(marketing_channel_ref_id=marketing_channel_ref_id)
+        
+        total_leads = queryset.count()
+        total_cac = float(queryset.aggregate(total=models.Sum('cac_cost'))['total'] or 0)
+        
+        # Get converted leads for conversion rate
+        converted_leads = queryset.filter(status='converted').count()
+        conversion_rate = (converted_leads / total_leads * 10) if total_leads > 0 else 0
+        
+        # Get channel name for the response
+        from .models import MarketingChannel
+        try:
+            channel = MarketingChannel.objects.get(id=marketing_channel_ref_id)
+            channel_name = channel.channel_name
+        except MarketingChannel.DoesNotExist:
+            channel_name = "Unknown Channel"
+        
+        return {
+            'channel': channel_name,
+            'total_leads': total_leads,
+            'total_cac_spent': total_cac,
+            'average_cac': total_cac / total_leads if total_leads > 0 else 0,
+            'conversion_rate': conversion_rate,
+            'converted_leads': converted_leads
+        }
+
+    @classmethod
+    def get_campaign_metrics(cls, campaign_source, tenant_id=None):
+        """Get performance metrics for a specific campaign."""
+        queryset = cls.objects.all()
+        
+        if tenant_id:
+            queryset = queryset.filter(tenant_id=tenant_id)
+            
+        queryset = queryset.filter(campaign_source=campaign_source)
+        
+        total_leads = queryset.count()
+        total_cac = float(queryset.aggregate(total=models.Sum('cac_cost'))['total'] or 0)
+        
+        # Get converted leads for conversion rate
+        converted_leads = queryset.filter(status='converted').count()
+        conversion_rate = (converted_leads / total_leads * 100) if total_leads > 0 else 0
+        
+        return {
+            'campaign': campaign_source,
+            'total_leads': total_leads,
+            'total_cac_spent': total_cac,
+            'average_cac': total_cac / total_leads if total_leads > 0 else 0,
+            'conversion_rate': conversion_rate,
+            'converted_leads': converted_leads
+        }
+
+    @classmethod
+    def get_total_cac_by_period(cls, start_date, end_date, tenant_id=None):
+        """Get total CAC for leads acquired within a specific period."""
+        queryset = cls.objects.filter(
+            lead_acquisition_date__date__gte=start_date,
+            lead_acquisition_date__date__lte=end_date
+        )
+        
+        if tenant_id:
+            queryset = queryset.filter(tenant_id=tenant_id)
+        
+        total_leads = queryset.count()
+        total_cac = float(queryset.aggregate(total=models.Sum('cac_cost'))['total'] or 0)
+        
+        return {
+            'period_start': start_date,
+            'period_end': end_date,
+            'total_leads': total_leads,
+            'total_cac_spent': total_cac,
+            'average_cac': total_cac / total_leads if total_leads > 0 else 0
+        }
+
 
 class WebToLeadForm(TenantModel):
     """
     Web-to-lead form configuration.
     """
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    is_active = models.BooleanField(default=True)
+    form_name = models.CharField(max_length=255, help_text="Name of the web-to-lead form")  # Renamed from 'name' to avoid conflict
+    form_description = models.TextField(blank=True, help_text="Description of the form")  # Renamed from 'description' to avoid conflict
+    form_is_active = models.BooleanField(default=True, help_text="Whether this form is active")  # Renamed from 'is_active' to avoid conflict
     success_redirect_url = models.URLField(default='/thank-you/')
     
     # Form fields configuration
@@ -346,7 +576,8 @@ class WebToLeadForm(TenantModel):
     form_submissions = models.IntegerField(default=0)
     conversion_rate = models.FloatField(default=0.0)
     
-    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
+
+    
     @property
     def total_submissions(self):
         return self.submissions.count()
@@ -356,13 +587,13 @@ class WebToLeadForm(TenantModel):
         if self.total_submissions == 0:
             return 0.0
         converted_leads = self.submissions.filter(lead__isnull=False).count()
-        return (converted_leads / self.total_submissions) * 100
+        return (converted_leads / self.total_submissions) * 10
     
     def get_embed_code_url(self):
         return reverse('leads:webtoleadform_embed', kwargs={'pk': self.pk})
 
     def __str__(self):
-        return self.name
+        return self.form_name
 
 
 class LeadSourceAnalytics(TenantModel):
@@ -376,10 +607,10 @@ class LeadSourceAnalytics(TenantModel):
     converted_count = models.IntegerField(default=0)
     avg_lead_score = models.FloatField(default=0.0)
     
-    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
+
 
     class Meta:
-        unique_together = [('date', 'source', 'tenant_id')]
+        unique_together = [('date', 'source', 'tenant')]
 
     def __str__(self):
         return f"{self.source} - {self.date}"

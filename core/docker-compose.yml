@@ -24,6 +24,24 @@ services:
       WAZO_AGENTD_URL: http://wazo-agentd:some_port   # adjust as per agentd default port
 
   # -----------------------------------
+  # Redis for Celery and Channels
+  # -----------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: salescompass-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 2gb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # -----------------------------------
   # CRM Database
   # -----------------------------------
   db:
@@ -122,5 +140,5 @@ services:
 volumes:
   postgres_data: {}
   wazo_db: {}
-  
+  redis_data: {}
   asterisk_recordings: {}

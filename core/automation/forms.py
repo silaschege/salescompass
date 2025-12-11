@@ -8,21 +8,21 @@ class AutomationForm(forms.ModelForm):
     class Meta:
         model = Automation
         fields = [
-            'name', 
+            'automation_name', 
             'trigger_type', 
-            'is_active', 
+            'automation_is_active', 
             'is_system', 
             'priority'
         ]
         widgets = {
-            'name': forms.TextInput(attrs={
+            'automation_name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'e.g., Account Onboarding Automation'
             }),
             'trigger_type': forms.Select(attrs={
                 'class': 'form-select'
             }),
-            'is_active': forms.CheckboxInput(attrs={
+            'automation_is_active': forms.CheckboxInput(attrs={
                 'class': 'form-check-input'
             }),
             'is_system': forms.CheckboxInput(attrs={
@@ -51,7 +51,7 @@ class AutomationForm(forms.ModelForm):
             self.fields['is_system'].widget.attrs['disabled'] = True
             # If it's a system automation, disable name and trigger_type as well
             if self.instance.is_system:
-                self.fields['name'].widget.attrs['readonly'] = True
+                self.fields['automation_name'].widget.attrs['readonly'] = True
                 self.fields['trigger_type'].widget.attrs['disabled'] = True
 
     def clean(self):
@@ -59,7 +59,7 @@ class AutomationForm(forms.ModelForm):
         is_system = cleaned_data.get('is_system', False)
         
         # System automations should have is_active=True by default
-        if is_system and 'is_active' in cleaned_data and not cleaned_data['is_active']:
+        if is_system and 'automation_is_active' in cleaned_data and not cleaned_data['automation_is_active']:
             raise forms.ValidationError("System automations must be active.")
         
         return cleaned_data

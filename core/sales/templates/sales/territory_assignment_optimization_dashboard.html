@@ -1,0 +1,221 @@
+{% extends 'sales/base.html' %}
+
+{% block title %}Territory Assignment Optimization{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-2">Territory Assignment Optimization</h1>
+            <p class="mb-4">Optimize territory assignments based on performance and capacity.</p>
+        </div>
+    </div>
+
+    <!-- Optimization Summary Cards -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Optimizations</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ optimizations|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-cogs fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Completed</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ optimizations|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Average Performance Score</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% if optimizations %}
+                                    {{ optimizations|first.territory_performance_score|floatformat:2 }}%
+                                {% else %}
+                                    0.00%
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Total Territories</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ optimizations|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-map-marked-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Optimization Controls -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Run Optimization</h6>
+                </div>
+                <div class="card-body">
+                    <p>Run optimization algorithms to suggest optimal territory assignments.</p>
+                    <form method="GET" action="{% url 'sales:run_territory_optimization' 0 %}">
+                        <div class="form-row align-items-center">
+                            <div class="col-auto">
+                                <label class="sr-only" for="territorySelect">Territory</label>
+                                <select class="form-control mb-2" id="territorySelect" name="territory_id">
+                                    <option value="">Select a territory...</option>
+                                    {% for opt in optimizations %}
+                                        <option value="{{ opt.territory.id }}">{{ opt.territory.label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-auto">
+                                <label class="sr-only" for="optimizationType">Type</label>
+                                <select class="form-control mb-2" id="optimizationType" name="type">
+                                    <option value="load_balancing">Load Balancing</option>
+                                    <option value="performance_based">Performance Based</option>
+                                    <option value="geographic">Geographic</option>
+                                    <option value="capacity_based">Capacity Based</option>
+                                </select>
+                            </div>
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-primary mb-2">Run Optimization</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Optimization Results Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Optimization Results</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="optimizationTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Territory</th>
+                                    <th>Optimization Type</th>
+                                    <th>Date</th>
+                                    <th>Current Load</th>
+                                    <th>Recommended Size</th>
+                                    <th>Performance Score</th>
+                                    <th>Load Balance</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for opt in optimizations %}
+                                <tr>
+                                    <td>{{ opt.territory.label }}</td>
+                                    <td>{{ opt.get_optimization_type_display }}</td>
+                                    <td>{{ opt.optimization_date|date:"M d, Y" }}</td>
+                                    <td>{{ opt.current_load }}</td>
+                                    <td>{{ opt.recommended_team_size }}</td>
+                                    <td>{{ opt.territory_performance_score|floatformat:2 }}%</td>
+                                    <td>{{ opt.load_balance_score|floatformat:2 }}%</td>
+                                    <td>
+                                        <span class="badge badge-{% if opt.status == 'completed' %}success{% elif opt.status == 'running' %}warning{% else %}secondary{% endif %}">
+                                            {{ opt.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary" title="View Details">View</a>
+                                        <a href="{% url 'sales:run_territory_optimization' opt.territory.id %}?type={{ opt.optimization_type }}" 
+                                           class="btn btn-sm btn-info" title="Re-run Optimization">Re-run</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recommendations</h6>
+                </div>
+                <div class="card-body">
+                    {% for opt in optimizations %}
+                    <div class="mb-3">
+                        <h5>{{ opt.territory.label }}</h5>
+                        <p>{{ opt.recommended_adjustments }}</p>
+                    </div>
+                    {% empty %}
+                    <p>No optimization data available. Run an optimization to see recommendations.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize DataTables
+    $(document).ready(function() {
+        $('#optimizationTable').DataTable({
+            "pageLength": 25,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
+        });
+    });
+    
+    // Handle territory selection for optimization
+    document.getElementById('territorySelect').addEventListener('change', function() {
+        const form = document.querySelector('form');
+        const actionUrl = form.getAttribute('action');
+        form.setAttribute('action', actionUrl.replace('/0/', '/' + this.value + '/'));
+    });
+</script>
+{% endblock %}

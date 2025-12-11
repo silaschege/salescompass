@@ -19,13 +19,13 @@ class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
         fields = [
-            'name', 'description', 'sku', 'upc', 'category', 'tags',
+            'product_name', 'product_description', 'sku', 'upc', 'category', 'tags',
             'base_price', 'pricing_model', 'currency',
             'esg_certified', 'carbon_footprint', 'esg_certifications', 'sustainability_notes', 'tco2e_saved',
-            'is_active', 'available_from', 'available_to'
+            'product_is_active', 'available_from', 'available_to'
         ]
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 4}),
+            'product_description': forms.Textarea(attrs={'rows': 4}),
             'sustainability_notes': forms.Textarea(attrs={'rows': 3}),
             'pricing_model': forms.Select(choices=PRICING_MODEL_CHOICES),
             'esg_certifications': forms.SelectMultiple(choices=ESG_CERTIFICATION_CHOICES),
@@ -56,9 +56,9 @@ class PricingTierForm(forms.ModelForm):
 class ProductBundleForm(forms.ModelForm):
     class Meta:
         model = ProductBundle
-        fields = ['name', 'description', 'bundle_price', 'is_active']
+        fields = ['product_bundle_name', 'product_bundle_description', 'bundle_price', 'product_bundle_is_active']
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 3}),
+            'product_bundle_description': forms.Textarea(attrs={'rows': 3}),
         }
 
 
@@ -66,7 +66,7 @@ class CompetitorProductForm(forms.ModelForm):
     class Meta:
         model = CompetitorProduct
         fields = [
-            'name', 'competitor_name', 'competitor_sku', 
+            'competitor_product_name', 'competitor_name', 'competitor_sku', 
             'competitive_advantage', 'price_difference_percent', 'is_direct_competitor'
         ]
         widgets = {

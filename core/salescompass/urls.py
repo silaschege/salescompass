@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-# from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView  # Commented out - not installed
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
 urlpatterns = [
     path('', include('core.urls')),
@@ -50,10 +50,10 @@ urlpatterns = [
     path('feature-flags/', include('feature_flags.urls')),
     path('global-alerts/', include('global_alerts.urls')),
     
-    # API Documentation - Commented out (drf_spectacular not installed)
-    # path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    # path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    # path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    # API Documentation
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
 
 urlpatterns += staticfiles_urlpatterns()

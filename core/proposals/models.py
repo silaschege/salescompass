@@ -1,7 +1,6 @@
 from django.db import models
-from core.models import TenantModel
+from tenants.models import TenantAwareModel as TenantModel
 from core.models import User
-from accounts.models import Account
 from opportunities.models import Opportunity
 
 PROPOSAL_STATUS_CHOICES = [
@@ -48,7 +47,7 @@ class Proposal(TenantModel):
         blank=True,
         related_name='sent_proposals'
     )
-    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
+
 
     def __str__(self):
         return self.title
@@ -85,18 +84,17 @@ class ProposalEvent(TenantModel):
         return f"{self.event_type} - {self.proposal.title}"
 
 
-class EmailTemplate(TenantModel):
+class ProposalTemplate(TenantModel):
     """
     Reusable email template for proposals.
     """
-    name = models.CharField(max_length=255)
+    email_template_name = models.CharField(max_length=255)
     subject = models.CharField(max_length=255)
     html_content = models.TextField()
-    is_active = models.BooleanField(default=True)
-    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
+    email_template_is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.name
+        return self.email_template_name
 
 
 class ProposalEmail(TenantModel):
@@ -107,7 +105,7 @@ class ProposalEmail(TenantModel):
     recipient_email = models.EmailField()
     subject = models.CharField(max_length=255)
     tracking_enabled = models.BooleanField(default=True)
-    email_template = models.ForeignKey(EmailTemplate, on_delete=models.SET_NULL, null=True, blank=True)
+    email_template = models.ForeignKey(ProposalTemplate, on_delete=models.SET_NULL, null=True, blank=True)
     
     # Tracking tokens
     open_tracking_token = models.CharField(max_length=100, unique=True)

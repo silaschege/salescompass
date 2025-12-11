@@ -1,722 +1,1384 @@
 from django.shortcuts import render, get_object_or_404
-from django.views.generic import ListView, UpdateView, CreateView, TemplateView, DeleteView, DetailView
-from django.urls import reverse, reverse_lazy
-from django.contrib.auth.mixins import LoginRequiredMixin
-from core.permissions import PermissionRequiredMixin
-from core.object_permissions import TeamObjectPolicy 
-from .utils import onboard_new_team_member
-from .forms import TeamRoleForm
-from django import forms
-import logging
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, DetailView, View
+from django.urls import reverse_lazy
+from .models import Setting, CustomField, ModuleLabel, TeamMember, AssignmentRule, PipelineStage, EmailIntegration, BehavioralScoringRule, DemographicScoringRule, SettingType, ModelChoice, FieldType, ModuleChoice, TeamRole, Territory, AssignmentRuleType, PipelineType, EmailProvider, ActionType, OperatorType, SettingGroup
+from .forms import SettingForm, CustomFieldForm, ModuleLabelForm, TeamMemberForm, AssignmentRuleForm, PipelineStageForm, EmailIntegrationForm, BehavioralScoringRuleForm, DemographicScoringRuleForm, SettingTypeForm, ModelChoiceForm, FieldTypeForm, ModuleChoiceForm, TeamRoleForm, TerritoryForm, AssignmentRuleTypeForm, PipelineTypeForm, EmailProviderForm, ActionTypeForm, OperatorTypeForm
+from tenants.models import Tenant as TenantModel
 
-# Import models from settings_app
-from .models import (
-    SettingGroup, Setting, Territory, TeamRole, TeamMember,
-    CustomField, ModuleLabel, AssignmentRule, PipelineStage, 
-    APIKey, Webhook, BehavioralScoringRule, DemographicScoringRule, ScoreDecayConfig
-)
 
-# Import models from other apps
-from leads.models import LeadStatus, LeadSource
-from opportunities.models import OpportunityStage
-from tenants.models import Tenant
-
-logger = logging.getLogger(__name__)
-
-# --- Settings Dashboard ---
-
-class SettingsDashboardView(PermissionRequiredMixin, TemplateView):
+class SettingsDashboardView(TemplateView):
+    """Settings dashboard landing page."""
     template_name = 'settings_app/dashboard.html'
-    required_permission = 'settings_app:read'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        
-        # Get counts for dashboard cards (ensure models are available in the scope)
-        context['custom_fields_count'] = self.get_model_count('CustomField')
-        context['module_labels_count'] = self.get_model_count('ModuleLabel')
-        context['assignment_rules_count'] = self.get_model_count('AssignmentRule')
-        context['pipeline_stages_count'] = self.get_model_count('PipelineStage')
-        context['api_keys_count'] = self.get_model_count('APIKey')
-        context['webhooks_count'] = self.get_model_count('Webhook')
-        context['team_members_count'] = self.get_model_count('TeamMember')
-        
-        return context
-    
-    def get_model_count(self, model_name):
-        """Helper to get count of records for a model, specific to tenant"""
-        try:
-            # Use globals() to access the explicitly imported model classes
-            model_class = globals().get(model_name)
-            if model_class:
-                 return model_class.objects.filter(tenant_id=self.request.user.tenant_id).count()
-        except Exception as e:
-            logger.error(f"Error getting count for model {model_name}: {e}")
-            pass
-        return 0
-
-# --- General CRM Settings (Dynamic Key-Value Store) ---
-
-class CrmSettingsListView(PermissionRequiredMixin, ListView):
-    model = SettingGroup
-    template_name = 'settings_app/crm_settings_list.html'
-    context_object_name = 'groups'
-    required_permission = 'settings_app:read'
-
-    def get_queryset(self):
-        # Filter for the current tenant's settings groups
-        return super().get_queryset().prefetch_related('settings').filter(tenant_id=self.request.user.tenant_id)
 
 
-class CrmSettingsUpdateView(PermissionRequiredMixin, UpdateView):
+class CrmSettingsListView(ListView):
+    """List CRM settings."""
     model = Setting
-    fields = []  # Handled dynamically in form
+    template_name = 'settings_app/crm_settings_list.html'
+    context_object_name = 'settings'
+
+
+class CrmSettingsUpdateView(UpdateView):
+    """Update CRM settings."""
+    model = Setting
+    form_class = SettingForm
     template_name = 'settings_app/crm_settings_form.html'
-    required_permission = 'settings_app:write'
-
-    def get_form(self, form_class=None):
-        from .forms import DynamicSettingForm, TeamRoleForm
-        return DynamicSettingForm(**self.get_form_kwargs())
-
-    def get_success_url(self):
-        return reverse('settings_app:list')
-
-# --- Tenant Settings (Placeholders for your TenantSettingsView) ---
-# Assuming this handles the branding/locale fields added to the Tenant model
-class TenantSettingsView(PermissionRequiredMixin, UpdateView):
-    # This view requires you to define a form or fields related to your Tenant model
-    fields = ['name', 'domain', 'logo', 'primary_color', 'secondary_color', 'business_hours', 'default_currency', 'date_format', 'time_zone'] 
-    model = Tenant # Import Tenant model from tenants.models
-    template_name = 'settings_app/tenant_settings_form.html'
-    success_url = reverse_lazy('settings_app:tenant_settings')
-    required_permission = 'settings_app:write'
-    
-    def get_object(self, queryset=None):
-        # Gets the specific tenant object for the logged-in user
-        return get_object_or_404(Tenant, id=self.request.user.tenant_id)
+    success_url = reverse_lazy('settings_app:list')
 
 
-# --- Team Management ---
+class TenantSettingsView(TemplateView):
+    """Tenant-specific settings."""
+    template_name = 'settings_app/tenant_settings.html'
 
-class TeamListView(PermissionRequiredMixin, ListView):
+
+class TeamListView(ListView):
+    """List team members."""
     model = TeamMember
-    template_name = 'settings_app/teams_list.html'
+    template_name = 'settings_app/team_list.html'
     context_object_name = 'team_members'
-    paginate_by = 20
-    required_permission = 'settings_app:read'
-
-    def get_queryset(self):
-        # Filter for the current tenant
-        return super().get_queryset().select_related('user', 'role', 'manager', 'territory').filter(user__tenant_id=self.request.user.tenant_id)
 
 
-class TeamDetailView(PermissionRequiredMixin, DetailView):
+class TeamCreateView(CreateView):
+    """Create team member."""
+    model = TeamMember
+    form_class = TeamMemberForm
+    template_name = 'settings_app/team_form.html'
+    success_url = reverse_lazy('settings_app:team_list')
+
+
+class TeamDetailView(DetailView):
+    """View team member details."""
     model = TeamMember
     template_name = 'settings_app/team_detail.html'
-    context_object_name = 'member'
-    required_permission = 'settings_app:read'
-
-    def get_queryset(self):
-        return super().get_queryset().select_related('user', 'role', 'manager', 'territory').filter(user__tenant_id=self.request.user.tenant_id)
 
 
-class TeamCreateView(PermissionRequiredMixin, CreateView):
+class TeamUpdateView(UpdateView):
+    """Update team member."""
     model = TeamMember
-    fields = ['user', 'role', 'manager', 'territory', 'phone', 'hire_date', 'quota_amount', 'quota_period']
+    form_class = TeamMemberForm
     template_name = 'settings_app/team_form.html'
     success_url = reverse_lazy('settings_app:team_list')
-    required_permission = 'settings_app:write'
 
-    def form_valid(self, form):
-        # Ensure user being added belongs to the same tenant (basic validation)
-        user_to_add = form.cleaned_data['user']
-        if user_to_add.tenant_id != self.request.user.tenant_id:
-             form.add_error('user', 'Cannot add a user from a different tenant.')
-             return self.form_invalid(form)
-             
-        response = super().form_valid(form)
-        onboard_new_team_member(form.instance.user.id)
-        return response
-    
-class TeamUpdateView(PermissionRequiredMixin, UpdateView):
-    model = TeamMember
-    fields = ['role', 'manager', 'territory', 'phone', 'hire_date', 'quota_amount', 'quota_period']
-    template_name = 'settings_app/team_form.html'
-    required_permission = 'settings_app:write'
-    permission_policy = TeamObjectPolicy # Apply object-level permissions
-    
-    def get_success_url(self):
-        return reverse('settings_app:team_list')
 
-class TeamDeleteView(PermissionRequiredMixin, DeleteView):
+class TeamDeleteView(DeleteView):
+    """Delete team member."""
     model = TeamMember
-    template_name = 'settings_app/confirm_delete.html'
+    template_name = 'settings_app/team_confirm_delete.html'
     success_url = reverse_lazy('settings_app:team_list')
-    required_permission = 'settings_app:write'
-    permission_policy = TeamObjectPolicy
-    
-    def get_queryset(self):
-        return super().get_queryset().filter(user__tenant_id=self.request.user.tenant_id)
 
 
-# --- Territories ---
-
-class TerritoryListView(PermissionRequiredMixin, ListView):
-    model = Territory
-    template_name = 'settings_app/territory_list.html'
-    context_object_name = 'territories'
-    required_permission = 'settings_app:read'
-
-    def get_queryset(self):
-        return super().get_queryset().filter(tenant_id=self.request.user.tenant_id)
-
-class TerritoryCreateView(PermissionRequiredMixin, CreateView):
-    model = Territory
-    fields = ['name', 'description', 'country_codes']
-    template_name = 'settings_app/territory_form.html'
-    success_url = reverse_lazy('settings_app:territory_list')
-    required_permission = 'settings_app:write'
-    
-    def form_valid(self, form):
-        form.instance.tenant_id = self.request.user.tenant_id
-        return super().form_valid(form)
-
-class TerritoryUpdateView(PermissionRequiredMixin, UpdateView):
-    model = Territory
-    fields = ['name', 'description', 'country_codes']
-    template_name = 'settings_app/territory_form.html'
-    success_url = reverse_lazy('settings_app:territory_list')
-    required_permission = 'settings_app:write'
-
-class TerritoryDeleteView(PermissionRequiredMixin, DeleteView):
-    model = Territory
-    template_name = 'settings_app/confirm_delete.html'
-    success_url = reverse_lazy('settings_app:territory_list')
-    required_permission = 'settings_app:write'
-    
-    def get_queryset(self):
-        return super().get_queryset().filter(tenant_id=self.request.user.tenant_id)
-
-
-# --- Quotas ---
-
-class QuotaUpdateView(PermissionRequiredMixin, UpdateView):
+class QuotaUpdateView(UpdateView):
+    """Update team member quota."""
     model = TeamMember
     fields = ['quota_amount', 'quota_period']
     template_name = 'settings_app/quota_form.html'
-    required_permission = 'settings_app:write'
+    success_url = reverse_lazy('settings_app:team_list')
 
-    def get_object(self, queryset=None):
-        team_member_id = self.kwargs.get('team_member_id')
-        # Ensure object belongs to the tenant before editing
-        return get_object_or_404(TeamMember, id=team_member_id, user__tenant_id=self.request.user.tenant_id)
 
-    def get_success_url(self):
-        return reverse('settings_app:team_list')
-
-# --- Roles & Permissions ---
-
-class RoleListView(PermissionRequiredMixin, ListView):
-    # Assuming TeamRole is your tenant-specific role model
-    model = TeamRole 
+class RoleListView(ListView):
+    """List roles."""
+    model = TeamRole
     template_name = 'settings_app/role_list.html'
     context_object_name = 'roles'
-    required_permission = 'settings_app:read'
-    
-    def get_queryset(self):
-        return self.model.objects.filter(tenant_id=self.request.user.tenant_id)
 
 
-class RoleCreateView(PermissionRequiredMixin, CreateView):
+class RoleCreateView(CreateView):
+    """Create role."""
     model = TeamRole
-    template_name = 'settings_app/role_form.html'
     form_class = TeamRoleForm
     template_name = 'settings_app/role_form.html'
-    required_permission = 'settings_app:write'
+    success_url = reverse_lazy('settings_app:role_list')
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['resources'] = ['accounts', 'leads', 'opportunities', 'contacts', 'settings', 'reports', 'team', 'territories', 'quotas', 'api_keys', 'webhooks']
-        context['actions'] = ['read', 'write', 'delete', 'manage']
-        return context
 
-    def get_success_url(self):
-        return reverse('settings_app:role_list')
+class RoleUpdateView(UpdateView):
+    """Update role."""
+    model = TeamRole
+    form_class = TeamRoleForm
+    template_name = 'settings_app/role_form.html'
+    success_url = reverse_lazy('settings_app:role_list')
+
+
+class RoleDeleteView(DeleteView):
+    """Delete role."""
+    model = TeamRole
+    template_name = 'settings_app/role_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:role_list')
+
+
+class LeadStatusListView(TemplateView):
+    """Lead status settings - placeholder."""
+    template_name = 'settings_app/lead_status_list.html'
+
+
+class LeadStatusCreateView(TemplateView):
+    """Create lead status - placeholder."""
+    template_name = 'settings_app/lead_status_form.html'
+
+
+class LeadStatusUpdateView(TemplateView):
+    """Update lead status - placeholder."""
+    template_name = 'settings_app/lead_status_form.html'
+
+
+class LeadStatusDeleteView(TemplateView):
+    """Delete lead status - placeholder."""
+    template_name = 'settings_app/lead_status_confirm_delete.html'
+
+
+class LeadSourceListView(TemplateView):
+    """Lead source settings - placeholder."""
+    template_name = 'settings_app/lead_source_list.html'
+
+
+class LeadSourceCreateView(TemplateView):
+    """Create lead source - placeholder."""
+    template_name = 'settings_app/lead_source_form.html'
+
+
+class LeadSourceUpdateView(TemplateView):
+    """Update lead source - placeholder."""
+    template_name = 'settings_app/lead_source_form.html'
+
+
+class LeadSourceDeleteView(TemplateView):
+    """Delete lead source - placeholder."""
+    template_name = 'settings_app/lead_source_confirm_delete.html'
+
+
+class OpportunityStageListView(TemplateView):
+    """Opportunity stage settings - placeholder."""
+    template_name = 'settings_app/opportunity_stage_list.html'
+
+
+class OpportunityStageCreateView(TemplateView):
+    """Create opportunity stage - placeholder."""
+    template_name = 'settings_app/opportunity_stage_form.html'
+
+
+class OpportunityStageUpdateView(TemplateView):
+    """Update opportunity stage - placeholder."""
+    template_name = 'settings_app/opportunity_stage_form.html'
+
+
+class OpportunityStageDeleteView(TemplateView):
+    """Delete opportunity stage - placeholder."""
+    template_name = 'settings_app/opportunity_stage_confirm_delete.html'
+
+
+class APIKeyListView(TemplateView):
+    """API key list - placeholder."""
+    template_name = 'settings_app/apikey_list.html'
+
+
+class APIKeyCreateView(TemplateView):
+    """Create API key - placeholder."""
+    template_name = 'settings_app/apikey_form.html'
+
+
+class APIKeyDeleteView(TemplateView):
+    """Delete API key - placeholder."""
+    template_name = 'settings_app/apikey_confirm_delete.html'
+
+
+class WebhookListView(TemplateView):
+    """Webhook list - placeholder."""
+    template_name = 'settings_app/webhook_list.html'
+
+
+class WebhookCreateView(TemplateView):
+    """Create webhook - placeholder."""
+    template_name = 'settings_app/webhook_form.html'
+
+
+class WebhookUpdateView(TemplateView):
+    """Update webhook - placeholder."""
+    template_name = 'settings_app/webhook_form.html'
+
+
+class WebhookDeleteView(TemplateView):
+    """Delete webhook - placeholder."""
+    template_name = 'settings_app/webhook_confirm_delete.html'
+
+
+class ScoringRulesListView(TemplateView):
+    """Scoring rules list - placeholder."""
+    template_name = 'settings_app/scoring_rules_list.html'
+
+
+class BehavioralScoringRuleCreateView(CreateView):
+    """Create behavioral scoring rule."""
+    model = BehavioralScoringRule
+    form_class = BehavioralScoringRuleForm
+    template_name = 'settings_app/behavioral_scoring_form.html'
+    success_url = reverse_lazy('settings_app:scoring_rules_list')
+
+
+class BehavioralScoringRuleUpdateView(UpdateView):
+    """Update behavioral scoring rule."""
+    model = BehavioralScoringRule
+    form_class = BehavioralScoringRuleForm
+    template_name = 'settings_app/behavioral_scoring_form.html'
+    success_url = reverse_lazy('settings_app:scoring_rules_list')
+
+
+class BehavioralScoringRuleDeleteView(DeleteView):
+    """Delete behavioral scoring rule."""
+    model = BehavioralScoringRule
+    template_name = 'settings_app/behavioral_scoring_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:scoring_rules_list')
+
+
+class DemographicScoringRuleCreateView(CreateView):
+    """Create demographic scoring rule."""
+    model = DemographicScoringRule
+    form_class = DemographicScoringRuleForm
+    template_name = 'settings_app/demographic_scoring_form.html'
+    success_url = reverse_lazy('settings_app:scoring_rules_list')
+
+
+class DemographicScoringRuleUpdateView(UpdateView):
+    """Update demographic scoring rule."""
+    model = DemographicScoringRule
+    form_class = DemographicScoringRuleForm
+    template_name = 'settings_app/demographic_scoring_form.html'
+    success_url = reverse_lazy('settings_app:scoring_rules_list')
+
+
+class DemographicScoringRuleDeleteView(DeleteView):
+    """Delete demographic scoring rule."""
+    model = DemographicScoringRule
+    template_name = 'settings_app/demographic_scoring_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:scoring_rules_list')
+
+
+class ScoreDecayConfigView(TemplateView):
+    """Score decay config - placeholder."""
+    template_name = 'settings_app/score_decay_config.html'
+
+
+class SettingTypeListView(ListView):
+    model = SettingType
+    template_name = 'settings_app/setting_type_list.html'
+    context_object_name = 'setting_types'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class SettingTypeCreateView(CreateView):
+    model = SettingType
+    form_class = SettingTypeForm
+    template_name = 'settings_app/setting_type_form.html'
+    success_url = reverse_lazy('settings_app:setting_type_list')
     
     def form_valid(self, form):
-        form.instance.tenant_id = self.request.user.tenant_id
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Setting type created successfully.')
         return super().form_valid(form)
 
-class RoleUpdateView(PermissionRequiredMixin, UpdateView):
+
+class SettingTypeUpdateView(UpdateView):
+    model = SettingType
+    form_class = SettingTypeForm
+    template_name = 'settings_app/setting_type_form.html'
+    success_url = reverse_lazy('settings_app:setting_type_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Setting type updated successfully.')
+        return super().form_valid(form)
+
+
+class SettingTypeDeleteView(DeleteView):
+    model = SettingType
+    template_name = 'settings_app/setting_type_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:setting_type_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Setting type deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class ModelChoiceListView(ListView):
+    model = ModelChoice
+    template_name = 'settings_app/model_choice_list.html'
+    context_object_name = 'model_choices'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class ModelChoiceCreateView(CreateView):
+    model = ModelChoice
+    form_class = ModelChoiceForm
+    template_name = 'settings_app/model_choice_form.html'
+    success_url = reverse_lazy('settings_app:model_choice_list')
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Model choice created successfully.')
+        return super().form_valid(form)
+
+
+class ModelChoiceUpdateView(UpdateView):
+    model = ModelChoice
+    form_class = ModelChoiceForm
+    template_name = 'settings_app/model_choice_form.html'
+    success_url = reverse_lazy('settings_app:model_choice_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Model choice updated successfully.')
+        return super().form_valid(form)
+
+
+class ModelChoiceDeleteView(DeleteView):
+    model = ModelChoice
+    template_name = 'settings_app/model_choice_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:model_choice_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Model choice deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class FieldTypeListView(ListView):
+    model = FieldType
+    template_name = 'settings_app/field_type_list.html'
+    context_object_name = 'field_types'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class FieldTypeCreateView(CreateView):
+    model = FieldType
+    form_class = FieldTypeForm
+    template_name = 'settings_app/field_type_form.html'
+    success_url = reverse_lazy('settings_app:field_type_list')
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Field type created successfully.')
+        return super().form_valid(form)
+
+
+class FieldTypeUpdateView(UpdateView):
+    model = FieldType
+    form_class = FieldTypeForm
+    template_name = 'settings_app/field_type_form.html'
+    success_url = reverse_lazy('settings_app:field_type_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Field type updated successfully.')
+        return super().form_valid(form)
+
+
+class FieldTypeDeleteView(DeleteView):
+    model = FieldType
+    template_name = 'settings_app/field_type_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:field_type_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Field type deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class ModuleChoiceListView(ListView):
+    model = ModuleChoice
+    template_name = 'settings_app/module_choice_list.html'
+    context_object_name = 'module_choices'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class ModuleChoiceCreateView(CreateView):
+    model = ModuleChoice
+    form_class = ModuleChoiceForm
+    template_name = 'settings_app/module_choice_form.html'
+    success_url = reverse_lazy('settings_app:module_choice_list')
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Module choice created successfully.')
+        return super().form_valid(form)
+
+
+class ModuleChoiceUpdateView(UpdateView):
+    model = ModuleChoice
+    form_class = ModuleChoiceForm
+    template_name = 'settings_app/module_choice_form.html'
+    success_url = reverse_lazy('settings_app:module_choice_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Module choice updated successfully.')
+        return super().form_valid(form)
+
+
+class ModuleChoiceDeleteView(DeleteView):
+    model = ModuleChoice
+    template_name = 'settings_app/module_choice_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:module_choice_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Module choice deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class TeamRoleListView(ListView):
     model = TeamRole
-    template_name = 'settings_app/role_form.html'
+    template_name = 'settings_app/team_role_list.html'
+    context_object_name = 'team_roles'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class TeamRoleCreateView(CreateView):
+    model = TeamRole
     form_class = TeamRoleForm
-    template_name = 'settings_app/role_form.html'
-    required_permission = 'settings_app:write'
+    template_name = 'settings_app/team_role_form.html'
+    success_url = reverse_lazy('settings_app:team_role_list')
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Team role created successfully.')
+        return super().form_valid(form)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['resources'] = ['accounts', 'leads', 'opportunities', 'contacts', 'settings', 'reports', 'team', 'territories', 'quotas', 'api_keys', 'webhooks']
-        context['actions'] = ['read', 'write', 'delete', 'manage']
-        return context
 
-    def get_success_url(self):
-        return reverse('settings_app:role_list')
-
-class RoleDeleteView(PermissionRequiredMixin, DeleteView):
+class TeamRoleUpdateView(UpdateView):
     model = TeamRole
-    template_name = 'settings_app/confirm_delete.html'
-    success_url = reverse_lazy('settings_app:role_list')
-    required_permission = 'settings_app:write'
+    form_class = TeamRoleForm
+    template_name = 'settings_app/team_role_form.html'
+    success_url = reverse_lazy('settings_app:team_role_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Team role updated successfully.')
+        return super().form_valid(form)
+
+
+class TeamRoleDeleteView(DeleteView):
+    model = TeamRole
+    template_name = 'settings_app/team_role_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:team_role_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Team role deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class TerritoryListView(ListView):
+    model = Territory
+    template_name = 'settings_app/territory_list.html'
+    context_object_name = 'territories'
     
     def get_queryset(self):
-        return super().get_queryset().filter(tenant_id=self.request.user.tenant_id)
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
 
 
-# --- Lead Settings (Placeholders) ---
+class TerritoryCreateView(CreateView):
+    model = Territory
+    form_class = TerritoryForm
+    template_name = 'settings_app/territory_form.html'
+    success_url = reverse_lazy('settings_app:territory_list')
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Territory created successfully.')
+        return super().form_valid(form)
 
-class LeadStatusListView(PermissionRequiredMixin, ListView):
-    model = LeadStatus
-    template_name = 'settings_app/lead_status_list.html'
-    context_object_name = 'statuses'
-    required_permission = 'settings_app:read'
-    def get_queryset(self): return self.model.objects.filter(tenant_id=self.request.user.tenant_id)
-class LeadStatusCreateView(PermissionRequiredMixin, CreateView):
-    model = LeadStatus
-    fields = ['name', 'is_active']
-    template_name = 'settings_app/lead_status_form.html'
-    success_url = reverse_lazy('settings_app:lead_status_list')
-    required_permission = 'settings_app:write'
-    def form_valid(self, form): form.instance.tenant_id = self.request.user.tenant_id; return super().form_valid(form)
-class LeadStatusUpdateView(PermissionRequiredMixin, UpdateView):
-    model = LeadStatus
-    fields = ['name', 'is_active']
-    template_name = 'settings_app/lead_status_form.html'
-    success_url = reverse_lazy('settings_app:lead_status_list')
-    required_permission = 'settings_app:write'
 
-class LeadStatusDeleteView(PermissionRequiredMixin, DeleteView):
-    model = LeadStatus
-    template_name = 'settings_app/confirm_delete.html'
-    success_url = reverse_lazy('settings_app:lead_status_list')
-    required_permission = 'settings_app:write'
+class TerritoryUpdateView(UpdateView):
+    model = Territory
+    form_class = TerritoryForm
+    template_name = 'settings_app/territory_form.html'
+    success_url = reverse_lazy('settings_app:territory_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Territory updated successfully.')
+        return super().form_valid(form)
+
+
+class TerritoryDeleteView(DeleteView):
+    model = Territory
+    template_name = 'settings_app/territory_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:territory_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Territory deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class AssignmentRuleTypeListView(ListView):
+    model = AssignmentRuleType
+    template_name = 'settings_app/assignment_rule_type_list.html'
+    context_object_name = 'assignment_rule_types'
     
     def get_queryset(self):
-        return super().get_queryset().filter(tenant_id=self.request.user.tenant_id)
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
 
-class LeadSourceListView(PermissionRequiredMixin, ListView):
-    model = LeadSource
-    template_name = 'settings_app/lead_source_list.html'
-    context_object_name = 'sources'
-    required_permission = 'settings_app:read'
-    def get_queryset(self): return self.model.objects.filter(tenant_id=self.request.user.tenant_id)
-class LeadSourceCreateView(PermissionRequiredMixin, CreateView):
-    model = LeadSource
-    fields = ['name','label','order','color', 'icon', 'is_active', 'conversion_rate_target']
-    template_name = 'settings_app/lead_source_form.html'
-    success_url = reverse_lazy('settings_app:lead_source_list')
-    required_permission = 'settings_app:write'
-    def form_valid(self, form): form.instance.tenant_id = self.request.user.tenant_id; return super().form_valid(form)
 
-class LeadSourceUpdateView(PermissionRequiredMixin, UpdateView):
-    model = LeadSource
-    fields = ['name','label','order','color', 'icon', 'is_active', 'conversion_rate_target']
-    template_name = 'settings_app/lead_source_form.html'
-    success_url = reverse_lazy('settings_app:lead_source_list')
-    required_permission = 'settings_app:write'
+class AssignmentRuleTypeCreateView(CreateView):
+    model = AssignmentRuleType
+    form_class = AssignmentRuleTypeForm
+    template_name = 'settings_app/assignment_rule_type_form.html'
+    success_url = reverse_lazy('settings_app:assignment_rule_type_list')
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Assignment rule type created successfully.')
+        return super().form_valid(form)
 
-class LeadSourceDeleteView(PermissionRequiredMixin, DeleteView):
-    model = LeadSource
-    template_name = 'settings_app/confirm_delete.html'
-    success_url = reverse_lazy('settings_app:lead_source_list')
-    required_permission = 'settings_app:write'
+
+class AssignmentRuleTypeUpdateView(UpdateView):
+    model = AssignmentRuleType
+    form_class = AssignmentRuleTypeForm
+    template_name = 'settings_app/assignment_rule_type_form.html'
+    success_url = reverse_lazy('settings_app:assignment_rule_type_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Assignment rule type updated successfully.')
+        return super().form_valid(form)
+
+
+class AssignmentRuleTypeDeleteView(DeleteView):
+    model = AssignmentRuleType
+    template_name = 'settings_app/assignment_rule_type_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:assignment_rule_type_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Assignment rule type deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class PipelineTypeListView(ListView):
+    model = PipelineType
+    template_name = 'settings_app/pipeline_type_list.html'
+    context_object_name = 'pipeline_types'
     
     def get_queryset(self):
-        return super().get_queryset().filter(tenant_id=self.request.user.tenant_id)
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
 
 
+class PipelineTypeCreateView(CreateView):
+    model = PipelineType
+    form_class = PipelineTypeForm
+    template_name = 'settings_app/pipeline_type_form.html'
+    success_url = reverse_lazy('settings_app:pipeline_type_list')
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Pipeline type created successfully.')
+        return super().form_valid(form)
 
-# --- Opportunity Settings (Placeholders) ---
 
-class OpportunityStageListView(PermissionRequiredMixin, ListView):
-    model = OpportunityStage
-    template_name = 'settings_app/opportunity_stage_list.html'
-    context_object_name = 'stages'
-    required_permission = 'settings_app:read'
-    def get_queryset(self): return self.model.objects.filter(tenant_id=self.request.user.tenant_id)
-class OpportunityStageCreateView(PermissionRequiredMixin, CreateView):
-    model = OpportunityStage
-    fields = ['name', 'order', 'win_probability', 'is_active']
-    template_name = 'settings_app/opportunity_stage_form.html'
-    success_url = reverse_lazy('settings_app:opportunity_stage_list')
-    required_permission = 'settings_app:write'
-    def form_valid(self, form): form.instance.tenant_id = self.request.user.tenant_id; return super().form_valid(form)
-class OpportunityStageUpdateView(PermissionRequiredMixin, UpdateView):
-    model = OpportunityStage
-    fields = ['name', 'order', 'win_probability', 'is_active']
-    template_name = 'settings_app/opportunity_stage_form.html'
-    success_url = reverse_lazy('settings_app:opportunity_stage_list')
-    required_permission = 'settings_app:write'
+class PipelineTypeUpdateView(UpdateView):
+    model = PipelineType
+    form_class = PipelineTypeForm
+    template_name = 'settings_app/pipeline_type_form.html'
+    success_url = reverse_lazy('settings_app:pipeline_type_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Pipeline type updated successfully.')
+        return super().form_valid(form)
 
-class OpportunityStageDeleteView(PermissionRequiredMixin, DeleteView):
-    model = OpportunityStage
-    template_name = 'settings_app/confirm_delete.html'
-    success_url = reverse_lazy('settings_app:opportunity_stage_list')
-    required_permission = 'settings_app:write'
+
+class PipelineTypeDeleteView(DeleteView):
+    model = PipelineType
+    template_name = 'settings_app/pipeline_type_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:pipeline_type_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Pipeline type deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class EmailProviderListView(ListView):
+    model = EmailProvider
+    template_name = 'settings_app/email_provider_list.html'
+    context_object_name = 'email_providers'
     
     def get_queryset(self):
-        return super().get_queryset().filter(tenant_id=self.request.user.tenant_id)
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
 
 
+class EmailProviderCreateView(CreateView):
+    model = EmailProvider
+    form_class = EmailProviderForm
+    template_name = 'settings_app/email_provider_form.html'
+    success_url = reverse_lazy('settings_app:email_provider_list')
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Email provider created successfully.')
+        return super().form_valid(form)
 
-# --- Custom Fields (Fixes the original Attribute Error) ---
 
-class CustomFieldListView(PermissionRequiredMixin, ListView):
+class EmailProviderUpdateView(UpdateView):
+    model = EmailProvider
+    form_class = EmailProviderForm
+    template_name = 'settings_app/email_provider_form.html'
+    success_url = reverse_lazy('settings_app:email_provider_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Email provider updated successfully.')
+        return super().form_valid(form)
+
+
+class EmailProviderDeleteView(DeleteView):
+    model = EmailProvider
+    template_name = 'settings_app/email_provider_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:email_provider_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Email provider deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class ActionTypeListView(ListView):
+    model = ActionType
+    template_name = 'settings_app/action_type_list.html'
+    context_object_name = 'action_types'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class ActionTypeCreateView(CreateView):
+    model = ActionType
+    form_class = ActionTypeForm
+    template_name = 'settings_app/action_type_form.html'
+    success_url = reverse_lazy('settings_app:action_type_list')
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Action type created successfully.')
+        return super().form_valid(form)
+
+
+class ActionTypeUpdateView(UpdateView):
+    model = ActionType
+    form_class = ActionTypeForm
+    template_name = 'settings_app/action_type_form.html'
+    success_url = reverse_lazy('settings_app:action_type_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Action type updated successfully.')
+        return super().form_valid(form)
+
+
+class ActionTypeDeleteView(DeleteView):
+    model = ActionType
+    template_name = 'settings_app/action_type_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:action_type_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Action type deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class OperatorTypeListView(ListView):
+    model = OperatorType
+    template_name = 'settings_app/operator_type_list.html'
+    context_object_name = 'operator_types'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class OperatorTypeCreateView(CreateView):
+    model = OperatorType
+    form_class = OperatorTypeForm
+    template_name = 'settings_app/operator_type_form.html'
+    success_url = reverse_lazy('settings_app:operator_type_list')
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Operator type created successfully.')
+        return super().form_valid(form)
+
+
+class OperatorTypeUpdateView(UpdateView):
+    model = OperatorType
+    form_class = OperatorTypeForm
+    template_name = 'settings_app/operator_type_form.html'
+    success_url = reverse_lazy('settings_app:operator_type_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Operator type updated successfully.')
+        return super().form_valid(form)
+
+
+class OperatorTypeDeleteView(DeleteView):
+    model = OperatorType
+    template_name = 'settings_app/operator_type_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:operator_type_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Operator type deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class SettingListView(ListView):
+    model = Setting
+    template_name = 'settings_app/setting_list.html'
+    context_object_name = 'settings'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant and prefetch related objects
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('setting_type_ref', 'model_name_ref')
+
+
+class SettingCreateView(CreateView):
+    model = Setting
+    form_class = SettingForm
+    template_name = 'settings_app/setting_form.html'
+    success_url = reverse_lazy('settings_app:setting_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Setting created successfully.')
+        return super().form_valid(form)
+
+
+class SettingUpdateView(UpdateView):
+    model = Setting
+    form_class = SettingForm
+    template_name = 'settings_app/setting_form.html'
+    success_url = reverse_lazy('settings_app:setting_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Setting updated successfully.')
+        return super().form_valid(form)
+
+
+class SettingDeleteView(DeleteView):
+    model = Setting
+    template_name = 'settings_app/setting_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:setting_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Setting deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class CustomFieldListView(ListView):
     model = CustomField
     template_name = 'settings_app/custom_field_list.html'
     context_object_name = 'custom_fields'
-    required_permission = 'settings_app:read'
-    def get_queryset(self):
-        return CustomField.objects.filter(tenant_id=self.request.user.tenant_id)
-
-class CustomFieldCreateView(PermissionRequiredMixin, CreateView):
-    model = CustomField
-    template_name = 'settings_app/custom_field_form.html'
-    fields = ['model_name', 'field_name', 'field_label', 'field_type', 'is_required', 'options', 'help_text', 'default_value']
-    success_url = reverse_lazy('settings_app:custom_field_list')
-    required_permission = 'settings_app:write'
     
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form_title'] = 'Create Custom Field'
-        return context
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant and prefetch related objects
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('model_name_ref', 'field_type_ref')
+
+
+class CustomFieldCreateView(CreateView):
+    model = CustomField
+    form_class = CustomFieldForm
+    template_name = 'settings_app/custom_field_form.html'
+    success_url = reverse_lazy('settings_app:custom_field_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
     
     def form_valid(self, form):
-        form.instance.tenant_id = self.request.user.tenant_id
-        
-        # Parse options from textarea (one per line) if it's a select field
-        if form.cleaned_data['field_type'] == 'select':
-            options_text = self.request.POST.get('options', '')
-            if options_text:
-                options_list = [opt.strip() for opt in options_text.split('\n') if opt.strip()]
-                form.instance.options = options_list
-        
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Custom field created successfully.')
         return super().form_valid(form)
 
 
-class CustomFieldUpdateView(PermissionRequiredMixin, UpdateView):
+class CustomFieldUpdateView(UpdateView):
     model = CustomField
+    form_class = CustomFieldForm
     template_name = 'settings_app/custom_field_form.html'
-    fields = ['field_label', 'field_type', 'is_required', 'options', 'help_text', 'default_value']
     success_url = reverse_lazy('settings_app:custom_field_list')
-    required_permission = 'settings_app:write'
     
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form_title'] = f'Edit Custom Field: {self.object.field_label}'
-        return context
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
     
     def form_valid(self, form):
-        # Parse options from textarea if it's a select field
-        if form.cleaned_data['field_type'] == 'select':
-            options_text = self.request.POST.get('options', '')
-            if options_text:
-                options_list = [opt.strip() for opt in options_text.split('\n') if opt.strip()]
-                form.instance.options = options_list
-        
+        messages.success(self.request, 'Custom field updated successfully.')
         return super().form_valid(form)
 
 
-# --- Module Labels (Placeholders) ---
-
-class CustomFieldDeleteView(PermissionRequiredMixin, DeleteView):
+class CustomFieldDeleteView(DeleteView):
     model = CustomField
-    template_name = 'settings_app/confirm_delete.html'
+    template_name = 'settings_app/custom_field_confirm_delete.html'
     success_url = reverse_lazy('settings_app:custom_field_list')
-    required_permission = 'settings_app:write'
     
-    def get_queryset(self):
-        # Ensure only tenant's custom fields can be deleted
-        return super().get_queryset().filter(tenant_id=self.request.user.tenant_id)
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Custom field deleted successfully.')
+        return super().delete(request, *args, **kwargs)
 
 
-class ModuleLabelListView(PermissionRequiredMixin, ListView):
+class ModuleLabelListView(ListView):
     model = ModuleLabel
     template_name = 'settings_app/module_label_list.html'
-    required_permission = 'settings_app:read'
-    def get_queryset(self): return self.model.objects.filter(tenant_id=self.request.user.tenant_id)
-class ModuleLabelCreateView(PermissionRequiredMixin, CreateView):
-    model = ModuleLabel
-    fields = ['module_key', 'custom_label']
-    template_name = 'settings_app/module_label_form.html'
-    success_url = reverse_lazy('settings_app:module_label_list')
-    required_permission = 'settings_app:write'
-    def form_valid(self, form): form.instance.tenant_id = self.request.user.tenant_id; return super().form_valid(form)
-class ModuleLabelUpdateView(PermissionRequiredMixin, UpdateView):
-    model = ModuleLabel
-    fields = ['custom_label']
-    template_name = 'settings_app/module_label_form.html'
-    success_url = reverse_lazy('settings_app:module_label_list')
-    required_permission = 'settings_app:write'
-
-class ModuleLabelDeleteView(PermissionRequiredMixin, DeleteView):
-    model = ModuleLabel
-    template_name = 'settings_app/confirm_delete.html'
-    success_url = reverse_lazy('settings_app:module_label_list')
-    required_permission = 'settings_app:write'
+    context_object_name = 'module_labels'
     
     def get_queryset(self):
-        return super().get_queryset().filter(tenant_id=self.request.user.tenant_id)
+        queryset = super().get_queryset()
+        # Filter by current tenant and prefetch related objects
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('module_key_ref')
 
 
+class ModuleLabelCreateView(CreateView):
+    model = ModuleLabel
+    form_class = ModuleLabelForm
+    template_name = 'settings_app/module_label_form.html'
+    success_url = reverse_lazy('settings_app:module_label_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Module label created successfully.')
+        return super().form_valid(form)
 
-# --- Assignment Rules (Placeholders) ---
 
-class AssignmentRuleListView(PermissionRequiredMixin, ListView):
+class ModuleLabelUpdateView(UpdateView):
+    model = ModuleLabel
+    form_class = ModuleLabelForm
+    template_name = 'settings_app/module_label_form.html'
+    success_url = reverse_lazy('settings_app:module_label_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Module label updated successfully.')
+        return super().form_valid(form)
+
+
+class ModuleLabelDeleteView(DeleteView):
+    model = ModuleLabel
+    template_name = 'settings_app/module_label_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:module_label_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Module label deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class TeamMemberListView(ListView):
+    model = TeamMember
+    template_name = 'settings_app/team_member_list.html'
+    context_object_name = 'team_members'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant and prefetch related objects
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('user', 'role_ref', 'territory_ref', 'manager')
+
+
+class TeamMemberCreateView(CreateView):
+    model = TeamMember
+    form_class = TeamMemberForm
+    template_name = 'settings_app/team_member_form.html'
+    success_url = reverse_lazy('settings_app:team_member_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Team member created successfully.')
+        return super().form_valid(form)
+
+
+class TeamMemberUpdateView(UpdateView):
+    model = TeamMember
+    form_class = TeamMemberForm
+    template_name = 'settings_app/team_member_form.html'
+    success_url = reverse_lazy('settings_app:team_member_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Team member updated successfully.')
+        return super().form_valid(form)
+
+
+class TeamMemberDeleteView(DeleteView):
+    model = TeamMember
+    template_name = 'settings_app/team_member_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:team_member_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Team member deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class AssignmentRuleListView(ListView):
     model = AssignmentRule
     template_name = 'settings_app/assignment_rule_list.html'
-    required_permission = 'settings_app:read'
-    def get_queryset(self): return self.model.objects.filter(tenant_id=self.request.user.tenant_id)
-class AssignmentRuleCreateView(PermissionRequiredMixin, CreateView):
-    model = AssignmentRule
-    fields = ['module', 'rule_type', 'criteria', 'assignees', 'is_active']
-    template_name = 'settings_app/assignment_rule_form.html'
-    success_url = reverse_lazy('settings_app:assignment_rule_list')
-    required_permission = 'settings_app:write'
-    def form_valid(self, form): form.instance.tenant_id = self.request.user.tenant_id; return super().form_valid(form)
-class AssignmentRuleUpdateView(PermissionRequiredMixin, UpdateView):
-    model = AssignmentRule
-    fields = ['rule_type', 'criteria', 'assignees', 'is_active']
-    template_name = 'settings_app/assignment_rule_form.html'
-    success_url = reverse_lazy('settings_app:assignment_rule_list')
-    required_permission = 'settings_app:write'
-
-class AssignmentRuleDeleteView(PermissionRequiredMixin, DeleteView):
-    model = AssignmentRule
-    template_name = 'settings_app/confirm_delete.html'
-    success_url = reverse_lazy('settings_app:assignment_rule_list')
-    required_permission = 'settings_app:write'
+    context_object_name = 'assignment_rules'
     
     def get_queryset(self):
-        return super().get_queryset().filter(tenant_id=self.request.user.tenant_id)
+        queryset = super().get_queryset()
+        # Filter by current tenant and prefetch related objects
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('module_ref', 'rule_type_ref', 'assigned_to')
 
 
+class AssignmentRuleCreateView(CreateView):
+    model = AssignmentRule
+    form_class = AssignmentRuleForm
+    template_name = 'settings_app/assignment_rule_form.html'
+    success_url = reverse_lazy('settings_app:assignment_rule_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Assignment rule created successfully.')
+        return super().form_valid(form)
 
-# --- Pipeline Stages (Placeholders) ---
 
-class PipelineStageListView(PermissionRequiredMixin, ListView):
+class AssignmentRuleUpdateView(UpdateView):
+    model = AssignmentRule
+    form_class = AssignmentRuleForm
+    template_name = 'settings_app/assignment_rule_form.html'
+    success_url = reverse_lazy('settings_app:assignment_rule_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Assignment rule updated successfully.')
+        return super().form_valid(form)
+
+
+class AssignmentRuleDeleteView(DeleteView):
+    model = AssignmentRule
+    template_name = 'settings_app/assignment_rule_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:assignment_rule_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Assignment rule deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class PipelineStageListView(ListView):
     model = PipelineStage
     template_name = 'settings_app/pipeline_stage_list.html'
-    required_permission = 'settings_app:read'
-    def get_queryset(self): return self.model.objects.filter(tenant_id=self.request.user.tenant_id)
-class PipelineStageCreateView(PermissionRequiredMixin, CreateView):
+    context_object_name = 'pipeline_stages'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant and prefetch related objects
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('pipeline_type_ref')
+
+
+class PipelineStageCreateView(CreateView):
     model = PipelineStage
-    fields = ['pipeline_type', 'name', 'order', 'required_fields', 'approval_required']
+    form_class = PipelineStageForm
     template_name = 'settings_app/pipeline_stage_form.html'
     success_url = reverse_lazy('settings_app:pipeline_stage_list')
-    required_permission = 'settings_app:write'
-    def form_valid(self, form): form.instance.tenant_id = self.request.user.tenant_id; return super().form_valid(form)
-class PipelineStageUpdateView(PermissionRequiredMixin, UpdateView):
-    model = PipelineStage
-    fields = ['name', 'order', 'required_fields', 'approval_required']
-    template_name = 'settings_app/pipeline_stage_form.html'
-    success_url = reverse_lazy('settings_app:pipeline_stage_list')
-    required_permission = 'settings_app:write'
-
-class PipelineStageDeleteView(PermissionRequiredMixin, DeleteView):
-    model = PipelineStage
-    template_name = 'settings_app/confirm_delete.html'
-    success_url = reverse_lazy('settings_app:pipeline_stage_list')
-    required_permission = 'settings_app:write'
     
-    def get_queryset(self):
-        return super().get_queryset().filter(tenant_id=self.request.user.tenant_id)
-
-
-
-# --- API Keys (Placeholders) ---
-
-class APIKeyListView(PermissionRequiredMixin, ListView):
-    model = APIKey
-    template_name = 'settings_app/apikey_list.html'
-    required_permission = 'settings_app:read'
-    def get_queryset(self): return self.model.objects.filter(tenant_id=self.request.user.tenant_id)
-class APIKeyCreateView(PermissionRequiredMixin, CreateView):
-    model = APIKey
-    fields = ['name', 'scopes']
-    template_name = 'settings_app/apikey_form.html'
-    success_url = reverse_lazy('settings_app:apikey_list')
-    required_permission = 'settings_app:write'
-    def form_valid(self, form): form.instance.tenant_id = self.request.user.tenant_id; form.instance.key_hash = 'GENERATED_HASH'; return super().form_valid(form)
-
-class APIKeyDeleteView(PermissionRequiredMixin, DeleteView):
-    model = APIKey
-    template_name = 'settings_app/confirm_delete.html'
-    success_url = reverse_lazy('settings_app:apikey_list')
-    required_permission = 'settings_app:write'
-    
-    def get_queryset(self):
-        return super().get_queryset().filter(tenant_id=self.request.user.tenant_id)
-
-
-
-# --- Webhooks (Placeholders) ---
-
-class WebhookListView(PermissionRequiredMixin, ListView):
-    model = Webhook
-    template_name = 'settings_app/webhook_list.html'
-    required_permission = 'settings_app:read'
-    def get_queryset(self): return self.model.objects.filter(tenant_id=self.request.user.tenant_id)
-class WebhookCreateView(PermissionRequiredMixin, CreateView):
-    model = Webhook
-    fields = ['url', 'events', 'secret', 'is_active']
-    template_name = 'settings_app/webhook_form.html'
-    success_url = reverse_lazy('settings_app:webhook_list')
-    required_permission = 'settings_app:write'
-    def form_valid(self, form): form.instance.tenant_id = self.request.user.tenant_id; return super().form_valid(form)
-class WebhookUpdateView(PermissionRequiredMixin, UpdateView):
-    model = Webhook
-    fields = ['url', 'events', 'is_active']
-    template_name = 'settings_app/webhook_form.html'
-    success_url = reverse_lazy('settings_app:webhook_list')
-    required_permission = 'settings_app:write'
-
-class WebhookDeleteView(PermissionRequiredMixin, DeleteView):
-    model = Webhook
-    template_name = 'settings_app/confirm_delete.html'
-    success_url = reverse_lazy('settings_app:webhook_list')
-    required_permission = 'settings_app:write'
-    
-    def get_queryset(self):
-        return super().get_queryset().filter(tenant_id=self.request.user.tenant_id)
-
-
-
-# --- Lead Scoring Rules ---
-
-class ScoringRulesListView(PermissionRequiredMixin, TemplateView):
-    """Combined list view for all scoring rules."""
-    template_name = 'settings_app/scoring_rules_list.html'
-    required_permission = 'settings_app:read'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        tenant_id = self.request.user.tenant_id
-        
-        context['behavioral_rules'] = BehavioralScoringRule.objects.filter(
-            tenant_id=tenant_id
-        ).order_by('-priority', 'name')
-        
-        context['demographic_rules'] = DemographicScoringRule.objects.filter(
-            tenant_id=tenant_id
-        ).order_by('-priority', 'name')
-        
-        context['decay_config'] = ScoreDecayConfig.objects.filter(
-            tenant_id=tenant_id
-        ).first()
-        
-        return context
-
-
-class BehavioralScoringRuleCreateView(PermissionRequiredMixin, CreateView):
-    """Create behavioral scoring rule."""
-    model = BehavioralScoringRule
-    template_name = 'settings_app/behavioral_scoring_form.html'
-    success_url = reverse_lazy('settings_app:scoring_rules_list')
-    required_permission = 'settings_app:write'
-    
-    def get_form_class(self):
-        from .forms import BehavioralScoringRuleForm
-        return BehavioralScoringRuleForm
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
     
     def form_valid(self, form):
-        form.instance.tenant_id = self.request.user.tenant_id
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Pipeline stage created successfully.')
         return super().form_valid(form)
 
 
-class BehavioralScoringRuleUpdateView(PermissionRequiredMixin, UpdateView):
-    """Update behavioral scoring rule."""
-    model = BehavioralScoringRule
-    template_name = 'settings_app/behavioral_scoring_form.html'
-    success_url = reverse_lazy('settings_app:scoring_rules_list')
-    required_permission = 'settings_app:write'
+class PipelineStageUpdateView(UpdateView):
+    model = PipelineStage
+    form_class = PipelineStageForm
+    template_name = 'settings_app/pipeline_stage_form.html'
+    success_url = reverse_lazy('settings_app:pipeline_stage_list')
     
-    def get_form_class(self):
-        from .forms import BehavioralScoringRuleForm
-        return BehavioralScoringRuleForm
-
-class BehavioralScoringRuleDeleteView(PermissionRequiredMixin, DeleteView):
-    """Delete behavioral scoring rule."""
-    model = BehavioralScoringRule
-    template_name = 'settings_app/confirm_delete.html'
-    success_url = reverse_lazy('settings_app:scoring_rules_list')
-    required_permission = 'settings_app:write'
-    
-    def get_queryset(self):
-        return super().get_queryset().filter(tenant_id=self.request.user.tenant_id)
-    
-    def get_form_class(self):
-        from .forms import BehavioralScoringRuleForm
-        return BehavioralScoringRuleForm
-
-
-class DemographicScoringRuleCreateView(PermissionRequiredMixin, CreateView):
-    """Create demographic scoring rule."""
-    model = DemographicScoringRule
-    template_name = 'settings_app/demographic_scoring_form.html'
-    success_url = reverse_lazy('settings_app:scoring_rules_list')
-    required_permission = 'settings_app:write'
-    
-    def get_form_class(self):
-        from .forms import DemographicScoringRuleForm
-        return DemographicScoringRuleForm
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
     
     def form_valid(self, form):
-        form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Pipeline stage updated successfully.')
         return super().form_valid(form)
 
 
-class DemographicScoringRuleUpdateView(PermissionRequiredMixin, UpdateView):
-    """Update demographic scoring rule."""
-    model = DemographicScoringRule
-    template_name = 'settings_app/demographic_scoring_form.html'
-    success_url = reverse_lazy('settings_app:scoring_rules_list')
-    required_permission = 'settings_app:write'
+class PipelineStageDeleteView(DeleteView):
+    model = PipelineStage
+    template_name = 'settings_app/pipeline_stage_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:pipeline_stage_list')
     
-    def get_form_class(self):
-        from .forms import DemographicScoringRuleForm
-        return DemographicScoringRuleForm
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Pipeline stage deleted successfully.')
+        return super().delete(request, *args, **kwargs)
 
-class DemographicScoringRuleDeleteView(PermissionRequiredMixin, DeleteView):
-    """Delete demographic scoring rule."""
-    model = DemographicScoringRule
-    template_name = 'settings_app/confirm_delete.html'
-    success_url = reverse_lazy('settings_app:scoring_rules_list')
-    required_permission = 'settings_app:write'
+
+class EmailIntegrationListView(ListView):
+    model = EmailIntegration
+    template_name = 'settings_app/email_integration_list.html'
+    context_object_name = 'email_integrations'
     
     def get_queryset(self):
-        return super().get_queryset().filter(tenant_id=self.request.user.tenant_id)
-    
-    def get_form_class(self):
-        from .forms import DemographicScoringRuleForm
-        return DemographicScoringRuleForm
+        queryset = super().get_queryset()
+        # Filter by current tenant and prefetch related objects
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('user', 'provider_ref')
 
 
-class ScoreDecayConfigView(PermissionRequiredMixin, UpdateView):
-    """Configure score decay (single config per tenant)."""
-    model = ScoreDecayConfig
-    template_name = 'settings_app/score_decay_config.html'
-    success_url = reverse_lazy('settings_app:scoring_rules_list')
-    required_permission = 'settings_app:write'
+class EmailIntegrationCreateView(CreateView):
+    model = EmailIntegration
+    form_class = EmailIntegrationForm
+    template_name = 'settings_app/email_integration_form.html'
+    success_url = reverse_lazy('settings_app:email_integration_list')
     
-    def get_form_class(self):
-        from .forms import ScoreDecayConfigForm
-        return ScoreDecayConfigForm
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
     
-    def get_object(self, queryset=None):
-        # Get or create the decay config for this tenant
-        config, created = ScoreDecayConfig.objects.get_or_create(
-            tenant_id=self.request.user.tenant_id
-        )
-        return config
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Email integration created successfully.')
+        return super().form_valid(form)
 
+
+class EmailIntegrationUpdateView(UpdateView):
+    model = EmailIntegration
+    form_class = EmailIntegrationForm
+    template_name = 'settings_app/email_integration_form.html'
+    success_url = reverse_lazy('settings_app:email_integration_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Email integration updated successfully.')
+        return super().form_valid(form)
+
+
+class EmailIntegrationDeleteView(DeleteView):
+    model = EmailIntegration
+    template_name = 'settings_app/email_integration_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:email_integration_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Email integration deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class BehavioralScoringRuleListView(ListView):
+    model = BehavioralScoringRule
+    template_name = 'settings_app/behavioral_scoring_rule_list.html'
+    context_object_name = 'behavioral_scoring_rules'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant and prefetch related objects
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('action_type_ref', 'business_impact_ref')
+
+
+class BehavioralScoringRuleCreateView(CreateView):
+    model = BehavioralScoringRule
+    form_class = BehavioralScoringRuleForm
+    template_name = 'settings_app/behavioral_scoring_rule_form.html'
+    success_url = reverse_lazy('settings_app:behavioral_scoring_rule_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Behavioral scoring rule created successfully.')
+        return super().form_valid(form)
+
+
+class BehavioralScoringRuleUpdateView(UpdateView):
+    model = BehavioralScoringRule
+    form_class = BehavioralScoringRuleForm
+    template_name = 'settings_app/behavioral_scoring_rule_form.html'
+    success_url = reverse_lazy('settings_app:behavioral_scoring_rule_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Behavioral scoring rule updated successfully.')
+        return super().form_valid(form)
+
+
+class BehavioralScoringRuleDeleteView(DeleteView):
+    model = BehavioralScoringRule
+    template_name = 'settings_app/behavioral_scoring_rule_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:behavioral_scoring_rule_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Behavioral scoring rule deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class DemographicScoringRuleListView(ListView):
+    model = DemographicScoringRule
+    template_name = 'settings_app/demographic_scoring_rule_list.html'
+    context_object_name = 'demographic_scoring_rules'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant and prefetch related objects
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('operator_ref')
+
+
+class DemographicScoringRuleCreateView(CreateView):
+    model = DemographicScoringRule
+    form_class = DemographicScoringRuleForm
+    template_name = 'settings_app/demographic_scoring_rule_form.html'
+    success_url = reverse_lazy('settings_app:demographic_scoring_rule_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Demographic scoring rule created successfully.')
+        return super().form_valid(form)
+
+
+class DemographicScoringRuleUpdateView(UpdateView):
+    model = DemographicScoringRule
+    form_class = DemographicScoringRuleForm
+    template_name = 'settings_app/demographic_scoring_rule_form.html'
+    success_url = reverse_lazy('settings_app:demographic_scoring_rule_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Demographic scoring rule updated successfully.')
+        return super().form_valid(form)
+
+
+class DemographicScoringRuleDeleteView(DeleteView):
+    model = DemographicScoringRule
+    template_name = 'settings_app/demographic_scoring_rule_confirm_delete.html'
+    success_url = reverse_lazy('settings_app:demographic_scoring_rule_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Demographic scoring rule deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_settings_dynamic_choices(request, model_name):
+    """
+    API endpoint to fetch dynamic choices for settings models
+    """
+    tenant_id = request.user.tenant_id if hasattr(request.user, 'tenant_id') else None
+    
+    if not tenant_id:
+        return JsonResponse({'error': 'No tenant associated with user'}, status=400)
+    
+    # Map model names to actual models
+    model_map = {
+        'settingtype': SettingType,
+        'modelchoice': ModelChoice,
+        'fieldtype': FieldType,
+        'modulechoice': ModuleChoice,
+        'teamrole': TeamRole,
+        'territory': Territory,
+        'assignmentruletype': AssignmentRuleType,
+        'pipelinetype': PipelineType,
+        'emailprovider': EmailProvider,
+        'actiontype': ActionType,
+        'operatortype': OperatorType,
+    }
+    
+    model_class = model_map.get(model_name.lower())
+    
+    if not model_class:
+        return JsonResponse({'error': 'Invalid choice model'}, status=400)
+    
+    try:
+        choices = model_class.objects.filter(tenant_id=tenant_id).values('id', 'name', 'label')
+        return JsonResponse(list(choices), safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

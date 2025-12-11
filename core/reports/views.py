@@ -6,9 +6,16 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.views import View
 from django.utils import timezone
 from core.permissions import PermissionRequiredMixin
-from .models import Report, ReportSchedule, ReportExport, DashboardWidget, EXPORT_FORMATS
-from .forms import ReportForm, ReportScheduleForm, DashboardWidgetForm
+from .models import Report, ReportSchedule, ReportExport, EXPORT_FORMATS
+from dashboard.models import DashboardWidget
+from dashboard.forms import DashboardWidgetForm
+from .forms import ReportForm, ReportScheduleForm
 from .utils import generate_report
+from services.business_metrics_service import BusinessMetricsService
+import csv
+import json
+from datetime import datetime
+
 
 def export_report(request, report_id):
     """
@@ -17,12 +24,13 @@ def export_report(request, report_id):
     if not request.user.has_perm('reports:read'):
         messages.error(request, "Permission denied.")
         return redirect('reports:list')
-    
+
     export_format = request.GET.get('format', 'csv')
     # Fix: Check if the export_format is in the list of available format keys
     if export_format not in [fmt[0] for fmt in EXPORT_FORMATS]:
         messages.error(request, "Invalid export format.")
         return redirect('reports:detail', pk=report_id)
+
 
 class ReportListView(PermissionRequiredMixin, ListView):
     """
@@ -40,12 +48,12 @@ class ReportListView(PermissionRequiredMixin, ListView):
         report_type = self.request.GET.get('report_type')
         if report_type:
             queryset = queryset.filter(report_type=report_type)
-        
+
         # Search functionality
         search = self.request.GET.get('search')
         if search:
             queryset = queryset.filter(name__icontains=search)
-        
+
         return queryset.order_by('-created_at')
 
     def get_context_data(self, **kwargs):
@@ -70,16 +78,16 @@ class ReportDetailView(PermissionRequiredMixin, DetailView):
         context['recent_exports'] = ReportExport.objects.filter(
             report=self.object
         ).order_by('-created_at')[:5]
-        
+
         # Get active schedules for this report
         context['active_schedules'] = ReportSchedule.objects.filter(
             report=self.object,
             is_active=True
         )
-        
+
         # Get available export formats
         context['export_formats'] = EXPORT_FORMATS
-        
+
         return context
 
 
@@ -110,7 +118,7 @@ class ReportBuilderView(PermissionRequiredMixin, CreateView):
             },
             {
                 'value': 'opportunity',
-                'label': 'Opportunities', 
+                'label': 'Opportunities',
                 'fields': ['name', 'amount', 'stage', 'weighted_value', 'esg_tagged', 'close_date']
             },
             {
@@ -140,29 +148,28 @@ class DashboardView(PermissionRequiredMixin, TemplateView):
     template_name = 'reports/dashboard.html'
     required_permission = 'reports:read'
 
-# In your DashboardView.get_context_data()
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-    
-    # Get active dashboard widgets for current tenant
+
+        # Get active dashboard widgets for current tenant
         widgets = DashboardWidget.objects.filter(
             is_active=True,
             report__tenant_id=getattr(user, 'tenant_id', None)
         ).select_related('report').order_by('position', 'order')
-    
+
         # Group widgets by position with default empty lists
         widget_groups = {
             'main': [],
             'sidebar': [],
             'footer': []
         }
-    
+
         for widget in widgets:
             if widget.position not in widget_groups:
                 widget_groups[widget.position] = []
             widget_groups[widget.position].append(widget)
-    
+
         context['widget_groups'] = widget_groups
         context['widget_types'] = DashboardWidget.WIDGET_TYPES
         return context
@@ -243,28 +250,30 @@ class ReportScheduleCreateView(PermissionRequiredMixin, CreateView):
     def form_valid(self, form):
         # Set tenant_id
         form.instance.tenant_id = getattr(self.request.user, 'tenant_id', None)
-        
+
         # Set the next_run date based on frequency
         from datetime import timedelta
         now = timezone.now()
         frequency = form.cleaned_data['frequency']
-        
+
         if frequency == 'daily':
             form.instance.next_run = now + timedelta(days=1)
         elif frequency == 'weekly':
             form.instance.next_run = now + timedelta(weeks=1)
         elif frequency == 'monthly':
-            form.instance.next_run = now + timedelta(days=30)
-        else:  # quarterly
-            form.instance.next_run = now + timedelta(days=90)
-            
-        messages.success(self.request, f"Report schedule created successfully!")
+            form.instance.next_run = now + timedelta(days=30)  # Approximate
+        elif frequency == 'quarterly':
+            form.instance.next_run = now + timedelta(days=90)  # Approximate
+        elif frequency == 'yearly':
+            form.instance.next_run = now + timedelta(days=365)  # Approximate
+
+        messages.success(self.request, f"Report schedule '{form.instance.name}' created successfully!")
         return super().form_valid(form)
 
 
 class ReportScheduleUpdateView(PermissionRequiredMixin, UpdateView):
     """
-    Update a report schedule.
+    Update a scheduled report delivery.
     """
     model = ReportSchedule
     form_class = ReportScheduleForm
@@ -277,6 +286,26 @@ class ReportScheduleUpdateView(PermissionRequiredMixin, UpdateView):
         kwargs['user'] = self.request.user
         return kwargs
 
+    def form_valid(self, form):
+        # Update the next_run date based on the new frequency
+        from datetime import timedelta
+        now = timezone.now()
+        frequency = form.cleaned_data['frequency']
+
+        if frequency == 'daily':
+            form.instance.next_run = now + timedelta(days=1)
+        elif frequency == 'weekly':
+            form.instance.next_run = now + timedelta(weeks=1)
+        elif frequency == 'monthly':
+            form.instance.next_run = now + timedelta(days=30)  # Approximate
+        elif frequency == 'quarterly':
+            form.instance.next_run = now + timedelta(days=90)  # Approximate
+        elif frequency == 'yearly':
+            form.instance.next_run = now + timedelta(days=365)  # Approximate
+
+        messages.success(self.request, f"Report schedule '{form.instance.name}' updated successfully!")
+        return super().form_valid(form)
+
     def get_queryset(self):
         return ReportSchedule.objects.filter(
             report__tenant_id=getattr(self.request.user, 'tenant_id', None)
@@ -285,7 +314,7 @@ class ReportScheduleUpdateView(PermissionRequiredMixin, UpdateView):
 
 class ReportScheduleDeleteView(PermissionRequiredMixin, DeleteView):
     """
-    Delete a report schedule.
+    Delete a scheduled report.
     """
     model = ReportSchedule
     template_name = 'reports/schedule_confirm_delete.html'
@@ -294,13 +323,31 @@ class ReportScheduleDeleteView(PermissionRequiredMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
         schedule = self.get_object()
-        messages.success(request, f"Report schedule '{schedule.report.name}' deleted successfully!")
+        messages.success(request, f"Report schedule '{schedule.name}' deleted successfully!")
         return super().delete(request, *args, **kwargs)
 
     def get_queryset(self):
         return ReportSchedule.objects.filter(
             report__tenant_id=getattr(self.request.user, 'tenant_id', None)
         )
+
+
+class ReportUpdateView(PermissionRequiredMixin, UpdateView):
+    """
+    Update an existing report.
+    """
+    model = Report
+    form_class = ReportForm
+    template_name = 'reports/edit.html'
+    success_url = reverse_lazy('reports:list')
+    required_permission = 'reports:write'
+
+    def form_valid(self, form):
+        messages.success(self.request, f"Report '{form.instance.name}' updated successfully!")
+        return super().form_valid(form)
+
+    def get_queryset(self):
+        return Report.objects.filter(tenant_id=getattr(self.request.user, 'tenant_id', None))
 
 
 class ReportDeleteView(PermissionRequiredMixin, DeleteView):
@@ -325,23 +372,23 @@ def export_report(request, report_id):
     if not request.user.has_perm('reports:read'):
         messages.error(request, "Permission denied.")
         return redirect('reports:list')
-    
+
     export_format = request.GET.get('format', 'csv')
     if export_format not in [fmt[0] for fmt in EXPORT_FORMATS]:
         messages.error(request, "Invalid export format.")
         return redirect('reports:detail', pk=report_id)
-    
+
     try:
         report = get_object_or_404(Report, id=report_id)
-        
+
         # Check if user has access to this report
         if report.tenant_id != getattr(request.user, 'tenant_id', None):
             messages.error(request, "Permission denied.")
             return redirect('reports:list')
-        
+
         # Generate the report
         response = generate_report(report_id, export_format, request.user)
-        
+
         # Create export record
         ReportExport.objects.create(
             report=report,
@@ -350,9 +397,9 @@ def export_report(request, report_id):
             tenant_id=getattr(request.user, 'tenant_id', None),
             status='completed'
         )
-        
+
         return response
-        
+
     except Exception as e:
         messages.error(request, f"Error exporting report: {str(e)}")
         return redirect('reports:detail', pk=report_id)
@@ -404,7 +451,7 @@ class GenerateReportView(PermissionRequiredMixin, View):
             filters = data.get('filters', [])
             group_by = data.get('group_by')
             chart_type = data.get('chart_type', 'bar')
-            
+
             # Map entity to model
             model_map = {
                 'account': 'accounts.Account',
@@ -413,11 +460,11 @@ class GenerateReportView(PermissionRequiredMixin, View):
                 'case': 'support.Case',
                 'task': 'tasks.Task',
             }
-            
+
             model_path = model_map.get(entity)
             if not model_path:
                 return JsonResponse({'error': 'Invalid entity'}, status=400)
-            
+
             try:
                 app_label, model_name = model_path.split('.')
                 Model = apps.get_model(app_label, model_name)
@@ -432,7 +479,7 @@ class GenerateReportView(PermissionRequiredMixin, View):
                 field = f.get('field')
                 operator = f.get('operator')
                 value = f.get('value')
-                
+
                 if field and operator and value:
                     lookup = f"{field}__{operator}" if operator != 'exact' else field
                     queryset = queryset.filter(**{lookup: value})
@@ -441,12 +488,12 @@ class GenerateReportView(PermissionRequiredMixin, View):
             if entity == 'lead' and group_by == 'conversion_rate':
                 # Calculate conversion rate (Converted / Total) * 100
                 # We can group by source or just show overall
-                # Let's assume we want conversion rate by Source if group_by is 'conversion_rate' 
+                # Let's assume we want conversion rate by Source if group_by is 'conversion_rate'
                 # Actually, usually we group by Source AND calculate conversion rate.
-                # But our UI only has one group_by. 
+                # But our UI only has one group_by.
                 # Let's handle a special case: if chart_type is 'conversion' (we might need to add this)
                 # OR if we just return two bars: Converted vs Total?
-                
+
                 # Better approach for this sprint:
                 # If entity is Lead and we are grouping by something (e.g. Source),
                 # we can return the conversion rate AS the value instead of count.
@@ -456,12 +503,12 @@ class GenerateReportView(PermissionRequiredMixin, View):
             labels = []
             dataset_data = []
             label_suffix = ''
-            
+
             if group_by:
                 # Date Grouping Logic
                 date_field = None
                 trunc_func = None
-                
+
                 if '__month' in group_by:
                     date_field = group_by.replace('__month', '')
                     trunc_func = TruncMonth
@@ -471,7 +518,7 @@ class GenerateReportView(PermissionRequiredMixin, View):
                 elif '__day' in group_by:
                     date_field = group_by.replace('__day', '')
                     trunc_func = TruncDay
-                
+
                 if date_field and trunc_func:
                     # Date grouping
                     # Check if we sum amount (Revenue Report)
@@ -483,14 +530,14 @@ class GenerateReportView(PermissionRequiredMixin, View):
                         data = queryset.annotate(period=trunc_func(date_field)).values('period').annotate(count=Count('id')).order_by('period')
                         value_key = 'count'
                         label_suffix = ' (Count)'
-                        
+
                     for item in data:
                         labels.append(item['period'].strftime('%Y-%m-%d') if item['period'] else 'None')
                         dataset_data.append(item[value_key])
-                        
+
                 else:
                     # Standard Categorical Grouping
-                    
+
                     # Special Case: Lead Conversion Rate by Group
                     if entity == 'lead' and chart_type == 'conversion':
                         # We want conversion rate per group
@@ -498,25 +545,25 @@ class GenerateReportView(PermissionRequiredMixin, View):
                         total_data = queryset.values(group_by).annotate(total=Count('id'))
                         # Count converted per group
                         converted_data = queryset.filter(status='converted').values(group_by).annotate(converted=Count('id'))
-                        
+
                         # Merge
                         converted_map = {item[group_by]: item['converted'] for item in converted_data}
-                        
+
                         for item in total_data:
                             group_val = item[group_by]
                             total = item['total']
                             converted = converted_map.get(group_val, 0)
                             rate = (converted / total * 100) if total > 0 else 0
-                            
+
                             labels.append(str(group_val) if group_val is not None else 'None')
                             dataset_data.append(round(rate, 1))
-                        
+
                         label_suffix = ' (Conversion Rate %)'
-                        
+
                     else:
                         # Default Count/Sum logic
                         has_amount = any(f.name == 'amount' for f in Model._meta.get_fields())
-                        
+
                         if has_amount and entity == 'opportunity':
                             data = queryset.values(group_by).annotate(total=Sum('amount')).order_by(group_by)
                             value_key = 'total'
@@ -548,8 +595,165 @@ class GenerateReportView(PermissionRequiredMixin, View):
                     'borderWidth': 1
                 }]
             }
-            
+
             return JsonResponse(chart_data)
 
         except Exception as e:
+
             return JsonResponse({'error': str(e)}, status=500)
+
+
+# Business Metrics Export Functions
+def export_clv_metrics(request):
+    """
+    Export CLV metrics to CSV
+    """
+    if not request.user.has_perm('reports:read'):
+        messages.error(request, "Permission denied.")
+        return redirect('reports:dashboard')
+
+    tenant_id = getattr(request.user, 'tenant_id', None)
+    metrics = BusinessMetricsService.calculate_clv_metrics(tenant_id=tenant_id)
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="clv_metrics_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Metric', 'Value'])
+    writer.writerow(['Average CLV', metrics['avg_clv']])
+    writer.writerow(['Total CLV', metrics['total_clv']])
+    writer.writerow(['Average Order Value', metrics['avg_order_value']])
+    writer.writerow(['Average Purchase Frequency', metrics['avg_purchase_frequency']])
+    
+    return response
+
+
+def export_cac_metrics(request):
+    """
+    Export CAC metrics to CSV
+    """
+    if not request.user.has_perm('reports:read'):
+        messages.error(request, "Permission denied.")
+        return redirect('reports:dashboard')
+
+    tenant_id = getattr(request.user, 'tenant_id', None)
+    metrics = BusinessMetricsService.calculate_cac_metrics(tenant_id=tenant_id)
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="cac_metrics_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Metric', 'Value'])
+    writer.writerow(['Average CAC', metrics['avg_cac']])
+    writer.writerow(['Total Spend', metrics['total_spend']])
+    writer.writerow(['New Customers Count', metrics['new_customers_count']])
+    writer.writerow(['Conversion Rate', f"{metrics['conversion_rate']:.2f}%"])
+    
+    return response
+
+
+def export_sales_velocity_metrics(request):
+    """
+    Export sales velocity metrics to CSV
+    """
+    if not request.user.has_perm('reports:read'):
+        messages.error(request, "Permission denied.")
+        return redirect('reports:dashboard')
+
+    tenant_id = getattr(request.user, 'tenant_id', None)
+    metrics = BusinessMetricsService.calculate_sales_velocity_metrics(tenant_id=tenant_id)
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="sales_velocity_metrics_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Metric', 'Value'])
+    writer.writerow(['Average Sales Velocity', metrics['avg_sales_velocity']])
+    writer.writerow(['Conversion Rate', f"{metrics['conversion_rate']:.2f}%"])
+    writer.writerow(['Average Sales Cycle', metrics['avg_sales_cycle']])
+    
+    return response
+
+
+def export_roi_metrics(request):
+    """
+    Export ROI metrics to CSV
+    """
+    if not request.user.has_perm('reports:read'):
+        messages.error(request, "Permission denied.")
+        return redirect('reports:dashboard')
+
+    tenant_id = getattr(request.user, 'tenant_id', None)
+    metrics = BusinessMetricsService.calculate_roi_metrics(tenant_id=tenant_id)
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="roi_metrics_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Metric', 'Value'])
+    writer.writerow(['Total CLV', metrics['total_clv']])
+    writer.writerow(['Total CAC', metrics['total_cac']])
+    writer.writerow(['ROI', f"{metrics['roi']:.2f}"])
+    
+    return response
+
+
+def export_conversion_funnel_metrics(request):
+    """
+    Export conversion funnel metrics to CSV
+    """
+    if not request.user.has_perm('reports:read'):
+        messages.error(request, "Permission denied.")
+        return redirect('reports:dashboard')
+
+    tenant_id = getattr(request.user, 'tenant_id', None)
+    metrics = BusinessMetricsService.calculate_conversion_funnel_metrics(tenant_id=tenant_id)
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="conversion_funnel_metrics_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Metric', 'Value'])
+    writer.writerow(['Total Leads', metrics['total_leads']])
+    writer.writerow(['Qualified Leads', metrics['qualified_leads']])
+    writer.writerow(['Converted Leads', metrics['converted_leads']])
+    writer.writerow(['Total Opportunities', metrics['total_opportunities']])
+    writer.writerow(['Won Opportunities', metrics['won_opportunities']])
+    writer.writerow(['Lead to Qualified Rate', f"{metrics['lead_to_qualified_rate']:.2f}%"])
+    writer.writerow(['Lead to Customer Rate', f"{metrics['lead_to_customer_rate']:.2f}%"])
+    writer.writerow(['Opportunity to Won Rate', f"{metrics['opp_to_won_rate']:.2f}%"])
+    
+    return response
+
+
+def export_all_metrics(request):
+    """
+    Export all business metrics to JSON
+    """
+    if not request.user.has_perm('reports:read'):
+        messages.error(request, "Permission denied.")
+        return redirect('reports:dashboard')
+
+    tenant_id = getattr(request.user, 'tenant_id', None)
+    
+    clv_metrics = BusinessMetricsService.calculate_clv_metrics(tenant_id=tenant_id)
+    cac_metrics = BusinessMetricsService.calculate_cac_metrics(tenant_id=tenant_id)
+    sales_velocity_metrics = BusinessMetricsService.calculate_sales_velocity_metrics(tenant_id=tenant_id)
+    roi_metrics = BusinessMetricsService.calculate_roi_metrics(tenant_id=tenant_id)
+    funnel_metrics = BusinessMetricsService.calculate_conversion_funnel_metrics(tenant_id=tenant_id)
+    
+    all_metrics = {
+        'clv_metrics': clv_metrics,
+        'cac_metrics': cac_metrics,
+        'sales_velocity_metrics': sales_velocity_metrics,
+        'roi_metrics': roi_metrics,
+        'funnel_metrics': funnel_metrics,
+        'exported_at': datetime.now().isoformat()
+    }
+    
+    response = HttpResponse(content_type='application/json')
+    response['Content-Disposition'] = f'attachment; filename="all_business_metrics_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json"'
+    
+    json.dump(all_metrics, response, indent=2)
+    
+    return response

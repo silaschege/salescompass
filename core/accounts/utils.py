@@ -2,7 +2,7 @@ import csv
 from io import StringIO
 from typing import List, Dict, Tuple
 from django.core.exceptions import ValidationError
-from .models import Account
+from core.models import User
 
 INDUSTRY_CHOICES = {choice[0] for choice in [
     ('tech', 'Technology'),

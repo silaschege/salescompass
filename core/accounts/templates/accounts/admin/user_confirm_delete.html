@@ -1,0 +1,59 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+
+{% block title %}Delete User{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>Delete User</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'accounts:admin_user_dashboard' %}">User Management</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'accounts:admin_user_list' %}">Users</a></li>
+                    <li class="breadcrumb-item active">Delete</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Confirm Deletion</h5>
+                </div>
+                <div class="card-body">
+                    <p>Are you sure you want to delete the user <strong>{{ object.email }}</strong>?</p>
+                    <p>This action cannot be undone. All data associated with this user will be permanently removed.</p>
+                    <p><strong>User Details:</strong></p>
+                    <ul>
+                        <li><strong>Name:</strong> {{ object.first_name }} {{ object.last_name }}</li>
+                        <li><strong>Email:</strong> {{ object.email }}</li>
+                        <li><strong>Tenant:</strong> {{ object.tenant.name|default:"-" }}</li>
+                        <li><strong>Role:</strong> {{ object.role.name|default:"-" }}</li>
+                        <li><strong>Date Joined:</strong> {{ object.date_joined }}</li>
+                    </ul>
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Yes, Delete User</button>
+                        <a href="{% url 'accounts:admin_user_list' %}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Warning</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Deleting a user will remove all their account information, including any associated data.</p>
+                    <p class="card-text">Consider deactivating the user instead if you want to preserve their data.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "automation/base.html" %}
+
+{% block title %}Workflow Execution Form - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{% if object %}Edit Workflow Execution{% else %}Create Workflow Execution{% endif %}</h1>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="{{ form.workflow_execution_status.id_for_label }}" class="form-label">Status</label>
+            {{ form.workflow_execution_status }}
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.workflow_execution_error_message.id_for_label }}" class="form-label">Error Message</label>
+            {{ form.workflow_execution_error_message }}
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.workflow_execution_completed_at.id_for_label }}" class="form-label">Completed At</label>
+            {{ form.workflow_execution_completed_at }}
+        </div>
+        
+        <button type="submit" class="btn btn-primary">{% if object %}Update{% else %}Create{% endif %} Workflow Execution</button>
+        <a href="{% url 'automation:workflow_execution_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

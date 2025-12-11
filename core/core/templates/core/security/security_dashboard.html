@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Security Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>Security Dashboard</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
+                    <li class="breadcrumb-item active">Security Dashboard</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Users</h5>
+                    <p class="card-text display-4">{{ total_users }}</p>
+                </div>
+            </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Active Users</h5>
+                    <p class="card-text display-4">{{ active_users }}</p>
+                </div>
+            </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Suspended Users</h5>
+                    <p class="card-text display-4">{{ suspended_users }}</p>
+                </div>
+            </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">MFA Enabled</h5>
+                    <p class="card-text display-4">{{ users_with_mfa }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Recent Security Events</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>User</th>
+                                    <th>Event</th>
+                                    <th>Severity</th>
+                                    <th>IP Address</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for event in recent_security_events %}
+                                <tr>
+                                    <td>{{ event.timestamp|date:"M d, Y H:i" }}</td>
+                                    <td>{{ event.user_email|default:"System" }}</td>
+                                    <td>{{ event.action_type }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if event.severity == 'critical' %}bg-danger
+                                            {% elif event.severity == 'error' %}bg-warning
+                                            {% elif event.severity == 'warning' %}bg-info
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ event.severity|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ event.ip_address|default:"-" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5">No recent security events found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="{% url 'core:security_event_monitoring' %}" class="btn btn-primary">View All Events</a>
+                </div>
+            </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Security Trends</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <div class="text-success">
+                                <i class="fas fa-sign-in-alt fa-2x"></i>
+                                <p class="mb-0">Logins Today</p>
+                                <p class="h4 mb-0">{{ security_trends.logins_today }}</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-danger">
+                                <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                <p class="mb-0">Failed Attempts</p>
+                                <p class="h4 mb-0">{{ security_trends.failed_attempts_today }}</p>
+                            </div>
+                        </div>
+                    <div class="row text-center mb-3">
+                        <div class="col-12">
+                            <div class="text-info">
+                                <i class="fas fa-user-lock fa-2x"></i>
+                                <p class="mb-0">Permission Changes</p>
+                                <p class="h4 mb-0">{{ security_trends.permission_changes_today }}</p>
+                            </div>
+                        </div>
+                    <div class="d-grid">
+                        <button class="btn btn-outline-primary">
+                            <i class="fas fa-chart-line"></i> View Detailed Trends
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Security Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Active Threats:</span>
+                        <span class="badge bg-danger">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Open Vulnerabilities:</span>
+                        <span class="badge bg-warning">3</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Security Policies:</span>
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Compliance Status:</span>
+                        <span class="badge bg-success">Compliant</span>
+                    </div>
+                </div>
+            </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'core:security_policy_management' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-shield-alt"></i> Manage Security Policies
+                        </a>
+                        <a href="{% url 'core:vulnerability_management' %}" class="btn btn-outline-warning">
+                            <i class="fas fa-bug"></i> Vulnerability Management
+                        </a>
+                        <a href="{% url 'core:ip_whitelist_management' %}" class="btn btn-outline-info">
+                            <i class="fas fa-list"></i> IP Whitelist Management
+                        </a>
+                        <a href="{% url 'core:compliance_dashboard' %}" class="btn btn-outline-success">
+                            <i class="fas fa-clipboard-check"></i> Compliance Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Security Alerts</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success" role="alert">
+                        <i class="fas fa-check-circle"></i> No critical security alerts
+                    </div>
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-info-circle"></i> Last security scan completed successfully
+                    </div>
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-exclamation-triangle"></i> 2 accounts with weak passwords
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

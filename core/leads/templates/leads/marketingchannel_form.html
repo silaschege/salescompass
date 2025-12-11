@@ -1,0 +1,92 @@
+{% extends 'leads/base.html' %}
+
+{% block title %}{% if object %}Edit{% else %}Add{% endif %} Marketing Channel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>{% if object %}Edit{% else %}Add{% endif %} Marketing Channel</h1>
+            
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.channel_name.id_for_label }}" class="form-label">Channel Name</label>
+                            {{ form.channel_name }}
+                            <div class="form-text">Unique identifier for the channel (e.g., 'email', 'social')</div>
+                            {% if form.channel_name.errors %}
+                                <div class="text-danger">{{ form.channel_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.label.id_for_label }}" class="form-label">Label</label>
+                            {{ form.label }}
+                            <div class="form-text">Display name for the channel (e.g., 'Email Marketing', 'Social Media')</div>
+                            {% if form.label.errors %}
+                                <div class="text-danger">{{ form.label.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.order.id_for_label }}" class="form-label">Order</label>
+                            {{ form.order }}
+                            <div class="form-text">Order in which this channel appears in lists</div>
+                            {% if form.order.errors %}
+                                <div class="text-danger">{{ form.order.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.color.id_for_label }}" class="form-label">Color</label>
+                            {{ form.color }}
+                            <div class="form-text">Color code to represent this channel (e.g., #6c757d)</div>
+                            {% if form.color.errors %}
+                                <div class="text-danger">{{ form.color.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.icon.id_for_label }}" class="form-label">Icon</label>
+                            {{ form.icon }}
+                            <div class="form-text">Icon class for this channel (e.g., 'bi-envelope', 'bi-facebook')</div>
+                            {% if form.icon.errors %}
+                                <div class="text-danger">{{ form.icon.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            {{ form.channel_is_active }}
+                            <label for="{{ form.channel_is_active.id_for_label }}" class="form-check-label">
+                                Active
+                            </label>
+                            {% if form.channel_is_active.errors %}
+                                <div class="text-danger">{{ form.channel_is_active.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            {{ form.is_system }}
+                            <label for="{{ form.is_system.id_for_label }}" class="form-check-label">
+                                System Channel
+                            </label>
+                            <div class="form-text">Check if this is a system-provided channel that can't be modified</div>
+                            {% if form.is_system.errors %}
+                                <div class="text-danger">{{ form.is_system.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            {% if object %}Update{% else %}Create{% endif %} Marketing Channel
+                        </button>
+                        <a href="{% url 'leads:marketingchannel_list' %}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

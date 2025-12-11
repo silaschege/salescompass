@@ -1,0 +1,56 @@
+{% extends "automation/base.html" %}
+
+{% block title %}Workflow Actions - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Workflow Actions</h1>
+    
+    <div class="mb-3">
+        <a href="{% url 'automation:workflow_action_create' %}" class="btn btn-primary">Add New Workflow Action</a>
+    </div>
+    
+    {% if workflow_actions %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Action Type</th>
+                    <th>Workflow</th>
+                    <th>Order</th>
+                    <th>Active</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for action in workflow_actions %}
+                <tr>
+                    <td>{{ action.id }}</td>
+                    <td>{{ action.workflow_action_type }}</td>
+                    <td>{{ action.workflow.workflow_name }}</td>
+                    <td>{{ action.workflow_action_order }}</td>
+                    <td>
+                        {% if action.workflow_action_is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ action.workflow_action_created_at }}</td>
+                    <td>
+                        <a href="{% url 'automation:workflow_action_detail' action.id %}" class="btn btn-sm btn-info">View</a>
+                        <a href="{% url 'automation:workflow_action_update' action.id %}" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="{% url 'automation:workflow_action_delete' action.id %}" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p>No workflow actions found.</p>
+    {% endif %}
+</div>
+{% endblock %}

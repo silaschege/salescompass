@@ -1,0 +1,35 @@
+{% extends "automation/base.html" %}
+
+{% block title %}Workflow Action Form - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{% if object %}Edit Workflow Action{% else %}Create Workflow Action{% endif %}</h1>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="{{ form.workflow_action_type.id_for_label }}" class="form-label">Action Type</label>
+            {{ form.workflow_action_type }}
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.workflow_action_parameters.id_for_label }}" class="form-label">Parameters</label>
+            {{ form.workflow_action_parameters }}
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.workflow_action_order.id_for_label }}" class="form-label">Order</label>
+            {{ form.workflow_action_order }}
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.workflow_action_is_active.id_for_label }}" class="form-label">Active</label>
+            {{ form.workflow_action_is_active }}
+        </div>
+        
+        <button type="submit" class="btn btn-primary">{% if object %}Update{% else %}Create{% endif %} Workflow Action</button>
+        <a href="{% url 'automation:workflow_action_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

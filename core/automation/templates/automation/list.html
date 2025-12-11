@@ -1,65 +1,113 @@
 {% extends "automation/base.html" %}
 
-{% block title %}Automation Rules - SalesCompass{% endblock %}
+{% block title %}Automations - SalesCompass{% endblock %}
 
 {% block content %}
-<div class="header-bar mb-4">
-    <div class="container">
-        <h1 class="block-title">Automation Rules</h1>
-        <p class="text-white text-center lead">Create and manage automated workflows across your CRM</p>
-    </div>
-</div>
-
 <div class="container">
-    <div class="d-flex justify-content-between mb-3">
-        <h2>Automation Library</h2>
-        <a href="{% url 'automation:create' %}" class="btn btn-primary">+ New Automation</a>
+    <h1>Automations</h1>
+    
+    <div class="mb-3">
+        {% if perms.automation.write %}
+        <a href="{% url 'automation:create' %}" class="btn btn-primary">Create New Automation</a>
+        {% endif %}
+        {% if perms.automation.write %}
+        <a href="{% url 'automation:workflow_create' %}" class="btn btn-success">Create New Workflow</a>
+        {% endif %}
+        <a href="{% url 'automation:workflow_builder' %}" class="btn btn-info">Workflow Builder</a>
     </div>
-
+    
     {% if automations %}
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Trigger</th>
-                        <th>Actions</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for automation in automations %}
-                    <tr>
-                        <td>
-                            <a href="{% url 'automation:detail' automation.pk %}">{{ automation.name }}</a>
-                            {% if automation.is_system %}
-                                <span class="badge bg-info">System</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ automation.get_trigger_type_display }}</td>
-                        <td>{{ automation.actions.count }}</td>
-                        <td>
-                            {% if automation.is_active %}
-                                <span class="badge bg-success">Active</span>
-                            {% else %}
-                                <span class="badge bg-secondary">Inactive</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{% url 'automation:detail' automation.pk %}" class="btn btn-sm btn-outline-primary">View</a>
-                            <a href="{% url 'automation:workflow_builder_edit' automation.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Trigger Type</th>
+                    <th>Active</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for automation in automations %}
+                <tr>
+                    <td>{{ automation.id }}</td>
+                    <td>{{ automation.automation_name }}</td>
+                    <td>{{ automation.automation_description|truncatechars:50 }}</td>
+                    <td>{{ automation.trigger_type }}</td>
+                    <td>
+                        {% if automation.automation_is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ automation.automation_created_at }}</td>
+                    <td>
+                        <a href="{% url 'automation:detail' automation.id %}" class="btn btn-sm btn-info">View</a>
+                        {% if perms.automation.write %}
+                        <a href="{% url 'automation:update' automation.id %}" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="{% url 'automation:delete' automation.id %}" class="btn btn-sm btn-danger">Delete</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% else %}
-        <div class="text-center">
-            <p class="text-muted">No automations found.</p>
-            <a href="{% url 'automation:create' %}" class="btn btn-primary">Create your first automation</a>
-        </div>
+    <p>No automations found.</p>
+    {% endif %}
+    
+    <!-- Workflow section -->
+    {% if perms.automation.read %}
+    <h2 class="mt-5">Workflows</h2>
+    {% if workflows %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Trigger Type</th>
+                    <th>Active</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for workflow in workflows %}
+                <tr>
+                    <td>{{ workflow.id }}</td>
+                    <td>{{ workflow.workflow_name }}</td>
+                    <td>{{ workflow.workflow_description|truncatechars:50 }}</td>
+                    <td>{{ workflow.workflow_trigger_type }}</td>
+                    <td>
+                        {% if workflow.workflow_is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ workflow.workflow_created_at }}</td>
+                    <td>
+                        <a href="{% url 'automation:workflow_detail' workflow.id %}" class="btn btn-sm btn-info">View</a>
+                        {% if perms.automation.write %}
+                        <a href="{% url 'automation:workflow_update' workflow.id %}" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="{% url 'automation:workflow_delete' workflow.id %}" class="btn btn-sm btn-danger">Delete</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p>No workflows found.</p>
+    {% endif %}
     {% endif %}
 </div>
 {% endblock %}

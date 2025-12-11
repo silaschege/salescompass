@@ -1,47 +1,268 @@
-{% extends "infrastructure/base.html" %}
+{% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Infrastructure Dashboard - SalesCompass{% endblock %}
+{% block title %}Infrastructure Dashboard{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <h1 class="mb-4">Infrastructure & Resource Monitoring</h1>
-
     <div class="row">
-        <div class="col-md-4 mb-4">
-            <div class="card">
+        <div class="col-12">
+            <h1>Infrastructure Dashboard</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
+                    <li class="breadcrumb-item active">Infrastructure</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
                 <div class="card-body">
-                    <h5 class="card-title"><i class="bi bi-graph-up text-primary"></i> API Calls</h5>
-                    <h2 class="mb-0">0</h2>
-                    <small class="text-muted">Total today</small>
+                    <h5 class="card-title">Total Resources Allocated</h5>
+                    <p class="card-text display-4">{{ total_resources_allocated }}</p>
                 </div>
             </div>
-        </div>
-        <div class="col-md-4 mb-4">
-            <div class="card">
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
                 <div class="card-body">
-                    <h5 class="card-title"><i class="bi bi-hdd text-info"></i> Storage Used</h5>
-                    <h2 class="mb-0">0 GB</h2>
-                    <small class="text-muted">Across all tenants</small>
+                    <h5 class="card-title">Active Allocations</h5>
+                    <p class="card-text display-4">{{ active_allocations }}</p>
                 </div>
             </div>
-        </div>
-        <div class="col-md-4 mb-4">
-            <div class="card">
+        <div class="col-md-3">
+            <div class="card text-white bg-danger">
                 <div class="card-body">
-                    <h5 class="card-title"><i class="bi bi-database text-success"></i> DB Connections</h5>
-                    <h2 class="mb-0">0</h2>
-                    <small class="text-muted">Active connections</small>
+                    <h5 class="card-title">Open Alerts</h5>
+                    <p class="card-text display-4">{{ open_alerts }}</p>
+                </div>
+            </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Critical Alerts</h5>
+                    <p class="card-text display-4">{{ critical_alerts }}</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">Tenant Resource Usage</h5>
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Resource Utilization</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Resource Type</th>
+                                    <th>Total Allocated</th>
+                                    <th>Utilization %</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for resource in resource_types %}
+                                <tr>
+                                    <td>{{ resource.resource_type|title }}</td>
+                                    <td>{{ resource.total_allocated }}</td>
+                                    <td>
+                                        <div class="progress">
+                                            <div class="progress-bar" 
+                                                 role="progressbar" 
+                                                 style="width: {{ resource.utilization_percentage|floatformat:1 }}%" 
+                                                 aria-valuenow="{{ resource.utilization_percentage|floatformat:1 }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                                {{ resource.utilization_percentage|floatformat:1 }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if resource.utilization_percentage > 90 %}
+                                            <span class="badge bg-danger">Critical</span>
+                                        {% elif resource.utilization_percentage > 75 %}
+                                            <span class="badge bg-warning">Warning</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Healthy</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Alert Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <div class="border-right">
+                                <p class="h4 text-info">{{ total_alerts }}</p>
+                                <p class="text-muted">Total Alerts</p>
+                            </div>
+                        <div class="col-6">
+                            <p class="h4 text-success">{{ resolved_last_24h }}</p>
+                            <p class="text-muted">Resolved (24h)</p>
+                        </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> No critical infrastructure issues at this time.
+                            </div>
+                        </div>
+                    <div class="d-grid">
+                        <a href="{% url 'infrastructure:infrastructure_alert_list' %}" class="btn btn-outline-primary">
+                            View All Alerts
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <p class="text-muted">No usage data available. Start monitoring tenant resources.</p>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Recent Infrastructure Changes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Change Type</th>
+                                    <th>Service</th>
+                                    <th>Timestamp</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for change in recent_changes %}
+                                <tr>
+                                    <td>{{ change.change_type|title }}</td>
+                                    <td>{{ change.service_name }}</td>
+                                    <td>{{ change.change_timestamp|date:"M d, H:i" }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if change.status == 'executed' %}bg-success
+                                            {% elif change.status == 'pending' %}bg-warning
+                                            {% elif change.status == 'failed' %}bg-danger
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ change.status|title }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4">No recent infrastructure changes.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Recent Alerts</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for alert in recent_alerts %}
+                        <a href="{% url 'infrastructure:infrastructure_alert_detail' alert.id %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ alert.title }}</h6>
+                                <small>{{ alert.trigger_timestamp|timesince }} ago</small>
+                            </div>
+                            <p class="mb-1">{{ alert.description|truncatewords:10 }}</p>
+                            <small class="text-muted">
+                                <span class="badge 
+                                    {% if alert.severity == 'info' %}bg-info
+                                    {% elif alert.severity == 'warning' %}bg-warning
+                                    {% elif alert.severity == 'error' %}bg-danger
+                                    {% elif alert.severity == 'critical' %}bg-danger
+                                    {% endif %}">
+                                    {{ alert.severity|upper }}
+                                </span>
+                                - {{ alert.affected_service }}
+                            </small>
+                        </a>
+                        {% empty %}
+                        <div class="list-group-item">
+                            <p class="mb-0">No recent alerts.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Infrastructure Management</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <i class="fas fa-server fa-2x text-primary mb-2"></i>
+                                    <h6 class="card-title">Resource Allocation</h6>
+                                    <a href="{% url 'infrastructure:resource_allocation_list' %}" class="btn btn-sm btn-outline-primary mt-2">
+                                        Manage
+                                    </a>
+                                </div>
+                            </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <i class="fas fa-bell fa-2x text-warning mb-2"></i>
+                                    <h6 class="card-title">Alerts</h6>
+                                    <a href="{% url 'infrastructure:infrastructure_alert_list' %}" class="btn btn-sm btn-outline-warning mt-2">
+                                        Manage
+                                    </a>
+                                </div>
+                            </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <i class="fas fa-chart-line fa-2x text-success mb-2"></i>
+                                    <h6 class="card-title">Performance Baselines</h6>
+                                    <a href="{% url 'infrastructure:performance_baseline_list' %}" class="btn btn-sm btn-outline-success mt-2">
+                                        Manage
+                                    </a>
+                                </div>
+                            </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <i class="fas fa-chart-pie fa-2x text-info mb-2"></i>
+                                    <h6 class="card-title">Capacity Planning</h6>
+                                    <a href="{% url 'infrastructure:capacity_planning_list' %}" class="btn btn-sm btn-outline-info mt-2">
+                                        Manage
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

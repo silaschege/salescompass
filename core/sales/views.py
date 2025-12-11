@@ -1,10 +1,19 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from accounts.models import Account
+from core.models import User as  Account
 from django import forms
 from django.contrib import messages
-from .models import Sale, Product, Commission, CommissionRule
+from .models import Sale, Product, Commission, CommissionRule, TerritoryPerformance, TerritoryAssignmentOptimizer, TeamMemberTerritoryMetrics
 from django.db.models import Count, Avg, Sum
 from core.utils import get_queryset_for_user
+from settings_app.models import TeamMember, Territory
+from django.http import JsonResponse
+from django.core.serializers.json import DjangoJSONEncoder
+import json
+from datetime import datetime, timedelta
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
+from django.db.models import Q
+
 
 # List View
 def sale_list(request):
@@ -244,3 +253,168 @@ class CommissionRuleDeleteView(PermissionRequiredMixin, DeleteView):
     template_name = 'sales/commission_rule_confirm_delete.html'
     success_url = reverse_lazy('sales:rule_list')
     permission_required = 'sales.delete_commissionrule'
+
+
+# Territory Performance Dashboard Views
+def territory_performance_dashboard(request):
+    """
+    Dashboard for territory performance metrics
+    """
+    user = request.user
+    
+    # Get all territories for the tenant
+    territories = Territory.objects.filter(tenant_id=user.tenant_id)
+    
+    # Get latest performance data for each territory
+    territory_data = []
+    for territory in territories:
+        try:
+            latest_performance = territory.performance_metrics.latest('period_end')
+            territory_data.append({
+                'territory': territory,
+                'performance': latest_performance,
+            })
+        except TerritoryPerformance.DoesNotExist:
+            territory_data.append({
+                'territory': territory,
+                'performance': None,
+            })
+    
+    # Calculate overall KPIs
+    total_revenue = sum(
+        td['performance'].total_revenue if td['performance'] else 0 
+        for td in territory_data
+    )
+    total_deals = sum(
+        td['performance'].total_deals if td['performance'] else 0 
+        for td in territory_data
+    )
+    avg_conversion_rate = sum(
+        td['performance'].conversion_rate if td['performance'] else 0 
+        for td in territory_data
+    ) / len([td for td in territory_data if td['performance']]) if len([td for td in territory_data if td['performance']]) > 0 else 0
+    
+    context = {
+        'territory_data': territory_data,
+        'total_revenue': total_revenue,
+        'total_deals': total_deals,
+        'avg_conversion_rate': avg_conversion_rate,
+    }
+    
+    return render(request, 'sales/territory_performance_dashboard.html', context)
+
+
+def territory_assignment_optimization_dashboard(request):
+    """
+    Dashboard for territory assignment optimization
+    """
+    user = request.user
+    
+    # Get all optimization records for territories in the tenant
+    optimizations = TerritoryAssignmentOptimizer.objects.filter(
+        territory__tenant_id=user.tenant_id
+    ).select_related('territory').order_by('-optimization_date')
+    
+    # Get latest optimization for each territory
+    territory_optimizations = {}
+    for opt in optimizations:
+        if opt.territory not in territory_optimizations:
+            territory_optimizations[opt.territory] = opt
+    
+    context = {
+        'optimizations': list(territory_optimizations.values()),
+    }
+    
+    return render(request, 'sales/territory_assignment_optimization_dashboard.html', context)
+
+
+def run_territory_optimization(request, territory_id):
+    """
+    Run territory assignment optimization for a specific territory
+    """
+    territory = get_object_or_404(Territory, id=territory_id, tenant_id=request.user.tenant_id)
+    
+    # Create a new optimization record
+    optimizer = TerritoryAssignmentOptimizer.objects.create(
+        territory=territory,
+        optimization_type=request.GET.get('type', 'load_balancing')
+    )
+    
+    # Run the optimization
+    optimizer.run_optimization()
+    
+    messages.success(request, f"Territory optimization completed for {territory.label}")
+    return redirect('sales:territory_assignment_optimization_dashboard')
+
+
+def territory_comparison_tool(request):
+    """
+    Tool for comparing territory performance
+    """
+    user = request.user
+    
+    # Get territories and their latest performance data
+    territories = Territory.objects.filter(tenant_id=user.tenant_id)
+    territory_comparison_data = []
+    
+    for territory in territories:
+        try:
+            latest_performance = territory.performance_metrics.latest('period_end')
+            territory_comparison_data.append({
+                'territory': territory,
+                'performance': latest_performance,
+            })
+        except TerritoryPerformance.DoesNotExist:
+            territory_comparison_data.append({
+                'territory': territory,
+                'performance': None,
+            })
+    
+    # Prepare data for comparison chart
+    chart_data = {
+        'labels': [td['territory'].label for td in territory_comparison_data if td['performance']],
+        'revenue_data': [float(td['performance'].total_revenue) if td['performance'] else 0 for td in territory_comparison_data],
+        'deal_data': [td['performance'].total_deals if td['performance'] else 0 for td in territory_comparison_data],
+        'conversion_data': [float(td['performance'].conversion_rate) if td['performance'] else 0 for td in territory_comparison_data],
+    }
+    
+    context = {
+        'territory_comparison_data': territory_comparison_data,
+        'chart_data': json.dumps(chart_data, cls=DjangoJSONEncoder),
+    }
+    
+    return render(request, 'sales/territory_comparison_tool.html', context)
+
+
+def territory_performance_api(request):
+    """
+    API endpoint for territory performance data
+    """
+    user = request.user
+    
+    # Get territories and their latest performance data
+    territories = Territory.objects.filter(tenant_id=user.tenant_id)
+    data = []
+    
+    for territory in territories:
+        try:
+            latest_performance = territory.performance_metrics.latest('period_end')
+            data.append({
+                'id': territory.id,
+                'name': territory.label,
+                'total_revenue': float(latest_performance.total_revenue),
+                'total_deals': latest_performance.total_deals,
+                'conversion_rate': float(latest_performance.conversion_rate),
+                'opportunity_win_rate': float(latest_performance.opportunity_win_rate),
+            })
+        except TerritoryPerformance.DoesNotExist:
+            data.append({
+                'id': territory.id,
+                'name': territory.label,
+                'total_revenue': 0,
+                'total_deals': 0,
+                'conversion_rate': 0,
+                'opportunity_win_rate': 0,
+            })
+    
+    return JsonResponse({'territories': data})

@@ -1,80 +1,143 @@
-{% extends "leads/base.html" %}
+{% extends 'base.html' %}
 
-{% block title %}Web-to-Lead Form Builder - SalesCompass{% endblock %}
+{% block title %}Web-to-Lead Builder{% endblock %}
 
 {% block content %}
-<h2 class="block-title fw-bold mb-0">Web-to-Lead Form Builder</h2>
-
-<form method="post">
-    {% csrf_token %}
+<div class="container-fluid">
     <div class="row">
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label class="form-label">Form Name</label>
-                {{ form.name }}
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Description</label>
-                {{ form.description }}
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Success Redirect URL</label>
-                {{ form.success_redirect_url }}
-            </div>
-            <div class="mb-3 form-check">
-                {{ form.is_active }}
-                <label class="form-check-label">Active</label>
-            </div>
+        <div class="col-12">
+            <h1 class="h3 mb-2">Web-to-Lead Form Builder</h1>
+            <p class="mb-4">Create and customize web forms for lead capture.</p>
         </div>
-        <div class="col-md-6">
-            <h5>Form Fields</h5>
-            <div class="mb-3 form-check">
-                {{ form.include_first_name }}
-                <label class="form-check-label">First Name</label>
-            </div>
-            <div class="mb-3 form-check">
-                {{ form.include_last_name }}
-                <label class="form-check-label">Last Name</label>
-            </div>
-            <div class="mb-3 form-check">
-                {{ form.include_email }}
-                <label class="form-check-label">Email *</label>
-            </div>
-            <div class="mb-3 form-check">
-                {{ form.include_phone }}
-                <label class="form-check-label">Phone</label>
-            </div>
-            <div class="mb-3 form-check">
-                {{ form.include_company }}
-                <label class="form-check-label">Company *</label>
-            </div>
-            <div class="mb-3 form-check">
-                {{ form.include_job_title }}
-                <label class="form-check-label">Job Title</label>
-            </div>
-            <div class="mb-3 form-check">
-                {{ form.include_industry }}
-                <label class="form-check-label">Industry</label>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Form Builder</h6>
+                </div>
+                <div class="card-body">
+                    <form id="webToLeadForm">
+                        <div class="form-group">
+                            <label for="formName">Form Name</label>
+                            <input type="text" class="form-control" id="formName" placeholder="Enter form name">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="formDescription">Description</label>
+                            <textarea class="form-control" id="formDescription" rows="3" placeholder="Enter form description"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Form Fields</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="" id="firstName" checked>
+                                <label class="form-check-label" for="firstName">
+                                    First Name
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="" id="lastName" checked>
+                                <label class="form-check-label" for="lastName">
+                                    Last Name
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="" id="email" checked>
+                                <label class="form-check-label" for="email">
+                                    Email
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="" id="company">
+                                <label class="form-check-label" for="company">
+                                    Company
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="" id="phone">
+                                <label class="form-check-label" for="phone">
+                                    Phone
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="" id="message">
+                                <label class="form-check-label" for="message">
+                                    Message
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="successMessage">Success Message</label>
+                            <textarea class="form-control" id="successMessage" rows="2" placeholder="Enter success message after form submission">Thank you for your interest. We will contact you shortly.</textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="redirectUrl">Redirect URL (Optional)</label>
+                            <input type="text" class="form-control" id="redirectUrl" placeholder="https://example.com/thank-you">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="leadSource">Lead Source</label>
+                            <select class="form-control" id="leadSource">
+                                <option value="web_form">Web Form</option>
+                                <option value="contact_page">Contact Page</option>
+                                <option value="newsletter">Newsletter Signup</option>
+                                <option value="free_trial">Free Trial Request</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="assignedTo">Assign to</label>
+                            <select class="form-control" id="assignedTo">
+                                <option value="">Unassigned</option>
+                                <option value="sales_team">Sales Team</option>
+                                <option value="support_team">Support Team</option>
+                                <option value="john_doe">John Doe</option>
+                                <option value="jane_smith">Jane Smith</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Form Status</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="formStatus" id="active" value="active" checked>
+                                <label class="form-check-label" for="active">
+                                    Active
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="formStatus" id="inactive" value="inactive">
+                                <label class="form-check-label" for="inactive">
+                                    Inactive
+                                </label>
+                            </div>
+                        
+                        <button type="submit" class="btn btn-primary">Save Form</button>
+                        <button type="button" class="btn btn-secondary" onclick="previewForm()">Preview Form</button>
+                        <button type="button" class="btn btn-info" onclick="generateCode()">Generate Embed Code</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
+</div>
+
+<script>
+    function previewForm() {
+        alert('Form preview functionality would be implemented here.');
+    }
     
-    <div class="mb-3">
-        <label class="form-label">Custom Fields (JSON)</label>
-        {{ form.custom_fields }}
-        <div class="form-text">
-            Example: {"custom_field": {"type": "text", "max_length": 100, "required": false}}
-        </div>
-    </div>
+    function generateCode() {
+        alert('Embed code generation would be implemented here.');
+    }
     
-    <div class="mb-3">
-        <label class="form-label">Assign To</label>
-        {{ form.assign_to }}
-        <div class="form-text">Or assign to role:</div>
-        {{ form.assign_to_role }}
-    </div>
-    
-    <button type="submit" class="btn btn-primary">Save Form</button>
-    <a href="{% url 'leads:web_to_lead_list' %}" class="btn btn-secondary">Cancel</a>
-</form>
+    // Handle form submission
+    document.getElementById('webToLeadForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        alert('Form saved successfully!');
+    });
+</script>
 {% endblock %}

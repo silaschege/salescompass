@@ -1,7 +1,7 @@
 from django.db import models
-from core.models import TimeStampedModel, TenantModel
-from core.models import User
-from accounts.models import Account, Contact
+from core.models import TimeStampedModel,User
+from tenants.models import TenantAwareModel as TenantModel
+from accounts.models import Contact
 from datetime import timedelta
 from django.utils import timezone
 from core.managers import VisibilityAwareManager
@@ -32,8 +32,8 @@ class Case(TenantModel):
     Customer support case with SLA and CSAT.
     """
     subject = models.CharField(max_length=255)
-    description = models.TextField()
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='cases')
+    case_description = models.TextField()
+    account = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cases')
     contact = models.ForeignKey(Contact, on_delete=models.SET_NULL, null=True, blank=True)
     
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='medium')
@@ -74,7 +74,7 @@ class Case(TenantModel):
         related_name='escalated_cases'
     )
     
-    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
+
 
     objects = VisibilityAwareManager()
 
@@ -138,14 +138,14 @@ class Case(TenantModel):
         if self.priority in ['high', 'critical']:
             Task.objects.create(
                 title=f"Escalation required: {self.subject}",
-                description=f"High priority case requires immediate attention",
+                case_description=f"High priority case requires immediate attention",
                 assigned_to=self.owner,
                 case=self,
                 priority='critical',
                 status='todo',
                 task_type='case_escalation',
                 due_date=timezone.now() + timedelta(hours=2),
-                tenant_id=self.tenant_id
+                tenant=self.tenant
             )
 
 
@@ -186,7 +186,6 @@ class KnowledgeBaseArticle(TenantModel):
     tags = models.CharField(max_length=255, blank=True, help_text="Comma-separated tags")
     is_published = models.BooleanField(default=True)
     views = models.IntegerField(default=0)  # internal view count
-    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
 
     def __str__(self):
         return self.title
@@ -214,7 +213,7 @@ class KnowledgeBaseArticle(TenantModel):
             'title': self.title,
             'category': self.category,
             'is_published': self.is_published,
-            'tenant_id': self.tenant_id
+            'tenant_id': self.tenant.id if self.tenant else None
         }
         
         if is_new:
@@ -231,10 +230,9 @@ class CsatSurvey(TenantModel):
     """
     CSAT survey configuration.
     """
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    is_active = models.BooleanField(default=True)
-    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
+    csat_survey_name = models.CharField(max_length=255)
+    csat_survey_description = models.TextField(blank=True)
+    csat_survey_is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
@@ -247,7 +245,6 @@ class CsatResponse(TenantModel):
     case = models.OneToOneField(Case, on_delete=models.CASCADE, related_name='csat_response')
     score = models.IntegerField()  # 1–5
     comment = models.TextField(blank=True)
-    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
 
     def __str__(self):
         return f"CSAT {self.score} for {self.case.subject}"
@@ -275,12 +272,11 @@ class SlaPolicy(TenantModel):
     """
     SLA policy configuration.
     """
-    name = models.CharField(max_length=255)
+    sla_policy_name = models.CharField(max_length=255)
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES)
     response_hours = models.IntegerField(default=24)
     resolution_hours = models.IntegerField(default=72)
     business_hours_only = models.BooleanField(default=False)
-    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
 
     def __str__(self):
         return f"{self.name} ({self.get_priority_display()})"

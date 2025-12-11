@@ -1,0 +1,88 @@
+{% extends 'logged_in/base.html' %}
+
+{% block title %}Tenant Lifecycle Event Log{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Tenant Lifecycle Event Log</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Lifecycle Events</h6>
+                </div>
+                <div class="card-body">
+                    {% if events %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Tenant</th>
+                                        <th>Rule</th>
+                                        <th>Event Type</th>
+                                        <th>Status</th>
+                                        <th>Details</th>
+                                        <th>Executed By</th>
+                                        <th>Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for event in events %}
+                                    <tr>
+                                        <td>{{ event.tenant.name }}</td>
+                                        <td>{{ event.rule.name }}</td>
+                                        <td>{{ event.event_type|title }}</td>
+                                        <td>
+                                            {% if event.status == 'success' %}
+                                                <span class="badge badge-success">{{ event.status|title }}</span>
+                                            {% elif event.status == 'failed' %}
+                                                <span class="badge badge-danger">{{ event.status|title }}</span>
+                                            {% else %}
+                                                <span class="badge badge-warning">{{ event.status|title }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ event.details|truncatechars:50 }}</td>
+                                        <td>{{ event.executed_by.get_full_name|default:event.executed_by.username }}</td>
+                                        <td>{{ event.triggered_at|date:"M d, Y H:i" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if is_paginated %}
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                                    </li>
+                                    
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <p>No lifecycle events found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

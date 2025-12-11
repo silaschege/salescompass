@@ -1,191 +1,742 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
+from django.utils import timezone
+from django.core.validators import MinLengthValidator
+from django.conf import settings
 
 class TimeStampedModel(models.Model):
     """
-    Abstract base model with created_at and updated_at fields.
+    An abstract model for adding created_at and updated_at timestamps
     """
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    
     class Meta:
         abstract = True
 
-
-class TenantModel(TimeStampedModel):
-    """
-    Abstract base model with tenant_id for multi-tenancy.
-    """
-    tenant_id = models.CharField(
-        max_length=50,
-        db_index=True,
-        null=True,
-        blank=True,
-        help_text="ID of the tenant (organization) this record belongs to"
-    )
-
-    class Meta:
-        abstract = True
-
-    def save(self, *args, **kwargs):
-        # Auto-populate tenant_id from request user if not set
-        if not self.tenant_id and hasattr(self, '_current_user'):
-            self.tenant_id = getattr(self._current_user, 'tenant_id', None)
-            
-        # Enforce limits on creation
-        if self._state.adding and self.tenant_id:
-            self.check_usage_limits()
-            
-        super().save(*args, **kwargs)
-
-    def get_subscription(self):
-        """Get the active subscription for this tenant."""
-        from billing.models import Subscription
-        try:
-            return Subscription.objects.filter(tenant_id=self.tenant_id, status__in=['active', 'trialing']).select_related('plan').first()
-        except ImportError:
-            return None
-
-    def check_usage_limits(self):
-        """Check if creating this object violates plan limits."""
-        sub = self.get_subscription()
-        if not sub:
-            # Default to restrictive limits if no subscription found (or handle as error)
-            # For now, allow if no sub to avoid breaking existing tests, but in prod this should be strict.
-            return
-
-        model_name = self._meta.model_name
-        
-        if model_name == 'user':
-            current_count = User.objects.filter(tenant_id=self.tenant_id).count()
-            if current_count >= sub.plan.max_users:
-                raise ValidationError(f"Plan limit reached: Max {sub.plan.max_users} users allowed.")
-                
-        elif model_name == 'lead':
-            # Avoid circular import by using string reference or local import if needed
-            # But self is a Lead instance here
-            current_count = self.__class__.objects.filter(tenant_id=self.tenant_id).count()
-            if current_count >= sub.plan.max_leads:
-                raise ValidationError(f"Plan limit reached: Max {sub.plan.max_leads} leads allowed.")
-
-
-class Role(TenantModel):
-    """
-    Role with a list of permission strings.
-    
-    Permission format: "<resource>:<action>"
-    Examples:
-      - "accounts:read"
-      - "accounts:write"
-      - "esg:read"
-      - "automation:manage"
-    
-    Permissions are stored as a JSON list for simplicity and flexibility.
-    In high-scale systems, consider a many-to-many Permission model.
-    """
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True)
-    permissions = models.JSONField(
-        default=list,
-        help_text="List of permission strings, e.g., ['accounts:read', 'proposals:write']"
-    )
-    data_visibility_rules = models.JSONField(
-        default=dict,
-        blank=True,
-        help_text="Record-level visibility rules, e.g., {'accounts': 'own_only', 'leads': 'team_only'}"
-    )
-
-    def __str__(self):
-        return self.name
-
-    def add_permission(self, perm: str) -> None:
-        """Add a permission if not already present."""
-        if perm not in self.permissions:
-            self.permissions.append(perm)
-            self.save(update_fields=['permissions'])
-
-    def remove_permission(self, perm: str) -> None:
-        """Remove a permission if present."""
-        if perm in self.permissions:
-            self.permissions.remove(perm)
-            self.save(update_fields=['permissions'])
-
-    def has_permission(self, perm: str) -> bool:
-        """Check if this role grants a specific permission."""
-        return perm in self.permissions
-
-
-class User(AbstractUser, TenantModel):
-    """
-    Custom user with role-based permissions and multi-tenancy.
-    """
-    email = models.EmailField(unique=True) 
-    role = models.ForeignKey(
-        Role,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='users'
-    )
-    phone = models.CharField(max_length=20, blank=True)
-    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
+class User(AbstractUser):
+    id = models.AutoField(primary_key=True)
+    email = models.EmailField(unique=True)
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
+    role = models.ForeignKey('accounts.Role', on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
     mfa_enabled = models.BooleanField(default=False)
-    last_login_ip = models.GenericIPAddressField(null=True, blank=True)
-
-    # Django auth requirements
-    EMAIL_FIELD = 'email'
+    mfa_secret = models.CharField(max_length=32, blank=True, null=True)
+    last_mfa_login = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    
+    # Customer Lifetime Value (CLV) related fields
+    customer_lifetime_value = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, 
+                                                help_text="Calculated customer lifetime value")
+    acquisition_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, 
+                                           help_text="Cost to acquire this customer")
+    retention_rate = models.DecimalField(max_digits=5, decimal_places=4, default=0.0000, 
+                                        help_text="Customer retention rate as a decimal (e.g., 0.85 for 85%)")
+    avg_order_value = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, 
+                                          help_text="Average value of customer orders")
+    customer_since = models.DateField(null=True, blank=True, 
+                                      help_text="Date when customer relationship started")
+    purchase_frequency = models.PositiveIntegerField(default=0, 
+                                                     help_text="Number of purchases per year")
+    
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
-    groups = models.ManyToManyField(
-        'auth.Group',
-        verbose_name='groups',
-        blank=True,
-        help_text='The groups this user belongs to.',
-        related_name='core_user_set',  # ← Unique related_name
-        related_query_name='core_user',
-    )
-    
-    user_permissions = models.ManyToManyField(
-        'auth.Permission',
-        verbose_name='user permissions',
-        blank=True,
-        help_text='Specific permissions for this user.',
-        related_name='core_user_set',  # ← Unique related_name
-        related_query_name='core_user',
-    )
-
-    def has_perm(self, perm: str, obj=None) -> bool:
-        """
-        Override to support our permission system.
-        obj is ignored (no object-level perms here; add if needed).
-        """
-        if self.is_superuser:
-            return True
-        if not self.role:
-            return False
-        
-        # Check for global wildcard
-        if '*' in self.role.permissions:
-            return True
-        
-        # Check exact match
-        if perm in self.role.permissions:
-            return True
-            
-        # Check wildcard (e.g., 'accounts:*' matches 'accounts:read')
-        resource, _, action = perm.partition(':')
-        if action and f"{resource}:*" in self.role.permissions:
-            return True
-            
-        return False
-
-    def get_permissions(self) -> list:
-        """Return list of all permissions for this user."""
-        if self.is_superuser:
-            return ['*']
-        return self.role.permissions if self.role else []
-
     def __str__(self):
         return self.email
+
+    def calculate_avg_order_value(self):
+        """Calculate the average order value from all payments made by this user"""
+        from django.db.models import Avg
+        from core.billing.models import Payment
+        
+        # Get all payments related to this user through their invoices and subscriptions
+        avg_value = Payment.objects.filter(
+            invoice__subscription__user=self,
+            status='succeeded'
+        ).aggregate(avg_amount=Avg('amount'))['avg_amount']
+        
+        return avg_value or 0.00
+
+    def calculate_retention_rate(self):
+        """Calculate retention rate based on subscription renewals"""
+        # This is a simplified calculation - in practice, you might want to consider
+        # more complex factors like subscription duration, gaps in service, etc.
+        from core.billing.models import Subscription
+        subscriptions = Subscription.objects.filter(user=self)
+        
+        if not subscriptions.exists():
+            return 0.0000
+        
+        # Count active and renewed subscriptions
+        active_subscriptions = subscriptions.filter(status_ref__name__in=['active', 'trialing'])
+        total_subscriptions = subscriptions.count()
+        
+        if total_subscriptions == 0:
+            return 0.0000
+        
+        # This is a basic retention calculation - could be enhanced with time-based logic
+        return min(1.0000, float(active_subscriptions.count()) / total_subscriptions)
+
+    def calculate_purchase_frequency(self):
+        """Calculate how many purchases the customer makes per year"""
+        from django.db.models import Count
+        from datetime import datetime, timedelta
+        from core.billing.models import Payment
+        
+        # Count successful payments in the last year
+        one_year_ago = datetime.now() - timedelta(days=365)
+        
+        annual_purchases = Payment.objects.filter(
+            invoice__subscription__user=self,
+            status='succeeded',
+            processed_at__gte=one_year_ago
+        ).count()
+        
+        return annual_purchases
+
+    def calculate_clv(self):
+        """
+        Calculate Customer Lifetime Value using the formula:
+        CLV = (Average Order Value × Purchase Frequency × Retention Rate) / (1 - Retention Rate) - Acquisition Cost
+        If retention rate is 1 (100%), use a simplified calculation
+        """
+        avg_order_value = self.avg_order_value or self.calculate_avg_order_value()
+        retention_rate = float(self.retention_rate or self.calculate_retention_rate())
+        purchase_frequency = self.purchase_frequency or self.calculate_purchase_frequency()
+        
+        if retention_rate >= 1.0:
+            # If retention rate is 100%, we can't divide by zero
+            # Use a simplified calculation based on average order value and frequency
+            clv = avg_order_value * purchase_frequency * 5  # 5-year estimate
+        elif retention_rate > 0:
+            # Standard CLV calculation
+            clv = (avg_order_value * purchase_frequency * retention_rate) / (1 - retention_rate) - self.acquisition_cost
+        else:
+            # If retention rate is 0, CLV is just negative acquisition cost
+            clv = -self.acquisition_cost
+        
+        # Ensure CLV is not negative
+        return max(0.00, clv)
+
+    def update_clv(self):
+        """Update all CLV-related fields and save the user"""
+        self.avg_order_value = self.calculate_avg_order_value()
+        self.retention_rate = self.calculate_retention_rate()
+        self.purchase_frequency = self.calculate_purchase_frequency()
+        self.customer_lifetime_value = self.calculate_clv()
+        self.save()
+        
+        return self.customer_lifetime_value
+
+    def calculate_customer_lifespan(self):
+        """
+        Calculate the average customer lifespan in years.
+        This is a simplified calculation based on when the customer started
+        and whether they're still active.
+        """
+        if not self.customer_since:
+            # If we don't know when the relationship started, use account creation date
+            customer_start = self.date_joined.date()
+        else:
+            customer_start = self.customer_since
+        
+        # Calculate how long the customer has been with us
+        from datetime import date
+        today = date.today()
+        tenure_days = (today - customer_start).days
+        
+        # For customers with more than 2 years of tenure, we'll use actual tenure
+        # For newer customers, we'll use a projected average based on retention
+        if tenure_days > 730:  # More than 2 years
+            return tenure_days / 365.0
+        else:
+            # For newer customers, estimate based on retention rate
+            retention_rate = float(self.retention_rate or self.calculate_retention_rate())
+            if retention_rate > 0 and retention_rate < 1:
+                # Inverse of churn rate as a simple lifetime calculation
+                # Churn rate = 1 - retention_rate
+                # Average lifetime = 1 / churn_rate
+                churn_rate = 1 - retention_rate
+                if churn_rate > 0:
+                    return min(10.0, 1 / churn_rate)  # Cap at 10 years
+            return max(0.5, tenure_days / 365.0)  # Default to actual tenure if >= 6 months
+
+    def calculate_clv_simple(self):
+        """
+        Calculate Customer Lifetime Value using the simple formula:
+        CLV = Average Order Value × Purchase Frequency × Customer Lifespan
+        """
+        avg_order_value = self.avg_order_value or self.calculate_avg_order_value()
+        purchase_frequency = self.purchase_frequency or self.calculate_purchase_frequency()
+        customer_lifespan = self.calculate_customer_lifespan()
+        
+        clv = avg_order_value * purchase_frequency * customer_lifespan
+        return clv
+
+    def calculate_roi(self, expected_revenue=None):
+        """
+        Calculate ROI: (Expected Revenue - CAC) / CAC
+        """
+        cac = self.acquisition_cost or 0
+        if expected_revenue is None:
+            # Use calculated CLV as expected revenue if not provided
+            expected_revenue = self.calculate_clv()
+        
+        if cac == 0:
+            # Avoid division by zero
+            return float('inf') if expected_revenue > 0 else 0
+        
+        roi = (expected_revenue - cac) / cac
+        return roi
+
+    def get_customer_value_trend(self, months=12):
+        """Get CLV trend over the specified number of months"""
+        # This would require historical CLV tracking, which could be implemented
+        # with a separate model to store historical values
+        pass
+
+
+class SystemConfigType(models.Model):
+    """Model for storing dynamic configuration types"""
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=50, unique=True, help_text="Unique identifier for the config type (e.g., 'string', 'integer')")
+    display_name = models.CharField(max_length=100, help_text="Display name for the config type (e.g., 'String', 'Integer')")
+    description = models.TextField(blank=True, help_text="Description of the config type")
+    is_active = models.BooleanField(default=True, help_text="Whether this config type is active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "System Config Type"
+        verbose_name_plural = "System Config Types"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.display_name
+
+
+class SystemConfigCategory(models.Model):
+    """Model for storing dynamic configuration categories"""
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=50, unique=True, help_text="Unique identifier for the category (e.g., 'general', 'security')")
+    display_name = models.CharField(max_length=100, help_text="Display name for the category (e.g., 'General', 'Security')")
+    description = models.TextField(blank=True, help_text="Description of the category")
+    is_active = models.BooleanField(default=True, help_text="Whether this category is active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "System Config Category"
+        verbose_name_plural = "System Config Categories"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.display_name
+
+
+class SystemConfiguration(models.Model):
+    """Model for storing global system settings and configurations"""
+    id = models.AutoField(primary_key=True)
+    key = models.CharField(max_length=255, unique=True)
+    value = models.TextField()
+    description = models.TextField(blank=True)
+    data_type = models.CharField(max_length=50, choices=[
+        ('string', 'String'),
+        ('integer', 'Integer'),
+        ('boolean', 'Boolean'),
+        ('json', 'JSON'),
+        ('file', 'File Path'),
+    ], default='string')
+    # New dynamic field
+    data_type_ref = models.ForeignKey(
+        SystemConfigType,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text="Dynamic data type (replaces data_type field)"
+    )
+    category = models.CharField(max_length=100, choices=[
+        ('general', 'General'),
+        ('security', 'Security'),
+        ('email', 'Email'),
+        ('authentication', 'Authentication'),
+        ('integration', 'Integration'),
+        ('performance', 'Performance'),
+    ], default='general')
+    # New dynamic field
+    category_ref = models.ForeignKey(
+        SystemConfigCategory,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text="Dynamic category (replaces category field)"
+    )
+    is_sensitive = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        verbose_name = "System Configuration"
+        verbose_name_plural = "System Configurations"
+    
+    def __str__(self):
+        return f"{self.key}: {self.value[:50]}{'...' if len(self.value) > 50 else ''}"
+
+
+class SystemEventType(models.Model):
+    """Model for storing dynamic system event types"""
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=50, unique=True, help_text="Unique identifier for the event type (e.g., 'system_start', 'backup')")
+    display_name = models.CharField(max_length=100, help_text="Display name for the event type (e.g., 'System Start', 'Backup')")
+    description = models.TextField(blank=True, help_text="Description of the event type")
+    is_active = models.BooleanField(default=True, help_text="Whether this event type is active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "System Event Type"
+        verbose_name_plural = "System Event Types"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.display_name
+
+
+class SystemEventSeverity(models.Model):
+    """Model for storing dynamic system event severities"""
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=20, unique=True, help_text="Unique identifier for the severity (e.g., 'info', 'error')")
+    display_name = models.CharField(max_length=50, help_text="Display name for the severity (e.g., 'Information', 'Error')")
+    color = models.CharField(max_length=7, default='#6c757d', help_text="Hex color code for UI representation")
+    description = models.TextField(blank=True, help_text="Description of the severity level")
+    is_active = models.BooleanField(default=True, help_text="Whether this severity is active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "System Event Severity"
+        verbose_name_plural = "System Event Severities"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.display_name
+
+
+class SystemEventLog(models.Model):
+    """Model for tracking system-level events and operations"""
+    id = models.AutoField(primary_key=True)
+    event_type = models.CharField(max_length=100, choices=[
+        ('system_start', 'System Start'),
+        ('system_stop', 'System Stop'),
+        ('maintenance', 'Maintenance'),
+        ('backup', 'Backup'),
+        ('restore', 'Restore'),
+        ('configuration_change', 'Configuration Change'),
+        ('security_scan', 'Security Scan'),
+        ('patch_install', 'Patch Install'),
+        ('monitoring_alert', 'Monitoring Alert'),
+    ])
+    # New dynamic field
+    event_type_ref = models.ForeignKey(
+        SystemEventType,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text="Dynamic event type (replaces event_type field)"
+    )
+    severity = models.CharField(max_length=20, choices=[
+        ('info', 'Information'),
+        ('warning', 'Warning'),
+        ('error', 'Error'),
+        ('critical', 'Critical'),
+    ], default='info')
+    # New dynamic field
+    severity_ref = models.ForeignKey(
+        SystemEventSeverity,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text="Dynamic severity (replaces severity field)"
+    )
+    message = models.TextField()
+    details = models.JSONField(default=dict, blank=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    timestamp = models.DateTimeField(default=timezone.now)
+    duration_seconds = models.FloatField(null=True, blank=True)
+    
+    class Meta:
+        verbose_name = "System Event Log"
+        verbose_name_plural = "System Event Logs"
+        ordering = ['-timestamp']
+    
+    def __str__(self):
+        return f"[{self.severity.upper()}] {self.event_type}: {self.message[:50]}..."
+
+
+class HealthCheckType(models.Model):
+    """Model for storing dynamic health check types"""
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=50, unique=True, help_text="Unique identifier for the check type (e.g., 'database', 'cache')")
+    display_name = models.CharField(max_length=100, help_text="Display name for the check type (e.g., 'Database Connection', 'Cache Health')")
+    description = models.TextField(blank=True, help_text="Description of the check type")
+    is_active = models.BooleanField(default=True, help_text="Whether this check type is active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Health Check Type"
+        verbose_name_plural = "Health Check Types"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.display_name
+
+
+class HealthCheckStatus(models.Model):
+    """Model for storing dynamic health check statuses"""
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=20, unique=True, help_text="Unique identifier for the status (e.g., 'healthy', 'error')")
+    display_name = models.CharField(max_length=50, help_text="Display name for the status (e.g., 'Healthy', 'Error')")
+    color = models.CharField(max_length=7, default='#6c757d', help_text="Hex color code for UI representation")
+    description = models.TextField(blank=True, help_text="Description of the status level")
+    is_active = models.BooleanField(default=True, help_text="Whether this status is active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Health Check Status"
+        verbose_name_plural = "Health Check Statuses"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.display_name
+
+
+class SystemHealthCheck(models.Model):
+    """Model for monitoring and recording system health metrics"""
+    id = models.AutoField(primary_key=True)
+    check_type = models.CharField(max_length=100, choices=[
+        ('database', 'Database Connection'),
+        ('cache', 'Cache Health'),
+        ('storage', 'Storage Space'),
+        ('network', 'Network Connectivity'),
+        ('api', 'API Response Time'),
+        ('memory', 'Memory Usage'),
+        ('cpu', 'CPU Usage'),
+        ('disk_io', 'Disk I/O'),
+        ('process', 'Process Health'),
+    ])
+    # New dynamic field
+    check_type_ref = models.ForeignKey(
+        HealthCheckType,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text="Dynamic check type (replaces check_type field)"
+    )
+    status = models.CharField(max_length=20, choices=[
+        ('healthy', 'Healthy'),
+        ('warning', 'Warning'),
+        ('error', 'Error'),
+        ('critical', 'Critical'),
+    ])
+    # New dynamic field
+    status_ref = models.ForeignKey(
+        HealthCheckStatus,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text="Dynamic status (replaces status field)"
+    )
+    value = models.FloatField(help_text="Numeric value of the metric")
+    unit = models.CharField(max_length=20, blank=True, help_text="Unit of measurement (e.g., %, MB, seconds)")
+    threshold_critical = models.FloatField(help_text="Threshold for critical status")
+    threshold_warning = models.FloatField(help_text="Threshold for warning status")
+    details = models.TextField(blank=True)
+    timestamp = models.DateTimeField(default=timezone.now)
+    
+    class Meta:
+        verbose_name = "System Health Check"
+        verbose_name_plural = "System Health Checks"
+        ordering = ['-timestamp']
+    
+    def __str__(self):
+        return f"{self.check_type}: {self.status.upper()} ({self.value}{self.unit})"
+
+
+class MaintenanceStatus(models.Model):
+    """Model for storing dynamic maintenance statuses"""
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=20, unique=True, help_text="Unique identifier for the status (e.g., 'scheduled', 'completed')")
+    display_name = models.CharField(max_length=50, help_text="Display name for the status (e.g., 'Scheduled', 'Completed')")
+    color = models.CharField(max_length=7, default='#6c757d', help_text="Hex color code for UI representation")
+    description = models.TextField(blank=True, help_text="Description of the status level")
+    is_active = models.BooleanField(default=True, help_text="Whether this status is active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Maintenance Status"
+        verbose_name_plural = "Maintenance Statuses"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.display_name
+
+
+class MaintenanceType(models.Model):
+    """Model for storing dynamic maintenance types"""
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=50, unique=True, help_text="Unique identifier for the maintenance type (e.g., 'system_update', 'database_maintenance')")
+    display_name = models.CharField(max_length=100, help_text="Display name for the maintenance type (e.g., 'System Update', 'Database Maintenance')")
+    description = models.TextField(blank=True, help_text="Description of the maintenance type")
+    is_active = models.BooleanField(default=True, help_text="Whether this maintenance type is active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Maintenance Type"
+        verbose_name_plural = "Maintenance Types"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.display_name
+
+
+class MaintenanceWindow(models.Model):
+    """Model for scheduling and tracking maintenance activities"""
+    id = models.AutoField(primary_key=True)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    scheduled_start = models.DateTimeField()
+    scheduled_end = models.DateTimeField()
+    actual_start = models.DateTimeField(null=True, blank=True)
+    actual_end = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=[
+        ('scheduled', 'Scheduled'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ], default='scheduled')
+    # New dynamic field
+    status_ref = models.ForeignKey(
+        MaintenanceStatus,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text="Dynamic status (replaces status field)"
+    )
+    maintenance_type = models.CharField(max_length=50, choices=[
+        ('system_update', 'System Update'),
+        ('database_maintenance', 'Database Maintenance'),
+        ('security_patch', 'Security Patch'),
+        ('backup_restore', 'Backup/Restore'),
+        ('infrastructure_upgrade', 'Infrastructure Upgrade'),
+    ])
+    # New dynamic field
+    maintenance_type_ref = models.ForeignKey(
+        MaintenanceType,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text="Dynamic maintenance type (replaces maintenance_type field)"
+    )
+    affected_components = models.TextField(help_text="Comma-separated list of affected system components")
+    estimated_downtime_minutes = models.IntegerField(default=0)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='maintenance_created')
+    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='maintenance_approved')
+    notified_users = models.ManyToManyField(User, related_name='maintenance_notifications', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Maintenance Window"
+        verbose_name_plural = "Maintenance Windows"
+        ordering = ['-scheduled_start']
+    
+    def __str__(self):
+        return f"{self.title} - {self.scheduled_start.strftime('%Y-%m-%d %H:%M')} ({self.status})"
+
+
+class PerformanceMetricType(models.Model):
+    """Model for storing dynamic performance metric types"""
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=50, unique=True, help_text="Unique identifier for the metric type (e.g., 'response_time', 'throughput')")
+    display_name = models.CharField(max_length=100, help_text="Display name for the metric type (e.g., 'API Response Time', 'Request Throughput')")
+    description = models.TextField(blank=True, help_text="Description of the metric type")
+    is_active = models.BooleanField(default=True, help_text="Whether this metric type is active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Performance Metric Type"
+        verbose_name_plural = "Performance Metric Types"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.display_name
+
+
+class PerformanceEnvironment(models.Model):
+    """Model for storing dynamic performance environments"""
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=50, unique=True, help_text="Unique identifier for the environment (e.g., 'development', 'production')")
+    display_name = models.CharField(max_length=100, help_text="Display name for the environment (e.g., 'Development', 'Production')")
+    description = models.TextField(blank=True, help_text="Description of the environment")
+    is_active = models.BooleanField(default=True, help_text="Whether this environment is active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Performance Environment"
+        verbose_name_plural = "Performance Environments"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.display_name
+
+
+class PerformanceMetric(models.Model):
+    """Model for storing system performance data"""
+    id = models.AutoField(primary_key=True)
+    metric_type = models.CharField(max_length=100, choices=[
+        ('response_time', 'API Response Time'),
+        ('throughput', 'Request Throughput'),
+        ('concurrency', 'Concurrent Users'),
+        ('memory_usage', 'Memory Usage'),
+        ('cpu_usage', 'CPU Usage'),
+        ('database_queries', 'Database Query Time'),
+        ('cache_hit_ratio', 'Cache Hit Ratio'),
+        ('disk_io', 'Disk I/O'),
+    ])
+    # New dynamic field
+    metric_type_ref = models.ForeignKey(
+        PerformanceMetricType,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text="Dynamic metric type (replaces metric_type field)"
+    )
+    value = models.FloatField()
+    unit = models.CharField(max_length=20, default='ms')
+    timestamp = models.DateTimeField(default=timezone.now)
+    component = models.CharField(max_length=100, blank=True, help_text="Specific component being measured")
+    environment = models.CharField(max_length=50, choices=[
+        ('development', 'Development'),
+        ('staging', 'Staging'),
+        ('production', 'Production'),
+    ], default='production')
+    # New dynamic field
+    environment_ref = models.ForeignKey(
+        PerformanceEnvironment,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text="Dynamic environment (replaces environment field)"
+    )
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, null=True, blank=True)
+    
+    class Meta:
+        verbose_name = "Performance Metric"
+        verbose_name_plural = "Performance Metrics"
+        ordering = ['-timestamp']
+    
+    def __str__(self):
+        return f"{self.metric_type}: {self.value}{self.unit} ({self.component})"
+
+
+class NotificationType(models.Model):
+    """Model for storing dynamic notification types"""
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=50, unique=True, help_text="Unique identifier for the notification type (e.g., 'info', 'alert')")
+    display_name = models.CharField(max_length=100, help_text="Display name for the notification type (e.g., 'Information', 'Alert')")
+    description = models.TextField(blank=True, help_text="Description of the notification type")
+    is_active = models.BooleanField(default=True, help_text="Whether this notification type is active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Notification Type"
+        verbose_name_plural = "Notification Types"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.display_name
+
+
+class NotificationPriority(models.Model):
+    """Model for storing dynamic notification priorities"""
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=20, unique=True, help_text="Unique identifier for the priority (e.g., 'low', 'high')")
+    display_name = models.CharField(max_length=50, help_text="Display name for the priority (e.g., 'Low', 'High')")
+    color = models.CharField(max_length=7, default='#6c757d', help_text="Hex color code for UI representation")
+    description = models.TextField(blank=True, help_text="Description of the priority level")
+    is_active = models.BooleanField(default=True, help_text="Whether this priority is active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Notification Priority"
+        verbose_name_plural = "Notification Priorities"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.display_name
+
+
+class SystemNotification(models.Model):
+    """Model for managing system-wide notifications"""
+    id = models.AutoField(primary_key=True)
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    notification_type = models.CharField(max_length=50, choices=[
+        ('info', 'Information'),
+        ('warning', 'Warning'),
+        ('alert', 'Alert'),
+        ('maintenance', 'Maintenance Notice'),
+        ('system_update', 'System Update'),
+    ])
+    # New dynamic field
+    notification_type_ref = models.ForeignKey(
+        NotificationType,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text="Dynamic notification type (replaces notification_type field)"
+    )
+    priority = models.CharField(max_length=20, choices=[
+        ('low', 'Low'),
+        ('normal', 'Normal'),
+        ('high', 'High'),
+        ('urgent', 'Urgent'),
+    ], default='normal')
+    # New dynamic field
+    priority_ref = models.ForeignKey(
+        NotificationPriority,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text="Dynamic priority (replaces priority field)"
+    )
+    start_datetime = models.DateTimeField(default=timezone.now)
+    end_datetime = models.DateTimeField()
+    is_active = models.BooleanField(default=True)
+    is_dismissible = models.BooleanField(default=True)
+    affected_users = models.ManyToManyField(User, blank=True, related_name='system_notifications')
+    affected_tenants = models.ManyToManyField('tenants.Tenant', blank=True, related_name='system_notifications')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='notifications_created')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "System Notification"
+        verbose_name_plural = "System Notifications"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.title} - {self.notification_type.upper()}"

@@ -1,5 +1,5 @@
 from django.db import models
-from core.models import TenantModel
+from tenants.models import TenantAwareModel as TenantModel
 from core.models import User
 
 PRICING_MODEL_CHOICES = [
@@ -20,8 +20,8 @@ class Product(TenantModel):
     """
     Core product in the catalog.
     """
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
+    product_name = models.CharField(max_length=255)
+    product_description = models.TextField(blank=True)
     sku = models.CharField(max_length=100, unique=True)
     upc = models.CharField(max_length=12, blank=True, help_text="Universal Product Code")
     category = models.CharField(max_length=100, blank=True)
@@ -55,13 +55,13 @@ class Product(TenantModel):
     tco2e_saved = models.FloatField(default=0.0, help_text="Tonnes of CO2e saved by customer")
     
     # Availability
-    is_active = models.BooleanField(default=True)
+    product_is_active = models.BooleanField(default=True)
     available_from = models.DateField(null=True, blank=True)
     available_to = models.DateField(null=True, blank=True)
     
     # Metadata
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
+
 
     def __str__(self):
         return f"{self.name} ({self.sku})"
@@ -94,12 +94,12 @@ class ProductBundle(TenantModel):
     """
     Product bundles (e.g., "Starter Pack" = Product A + Product B).
     """
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
+    product_bundle_name = models.CharField(max_length=255)
+    product_bundle_description = models.TextField(blank=True)
     products = models.ManyToManyField(Product, through='BundleItem')
     bundle_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-    is_active = models.BooleanField(default=True)
-    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
+    product_bundle_is_active = models.BooleanField(default=True)
+
 
     def __str__(self):
         return self.name
@@ -121,7 +121,7 @@ class CompetitorProduct(TenantModel):
     """
     Competitor product mapping for competitive analysis.
     """
-    name = models.CharField(max_length=255)
+    competitor_product_name = models.CharField(max_length=255)
     competitor_name = models.CharField(max_length=255)
     competitor_sku = models.CharField(max_length=100, blank=True)
     our_product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='competitor_mappings')
@@ -156,10 +156,10 @@ class ProductComparison(TenantModel):
     """
     Pre-defined product comparisons for marketing.
     """
-    name = models.CharField(max_length=255)
+    product_comparison_name = models.CharField(max_length=255)
     products = models.ManyToManyField(Product, related_name='comparisons')
-    is_active = models.BooleanField(default=True)
-    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
+    product_comparison_is_active = models.BooleanField(default=True)
+
 
     def __str__(self):
         return self.name

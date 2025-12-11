@@ -1,0 +1,199 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}CLV Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4 text-gray-800">Customer Lifetime Value (CLV) Dashboard</h1>
+            
+            <!-- CLV Overview Cards -->
+            <div class="row">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Average CLV</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">${{ avg_clv|floatformat:2 }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Total CLV</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_clv|floatformat:2 }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Avg Order Value</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">${{ avg_order_value|floatformat:2 }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Avg Purchase Frequency</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ avg_purchase_frequency|floatformat:2 }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-sync-alt fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CLV Trend Chart -->
+            <div class="row">
+                <div class="col-xl-12 col-lg-12">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">CLV Trend Over Time</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-area">
+                                <canvas id="clvTrendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Customers by CLV -->
+            <div class="row">
+                <div class="col-xl-12 col-lg-12">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Top Customers by CLV</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Customer</th>
+                                            <th>Email</th>
+                                            <th>CLV</th>
+                                            <th>Acquisition Cost</th>
+                                            <th>Retention Rate</th>
+                                            <th>Customer Since</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for customer in top_customers %}
+                                        <tr>
+                                            <td>{{ customer.first_name }} {{ customer.last_name }}</td>
+                                            <td>{{ customer.email }}</td>
+                                            <td>${{ customer.customer_lifetime_value|floatformat:2 }}</td>
+                                            <td>${{ customer.acquisition_cost|floatformat:2 }}</td>
+                                            <td>{{ customer.retention_rate|floatformat:2 }}</td>
+                                            <td>{{ customer.customer_since|date:"Y-m-d" }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// CLV Trend Chart
+const ctx = document.getElementById('clvTrendChart').getContext('2d');
+const clvTrendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ clv_trend_labels|safe }},
+        datasets: [{
+            label: 'CLV Trend',
+            data: {{ clv_trend_data|safe }},
+            borderColor: 'rgb(78, 115, 223)',
+            backgroundColor: 'rgba(78, 115, 223, 0.05)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            title: {
+                display: true,
+                text: 'Customer Lifetime Value Over Time'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    drawBorder: false,
+                    display: true,
+                    drawOnChartArea: true,
+                    drawTicks: false,
+                    borderDash: [5, 5]
+                },
+                ticks: {
+                    maxTicksLimit: 5,
+                    callback: function(value, index, values) {
+                        return '$' + value.toLocaleString();
+                    }
+                }
+            },
+            x: {
+                grid: {
+                    display: false,
+                    drawBorder: false
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,85 +1,212 @@
-# apps/automation/
-# ├── __init__.py
-# ├── admin.py
-# ├── apps.py
-# ├── models.py
-# ├── views.py
-# ├── forms.py
-# ├── engine.py
-# ├── tasks.py
-# ├── utils.py
-# ├── urls.py
-# └── templates/automation/
-#     ├── list.html
-#     ├── detail.html
-#     ├── form.html
-#     └── trigger_builder.html
-
 from django.db import models
-from core.models import TenantModel
+from django.utils import timezone
 from core.models import User
+from tenants.models import Tenant, TenantAwareModel as TenantModel
 
-TRIGGER_TYPES = [
-    ('account.created', 'Account Created'),
-    ('account.health_changed', 'Account Health Changed'),
-    ('lead.created', 'Lead Created'),
-    ('lead.qualified', 'Lead Qualified'),
-    ('opportunity.created', 'Opportunity Created'),
-    ('opportunity.stage_changed', 'Opportunity Stage Changed'),
-    ('proposal.viewed', 'Proposal Viewed'),
-    ('proposal.esg_viewed', 'ESG Section Viewed'),
-    ('case.created', 'Case Created'),
-    ('case.sla_breached', 'SLA Breached'),
-    ('case.csat_submitted', 'CSAT Submitted'),
-    ('nps.submitted', 'NPS Submitted'),
-    ('nps.detractor_alert', 'NPS Detractor Alert'),
-    ('custom_status.changed', 'Custom Status Changed'),
-    ('crm_setting.changed', 'CRM Setting Changed'),
-    ('team.member_onboarded', 'Team Member Onboarded'),
-    ('web_to_lead.submitted', 'Web-to-Lead Submitted'),
-]
 
-ACTION_TYPES = [
-    ('send_email', 'Send Email'),
-    ('create_task', 'Create Task'),
-    ('update_field', 'Update Field'),
-    ('run_function', 'Run Function'),
-    ('create_case', 'Create Case'),
-    ('assign_owner', 'Assign Owner'),
-    ('send_slack_message', 'Send Slack Message'),
-    ('webhook', 'Webhook'),
-]
-
-class Automation(TenantModel):
-    """
-    Automation rule with trigger, conditions, and actions.
-    """
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    trigger_type = models.CharField(max_length=50, choices=TRIGGER_TYPES)
-    is_active = models.BooleanField(default=True)
-    is_system = models.BooleanField(default=False)  # Cannot be deleted
-    priority = models.IntegerField(default=0)  # Lower = higher priority
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-
-    def __str__(self):
-        return self.name
+class Workflow(TenantModel):
+    """Model for managing workflow automations"""
+    
+    workflow_name = models.CharField(max_length=255, help_text="Name of the workflow")
+    workflow_description = models.TextField(blank=True, help_text="Description of what this workflow does")
+    workflow_trigger_type = models.CharField(max_length=50, choices=[
+        ('account.created', 'Account Created'),
+        ('account.health_changed', 'Account Health Changed'),
+        ('lead.created', 'Lead Created'),
+        ('lead.qualified', 'Lead Qualified'),
+        ('opportunity.created', 'Opportunity Created'),
+        ('opportunity.stage_changed', 'Opportunity Stage Changed'),
+        ('proposal.viewed', 'Proposal Viewed'),
+        ('proposal.esg_viewed', 'ESG Section Viewed'),
+        ('case.created', 'Case Created'),
+        ('case.sla_breached', 'SLA Breached'),
+        ('case.csat_submitted', 'CSAT Submitted'),
+        ('nps.submitted', 'NPS Submitted'),
+        ('nps.detractor_alert', 'NPS Detractor Alert'),
+        ('custom_status.changed', 'Custom Status Changed'),
+        ('crm_setting.changed', 'CRM Setting Changed'),
+        ('team.member_onboarded', 'Team Member Onboarded'),
+        ('web_to_lead.submitted', 'Web-to-Lead Submitted'),
+    ], help_text="What triggers this workflow")
+    
+    workflow_is_active = models.BooleanField(default=True, help_text="Whether this workflow is currently active")
+    workflow_created_at = models.DateTimeField(auto_now_add=True)
+    workflow_updated_at = models.DateTimeField(auto_now=True)
+    workflow_builder_data = models.JSONField(blank=True, default=dict, help_text="Raw data from visual builder")
+    
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='workflows_created')
 
     class Meta:
-        ordering = ['priority', 'name']
-        indexes = [
-            models.Index(fields=['trigger_type', 'is_active']),
-            models.Index(fields=['tenant_id', 'is_active']),
-        ]
+        verbose_name = "Workflow"
+        verbose_name_plural = "Workflows"
+        ordering = ['-workflow_created_at']
+    
+    def __str__(self):
+        return self.workflow_name
+
+
+class WorkflowAction(TenantModel):
+    """Model for defining actions in workflows"""
+    ACTION_TYPE_CHOICES = [
+        ('send_email', 'Send Email'),
+        ('create_task', 'Create Task'),
+        ('update_field', 'Update Field'),
+        ('run_function', 'Run Function'),
+        ('create_case', 'Create Case'),
+        ('assign_owner', 'Assign Owner'),
+        ('send_slack_message', 'Send Slack Message'),
+        ('webhook', 'Webhook'),
+    ]
+    
+    workflow = models.ForeignKey(Workflow, on_delete=models.CASCADE, related_name='workflow_actions')
+    workflow_action_type = models.CharField(max_length=50, choices=ACTION_TYPE_CHOICES, help_text="Type of action to perform")
+    workflow_action_parameters = models.JSONField(default=dict, help_text="Parameters for the action (JSON)")
+    workflow_action_order = models.IntegerField(default=0, help_text="Execution order (lower executes first)")
+    workflow_action_is_active = models.BooleanField(default=True, help_text="Whether this action is active")
+    workflow_action_created_at = models.DateTimeField(auto_now_add=True)
+    workflow_action_updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Workflow Action"
+        verbose_name_plural = "Workflow Actions"
+        ordering = ['workflow_action_order', 'workflow_action_created_at']
+    
+    def __str__(self):
+        return f"{self.workflow_action_type} for {self.workflow.workflow_name}"
+
+
+class WorkflowExecution(TenantModel):
+    """Model for tracking workflow executions"""
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('running', 'Running'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    workflow = models.ForeignKey(Workflow, on_delete=models.CASCADE, related_name='executions')
+    workflow_execution_trigger_payload = models.JSONField(help_text="Data that triggered the workflow")
+    workflow_execution_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    workflow_execution_error_message = models.TextField(blank=True)
+    workflow_execution_executed_at = models.DateTimeField(auto_now_add=True)
+    workflow_execution_completed_at = models.DateTimeField(blank=True, null=True)
+    workflow_execution_execution_time_ms = models.IntegerField(blank=True, help_text="Execution time in milliseconds", null=True)
+    workflow_execution_created_at = models.DateTimeField(auto_now_add=True)
+    workflow_execution_updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Workflow Execution"
+        verbose_name_plural = "Workflow Executions"
+        ordering = ['-workflow_execution_executed_at']
+    
+    def __str__(self):
+        return f"{self.workflow.workflow_name} - {self.workflow_execution_status}"
+
+
+class WorkflowTrigger(TenantModel):
+    """Model for defining triggers in workflows"""
+    
+    workflow = models.ForeignKey(Workflow, on_delete=models.CASCADE, related_name='triggers')
+    workflow_trigger_event = models.CharField(max_length=100, help_text="Event that triggers this workflow")
+    workflow_trigger_conditions = models.JSONField(default=dict, help_text="Conditions that must be met for the trigger to fire (JSON)")
+    workflow_trigger_is_active = models.BooleanField(default=True, help_text="Whether this trigger is active")
+    workflow_trigger_created_at = models.DateTimeField(auto_now_add=True)
+    workflow_trigger_updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Workflow Trigger"
+        verbose_name_plural = "Workflow Triggers"
+        ordering = ['workflow_trigger_created_at']
+    
+    def __str__(self):
+        return f"Trigger for {self.workflow.workflow_name}: {self.workflow_trigger_event}"
+
+
+class WorkflowTemplate(models.Model):
+    """Model for workflow templates"""
+    
+    workflow_template_name = models.CharField(max_length=255, help_text="Name of the workflow template")
+    workflow_template_description = models.TextField(blank=True, help_text="Description of what this template does")
+    workflow_template_trigger_type = models.CharField(max_length=50, choices=[
+        ('account.created', 'Account Created'),
+        ('account.health_changed', 'Account Health Changed'),
+        ('lead.created', 'Lead Created'),
+        ('lead.qualified', 'Lead Qualified'),
+        ('opportunity.created', 'Opportunity Created'),
+        ('opportunity.stage_changed', 'Opportunity Stage Changed'),
+        ('proposal.viewed', 'Proposal Viewed'),
+        ('proposal.esg_viewed', 'ESG Section Viewed'),
+        ('case.created', 'Case Created'),
+        ('case.sla_breached', 'SLA Breached'),
+        ('case.csat_submitted', 'CSAT Submitted'),
+        ('nps.submitted', 'NPS Submitted'),
+        ('nps.detractor_alert', 'NPS Detractor Alert'),
+        ('custom_status.changed', 'Custom Status Changed'),
+        ('crm_setting.changed', 'CRM Setting Changed'),
+        ('team.member_onboarded', 'Team Member Onboarded'),
+        ('web_to_lead.submitted', 'Web-to-Lead Submitted'),
+    ])
+    workflow_template_builder_data = models.JSONField(help_text="Drawflow JSON structure")
+    workflow_template_is_active = models.BooleanField(default=True, help_text="Whether this template is active")
+    workflow_template_created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Workflow Template"
+        verbose_name_plural = "Workflow Templates"
+        ordering = ['workflow_template_name']
+    
+    def __str__(self):
+        return self.workflow_template_name
+
+
+# Keep the existing models that serve different purposes
+class Automation(TenantModel):
+    """Model for managing automation workflows"""
+    
+    automation_name = models.CharField(max_length=255, help_text="Name of the automation")
+    automation_description = models.TextField(blank=True, help_text="Description of what this automation does")
+    automation_is_active = models.BooleanField(default=True, help_text="Whether this automation is currently active")
+    
+    trigger_type = models.CharField(max_length=100, choices=[
+        ('event_based', 'Event Based'),
+        ('time_based', 'Time Based'),
+        ('condition_based', 'Condition Based'),
+        ('manual', 'Manual Trigger'),
+        ('webhook', 'Webhook Trigger'),
+        ('api_call', 'API Call'),
+    ], help_text="What triggers this automation")
+    
+    trigger_config = models.JSONField(default=dict, blank=True, help_text="Configuration for the trigger")
+    priority = models.IntegerField(default=100, help_text="Priority of the automation (lower numbers execute first)")
+    max_executions_per_minute = models.IntegerField(default=60, help_text="Max number of times this can execute per minute")
+    execution_timeout_seconds = models.IntegerField(default=30, help_text="Timeout for execution in seconds")
+    error_handling = models.JSONField(default=dict, blank=True, help_text="How to handle errors during execution")
+    
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='automations_created')
+    automation_created_at = models.DateTimeField(auto_now_add=True)
+    automation_updated_at = models.DateTimeField(auto_now=True)
+    last_executed = models.DateTimeField(null=True, blank=True, help_text="Last time this was executed")
+    execution_count = models.IntegerField(default=0, help_text="Number of times this has been executed")
+    failure_count = models.IntegerField(default=0, help_text="Number of times this has failed")
+    average_execution_time_ms = models.FloatField(default=0.0, help_text="Average execution time in milliseconds")
+    tags = models.JSONField(default=list, blank=True, help_text="Tags for organizing automations")
+    notes = models.TextField(blank=True, help_text="Internal notes about this automation")
+    is_system = models.BooleanField(default=False, help_text="Automation Triggered By System")
+    class Meta:
+        verbose_name = "Automation"
+        verbose_name_plural = "Automations"
+        ordering = ['priority', '-automation_created_at']
+    
+    def __str__(self):
+        return f"{self.automation_name} - Priority: {self.priority}"
 
 
 class AutomationCondition(TenantModel):
-    """
-    Condition for an automation rule.
-    """
-    CONDITION_OPERATORS = [
+    """Model for defining conditions in automations"""
+    OPERATOR_CHOICES = [
         ('eq', 'Equals'),
-        ('ne', 'Not Equals'),
+        ('ne', 'Not Equal'),
         ('gt', 'Greater Than'),
         ('lt', 'Less Than'),
         ('gte', 'Greater Than or Equal'),
@@ -90,38 +217,62 @@ class AutomationCondition(TenantModel):
     ]
     
     automation = models.ForeignKey(Automation, on_delete=models.CASCADE, related_name='conditions')
-    field_path = models.CharField(max_length=100, help_text="Dot notation path (e.g., 'account.industry')")
-    operator = models.CharField(max_length=20, choices=CONDITION_OPERATORS)
-    value = models.JSONField(help_text="Value to compare against")
-    is_active = models.BooleanField(default=True)
-
+    field_path = models.CharField(max_length=255, help_text="Dot notation path to the field to check (e.g., 'user.profile.status')")
+    operator = models.CharField(max_length=10, choices=OPERATOR_CHOICES, help_text="Comparison operator to use")
+    value = models.TextField(help_text="Expected value for comparison")
+    automation_condition_is_active = models.BooleanField(default=True, help_text="Whether this condition is active")
+    order = models.IntegerField(default=0, help_text="Order to evaluate conditions (lower numbers first)")
+    
+    automation_condition_created_at = models.DateTimeField(auto_now_add=True)
+    automation_condition_updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Automation Condition"
+        verbose_name_plural = "Automation Conditions"
+        ordering = ['automation', 'order']
+    
     def __str__(self):
-        return f"{self.field_path} {self.operator} {self.value}"
+        return f"Condition for {self.automation.automation_name}: {self.field_path} {self.operator} {self.value}"
 
 
 class AutomationAction(TenantModel):
-    """
-    Action to execute when automation is triggered.
-    """
+    """Model for defining actions in automations"""
+    ACTION_TYPE_CHOICES = [
+        ('send_email', 'Send Email'),
+        ('create_task', 'Create Task'),
+        ('update_field', 'Update Field'),
+        ('run_function', 'Run Function'),
+        ('create_case', 'Create Case'),
+        ('assign_owner', 'Assign Owner'),
+        ('send_slack_message', 'Send Slack Message'),
+        ('webhook', 'Webhook Call'),
+        ('custom', 'Custom Action'),
+    ]
+    
     automation = models.ForeignKey(Automation, on_delete=models.CASCADE, related_name='actions')
-    action_type = models.CharField(max_length=50, choices=ACTION_TYPES)
-    config = models.JSONField(help_text="Action configuration (JSON)")
-    order = models.IntegerField(default=0)
-    is_active = models.BooleanField(default=True)
-
-    def __str__(self):
-        return f"{self.get_action_type_display()} for {self.automation.name}"
-
+    action_type = models.CharField(max_length=50, choices=ACTION_TYPE_CHOICES, help_text="Type of action to perform")
+    automation_action_name = models.CharField(max_length=255, help_text="Name of this action")
+    automation_action_description = models.TextField(blank=True, help_text="Description of what this action does")
+    config = models.JSONField(default=dict, blank=True, help_text="Configuration parameters for the action")
+    automation_action_is_active = models.BooleanField(default=True, help_text="Whether this action is active")
+    order = models.IntegerField(default=0, help_text="Order to execute actions (lower numbers first)")
+    
+    automation_action_created_at = models.DateTimeField(auto_now_add=True)
+    automation_action_updated_at = models.DateTimeField(auto_now=True)
+    
     class Meta:
-        ordering = ['order']
+        verbose_name = "Automation Action"
+        verbose_name_plural = "Automation Actions"
+        ordering = ['automation', 'order']
+    
+    def __str__(self):
+        return f"{self.action_type} - {self.automation_action_name}"
 
 
 class AutomationExecutionLog(TenantModel):
-    """
-    Log of automation executions for debugging and monitoring.
-    """
-    EXECUTION_STATUS_CHOICES = [
-        ('triggered', 'Triggered'),
+    """Model for logging automation executions"""
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
         ('conditions_evaluated', 'Conditions Evaluated'),
         ('executing', 'Executing'),
         ('completed', 'Completed'),
@@ -129,128 +280,207 @@ class AutomationExecutionLog(TenantModel):
         ('skipped', 'Skipped'),
     ]
     
-    automation = models.ForeignKey(Automation, on_delete=models.CASCADE)
-    trigger_payload = models.JSONField()
-    status = models.CharField(max_length=20, choices=EXECUTION_STATUS_CHOICES, default='triggered')
-    error_message = models.TextField(blank=True)
-    executed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    execution_time_ms = models.IntegerField(null=True, blank=True)
-
-    def __str__(self):
-        return f"{self.automation.name} - {self.status}"
-
-
-# Workflow Engine Models
-
-class Workflow(TenantModel):
-    """
-    Workflow model for workflow execution engine.
-    """
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    trigger_type = models.CharField(max_length=50, choices=TRIGGER_TYPES)
-    is_active = models.BooleanField(default=True)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    builder_data = models.JSONField(default=dict, blank=True, help_text="Raw data from visual builder")
-
-    def __str__(self):
-        return self.name
-
+    automation = models.ForeignKey(Automation, on_delete=models.CASCADE, related_name='execution_logs')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    trigger_payload = models.JSONField(help_text="Payload that triggered the automation")
+    executed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='automation_executions')
+    execution_time_ms = models.IntegerField(null=True, blank=True, help_text="Time taken to execute in milliseconds")
+    error_message = models.TextField(blank=True, help_text="Error message if execution failed")
+    completed_at = models.DateTimeField(null=True, blank=True, help_text="When execution was completed")
+    
+    automation_execution_log_created_at = models.DateTimeField(auto_now_add=True)
+    automation_execution_log_updated_at = models.DateTimeField(auto_now=True)
+    
     class Meta:
-        ordering = ['-created_at']
-        indexes = [
-            models.Index(fields=['trigger_type', 'is_active']),
-            models.Index(fields=['tenant_id', 'is_active']),
-        ]
-
-
-class WorkflowTrigger(TenantModel):
-    """
-    Trigger configuration for a workflow with conditions.
-    """
-    workflow = models.ForeignKey(Workflow, on_delete=models.CASCADE, related_name='triggers')
-    trigger_event = models.CharField(max_length=100, help_text="Event that triggers this workflow")
-    conditions = models.JSONField(
-        default=dict,
-        help_text="Conditions that must be met for the trigger to fire (JSON)"
-    )
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
+        verbose_name = "Automation Execution Log"
+        verbose_name_plural = "Automation Execution Logs"
+        ordering = ['-automation_execution_log_created_at']
+    
     def __str__(self):
-        return f"{self.trigger_event} for {self.workflow.name}"
+        return f"{self.automation.automation_name} - {self.status} - {self.created_at}"
 
+
+class WebhookEndpoint(TenantModel):
+    """Model for managing webhook endpoints"""
+ 
+    webhook_endpoint_name = models.CharField(max_length=255, help_text="Name of the webhook endpoint")
+    webhook_endpoint_description = models.TextField(blank=True, help_text="Description of what this webhook does")
+    webhook_endpoint_url = models.URLField(max_length=500, help_text="The URL to send webhook payloads to")
+    webhook_endpoint_is_active = models.BooleanField(default=True, help_text="Whether this webhook is currently active")
+    event_types = models.JSONField(default=list, blank=True, help_text="Types of events that trigger this webhook")
+    http_method = models.CharField(max_length=10, choices=[
+        ('GET', 'GET'),
+        ('POST', 'POST'),
+        ('PUT', 'PUT'),
+        ('PATCH', 'PATCH'),
+        ('DELETE', 'DELETE'),
+    ], default='POST')
+    headers = models.JSONField(default=dict, blank=True, help_text="Headers to send with the webhook request")
+    secret = models.CharField(max_length=255, blank=True, help_text="Secret used to sign webhook payloads")
+    signature_header = models.CharField(max_length=50, default='X-Signature', help_text="Header name for the signature")
+    signature_algorithm = models.CharField(max_length=20, default='sha256', help_text="Algorithm used for signatures")
+    timeout_seconds = models.IntegerField(default=30, help_text="Timeout for webhook requests in seconds")
+    retry_attempts = models.IntegerField(default=3, help_text="Number of retry attempts on failure")
+    retry_delay_seconds = models.IntegerField(default=5, help_text="Delay between retries in seconds")
+    rate_limit = models.IntegerField(default=100, help_text="Max requests per time period")
+    rate_limit_period_seconds = models.IntegerField(default=3600, help_text="Time period for rate limiting in seconds")
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='webhooks_created')
+    webhook_endpoint_created_at = models.DateTimeField(auto_now_add=True)
+    webhook_endpoint_updated_at = models.DateTimeField(auto_now=True)
+    last_called = models.DateTimeField(null=True, blank=True, help_text="Last time this webhook was called")
+    last_response_code = models.IntegerField(null=True, blank=True, help_text="Last HTTP response code received")
+    last_error = models.TextField(blank=True, help_text="Last error message if any")
+    failure_count = models.IntegerField(default=0, help_text="Number of consecutive failures")
+    disabled_after_failures = models.IntegerField(default=5, help_text="Disable after this many failures")
+    tags = models.JSONField(default=list, blank=True, help_text="Tags for organizing webhooks")
+    notes = models.TextField(blank=True, help_text="Internal notes about this webhook")
+    
     class Meta:
-        ordering = ['created_at']
-
-
-class WorkflowAction(TenantModel):
-    """
-    Action to be executed as part of a workflow.
-    """
-    workflow = models.ForeignKey(Workflow, on_delete=models.CASCADE, related_name='workflow_actions')
-    action_type = models.CharField(max_length=50, choices=ACTION_TYPES)
-    parameters = models.JSONField(
-        default=dict,
-        help_text="Parameters for the action (JSON)"
-    )
-    order = models.IntegerField(default=0, help_text="Execution order (lower executes first)")
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
+        verbose_name = "Webhook Endpoint"
+        verbose_name_plural = "Webhook Endpoints"
+        ordering = ['-webhook_endpoint_created_at']
+    
     def __str__(self):
-        return f"{self.get_action_type_display()} - {self.workflow.name}"
+        return f"{self.webhook_endpoint_name} - {self.webhook_endpoint_url}"
 
+
+class AutomationRule(models.Model):
+    """Model for defining automation rules"""
+    
+    automation_rule_name = models.CharField(max_length=255, help_text="Name of the automation rule")
+    automation_rule_description = models.TextField(blank=True, help_text="Description of what this rule does")
+    automation_rule_is_active = models.BooleanField(default=True, help_text="Whether this rule is currently active")
+    trigger_type = models.CharField(max_length=100, choices=[
+        ('event_based', 'Event Based'),
+        ('time_based', 'Time Based'),
+        ('condition_based', 'Condition Based'),
+        ('manual', 'Manual Trigger'),
+        ('webhook', 'Webhook Trigger'),
+        ('api_call', 'API Call'),
+    ])
+    trigger_config = models.JSONField(default=dict, blank=True, help_text="Configuration for the trigger")
+    conditions = models.JSONField(default=list, blank=True, help_text="Conditions that must be met for the rule to execute")
+    actions = models.JSONField(default=list, blank=True, help_text="Actions to perform when the rule executes")
+    priority = models.IntegerField(default=100, help_text="Priority of the rule (lower numbers execute first)")
+    max_executions_per_minute = models.IntegerField(default=60, help_text="Max number of times this rule can execute per minute")
+    execution_timeout_seconds = models.IntegerField(default=30, help_text="Timeout for rule execution in seconds")
+    error_handling = models.JSONField(default=dict, blank=True, help_text="How to handle errors during execution")
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, null=True, blank=True, related_name='automation_rules')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='automation_rules_created')
+    automation_rule_created_at = models.DateTimeField(auto_now_add=True)
+    automation_rule_updated_at = models.DateTimeField(auto_now=True)
+    last_executed = models.DateTimeField(null=True, blank=True, help_text="Last time this rule was executed")
+    execution_count = models.IntegerField(default=0, help_text="Number of times this rule has been executed")
+    failure_count = models.IntegerField(default=0, help_text="Number of times this rule has failed")
+    average_execution_time_ms = models.FloatField(default=0.0, help_text="Average execution time in milliseconds")
+    tags = models.JSONField(default=list, blank=True, help_text="Tags for organizing automation rules")
+    notes = models.TextField(blank=True, help_text="Internal notes about this rule")
+    
     class Meta:
-        ordering = ['order', 'created_at']
+        verbose_name = "Automation Rule"
+        verbose_name_plural = "Automation Rules"
+        ordering = ['priority', '-automation_rule_created_at']
+    
+    def __str__(self):
+        return f"{self.automation_rule_name} - Priority: {self.priority}"
 
 
-class WorkflowExecution(TenantModel):
-    """
-    Log of workflow executions for monitoring and debugging.
-    """
-    STATUS_CHOICES = [
+class WebhookDeliveryLog(models.Model):
+    """Model for tracking webhook deliveries"""
+    
+    webhook_endpoint = models.ForeignKey(WebhookEndpoint, on_delete=models.CASCADE, related_name='delivery_logs')
+    event_type = models.CharField(max_length=100, help_text="Type of event that triggered the webhook")
+    payload = models.TextField(help_text="The payload sent to the webhook")
+    headers = models.JSONField(default=dict, blank=True, help_text="Headers sent with the request")
+    webhook_delivery_url = models.URLField(max_length=500, help_text="URL the webhook was sent to")
+    http_method = models.CharField(max_length=10, help_text="HTTP method used")
+    status = models.CharField(max_length=20, choices=[
+        ('sent', 'Sent'),
+        ('delivered', 'Delivered'),
+        ('failed', 'Failed'),
+        ('retrying', 'Retrying'),
+        ('timeout', 'Timeout'),
+        ('rate_limited', 'Rate Limited'),
+    ], default='sent')
+    response_status_code = models.IntegerField(null=True, blank=True, help_text="HTTP status code of the response")
+    response_headers = models.JSONField(default=dict, blank=True, help_text="Headers received in the response")
+    response_body = models.TextField(blank=True, help_text="Body of the response")
+    execution_time_ms = models.FloatField(null=True, blank=True, help_text="Time taken to execute the request in milliseconds")
+    error_message = models.TextField(blank=True, help_text="Error message if the request failed")
+    retry_count = models.IntegerField(default=0, help_text="Number of retries attempted")
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, null=True, blank=True, related_name='webhook_delivery_logs')
+    webhook_delivery_created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True, help_text="When the delivery was completed (success or failure)")
+    signature = models.CharField(max_length=255, blank=True, help_text="Signature that was sent with the webhook")
+    tags = models.JSONField(default=list, blank=True, help_text="Tags for organizing delivery logs")
+    notes = models.TextField(blank=True, help_text="Internal notes about this delivery")
+    
+    class Meta:
+        verbose_name = "Webhook Delivery Log"
+        verbose_name_plural = "Webhook Delivery Logs"
+        ordering = ['-webhook_delivery_created_at']
+    
+    def __str__(self):
+        return f"{self.webhook_endpoint.webhook_endpoint_name} - {self.status} - {self.event_type}"
+
+
+class QualityCheckSchedule(models.Model):
+    """Model for scheduling data quality checks"""
+    
+    quality_check_schedule_name = models.CharField(max_length=255, help_text="Name of the quality check schedule")
+    quality_check_schedule_description = models.TextField(blank=True, help_text="Description of what the quality check validates")
+    quality_check_schedule_is_active = models.BooleanField(default=True, help_text="Whether this schedule is currently active")
+    quality_check_schedule_check_type = models.CharField(max_length=100, choices=[
+        ('data_completeness', 'Data Completeness'),
+        ('data_accuracy', 'Data Accuracy'),
+        ('data_consistency', 'Data Consistency'),
+        ('data_uniqueness', 'Data Uniqueness'),
+        ('data_timeliness', 'Data Timeliness'),
+        ('data_validity', 'Data Validity'),
+        ('data_integrity', 'Data Integrity'),
+        ('duplicate_detection', 'Duplicate Detection'),
+        ('schema_validation', 'Schema Validation'),
+        ('referential_integrity', 'Referential Integrity'),
+    ])
+    quality_check_schedule_target_resource = models.CharField(max_length=255, help_text="Resource to check (e.g., table name, API endpoint)")
+    quality_check_schedule_check_config = models.JSONField(default=dict, blank=True, help_text="Configuration for the quality check")
+    quality_check_schedule_schedule_type = models.CharField(max_length=50, choices=[
+        ('once', 'Once'),
+        ('hourly', 'Hourly'),
+        ('daily', 'Daily'),
+        ('weekly', 'Weekly'),
+        ('monthly', 'Monthly'),
+        ('custom', 'Custom'),
+    ], default='daily')
+    quality_check_schedule_schedule_config = models.JSONField(default=dict, blank=True, help_text="Configuration for the schedule")
+    quality_check_schedule_next_run = models.DateTimeField(help_text="When the next check is scheduled to run")
+    quality_check_schedule_last_run = models.DateTimeField(null=True, blank=True, help_text="When the check was last run")
+    quality_check_schedule_last_run_status = models.CharField(max_length=20, choices=[
         ('pending', 'Pending'),
         ('running', 'Running'),
         ('completed', 'Completed'),
         ('failed', 'Failed'),
         ('cancelled', 'Cancelled'),
-    ]
-
-    workflow = models.ForeignKey(Workflow, on_delete=models.CASCADE, related_name='executions')
-    trigger_payload = models.JSONField(help_text="Data that triggered the workflow")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    error_message = models.TextField(blank=True)
-    executed_at = models.DateTimeField(auto_now_add=True)
-    completed_at = models.DateTimeField(null=True, blank=True)
-    execution_time_ms = models.IntegerField(null=True, blank=True, help_text="Execution time in milliseconds")
-
-    def __str__(self):
-        return f"{self.workflow.name} - {self.status} ({self.executed_at})"
-
+    ], default='pending')
+    quality_check_schedule_last_run_result = models.JSONField(default=dict, blank=True, help_text="Result of the last run")
+    quality_check_schedule_pass_threshold_percent = models.FloatField(default=95.0, help_text="Percentage of data that must pass to consider the check passed")
+    quality_check_schedule_fail_on_error = models.BooleanField(default=True, help_text="Whether to fail the check if any errors occur")
+    quality_check_schedule_notification_emails = models.JSONField(default=list, blank=True, help_text="Email addresses to notify on failure")
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, null=True, blank=True, related_name='quality_check_schedules')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='quality_check_schedules_created')
+    quality_check_schedule_created_at = models.DateTimeField(auto_now_add=True)
+    quality_check_schedule_updated_at = models.DateTimeField(auto_now=True)
+    quality_check_schedule_last_pass = models.DateTimeField(null=True, blank=True, help_text="Last time the check passed")
+    quality_check_schedule_last_fail = models.DateTimeField(null=True, blank=True, help_text="Last time the check failed")
+    quality_check_schedule_failure_count = models.IntegerField(default=0, help_text="Number of consecutive failures")
+    quality_check_schedule_success_count = models.IntegerField(default=0, help_text="Number of successful runs")
+    quality_check_schedule_tags = models.JSONField(default=list, blank=True, help_text="Tags for organizing quality check schedules")
+    quality_check_schedule_notes = models.TextField(blank=True, help_text="Internal notes about this quality check schedule")
+    
     class Meta:
-        ordering = ['-executed_at']
-        indexes = [
-            models.Index(fields=['workflow', 'status']),
-            models.Index(fields=['tenant_id', 'executed_at']),
-        ]
-
-
-class WorkflowTemplate(models.Model):
-    """
-    Template for creating common workflows.
-    """
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    trigger_type = models.CharField(max_length=50, choices=TRIGGER_TYPES)
-    builder_data = models.JSONField(help_text="Drawflow JSON structure")
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
+        verbose_name = "Quality Check Schedule"
+        verbose_name_plural = "Quality Check Schedules"
+        ordering = ['quality_check_schedule_name']
+    
     def __str__(self):
-        return self.name
-
-    class Meta:
-        ordering = ['name']
+        return f"{self.quality_check_schedule_name} - {self.quality_check_schedule_check_type}"

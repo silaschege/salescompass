@@ -62,20 +62,14 @@
         }
 
         /* Additional styles for content */
-            {
-            % block extra_css %
-        }
-
-            {
-            % endblock %
-        }
     </style>
+    {% block extra_css %}{% endblock %}
 </head>
 
 <body>
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="{% url 'app_selection' %}">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'core:app_selection' %}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#6f42c1" class="me-2"
                     viewBox="0 0 16 16">
                     <circle cx="8" cy="8" r="7" stroke="#6f42c1" stroke-width="2" fill="white" />
@@ -83,6 +77,61 @@
                 </svg>
                 SalesCompass
             </a>
+
+            <!-- Navigation Links -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    {% if user.is_superuser %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-shield-lock"></i> Admin
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'accounts:admin_user_dashboard' %}"><i
+                                        class="bi bi-people"></i> User Management</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:system_configuration' %}"><i
+                                        class="bi bi-gear"></i> System Configuration</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:dynamic_choices_dashboard' %}"><i
+                                        class="bi bi-list-check"></i> Dynamic Choices</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:environment_variables' %}"><i
+                                        class="bi bi-terminal"></i> Environment Variables</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:feature_toggle_management' %}"><i
+                                        class="bi bi-toggle-on"></i> Feature Toggles</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:configuration_audit' %}"><i
+                                        class="bi bi-clipboard-check"></i> Configuration Audit</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:system_maintenance' %}"><i
+                                        class="bi bi-tools"></i> System Maintenance</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:data_management' %}"><i
+                                        class="bi bi-database"></i> Data Management</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:backup_management' %}"><i
+                                        class="bi bi-cloud-arrow-down"></i> Backup Management</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="{% url 'core:security_dashboard' %}"><i
+                                        class="bi bi-shield-check"></i> Security Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:ip_whitelist_management' %}"><i
+                                        class="bi bi-list"></i> IP Whitelist</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:security_event_monitoring' %}"><i
+                                        class="bi bi-shield-exclamation"></i> Security Events</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:intrusion_detection' %}"><i
+                                        class="bi bi-exclamation-triangle"></i> Intrusion Detection</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:secure_credential_management' %}"><i
+                                        class="bi bi-key"></i> Credentials</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:compliance_dashboard' %}"><i
+                                        class="bi bi-clipboard-data"></i> Compliance</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:data_privacy_management' %}"><i
+                                        class="bi bi-file-earmark-lock"></i> Data Privacy</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:security_policy_management' %}"><i
+                                        class="bi bi-shield-lock"></i> Security Policies</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:vulnerability_management' %}"><i
+                                        class="bi bi-bug"></i> Vulnerabilities</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+
             <div class="ms-auto d-flex align-items-center">
                 <!-- User Info Header -->
                 <div class="user-info-header d-none d-md-flex">
@@ -92,7 +141,7 @@
                     </div>
                 </div>
 
-                <a href="{% url 'logout' %}"
+                <a href="{% url 'core:logout' %}"
                     class="btn btn-outline-danger btn-sm d-flex align-items-center rounded-pill px-3">
                     <i class="bi bi-box-arrow-right me-2"></i> Log Out
                 </a>

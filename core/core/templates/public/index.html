@@ -1,259 +1,274 @@
 {% extends "public/base.html" %}
 {% load static humanize %}
 
-{% block title %}SalesCompass - CRM That Does the Work For You{% endblock %}
+{% block title %}SalesCompass - The Intelligent CRM for Modern Sales Teams{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'core/css/public-design-system.css' %}">
+<style>
+  /* Custom overrides for Bootstrap components to match design system */
+  .hero-section {
+    padding: 6rem 0;
+    background: linear-gradient(180deg, #FFFFFF 0%, #F5F3FF 100%);
+  }
+
+  .feature-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    height: 100%;
+    border-radius: 1rem;
+    border: 1px solid var(--gray-200);
+  }
+
+  .feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    border-color: var(--color-primary);
+  }
+
+  .icon-box {
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+</style>
 {% endblock %}
 
 {% block content %}
-<!-- Hero Section - Bold & Minimal -->
-<section class="section-large">
-  <div class="container text-center">
-    <h1 class="mb-6">Sell more. Work less.</h1>
-    <p class="text-large text-gray mb-8" style="max-width: 700px; margin-left: auto; margin-right: auto;">
-      The CRM that does the work for you—calls, emails, and follow-ups happen automatically.
-    </p>
-    <div class="flex flex-center gap-4" style="flex-wrap: wrap;">
-      <a href="{% url 'try_free' %}" class="btn btn-primary btn-large">
-        Start free trial
-      </a>
-      <a href="#products" class="btn btn-secondary btn-large">
-        See how it works
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- Metrics Bar -->
-<section class="section bg-gray">
+<!-- Hero Section -->
+<section class="hero-section text-center">
   <div class="container">
-    <div class="metrics-bar">
-      <div class="metric">
-        <div class="metric-number">40%</div>
-        <div class="metric-label">More deals closed</div>
-      </div>
-      <div class="metric">
-        <div class="metric-number">10 hrs</div>
-        <div class="metric-label">Saved per week</div>
-      </div>
-      <div class="metric">
-        <div class="metric-number">10,000+</div>
-        <div class="metric-label">Sales teams</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Product Grid -->
-<section id="products" class="section-large">
-  <div class="container">
-    <div class="text-center mb-12">
-      <h2 class="mb-4">Everything your sales team needs.</h2>
-      <p class="text-large text-gray">One platform. Zero busywork.</p>
-    </div>
-
-    <div class="grid grid-4">
-      <!-- CRM -->
-      <a href="{% url 'product' %}" class="product-card">
-        <div class="product-icon">
-          <i class="bi bi-people"></i>
-        </div>
-        <h4 class="product-title">Core CRM</h4>
-        <p class="product-description">Leads organize themselves.</p>
-        <span class="product-link">Learn more →</span>
-      </a>
-
-      <!-- Voice -->
-      <a href="{% url 'product' %}" class="product-card">
-        <div class="product-icon">
-          <i class="bi bi-telephone"></i>
-        </div>
-        <h4 class="product-title">Smart Calling</h4>
-        <p class="product-description">Calls that log themselves.</p>
-        <span class="product-link">Learn more →</span>
-      </a>
-
-      <!-- Email -->
-      <a href="{% url 'product' %}" class="product-card">
-        <div class="product-icon">
-          <i class="bi bi-envelope"></i>
-        </div>
-        <h4 class="product-title">Auto Email</h4>
-        <p class="product-description">Emails that send themselves.</p>
-        <span class="product-link">Learn more →</span>
-      </a>
-
-      <!-- Intelligence -->
-      <a href="{% url 'product' %}" class="product-card">
-        <div class="product-icon">
-          <i class="bi bi-lightbulb"></i>
-        </div>
-        <h4 class="product-title">Sales Intelligence</h4>
-        <p class="product-description">Insights that find themselves.</p>
-        <span class="product-link">Learn more →</span>
-      </a>
-
-      <!-- Reports -->
-      <a href="{% url 'product' %}" class="product-card">
-        <div class="product-icon">
-          <i class="bi bi-graph-up"></i>
-        </div>
-        <h4 class="product-title">Reporting</h4>
-        <p class="product-description">Reports that write themselves.</p>
-        <span class="product-link">Learn more →</span>
-      </a>
-
-      <!-- Automation -->
-      <a href="{% url 'product' %}" class="product-card">
-        <div class="product-icon">
-          <i class="bi bi-lightning"></i>
-        </div>
-        <h4 class="product-title">Automation</h4>
-        <p class="product-description">Tasks that complete themselves.</p>
-        <span class="product-link">Learn more →</span>
-      </a>
-
-      <!-- Marketing -->
-      <a href="{% url 'product' %}" class="product-card">
-        <div class="product-icon">
-          <i class="bi bi-megaphone"></i>
-        </div>
-        <h4 class="product-title">Marketing</h4>
-        <p class="product-description">Campaigns that run themselves.</p>
-        <span class="product-link">Learn more →</span>
-      </a>
-
-      <!-- Analytics -->
-      <a href="{% url 'product' %}" class="product-card">
-        <div class="product-icon">
-          <i class="bi bi-bar-chart"></i>
-        </div>
-        <h4 class="product-title">Analytics</h4>
-        <p class="product-description">Forecasts that update themselves.</p>
-        <span class="product-link">Learn more →</span>
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- How It Works -->
-<section class="section bg-gray">
-  <div class="container">
-    <div class="text-center mb-12">
-      <h2 class="mb-4">Three ways we save your team time.</h2>
-    </div>
-
-    <div class="grid grid-3">
-      <!-- Step 1 -->
-      <div class="text-center">
-        <div
-          style="width: 64px; height: 64px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
-          <i class="bi bi-shield-check" style="font-size: 32px; color: var(--color-purple);"></i>
-        </div>
-        <h3 class="mb-4">Set policies that enforce themselves.</h3>
-        <p class="text-gray">
-          Customize workflows, auto-assign leads, and stop out-of-process deals before they happen.
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <h1 class="display-3 fw-bold mb-4 text-dark">
+          The CRM that <span style="color: var(--color-primary);">does the work for you</span>.
+        </h1>
+        <p class="lead text-muted mb-5 mx-auto" style="max-width: 750px;">
+          SalesCompass combines an intuitive CRM with intelligent automation.
+          Stop wasting time on data entry and start closing more deals with auto-logged calls, smart follow-ups, and
+          AI-driven insights.
         </p>
-      </div>
-
-      <!-- Step 2 -->
-      <div class="text-center">
-        <div
-          style="width: 64px; height: 64px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
-          <i class="bi bi-eye" style="font-size: 32px; color: var(--color-purple);"></i>
+        <div class="d-flex justify-content-center gap-3">
+          <a href="{% url 'core:try_free' %}" class="btn btn-primary btn-lg px-5 rounded-pill fw-semibold">
+            Start Free Trial
+          </a>
+          <a href="#features" class="btn btn-outline-secondary btn-lg px-5 rounded-pill fw-semibold bg-white">
+            See How It Works
+          </a>
         </div>
-        <h3 class="mb-4">Errors are caught for you.</h3>
-        <p class="text-gray">
-          SalesCompass watches 24/7 to catch duplicates, missing data, and stalled opportunities.
-        </p>
-      </div>
-
-      <!-- Step 3 -->
-      <div class="text-center">
-        <div
-          style="width: 64px; height: 64px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
-          <i class="bi bi-gear" style="font-size: 32px; color: var(--color-purple);"></i>
-        </div>
-        <h3 class="mb-4">Leave the busywork to us.</h3>
-        <p class="text-gray">
-          Keep your team focused on selling while SalesCompass automates logging, follow-ups, and reporting.
+        <p class="mt-4 text-muted small">
+          <i class="bi bi-check-circle-fill text-success me-1"></i> No credit card required &nbsp; | &nbsp;
+          <i class="bi bi-check-circle-fill text-success me-1"></i> 14-day free trial
         </p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Social Proof -->
-<section class="section-large">
+<!-- Metrics Section (Bootstrap Grid) -->
+<section class="py-5 bg-white border-bottom">
   <div class="container">
-    <div class="text-center mb-12">
-      <h2 class="mb-4">What would you do with more time?</h2>
-      <p class="text-large text-gray">Over 100,000 hours saved for 10,000+ sales teams.</p>
+    <div class="row g-4 text-center">
+      <div class="col-md-4">
+        <div class="py-3">
+          <h2 class="display-4 fw-bold mb-1" style="color: var(--color-secondary);">40%</h2>
+          <p class="text-muted fw-medium">Increase in Win Rate</p>
+        </div>
+      </div>
+      <div class="col-md-4 border-start border-end">
+        <div class="py-3">
+          <h2 class="display-4 fw-bold mb-1" style="color: var(--color-secondary);">10h</h2>
+          <p class="text-muted fw-medium">Saved Per Rep Weekly</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="py-3">
+          <h2 class="display-4 fw-bold mb-1" style="color: var(--color-secondary);">3x</h2>
+          <p class="text-muted fw-medium">Faster Ramp Time</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Core Features Grid (Bento Box Style using Bootstrap) -->
+<section id="features" class="py-5">
+  <div class="container py-5">
+    <div class="text-center mb-5">
+      <h6 class="text-uppercase fw-bold letter-spacing-2" style="color: var(--color-primary);">Platform</h6>
+      <h2 class="fw-bold mb-3">All your sales tools in one place</h2>
+      <p class="text-muted lead">Eliminate tool switching and fragmented data.</p>
     </div>
 
-    <div class="grid grid-3">
-      <!-- Customer Case 1 -->
-      <div class="card">
-        <div class="text-small text-gray mb-2">Technology • Mid-size</div>
-        <div class="mb-4">
-          <div style="font-size: var(--text-4xl); font-weight: var(--font-extrabold); color: var(--color-purple);">2
-            hours</div>
-          <div class="text-gray">saved per rep, daily</div>
-        </div>
-        <p class="text-gray">"SalesCompass eliminated manual data entry completely."</p>
-      </div>
-
-      <!-- Customer Case 2 -->
-      <div class="card">
-        <div class="text-small text-gray mb-2">Healthcare • Enterprise</div>
-        <div class="mb-4">
-          <div style="font-size: var(--text-4xl); font-weight: var(--font-extrabold); color: var(--color-purple);">45%
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+      <!-- Feature 1: CRM -->
+      <div class="col">
+        <div class="card feature-card p-4 border-0 h-100 bg-white shadow-sm">
+          <div class="card-body">
+            <div class="icon-box" style="background-color: var(--color-primary-light); color: var(--color-primary);">
+              <i class="bi bi-people-fill"></i>
+            </div>
+            <h4 class="card-title fw-bold mb-3">Relationship Management</h4>
+            <p class="card-text text-muted">
+              A clean, clutter-free view of every customer. Activity timelines, deal stages, and contacts are
+              automatically organized for you.
+            </p>
           </div>
-          <div class="text-gray">increase in pipeline velocity</div>
         </div>
-        <p class="text-gray">"Deals close faster with automatic follow-ups."</p>
       </div>
 
-      <!-- Customer Case 3 -->
-      <div class="card">
-        <div class="text-small text-gray mb-2">Finance • SMB</div>
-        <div class="mb-4">
-          <div style="font-size: var(--text-4xl); font-weight: var(--font-extrabold); color: var(--color-purple);">3
-            tools</div>
-          <div class="text-gray">replaced by SalesCompass</div>
+      <!-- Feature 2: Voice -->
+      <div class="col">
+        <div class="card feature-card p-4 border-0 h-100 bg-white shadow-sm">
+          <div class="card-body">
+            <div class="icon-box"
+              style="background-color: var(--color-secondary-light); color: var(--color-secondary);">
+              <i class="bi bi-telephone-fill"></i>
+            </div>
+            <h4 class="card-title fw-bold mb-3">Smart Calling</h4>
+            <p class="card-text text-muted">
+              Click-to-call directly from the browser. Calls are automatically logged, recorded, and transcribed for
+              coaching.
+            </p>
+          </div>
         </div>
-        <p class="text-gray">"One platform for calls, emails, and CRM."</p>
       </div>
-    </div>
 
-    <div class="text-center mt-8">
-      <a href="{% url 'customers' %}" class="btn btn-secondary">View all customer stories</a>
+      <!-- Feature 3: Automation -->
+      <div class="col">
+        <div class="card feature-card p-4 border-0 h-100 bg-white shadow-sm">
+          <div class="card-body">
+            <div class="icon-box" style="background-color: #E0F2FE; color: #0284C7;">
+              <i class="bi bi-lightning-charge-fill"></i>
+            </div>
+            <h4 class="card-title fw-bold mb-3">Workflow Automation</h4>
+            <p class="card-text text-muted">
+              Put busywork on autopilot. Automatically assign leads, set follow-up tasks, and update deal stages based
+              on activity.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature 4: Intelligence -->
+      <div class="col">
+        <div class="card feature-card p-4 border-0 h-100 bg-white shadow-sm">
+          <div class="card-body">
+            <div class="icon-box" style="background-color: #FCE7F3; color: #DB2777;">
+              <i class="bi bi-lightbulb-fill"></i>
+            </div>
+            <h4 class="card-title fw-bold mb-3">Sales Intelligence</h4>
+            <p class="card-text text-muted">
+              Spot at-risk deals before it's too late. AI-driven scoring helps you focus on the opportunities most
+              likely to convert.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature 5: Email -->
+      <div class="col">
+        <div class="card feature-card p-4 border-0 h-100 bg-white shadow-sm">
+          <div class="card-body">
+            <div class="icon-box" style="background-color: #DCFCE7; color: #16A34A;">
+              <i class="bi bi-envelope-check-fill"></i>
+            </div>
+            <h4 class="card-title fw-bold mb-3">Email Integration</h4>
+            <p class="card-text text-muted">
+              Bi-directional sync with Gmail and Outlook. Send personalized sequences, track opens, and never miss a
+              reply.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature 6: Analytics -->
+      <div class="col">
+        <div class="card feature-card p-4 border-0 h-100 bg-white shadow-sm">
+          <div class="card-body">
+            <div class="icon-box" style="background-color: #F3E8FF; color: #9333EA;">
+              <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <h4 class="card-title fw-bold mb-3">Deep Analytics</h4>
+            <p class="card-text text-muted">
+              Real-time dashboards for revenue, pipeline health, and team performance. No complex setup required.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- Final CTA -->
-<section class="section-large bg-purple text-center" style="color: white;">
-  <div class="container">
-    <h2 class="mb-4" style="color: white;">Ready to get your time back?</h2>
-    <p class="text-large mb-8"
-      style="color: rgba(255,255,255,0.9); max-width: 600px; margin-left: auto; margin-right: auto;">
-      Join 10,000+ sales teams using SalesCompass to close more deals with less work.
-    </p>
-    <div class="flex flex-center gap-4" style="flex-wrap: wrap;">
-      <a href="{% url 'try_free' %}" class="btn btn-large"
-        style="background-color: white; color: var(--color-purple); border-color: white;">
-        Start free trial
-      </a>
-      <a href="{% url 'support' %}" class="btn btn-large"
-        style="background-color: transparent; color: white; border-color: white;">
-        Talk to sales
-      </a>
+<!-- Value Props / Alternating Sections -->
+<section class="py-5 bg-light">
+  <div class="container py-5">
+
+    <!-- Prop 1 -->
+    <div class="row align-items-center mb-5 gx-5">
+      <div class="col-lg-6 mb-4 mb-lg-0">
+        <div class="p-5 rounded-4 bg-white shadow-sm d-flex align-items-center justify-content-center"
+          style="min-height: 400px; border: 1px solid var(--gray-200);">
+          <!-- Placeholder for Product Screenshot -->
+          <div class="text-center text-muted">
+            <i class="bi bi-laptop display-1 mb-3 d-block"></i>
+            <span class="fw-medium">Pipeline View Dashboard</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="ps-lg-4">
+          <div class="d-inline-flex align-items-center justify-content-center rounded-3 p-2 mb-3"
+            style="background-color: var(--color-primary-light);">
+            <i class="bi bi-kanban" style="font-size: 1.5rem; color: var(--color-primary);"></i>
+          </div>
+          <h2 class="fw-bold mb-3">Visualize your entire sales pipeline.</h2>
+          <p class="lead text-muted mb-4">
+            Drag-and-drop deals through stages. Get a clear picture of forecasted revenue and identify bottlenecks
+            instantly.
+          </p>
+          <ul class="list-unstyled">
+            <li class="mb-3 d-flex align-items-start">
+              <i class="bi bi-check-circle-fill text-success mt-1 me-3"></i>
+              <span><strong>Kanban & List Views:</strong> Work the way you want.</span>
+            </li>
+            <li class="mb-3 d-flex align-items-start">
+              <i class="bi bi-check-circle-fill text-success mt-1 me-3"></i>
+              <span><strong>Custom Fields:</strong> Track the data that matters to your business.</span>
+            </li>
+            <li class="mb-3 d-flex align-items-start">
+              <i class="bi bi-check-circle-fill text-success mt-1 me-3"></i>
+              <span><strong>Stale Deal Alerts:</strong> Never let a lead go cold.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
-    <div class="mt-6" style="font-size: var(--text-sm); opacity: 0.8;">
-      No credit card required • Free 14-day trial • Cancel anytime
+
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5 text-center text-white" style="background-color: var(--color-primary);">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <h2 class="display-5 fw-bold mb-4">Ready to upgrade your sales team?</h2>
+        <p class="lead mb-5 opacity-75">
+          Join thousands of sales professionals who trust SalesCompass to manage their relationships and close more
+          deals.
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+          <a href="{% url 'core:try_free' %}" class="btn btn-light btn-lg px-5 rounded-pill fw-bold text-primary">
+            Start Your Free Trial
+          </a>
+        </div>
+        <p class="mt-4 small opacity-75">Full access. No credit card required.</p>
+      </div>
     </div>
   </div>
 </section>

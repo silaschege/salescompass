@@ -1,0 +1,115 @@
+{% extends 'logged_in/base.html' %}
+
+{% block title %}Create Automated Lifecycle Rule{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Create Automated Lifecycle Rule</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Rule Details</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="{{ form.name.id_for_label }}">Rule Name</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger">{{ form.name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="{{ form.evaluation_frequency.id_for_label }}">Evaluation Frequency</label>
+                                {{ form.evaluation_frequency }}
+                                {% if form.evaluation_frequency.errors %}
+                                    <div class="text-danger">{{ form.evaluation_frequency.errors }}</div>
+                                {% endif %}
+                            </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.description.id_for_label }}">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="m-0 font-weight-bold text-primary">Condition</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-row">
+                                    <div class="form-group col-md-4">
+                                        <label for="{{ form.condition_type.id_for_label }}">Condition Type</label>
+                                        {{ form.condition_type }}
+                                        {% if form.condition_type.errors %}
+                                            <div class="text-danger">{{ form.condition_type.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label for="{{ form.condition_field.id_for_label }}">Field</label>
+                                        {{ form.condition_field }}
+                                        {% if form.condition_field.errors %}
+                                            <div class="text-danger">{{ form.condition_field.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label for="{{ form.condition_operator.id_for_label }}">Operator</label>
+                                        {{ form.condition_operator }}
+                                        {% if form.condition_operator.errors %}
+                                            <div class="text-danger">{{ form.condition_operator.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                
+                                <div class="form-group">
+                                    <label for="{{ form.condition_value.id_for_label }}">Value</label>
+                                    {{ form.condition_value }}
+                                    {% if form.condition_value.errors %}
+                                        <div class="text-danger">{{ form.condition_value.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="m-0 font-weight-bold text-primary">Action</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label for="{{ form.action_type.id_for_label }}">Action Type</label>
+                                        {{ form.action_type }}
+                                        {% if form.action_type.errors %}
+                                            <div class="text-danger">{{ form.action_type.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label for="{{ form.action_parameters.id_for_label }}">Action Parameters (JSON)</label>
+                                        {{ form.action_parameters }}
+                                        {% if form.action_parameters.errors %}
+                                            <div class="text-danger">{{ form.action_parameters.errors }}</div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">Enter parameters in JSON format, e.g., {"reason": "Automated suspension"}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                        <button type="submit" class="btn btn-primary">Create Rule</button>
+                        <a href="{% url 'tenants:automated-lifecycle-rules' %}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

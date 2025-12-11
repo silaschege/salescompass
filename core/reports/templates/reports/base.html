@@ -206,27 +206,35 @@
             SalesCompass
         </a>
         <nav class="nav flex-column">
+            <!-- Dashboard -->
+            {% if perms.reports.read %}
+            <a class="nav-link" href="{% url 'reports:dashboard' %}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+            {% endif %}
+
             <!-- Reports Dropdown -->
             {% if perms.reports.read or perms.reports.write %}
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#customersMenu">
-                Reports
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#reportsMenu">
+                <i class="bi bi-file-earmark-text"></i> Reports
             </a>
-            <div class="collapse" id="customersMenu">
+            <div class="collapse" id="reportsMenu">
                 {% if perms.reports.read %}
-                <a class="nav-link ms-3" href="{% url 'reports:list' %}">List</a>
+                <a class="nav-link ms-3" href="{% url 'reports:list' %}">All Reports</a>
                 {% endif %}
                 {% if perms.reports.write %}
-                <a class="nav-link ms-3" href="{% url 'reports:create' %}">Create</a>
+                <a class="nav-link ms-3" href="{% url 'reports:create' %}">Create Report</a>
+                <a class="nav-link ms-3" href="{% url 'reports:builder' %}">Report Builder</a>
                 {% endif %}
             </div>
             {% endif %}
 
-            <!-- Dashboard Dropdown -->
+            <!-- Dashboard Widgets -->
             {% if perms.reports.read %}
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#DashboardMenu">
-                Dashboard
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#widgetsMenu">
+                <i class="bi bi-grid-3x3-gap"></i> Dashboard
             </a>
-            <div class="collapse" id="DashboardMenu">
+            <div class="collapse" id="widgetsMenu">
                 <a class="nav-link ms-3" href="{% url 'reports:dashboard' %}">Dashboard</a>
                 {% if perms.reports.write %}
                 <a class="nav-link ms-3" href="{% url 'reports:widget_create' %}">Create Widget</a>
@@ -236,24 +244,50 @@
 
             <!-- Scheduling Dropdown -->
             {% if perms.reports.write %}
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#levelsMenu">
-                Scheduling
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#schedulingMenu">
+                <i class="bi bi-calendar-event"></i> Scheduling
             </a>
-            <div class="collapse" id="levelsMenu">
-                <a class="nav-link ms-3" href="{% url 'reports:schedule_list' %}">List</a>
-                <a class="nav-link ms-3" href="{% url 'reports:schedule_create' %}">Create</a>
+            <div class="collapse" id="schedulingMenu">
+                <a class="nav-link ms-3" href="{% url 'reports:schedule_list' %}">Scheduled Reports</a>
+                <a class="nav-link ms-3" href="{% url 'reports:schedule_create' %}">Create Schedule</a>
             </div>
             {% endif %}
 
             <!-- Exports Dropdown -->
             {% if perms.reports.read %}
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#locationsMenu">
-                Exports
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#exportsMenu">
+                <i class="bi bi-download"></i> Exports
             </a>
-            <div class="collapse" id="locationsMenu">
-                <a class="nav-link ms-3" href="{% url 'reports:export_list' %}">List</a>
+            <div class="collapse" id="exportsMenu">
+                <a class="nav-link ms-3" href="{% url 'reports:export_list' %}">Export History</a>
+                {% if perms.reports.write %}
+                <a class="nav-link ms-3" href="{% url 'reports:schedule_create' %}">Schedule Export</a>
+                {% endif %}
             </div>
             {% endif %}
+
+            <!-- Workflow Management -->
+            {% if perms.automation.read %}
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#workflowMenu">
+                <i class="bi bi-diagram-3"></i> Workflow Management
+            </a>
+            <div class="collapse" id="workflowMenu">
+                <a class="nav-link ms-3" href="{% url 'automation:workflow_list' %}">Workflows</a>
+                {% if perms.automation.write %}
+                <a class="nav-link ms-3" href="{% url 'automation:workflow_create' %}">Create Workflow</a>
+                {% endif %}
+                <a class="nav-link ms-3" href="{% url 'automation:workflow_action_list' %}">Actions</a>
+                <a class="nav-link ms-3" href="{% url 'automation:workflow_execution_list' %}">Executions</a>
+                <a class="nav-link ms-3" href="{% url 'automation:workflow_trigger_list' %}">Triggers</a>
+                <a class="nav-link ms-3" href="{% url 'automation:workflow_template_list' %}">Templates</a>
+                <a class="nav-link ms-3" href="{% url 'automation:workflow_builder' %}">Builder</a>
+            </div>
+            {% endif %}
+
+            <!-- Back to Main App -->
+            <a class="nav-link" href="{% url 'app_selection' %}">
+                <i class="bi bi-house-door"></i> Main App
+            </a>
 
         </nav>
 

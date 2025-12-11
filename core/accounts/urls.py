@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 app_name = 'accounts'
@@ -30,5 +30,6 @@ urlpatterns = [
     # Account-specific contact URLs
     path('accounts/<int:account_pk>/contacts/', views.AccountContactListView.as_view(), name='account_contact_list'),
     
-
+    # Admin URLs
+    path('admin/', include('accounts.admin_urls')),
 ]

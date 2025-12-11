@@ -6,20 +6,46 @@ from django.http import JsonResponse
 # Make sure this import is at the top
 from core.object_permissions import AccountObjectPolicy, OBJECT_POLICIES
 from core.permissions import ObjectPermissionRequiredMixin
-from .models import Account, Contact
+from .models import Contact
 from .forms import AccountForm, ContactForm,BulkImportUploadForm
+from django.contrib.auth.views import LoginView
 from django.shortcuts import get_object_or_404, redirect, render
 from django.db import transaction, models
 from .utils import parse_accounts_csv
 from leads.models import Lead
 from opportunities.models import Opportunity
 from django.db.models import Q
+from core.models import User
+
+
+
+class CustomLoginView(LoginView):
+    template_name = 'public/login.html'
+    redirect_authenticated_user = True
+
+    def get_success_url(self):
+        user = self.request.user
+        
+        # Superuser -> Admin Dashboard
+        if user.is_superuser:
+            return reverse_lazy('dashboard:admin_dashboard')
+            
+        # Role-based redirection
+        if user.role:
+            role_name = user.role.name.lower()
+            if role_name in ['manager', 'tenant admin', 'admin']:
+                return reverse_lazy('dashboard:manager_dashboard')
+            elif role_name == 'support':
+                return reverse_lazy('dashboard:support_dashboard')
+        
+        # Default -> Cockpit
+        return reverse_lazy('dashboard:cockpit')
 
 
 
 
 class AccountListView(ObjectPermissionRequiredMixin, ListView):
-    model = Account
+    model = User
     template_name = 'accounts/list.html'
     context_object_name = 'accounts'
     paginate_by = 20
@@ -31,7 +57,7 @@ class AccountListView(ObjectPermissionRequiredMixin, ListView):
 
 
 class AccountDetailView(ObjectPermissionRequiredMixin, DetailView):
-    model = Account
+    model = User
     template_name = 'accounts/account_detail.html'
     context_object_name = 'account'
     permission_action = 'view'
@@ -116,7 +142,7 @@ class AccountDetailView(ObjectPermissionRequiredMixin, DetailView):
 
 
 class AccountCreateView(ObjectPermissionRequiredMixin, CreateView):
-    model = Account
+    model = User
     form_class = AccountForm
     template_name = 'accounts/form.html'
     success_url = reverse_lazy('accounts:accounts_list')
@@ -133,7 +159,7 @@ class AccountCreateView(ObjectPermissionRequiredMixin, CreateView):
 
 
 class AccountUpdateView(ObjectPermissionRequiredMixin, UpdateView):
-    model = Account
+    model = User
     form_class = AccountForm
     template_name = 'accounts/form.html'
     success_url = reverse_lazy('accounts:accounts_list')
@@ -150,7 +176,7 @@ class AccountUpdateView(ObjectPermissionRequiredMixin, UpdateView):
 
 
 class AccountDeleteView(ObjectPermissionRequiredMixin, DeleteView):
-    model = Account
+    model = User
     template_name = 'accounts/confirm_delete.html'
     success_url = reverse_lazy('accounts:account_list')
     permission_action = 'delete'
@@ -239,7 +265,7 @@ class BulkImportPreviewView(ObjectPermissionRequiredMixin, FormView):
                         row['owner_id'] = request.user.id
                         if hasattr(request.user, 'tenant_id'):
                             row['tenant_id'] = request.user.tenant_id
-                        Account.objects.create(**row)
+                        User.objects.create(**row)
                         success_count += 1
                     except Exception as e:
                         error_count += 1
@@ -279,7 +305,7 @@ class AccountKanbanView(ObjectPermissionRequiredMixin, TemplateView):
 
     def get_queryset(self):
         from core.object_permissions import AccountObjectPolicy
-        return AccountObjectPolicy.get_viewable_queryset(self.request.user, Account.objects.all())
+        return AccountObjectPolicy.get_viewable_queryset(self.request.user, User.objects.all())
 
 
 # === AJAX Update Status ===
@@ -293,11 +319,11 @@ def update_account_status(request):
         account_id = data.get('account_id')
         new_status = data.get('status')
 
-        if new_status not in dict(Account.STATUS_CHOICES):
+        if new_status not in dict(User.STATUS_CHOICES):
             return JsonResponse({'error': 'Invalid status'}, status=400)
 
         # Enforce object-level permission
-        account = get_object_or_404(Account, id=account_id)
+        account = get_object_or_404(User, id=account_id)
         from core.object_permissions import AccountObjectPolicy
         if not AccountObjectPolicy.can_change(request.user, account):
             return JsonResponse({'error': 'Permission denied'}, status=403)
@@ -363,10 +389,10 @@ class ContactListView(ObjectPermissionRequiredMixin, ListView):
             from core.object_permissions import AccountObjectPolicy
             context['filter_accounts'] = AccountObjectPolicy.get_viewable_queryset(
                 self.request.user, 
-                Account.objects.all()
+                User.objects.all()
             ).order_by('name')
         else:
-            context['filter_accounts'] = Account.objects.none()
+            context['filter_accounts'] = User.objects.none()
             
         return context
 
@@ -462,12 +488,12 @@ class AccountContactListView(ContactListView):
     template_name = 'contacts/account_contact_list.html'
 
     def get_queryset(self):
-        account = get_object_or_404(Account, pk=self.kwargs['account_pk'])
+        account = get_object_or_404(User, pk=self.kwargs['account_pk'])
         return Contact.objects.filter(account=account).select_related('account')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['account'] = get_object_or_404(Account, pk=self.kwargs['account_pk'])
+        context['account'] = get_object_or_404(User, pk=self.kwargs['account_pk'])
         return context
 
 

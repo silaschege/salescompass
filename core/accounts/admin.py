@@ -1,12 +1,15 @@
 from django.contrib import admin
-from .models import Account, Contact
+from .models import  Contact, Role
 
-@admin.register(Account)
-class AccountAdmin(admin.ModelAdmin):
-    list_display = ['name', 'industry', 'tier', 'health_score', 'esg_engagement', 'status','owner']
-    list_filter = ['industry', 'tier', 'esg_engagement', 'status']
-    search_fields = ['name', 'contacts__email']
-    readonly_fields = ['health_score', 'clv']
+@admin.register(Role)
+class RoleAdmin(admin.ModelAdmin):
+    list_display = ['name', 'description', 'permission_count']
+    readonly_fields = ['permission_count']
+
+    def permission_count(self, obj):
+        return len(obj.permissions)
+    permission_count.short_description = 'Permissions'
+
 
 @admin.register(Contact)
 class ContactAdmin(admin.ModelAdmin):

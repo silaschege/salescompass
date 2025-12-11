@@ -1,0 +1,40 @@
+{% extends "automation/base.html" %}
+
+{% block title %}Workflow Template Form - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{% if object %}Edit Workflow Template{% else %}Create Workflow Template{% endif %}</h1>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="{{ form.workflow_template_name.id_for_label }}" class="form-label">Name</label>
+            {{ form.workflow_template_name }}
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.workflow_template_description.id_for_label }}" class="form-label">Description</label>
+            {{ form.workflow_template_description }}
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.workflow_template_trigger_type.id_for_label }}" class="form-label">Trigger Type</label>
+            {{ form.workflow_template_trigger_type }}
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.workflow_template_builder_data.id_for_label }}" class="form-label">Builder Data</label>
+            {{ form.workflow_template_builder_data }}
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.workflow_template_is_active.id_for_label }}" class="form-label">Active</label>
+            {{ form.workflow_template_is_active }}
+        </div>
+        
+        <button type="submit" class="btn btn-primary">{% if object %}Update{% else %}Create{% endif %} Workflow Template</button>
+        <a href="{% url 'automation:workflow_template_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

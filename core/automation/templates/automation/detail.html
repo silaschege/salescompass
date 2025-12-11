@@ -1,34 +1,119 @@
 {% extends "automation/base.html" %}
 
+{% block title %}Automation Details - SalesCompass{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 text-gray-800">{{ workflow.name }}</h1>
-        <div>
-            <a href="{% url 'automation:update' workflow.pk %}" class="btn btn-primary btn-sm">Edit</a>
-            <a href="{% url 'automation:list' %}" class="btn btn-secondary btn-sm">Back to List</a>
+<div class="container">
+    <h1>Automation Details</h1>
+    
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Automation: {{ automation.automation_name }}</h5>
+            <p class="card-text"><strong>Description:</strong> {{ automation.automation_description }}</p>
+            <p class="card-text"><strong>Trigger Type:</strong> {{ automation.trigger_type }}</p>
+            <p class="card-text"><strong>Trigger Config:</strong> {{ automation.trigger_config }}</p>
+            <p class="card-text"><strong>Priority:</strong> {{ automation.priority }}</p>
+            <p class="card-text"><strong>Max Executions Per Minute:</strong> {{ automation.max_executions_per_minute }}</p>
+            <p class="card-text"><strong>Execution Timeout Seconds:</strong> {{ automation.execution_timeout_seconds }}</p>
+            <p class="card-text"><strong>Error Handling:</strong> {{ automation.error_handling }}</p>
+            <p class="card-text"><strong>Is Active:</strong> 
+                {% if automation.automation_is_active %}
+                    <span class="badge bg-success">Yes</span>
+                {% else %}
+                    <span class="badge bg-secondary">No</span>
+                {% endif %}
+            </p>
+            <p class="card-text"><strong>Created:</strong> {{ automation.automation_created_at }}</p>
+            <p class="card-text"><strong>Updated:</strong> {{ automation.automation_updated_at }}</p>
+            {% if automation.last_executed %}
+            <p class="card-text"><strong>Last Executed:</strong> {{ automation.last_executed }}</p>
+            {% endif %}
+            <p class="card-text"><strong>Execution Count:</strong> {{ automation.execution_count }}</p>
+            <p class="card-text"><strong>Failure Count:</strong> {{ automation.failure_count }}</p>
+            <p class="card-text"><strong>Avg Execution Time (ms):</strong> {{ automation.average_execution_time_ms }}</p>
         </div>
     </div>
-
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Rule Details</h6>
+    
+    <!-- Related Conditions -->
+    {% if automation.conditions.exists %}
+    <div class="mt-4">
+        <h3>Conditions</h3>
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Field Path</th>
+                        <th>Operator</th>
+                        <th>Value</th>
+                        <th>Order</th>
+                        <th>Active</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for condition in automation.conditions.all %}
+                    <tr>
+                        <td>{{ condition.field_path }}</td>
+                        <td>{{ condition.operator }}</td>
+                        <td>{{ condition.value }}</td>
+                        <td>{{ condition.order }}</td>
+                        <td>
+                            {% if condition.automation_condition_is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Trigger:</strong> {{ workflow.get_trigger_type_display }}</p>
-                    <p><strong>Active:</strong> {% if workflow.is_active %}<span class="badge bg-success">Yes</span>{% else%}<span class="badge bg-secondary">No</span>{% endif %}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Created At:</strong> {{ workflow.created_at }}</p>
-                    <p><strong>Last Updated:</strong> {{ workflow.updated_at }}</p>
-                </div>
-            </div>
-            <hr>
-            <h5>Description</h5>
-            <p>{{ workflow.description|default:"No description provided." }}</p>
+    {% endif %}
+    
+    <!-- Related Actions -->
+    {% if automation.actions.exists %}
+    <div class="mt-4">
+        <h3>Actions</h3>
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Config</th>
+                        <th>Order</th>
+                        <th>Active</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for action in automation.actions.all %}
+                    <tr>
+                        <td>{{ action.action_type }}</td>
+                        <td>{{ action.automation_action_name }}</td>
+                        <td>{{ action.automation_action_description }}</td>
+                        <td>{{ action.config }}</td>
+                        <td>{{ action.order }}</td>
+                        <td>
+                            {% if action.automation_action_is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+    {% endif %}
+    
+    <div class="mt-3">
+        <a href="{% url 'automation:list' %}" class="btn btn-secondary">Back to List</a>
+        {% if perms.automation.write %}
+        <a href="{% url 'automation:update' automation.id %}" class="btn btn-warning">Edit</a>
+        <a href="{% url 'automation:delete' automation.id %}" class="btn btn-danger">Delete</a>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

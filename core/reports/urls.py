@@ -7,8 +7,10 @@ urlpatterns = [
     # Report CRUD
     path('', views.ReportListView.as_view(), name='list'),
     path('create/', views.ReportBuilderView.as_view(), name='create'),
+    path('builder/', views.ReportBuilderView.as_view(), name='builder'),
     path('<int:pk>/', views.ReportDetailView.as_view(), name='detail'),
     path('<int:pk>/delete/', views.ReportDeleteView.as_view(), name='delete'),
+    path('report_list/', views.ReportListView.as_view(), name='report_list'),  # Additional name for navigation
     
     # Dashboard
     path('dashboard/', views.DashboardView.as_view(), name='dashboard'),

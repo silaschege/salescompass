@@ -1,0 +1,25 @@
+{% extends 'leads/base.html' %}
+
+{% block title %}Delete Marketing Channel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>Delete Marketing Channel</h1>
+            
+            <div class="card">
+                <div class="card-body">
+                    <p>Are you sure you want to delete the marketing channel "<strong>{{ object.label }}</strong>"?</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                        <a href="{% url 'leads:marketingchannel_list' %}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

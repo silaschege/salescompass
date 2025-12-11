@@ -1,58 +1,227 @@
-{% extends "global_alerts/base.html" %}
+{% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Global Alerts Dashboard - SalesCompass{% endblock %}
+{% block title %}Global Alerts Dashboard{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <h1 class="mb-4">Global Alerts & System Communication</h1>
+    <div class="row">
+        <div class="col-12">
+            <h1>Global Alerts Dashboard</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
+                    <li class="breadcrumb-item active">Global Alerts</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
 
     <div class="row">
-        <div class="col-md-3 mb-4">
-            <div class="card">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
                 <div class="card-body">
-                    <h5 class="card-title"><i class="bi bi-bell text-primary"></i> Total Alerts</h5>
-                    <h2 class="mb-0">0</h2>
-                    <small class="text-muted">All time</small>
+                    <h5 class="card-title">Total Alerts</h5>
+                    <p class="card-text display-4">{{ total_alerts }}</p>
                 </div>
             </div>
-        </div>
-        <div class="col-md-3 mb-4">
-            <div class="card">
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
                 <div class="card-body">
-                    <h5 class="card-title"><i class="bi bi-broadcast text-success"></i> Active Now</h5>
-                    <h2 class="mb-0">0</h2>
-                    <small class="text-muted">Currently showing</small>
+                    <h5 class="card-title">Active Alerts</h5>
+                    <p class="card-text display-4">{{ active_alerts }}</p>
                 </div>
             </div>
-        </div>
-        <div class="col-md-3 mb-4">
-            <div class="card">
+        <div class="col-md-3">
+            <div class="card text-white bg-danger mb-3">
                 <div class="card-body">
-                    <h5 class="card-title"><i class="bi bi-clock text-info"></i> Scheduled</h5>
-                    <h2 class="mb-0">0</h2>
-                    <small class="text-muted">Upcoming alerts</small>
+                    <h5 class="card-title">Critical Alerts</h5>
+                    <p class="card-text display-4">{{ critical_alerts }}</p>
                 </div>
             </div>
-        </div>
-        <div class="col-md-3 mb-4">
-            <div class="card">
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
                 <div class="card-body">
-                    <h5 class="card-title"><i class="bi bi-exclamation-triangle text-danger"></i> Critical</h5>
-                    <h2 class="mb-0">0</h2>
-                    <small class="text-muted">High priority</small>
+                    <h5 class="card-title">Resolved Alerts</h5>
+                    <p class="card-text display-4">{{ resolved_alerts }}</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">Recent Alerts</h5>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Recent Alerts</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Type</th>
+                                    <th>Severity</th>
+                                    <th>Status</th>
+                                    <th>Tenant</th>
+                                    <th>Triggered At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for alert in recent_alerts %}
+                                <tr>
+                                    <td>{{ alert.title }}</td>
+                                    <td>{{ alert.alert_config.alert_type|title }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if alert.severity == 'info' %}bg-info
+                                            {% elif alert.severity == 'warning' %}bg-warning
+                                            {% elif alert.severity == 'error' %}bg-danger
+                                            {% elif alert.severity == 'critical' %}bg-danger
+                                            {% endif %}">
+                                            {{ alert.severity|upper }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if alert.status == 'triggered' %}bg-info
+                                            {% elif alert.status == 'acknowledged' %}bg-primary
+                                            {% elif alert.status == 'investigating' %}bg-warning
+                                            {% elif alert.status == 'resolved' %}bg-success
+                                            {% elif alert.status == 'closed' %}bg-secondary
+                                            {% endif %}">
+                                            {{ alert.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ alert.tenant.name|default:"-" }}</td>
+                                    <td>{{ alert.triggered_at|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        <a href="{% url 'global_alerts:alert_instance_detail' alert.id %}" class="btn btn-sm btn-outline-primary">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7">No recent alerts found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="{% url 'global_alerts:alert_instance_list' %}" class="btn btn-primary">View All Alerts</a>
+                </div>
+            </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Alert Types Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="alertTypeChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <p class="text-muted">No alerts created. Create your first global alert to communicate with tenants.</p>
-            <button class="btn btn-primary">Create Alert</button>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Active Alert Configurations</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for config in active_configs %}
+                        <a href="{% url 'global_alerts:alert_config_update' config.id %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ config.name }}</h6>
+                                <small>{{ config.severity|upper }}</small>
+                            </div>
+                            <p class="mb-1">{{ config.description|truncatewords:10 }}</p>
+                            <small>{{ config.alert_type|title }} • Last evaluated: {{ config.last_evaluated|timesince|default:"Never" }}</small>
+                        </a>
+                        {% empty %}
+                        <div class="list-group-item">
+                            <p class="mb-0">No active alert configurations found.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <a href="{% url 'global_alerts:alert_config_list' %}" class="btn btn-sm btn-outline-primary mt-2">Manage Configurations</a>
+                </div>
+            </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'global_alerts:alert_config_create' %}" class="btn btn-success">
+                            <i class="fas fa-bell-plus"></i> Create New Alert Configuration
+                        </a>
+                        <a href="{% url 'global_alerts:escalation_policy_list' %}" class="btn btn-info">
+                            <i class="fas fa-exclamation-triangle"></i> Manage Escalation Policies
+                        </a>
+                        <a href="{% url 'global_alerts:correlation_rule_list' %}" class="btn btn-warning">
+                            <i class="fas fa-project-diagram"></i> Manage Correlation Rules
+                        </a>
+                        <a href="{% url 'global_alerts:alert_analytics' %}" class="btn btn-primary">
+                            <i class="fas fa-chart-line"></i> View Alert Analytics
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Chart.js for visualization -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Prepare data for the alert type chart
+const alertTypeData = {
+    labels: [{% for item in alert_types %}"{{ item.alert_type|title }}",{% endfor %}],
+    datasets: [{
+        label: 'Number of Alerts',
+        data: [{% for item in alert_types %}{{ item.count }},{% endfor %}],
+        backgroundColor: [
+            'rgba(255, 99, 132, 0.2)',
+            'rgba(54, 162, 235, 0.2)',
+            'rgba(255, 205, 86, 0.2)',
+            'rgba(75, 192, 192, 0.2)',
+            'rgba(153, 102, 255, 0.2)',
+            'rgba(255, 159, 64, 0.2)'
+        ],
+        borderColor: [
+            'rgb(255, 99, 132)',
+            'rgb(54, 162, 235)',
+            'rgb(255, 205, 86)',
+            'rgb(75, 192, 192)',
+            'rgb(153, 102, 255)',
+            'rgb(255, 159, 64)'
+        ],
+        borderWidth: 1
+    }]
+};
+
+// Create the chart
+const ctx = document.getElementById('alertTypeChart').getContext('2d');
+const alertTypeChart = new Chart(ctx, {
+    type: 'bar',
+    data: alertTypeData,
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
 {% endblock %}

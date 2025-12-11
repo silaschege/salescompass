@@ -12,7 +12,7 @@ from core.permissions import PermissionRequiredMixin
 from .models import NextBestAction, EngagementEvent
 from .forms import NextBestActionForm, EngagementEventForm
 from django.shortcuts import get_object_or_404
-from accounts.models import Account
+from core.models import User as Account
 # apps/engagement/views.py
 from django.utils import timezone
 from datetime import timedelta

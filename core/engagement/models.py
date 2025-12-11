@@ -17,9 +17,9 @@
 #     └── engagement_detail.html
 
 from django.db import models
-from core.models import TenantModel
+from tenants.models import Tenant as TenantModel
 from core.models import User
-from accounts.models import Account
+
 from opportunities.models import Opportunity
 
 
@@ -45,13 +45,13 @@ class EngagementEvent(TenantModel):
     ('task_lead_qualify_completed', 'Lead Qualification Completed'),
     ('task_opportunity_demo_completed', 'Opportunity Demo Completed'),
     ('task_case_escalation_completed', 'Case Escalation Completed'),
-    ('task_account_followup_completed', 'Account Follow-up Completed'),
+    ('task_user_followup_completed', 'User Follow-up Completed'),
     ('task_proposal_followup_completed', 'Proposal Follow-up Completed'),
 
 
     ('lead_created', 'Lead Created'),
     ('lead_contacted', 'Lead Contacted'),
-    ('account_followup_completed', 'Account Follow-up Completed'),
+    ('user_followup_completed', 'User Follow-up Completed'),
     ('demo_completed', 'Demo Completed'),
     ('case_escalation_handled', 'Case Escalation Handled'),
     ('detractor_followup_completed', 'Detractor Follow-up Completed'),
@@ -64,7 +64,7 @@ class EngagementEvent(TenantModel):
     ('renewal_reminder', 'Renewal Reminder'),
     ('nps_submitted', 'NPS Submitted'),
     ]
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='engagement_events')
+    account = models.ForeignKey(User, on_delete=models.CASCADE, related_name='engagement_events')
     opportunity = models.ForeignKey(
         Opportunity, 
         on_delete=models.SET_NULL, 
@@ -73,7 +73,7 @@ class EngagementEvent(TenantModel):
         related_name='engagement_events'
     )
     event_type = models.CharField(max_length=50, choices=EVENT_TYPES)
-    description = models.TextField()
+    engagement_event_description = models.TextField()
     title = models.CharField(max_length=255, blank=True)  # e.g., "Q3 Proposal Viewed"
     case = models.ForeignKey('cases.Case', on_delete=models.CASCADE, null=True, blank=True)
     nps_response = models.ForeignKey('nps.NpsResponse', on_delete=models.CASCADE, null=True, blank=True)
@@ -95,7 +95,7 @@ class EngagementEvent(TenantModel):
     tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
 
     def __str__(self):
-        return f"{self.event_type} - {self.account.name}"
+        return f"{self.event_type} - {self.user.name}"
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
@@ -109,7 +109,7 @@ class EngagementEvent(TenantModel):
                 'event_id': self.id,
                 'event_type': self.event_type,
                 'title': self.title,
-                'account_id': self.account_id,
+                'user_id': self.user_id,
                 'engagement_score': self.engagement_score,
                 'tenant_id': self.tenant_id
             })
@@ -120,14 +120,14 @@ class EngagementEvent(TenantModel):
                     'event_id': self.id,
                     'event_type': self.event_type,
                     'title': self.title,
-                    'account_id': self.account_id,
+                    'user_id': self.user_id,
                     'engagement_score': self.engagement_score,
                     'tenant_id': self.tenant_id
                 })
 
     @property
-    def account_name(self):
-        return self.account.name
+    def user_name(self):
+        return self.user.name
 
     @property
     def opportunity_name(self):
@@ -137,8 +137,8 @@ class EngagementEvent(TenantModel):
         """Get event data formatted for WebSocket broadcast."""
         return {
             'id': self.id,
-            'account_id': self.account.id if self.account else None,
-            'account_name': self.account.name if self.account else 'Unknown Account',
+            'user_id': self.user.id if self.user else None,
+            'user_name': self.user.name if self.user else 'Unknown User',
             'title': self.title or f'{self.get_event_type_display()} Event',
             'event_type': self.get_event_type_display(),
             'engagement_score': self.engagement_score,
@@ -150,20 +150,20 @@ class EngagementStatus(TenantModel):
     """
     Aggregated engagement status per account.
     """
-    account = models.OneToOneField(Account, on_delete=models.CASCADE, related_name='engagement_status')
+    account = models.OneToOneField(User, on_delete=models.CASCADE, related_name='engagement_status')
     last_engaged_at = models.DateTimeField(null=True, blank=True)
     engagement_score = models.FloatField(default=0.0)  # rolling 30-day score
     notes = models.TextField(blank=True)
 
     def __str__(self):
-        return f"{self.account.name} - {self.engagement_score}"
+        return f"{self.user.name} - {self.engagement_score}"
     
 
 class NextBestAction(TenantModel):
     """
-    AI or rule-based recommended action for an account.
+    AI or rule-based recommended action for an user.
     """
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='next_actions')
+    account = models.ForeignKey(User, on_delete=models.CASCADE, related_name='next_actions')
     opportunity = models.ForeignKey(
         Opportunity, 
         on_delete=models.SET_NULL, 
@@ -172,7 +172,7 @@ class NextBestAction(TenantModel):
     )
     action_type = models.CharField(max_length=50, choices=ACTION_TYPES)
     contact = models.ForeignKey('accounts.Contact', on_delete=models.CASCADE, null=True, blank=True)
-    description = models.TextField()
+    next_best_action_description = models.TextField()
     due_date = models.DateTimeField()
     completed = models.BooleanField(default=False)
     completed_at = models.DateTimeField(null=True, blank=True)
@@ -188,7 +188,7 @@ class NextBestAction(TenantModel):
     tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
 
     def __str__(self):
-        return f"{self.action_type} for {self.account.name}"
+        return f"{self.action_type} for {self.user.name}"
 
     class Meta:
         ordering = ['-due_date', 'priority']
@@ -198,11 +198,11 @@ class EngagementWebhook(TenantModel):
     """
     Webhook configuration for external engagement data.
     """
-    name = models.CharField(max_length=255)
+    engagement_webhook_name = models.CharField(max_length=255)
     webhook_url = models.URLField()
     secret_key = models.CharField(max_length=255, blank=True)
     event_types = models.JSONField(default=list)  # e.g., ["web_visit", "social_mention"]
-    is_active = models.BooleanField(default=True)
+    engagement_webhook_is_active = models.BooleanField(default=True)
     tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
 
     def __str__(self):

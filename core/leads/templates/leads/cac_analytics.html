@@ -1,0 +1,165 @@
+{% extends 'leads/base.html' %}
+
+{% block title %}CAC Analytics{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>Customer Acquisition Cost (CAC) Analytics</h1>
+            
+            <!-- Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h5>Total Leads</h5>
+                            <h2>{{ total_leads }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <h5>Total CAC</h5>
+                            <h2>${{ total_cac|floatformat:2 }}</h2>
+                        </div>
+                    </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <h5>Average CAC</h5>
+                            <h2>${{ average_cac|floatformat:2 }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body">
+                            <h5>Channels</h5>
+                            <h2>{{ cac_by_channel|length }}</h2>
+                        </div>
+                    </div>
+                </div>
+            
+            <!-- CAC by Channel Table (Legacy) -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>CAC by Marketing Channel (Legacy)</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Channel</th>
+                                    <th>Total Cost</th>
+                                    <th>Lead Count</th>
+                                    <th>Average CAC</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for channel, data in cac_by_channel.items %}
+                                <tr>
+                                    <td>{{ channel }}</td>
+                                    <td>${{ data.total_cost|floatformat:2 }}</td>
+                                    <td>{{ data.count }}</td>
+                                    <td>${{ data.average_cac|floatformat:2 }}</td>
+                                    <td>
+                                        <a href="{% url 'leads:channel_metrics' channel=channel %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5">No CAC data available.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            
+            <!-- CAC by Channel Table (New Reference) -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3>CAC by Marketing Channel (Dynamic)</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Channel</th>
+                                    <th>Total Cost</th>
+                                    <th>Lead Count</th>
+                                    <th>Average CAC</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for channel, data in cac_by_channel_ref.items %}
+                                <tr>
+                                    <td>{{ data.channel }}</td>
+                                    <td>${{ data.total_cac_spent|floatformat:2 }}</td>
+                                    <td>{{ data.total_leads }}</td>
+                                    <td>${{ data.average_cac|floatformat:2 }}</td>
+                                    <td>
+                                        <a href="{% url 'leads:channel_metrics' channel=data.channel %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5">No dynamic CAC data available.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Lead List with CAC Data -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3>Leads with CAC Data</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Company</th>
+                                    <th>Marketing Channel</th>
+                                    <th>Campaign Source</th>
+                                    <th>CAC Cost</th>
+                                    <th>Acquisition Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lead in leads %}
+                                <tr>
+                                    <td><a href="{% url 'leads:lead_detail' pk=lead.pk %}">{{ lead.full_name }}</a></td>
+                                    <td>{{ lead.company }}</td>
+                                    <td>{{ lead.marketing_channel }}</td>
+                                    <td>{{ lead.campaign_source }}</td>
+                                    <td>${{ lead.cac_cost|floatformat:2 }}</td>
+                                    <td>{{ lead.lead_acquisition_date|date:"M d, Y" }}</td>
+                                    <td>{{ lead.status }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7">No leads found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

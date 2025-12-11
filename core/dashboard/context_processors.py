@@ -10,7 +10,7 @@ def user_dashboards(request):
         # Get user's dashboards, ordered by default first, then by updated date
         dashboards = DashboardConfig.objects.filter(
             user=request.user
-        ).order_by('-is_default', '-updated_at')[:10]  # Limit to 10 most recent
+        ).order_by('-is_default', '-config_updated_at')[:10]  # Limit to 10 most recent
         
         context['user_dashboards'] = dashboards
     

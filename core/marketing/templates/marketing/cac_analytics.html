@@ -1,0 +1,280 @@
+{% extends 'marketing/base.html' %}
+{% load static %}
+
+{% block title %}CAC Analytics{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4 text-gray-800">Customer Acquisition Cost (CAC) Analytics</h1>
+            
+            <!-- CAC Overview Cards -->
+            <div class="row">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Average CAC</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">${{ avg_cac|floatformat:2 }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Total Marketing Spend</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_spend|floatformat:2 }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-chart-bar fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        New Customers Acquired</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ new_customers_count }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-users fa-2x text-gray-30"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Conversion Rate</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ conversion_rate|floatformat:2 }}%</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-percentage fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CAC by Channel Chart -->
+            <div class="row">
+                <div class="col-xl-6 col-lg-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">CAC by Marketing Channel</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-area">
+                                <canvas id="cacByChannelChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CAC Trend Chart -->
+                <div class="col-xl-6 col-lg-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">CAC Trend Over Time</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-area">
+                                <canvas id="cacTrendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CAC by Channel Table -->
+            <div class="row">
+                <div class="col-xl-12 col-lg-12">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">CAC Breakdown by Channel</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="cacChannelTable" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Channel</th>
+                                            <th>CAC</th>
+                                            <th>Total Spend</th>
+                                            <th>Converted Leads</th>
+                                            <th>Total Leads</th>
+                                            <th>Conversion Rate</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for channel, data in cac_by_channel.items %}
+                                        <tr>
+                                            <td>{{ channel }}</td>
+                                            <td>${{ data.cac|floatformat:2 }}</td>
+                                            <td>${{ data.total_spend|floatformat:2 }}</td>
+                                            <td>{{ data.converted_leads }}</td>
+                                            <td>{{ data.total_leads }}</td>
+                                            <td>{{ data.conversion_rate|floatformat:2 }}%</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// CAC by Channel Chart
+const channelCtx = document.getElementById('cacByChannelChart').getContext('2d');
+const cacByChannelChart = new Chart(channelCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ cac_by_channel_labels|safe }},
+        datasets: [{
+            label: 'CAC by Channel',
+            data: {{ cac_by_channel_data|safe }},
+            backgroundColor: [
+                'rgba(255, 9, 132, 0.2)',
+                'rgba(54, 162, 235, 0.2)',
+                'rgba(255, 205, 86, 0.2)',
+                'rgba(75, 192, 192, 0.2)',
+                'rgba(153, 102, 255, 0.2)',
+                'rgba(255, 159, 64, 0.2)'
+            ],
+            borderColor: [
+                'rgb(255, 99, 132)',
+                'rgb(54, 162, 235)',
+                'rgb(255, 205, 86)',
+                'rgb(75, 192, 192)',
+                'rgb(153, 102, 255)',
+                'rgb(255, 159, 64)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            title: {
+                display: true,
+                text: 'Customer Acquisition Cost by Marketing Channel'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    drawBorder: false,
+                    display: true,
+                    drawOnChartArea: true,
+                    drawTicks: false,
+                    borderDash: [5, 5]
+                },
+                ticks: {
+                    maxTicksLimit: 5,
+                    callback: function(value, index, values) {
+                        return '$' + value.toLocaleString();
+                    }
+                }
+            },
+            x: {
+                grid: {
+                    display: false,
+                    drawBorder: false
+                }
+            }
+        }
+    }
+});
+
+// CAC Trend Chart
+const trendCtx = document.getElementById('cacTrendChart').getContext('2d');
+const cacTrendChart = new Chart(trendCtx, {
+    type: 'line',
+    data: {
+        labels: {{ cac_trend_labels|safe }},
+        datasets: [{
+            label: 'CAC Trend',
+            data: {{ cac_trend_data|safe }},
+            borderColor: 'rgb(78, 115, 223)',
+            backgroundColor: 'rgba(78, 115, 223, 0.05)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            title: {
+                display: true,
+                text: 'Customer Acquisition Cost Over Time'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    drawBorder: false,
+                    display: true,
+                    drawOnChartArea: true,
+                    drawTicks: false,
+                    borderDash: [5, 5]
+                },
+                ticks: {
+                    maxTicksLimit: 5,
+                    callback: function(value, index, values) {
+                        return '$' + value.toLocaleString();
+                    }
+                }
+            },
+            x: {
+                grid: {
+                    display: false,
+                    drawBorder: false
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

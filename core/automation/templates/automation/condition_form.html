@@ -1,207 +1,43 @@
 {% extends "automation/base.html" %}
 
-{% block title %}{% if object %}Edit Condition{% else %}New Condition{% endif %} - SalesCompass{% endblock %}
+{% block title %}Automation Condition Form - SalesCompass{% endblock %}
 
 {% block content %}
-<div class="header-bar mb-4">
-    <div class="container">
-        <h1 class="block-title">{% if object %}Edit Condition{% else %}Add Condition{% endif %}</h1>
-        <p class="text-white text-center lead">
-            {% if object %}Update condition for "{{ automation.name }}"{% else %}Add condition to "{{ automation.name }}"{% endif %}
-        </p>
-    </div>
-</div>
-
 <div class="container">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow-sm border-0">
-                <div class="card-body p-4">
-                    <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <!-- Field Path -->
-                                <div class="mb-4">
-                                    <label for="{{ form.field_path.id_for_label }}" class="form-label fw-bold text-primary">
-                                        Field Path <span class="text-danger">*</span>
-                                    </label>
-                                    {{ form.field_path }}
-                                    {% if form.field_path.errors %}
-                                        <div class="text-danger mt-1">{{ form.field_path.errors }}</div>
-                                    {% endif %}
-                                    <div class="form-text text-muted small">
-                                        Dot notation path (e.g., "account.industry", "opportunity.amount")
-                                    </div>
-                                </div>
-
-                                <!-- Operator -->
-                                <div class="mb-4">
-                                    <label for="{{ form.operator.id_for_label }}" class="form-label fw-bold text-primary">
-                                        Operator <span class="text-danger">*</span>
-                                    </label>
-                                    {{ form.operator }}
-                                    {% if form.operator.errors %}
-                                        <div class="text-danger mt-1">{{ form.operator.errors }}</div>
-                                    {% endif %}
-                                    <div class="form-text text-muted small">
-                                        Comparison operator for the condition
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <!-- Value -->
-                                <div class="mb-4">
-                                    <label for="{{ form.value.id_for_label }}" class="form-label fw-bold text-primary">
-                                        Value <span class="text-danger">*</span>
-                                    </label>
-                                    {{ form.value }}
-                                    {% if form.value.errors %}
-                                        <div class="text-danger mt-1">{{ form.value.errors }}</div>
-                                    {% endif %}
-                                    <div class="form-text text-muted small">
-                                        The value to compare against (can be JSON for complex values)
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-4 pt-3 border-top">
-                            <div>
-                                {% comment %} <a href="{% url 'automation:detail' automation.pk %}" class="btn btn-outline-primary"> {% endcomment %}
-                                <a href="" class="btn btn-outline-primary">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
-                                        <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
-                                    </svg>
-                                    Back to Automation
-                                </a>
-                            </div>
-                            <div class="d-flex gap-2">
-                                {% comment %} <a href="{% url 'automation:detail' automation.pk %}" class="btn btn-light">Cancel</a> {% endcomment %}
-                                <a href="" class="btn btn-light">Cancel</a>
-                                <button type="submit" class="btn btn-primary">
-                                    {% if object %}
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle me-1" viewBox="0 0 16 16">
-                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                                        <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
-                                    </svg>
-                                    Update Condition
-                                    {% else %}
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle me-1" viewBox="0 0 16 16">
-                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-                                    </svg>
-                                    Add Condition
-                                    {% endif %}
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
+    <h1>{% if object %}Edit Condition{% else %}Create Condition{% endif %}</h1>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="{{ form.field_path.id_for_label }}" class="form-label">Field Path</label>
+            {{ form.field_path }}
+            <div class="form-text">Dot notation path to the field to check (e.g., 'account.industry', 'opportunity.amount')</div>
         </div>
-    </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.operator.id_for_label }}" class="form-label">Operator</label>
+            {{ form.operator }}
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.value.id_for_label }}" class="form-label">Value</label>
+            {{ form.value }}
+            <div class="form-text">The expected value for comparison</div>
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.order.id_for_label }}" class="form-label">Order</label>
+            {{ form.order }}
+            <div class="form-text">Order in which conditions are evaluated (lower numbers first)</div>
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.automation_condition_is_active.id_for_label }}" class="form-label">Active</label>
+            {{ form.automation_condition_is_active }}
+        </div>
+        
+        <button type="submit" class="btn btn-primary">{% if object %}Update{% else %}Create{% endif %} Condition</button>
+        <a href="{% url 'automation:list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
 </div>
-
-<div class="footer-bar mt-5">
-    <div class="container">
-        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
-    </div>
-</div>
-{% endblock %}
-{% block extra_head %}
-<style>
-    /* Form-specific styling */
-    .form-label {
-        font-size: 0.95rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .form-control, .form-select {
-        border: 1px solid #e3e6f3;
-        border-radius: 0.5rem;
-        padding: 0.75rem 1rem;
-        font-size: 0.95rem;
-        transition: all 0.2s ease;
-    }
-    
-    .form-control:focus, .form-select:focus {
-        border-color: #6f42c1;
-        box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
-    }
-    
-    .form-control:focus-visible, .form-select:focus-visible {
-        outline: none;
-    }
-    
-    textarea.form-control {
-        min-height: 150px;
-        resize: vertical;
-    }
-    
-    .text-danger {
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
-    }
-    
-    .form-text {
-        font-size: 0.8125rem;
-        margin-top: 0.25rem;
-    }
-    
-    .badge {
-        font-size: 0.75rem;
-        padding: 0.3em 0.6em;
-    }
-    
-    .btn {
-        padding: 0.5rem 1.25rem;
-        font-weight: 600;
-        border-radius: 0.5rem;
-        transition: all 0.2s ease;
-    }
-    
-    .btn-primary:hover {
-        background-color: #5a32a3;
-        border-color: #5a32a3;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
-    }
-    
-    .btn-light:hover {
-        background-color: #f8f9fa;
-        border-color: #d1c5e6;
-        color: #5a32a3;
-    }
-    
-    /* Card styling */
-    .card {
-        border: none;
-        border-radius: 1rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .card {
-            margin: 0 -1rem;
-            border-radius: 0;
-        }
-        
-        .header-bar {
-            border-radius: 0;
-        }
-        
-        .footer-bar {
-            border-radius: 0;
-        }
-        
-        .row > [class*="col-"] {
-            margin-bottom: 1rem;
-        }
-    }
-</style>
 {% endblock %}

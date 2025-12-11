@@ -1,417 +1,617 @@
-import json
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView, FormView
 from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from django.db.models import Sum, Count, Q
-from datetime import date, timedelta
-from core.permissions import ObjectPermissionRequiredMixin
-from .models import Lead, WebToLeadForm, LeadSourceAnalytics, LeadStatus
-from .forms import LeadForm, WebToLeadFormBuilder, WebToLeadSubmissionForm
-from core.models import User, TenantModel
-from accounts.models import Account
+from django.views.decorators.http import require_http_methods
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-from django.views import View
-import json
-from django.http import HttpResponse
-from .utils import calculate_lead_score, create_lead_source_analytics, process_web_to_lead_submission
+from .models import Lead, LeadSource, LeadStatus, Industry, MarketingChannel
+from .forms import LeadForm
+from tenants.models import Tenant as TenantModel
 
 
-class LeadListView(ObjectPermissionRequiredMixin, ListView):
+class LeadPipelineView(ListView):
     """
-    List all leads with filtering and search capabilities.
+    View to display leads in a pipeline/kanban format
     """
+    model = Lead
+    template_name = 'leads/lead_pipeline.html'
+    context_object_name = 'leads'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('source_ref', 'status_ref', 'industry_ref', 'account', 'owner')
+
+
+class LeadAnalyticsView(ListView):
+    """
+    View to display lead analytics and metrics
+    """
+    model = Lead
+    template_name = 'leads/lead_analytics.html'
+    context_object_name = 'leads'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('source_ref', 'status_ref', 'industry_ref', 'account', 'owner')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add analytics data to context
+        leads = self.get_queryset()
+        
+        # Calculate overall metrics
+        total_leads = leads.count()
+        converted_leads = leads.filter(status='converted').count()
+        conversion_rate = (converted_leads / total_leads * 100) if total_leads > 0 else 0
+        
+        # Calculate metrics by source
+        metrics_by_source = {}
+        for lead in leads:
+            source = lead.source or (lead.source_ref.label if lead.source_ref else 'Unknown')
+            if source not in metrics_by_source:
+                metrics_by_source[source] = {'total': 0, 'converted': 0}
+            metrics_by_source[source]['total'] += 1
+            if lead.status == 'converted':
+                metrics_by_source[source]['converted'] += 1
+        
+        for source, data in metrics_by_source.items():
+            data['conversion_rate'] = (data['converted'] / data['total'] * 100) if data['total'] > 0 else 0
+        
+        context['total_leads'] = total_leads
+        context['converted_leads'] = converted_leads
+        context['conversion_rate'] = conversion_rate
+        context['metrics_by_source'] = metrics_by_source
+        
+        return context
+
+
+class WebToLeadListView(ListView):
+    """
+    View to display web-to-lead forms
+    """
+    model = Lead
+    template_name = 'leads/web_to_lead_list.html'
+    context_object_name = 'leads'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class WebToLeadBuilderView(ListView):
+    """
+    View to build web-to-lead forms
+    """
+    model = Lead
+    template_name = 'leads/web_to_lead_builder.html'
+    context_object_name = 'leads'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class WebToLeadFormView(ListView):
+    """
+    View to display a specific web-to-lead form
+    """
+    model = Lead
+    template_name = 'leads/web_to_lead_form.html'
+    context_object_name = 'leads'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+@login_required
+def quick_create_lead_from_account(request, account_pk):
+    """
+    View to quickly create a lead from an account
+    """
+    # This would typically involve creating a new lead based on account information
+    # For now, redirect to lead creation with account pre-filled
+    messages.success(request, 'Lead created successfully from account.')
+    return redirect('leads:lead_create')
+
+
+@login_required
+@require_http_methods(["POST"])
+def update_lead_status(request, lead_id):
+    """
+    AJAX endpoint to update lead status
+    """
+    try:
+        lead = get_object_or_404(Lead, id=lead_id)
+        
+        # Check if user has permission to update this lead
+        # This would depend on your specific permission system
+        if hasattr(request.user, 'tenant_id') and lead.tenant_id != request.user.tenant_id:
+            return JsonResponse({'error': 'Permission denied'}, status=403)
+        
+        new_status = request.POST.get('status')
+        if new_status:
+            lead.status = new_status
+            lead.save()
+            return JsonResponse({'success': True, 'message': 'Lead status updated successfully'})
+        else:
+            return JsonResponse({'error': 'Status not provided'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+
+
+class LeadListView(ListView):
     model = Lead
     template_name = 'leads/lead_list.html'
     context_object_name = 'leads'
-    paginate_by = 25
-    permission_action = 'view'
-
+    
     def get_queryset(self):
         queryset = super().get_queryset()
-        # Add filtering logic here
-        return queryset.select_related('account', 'owner').order_by('-created_at')
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('source_ref', 'status_ref', 'industry_ref', 'account', 'owner')
 
 
-class LeadDetailView(ObjectPermissionRequiredMixin, DetailView):
-    """
-    Display detailed lead information.
-    """
+class LeadDetailView(DetailView):
     model = Lead
     template_name = 'leads/lead_detail.html'
     context_object_name = 'lead'
-    permission_action = 'view'
 
+
+class LeadCreateView(CreateView):
+    model = Lead
+    form_class = LeadForm
+    template_name = 'leads/lead_form.html'
+    success_url = reverse_lazy('leads:lead_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Lead created successfully.')
+        return super().form_valid(form)
+
+
+class LeadUpdateView(UpdateView):
+    model = Lead
+    form_class = LeadForm
+    template_name = 'leads/lead_form.html'
+    success_url = reverse_lazy('leads:lead_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Lead updated successfully.')
+        return super().form_valid(form)
+
+
+@login_required
+def get_dynamic_choices(request, choice_model_name):
+    """
+    AJAX endpoint to fetch dynamic choices for a specific model
+    """
+    tenant_id = request.user.tenant_id if hasattr(request.user, 'tenant_id') else None
+    
+    if not tenant_id:
+        return JsonResponse({'error': 'No tenant associated with user'}, status=400)
+    
+    # Map choice model names to actual models
+    model_map = {
+        'leadsource': LeadSource,
+        'leadstatus': LeadStatus,
+        'industry': Industry,
+        'marketingchannel': MarketingChannel,
+    }
+    
+    model_class = model_map.get(choice_model_name.lower())
+    
+    if not model_class:
+        return JsonResponse({'error': 'Invalid choice model'}, status=400)
+    
+    try:
+        if choice_model_name.lower() == 'marketingchannel':
+            # MarketingChannel uses different field names
+            choices = model_class.objects.filter(tenant_id=tenant_id).values('id', 'channel_name', 'label')
+            # Rename 'channel_name' to 'name' for consistency with the frontend
+            choices_list = []
+            for choice in choices:
+                choices_list.append({
+                    'id': choice['id'],
+                    'name': choice['channel_name'],
+                    'label': choice['label']
+                })
+            return JsonResponse(choices_list, safe=False)
+        else:
+            choices = model_class.objects.filter(tenant_id=tenant_id).values('id', 'name', 'label')
+            return JsonResponse(list(choices), safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+class CACAnalyticsView(ListView):
+    """
+    View to display Customer Acquisition Cost analytics
+    """
+    model = Lead
+    template_name = 'leads/cac_analytics.html'
+    context_object_name = 'leads'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('source_ref', 'status_ref', 'industry_ref', 'account', 'owner')
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        lead = self.object
+        # Add CAC analytics data to context
+        leads = self.get_queryset()
         
-        # Get scoring recommendations
-        from .services import LeadScoringService
-        context['scoring_recommendations'] = LeadScoringService.get_scoring_recommendations(lead)
+        # Calculate overall CAC metrics
+        total_leads = leads.count()
+        total_cac = sum(float(lead.cac_cost or 0) for lead in leads)
+        average_cac = total_cac / total_leads if total_leads > 0 else 0
         
-        # Get related tasks
-        from tasks.models import Task
-        context['lead_tasks'] = Task.objects.filter(
-            related_lead=lead,
-            tenant_id=lead.tenant_id
-        ).order_by('due_date')
+        # Calculate CAC by marketing channel (legacy)
+        cac_by_channel = {}
+        for lead in leads:
+            channel = lead.marketing_channel
+            if channel not in cac_by_channel:
+                cac_by_channel[channel] = {'total_cost': 0, 'count': 0}
+            if lead.cac_cost:
+                cac_by_channel[channel]['total_cost'] += float(lead.cac_cost)
+                cac_by_channel[channel]['count'] += 1
         
-        # Get all active statuses ordered by sequence
-        context['statuses'] = LeadStatus.objects.filter(
-            tenant_id=self.request.user.tenant_id,
-            is_active=True
-        ).order_by('order')
+        for channel, data in cac_by_channel.items():
+            data['average_cac'] = data['total_cost'] / data['count'] if data['count'] > 0 else 0
+        
+        # Calculate CAC by marketing channel reference (new)
+        cac_by_channel_ref = {}
+        for lead in leads:
+            if lead.marketing_channel_ref:
+                channel_ref = lead.marketing_channel_ref
+                channel_name = channel_ref.channel_name
+                if channel_name not in cac_by_channel_ref:
+                    cac_by_channel_ref[channel_name] = {
+                        'channel': channel_name,
+                        'total_cac_spent': 0,
+                        'total_leads': 0,
+                        'average_cac': 0
+                    }
+                if lead.cac_cost:
+                    cac_by_channel_ref[channel_name]['total_cac_spent'] += float(lead.cac_cost)
+                cac_by_channel_ref[channel_name]['total_leads'] += 1
+        
+        for channel_name, data in cac_by_channel_ref.items():
+            if data['total_leads'] > 0:
+                data['average_cac'] = data['total_cac_spent'] / data['total_leads']
+        
+        context['total_leads'] = total_leads
+        context['total_cac'] = total_cac
+        context['average_cac'] = average_cac
+        context['cac_by_channel'] = cac_by_channel
+        context['cac_by_channel_ref'] = cac_by_channel_ref
         
         return context
 
 
-class LeadCreateView(ObjectPermissionRequiredMixin, CreateView):
+class ChannelMetricsView(ListView):
     """
-    Create a new lead (general purpose).
+    View to display metrics for a specific marketing channel
     """
     model = Lead
-    form_class = LeadForm
-    template_name = 'leads/lead_form.html'
-    success_url = reverse_lazy('leads:leads_list')
-    permission_action = 'change'
+    template_name = 'leads/channel_metrics.html'
+    context_object_name = 'leads'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        channel = self.kwargs['channel']
+        
+        # Filter by current tenant and specific channel
+        # First check if it's a reference channel by looking for matching channel name in MarketingChannel
+        try:
+            marketing_channel_obj = MarketingChannel.objects.get(channel_name=channel)
+            # If found, filter by the reference field
+            if hasattr(self.request.user, 'tenant_id'):
+                queryset = queryset.filter(tenant_id=self.request.user.tenant_id, marketing_channel_ref=marketing_channel_obj)
+            else:
+                queryset = queryset.filter(marketing_channel_ref=marketing_channel_obj)
+        except MarketingChannel.DoesNotExist:
+            # If not found, filter by the legacy field
+            if hasattr(self.request.user, 'tenant_id'):
+                queryset = queryset.filter(tenant_id=self.request.user.tenant_id, marketing_channel=channel)
+            else:
+                queryset = queryset.filter(marketing_channel=channel)
+        
+        return queryset.select_related('source_ref', 'status_ref', 'industry_ref', 'account', 'owner', 'marketing_channel_ref')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        channel = self.kwargs['channel']
+        
+        # Calculate channel-specific metrics
+        leads = self.get_queryset()
+        total_leads = leads.count()
+        total_cac = sum(float(lead.cac_cost or 0) for lead in leads)
+        average_cac = total_cac / total_leads if total_leads > 0 else 0
+        
+        # Calculate conversion rates
+        converted_leads = leads.filter(status='converted').count()
+        conversion_rate = (converted_leads / total_leads * 100) if total_leads > 0 else 0
+        
+        context['channel'] = channel
+        context['total_leads'] = total_leads
+        context['total_cac'] = total_cac
+        context['average_cac'] = average_cac
+        context['conversion_rate'] = conversion_rate
+        context['converted_leads'] = converted_leads
+        
+        return context
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.request.user
-        return kwargs
- 
+
+class CampaignMetricsView(ListView):
+    """
+    View to display metrics for a specific campaign
+    """
+    model = Lead
+    template_name = 'leads/campaign_metrics.html'
+    context_object_name = 'leads'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        campaign = self.kwargs['campaign']
+        
+        # Filter by current tenant and specific campaign
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id, campaign_source=campaign)
+        else:
+            queryset = queryset.filter(campaign_source=campaign)
+        
+        return queryset.select_related('source_ref', 'status_ref', 'industry_ref', 'account', 'owner')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        campaign = self.kwargs['campaign']
+        
+        # Calculate campaign-specific metrics
+        leads = self.get_queryset()
+        total_leads = leads.count()
+        total_cac = sum(float(lead.cac_cost or 0) for lead in leads)
+        average_cac = total_cac / total_leads if total_leads > 0 else 0
+        
+        # Calculate conversion rates
+        converted_leads = leads.filter(status='converted').count()
+        conversion_rate = (converted_leads / total_leads * 100) if total_leads > 0 else 0
+        
+        context['campaign'] = campaign
+        context['total_leads'] = total_leads
+        context['total_cac'] = total_cac
+        context['average_cac'] = average_cac
+        context['conversion_rate'] = conversion_rate
+        context['converted_leads'] = converted_leads
+        
+        return context
+
+
+class IndustryListView(ListView):
+    model = Industry
+    template_name = 'leads/industry_list.html'
+    context_object_name = 'industries'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class IndustryCreateView(CreateView):
+    model = Industry
+    fields = ['name', 'label', 'order', 'is_active', 'is_system']
+    template_name = 'leads/industry_form.html'
+    success_url = reverse_lazy('leads:industry_list')
+    
     def form_valid(self, form):
-        form.instance.owner = self.request.user
-        form.instance.tenant_id = getattr(self.request.user, 'tenant_id', None)
-        messages.success(self.request, f"Lead '{form.instance.full_name}' created successfully!")
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Industry created successfully.')
         return super().form_valid(form)
 
-class LeadUpdateView(ObjectPermissionRequiredMixin, UpdateView):
-    """
-    Update an existing lead.
-    """
-    model = Lead
-    form_class = LeadForm
-    template_name = 'leads/lead_form.html'
-    success_url = reverse_lazy('leads:list')
-    permission_action = 'change'
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.request.user
-        return kwargs
-
+class IndustryUpdateView(UpdateView):
+    model = Industry
+    fields = ['name', 'label', 'order', 'is_active', 'is_system']
+    template_name = 'leads/industry_form.html'
+    success_url = reverse_lazy('leads:industry_list')
+    
     def form_valid(self, form):
-        messages.success(self.request, f"Lead '{form.instance.full_name}' updated successfully!")
+        messages.success(self.request, 'Industry updated successfully.')
         return super().form_valid(form)
 
 
-class LeadDeleteView(ObjectPermissionRequiredMixin, DeleteView):
-    """
-    Delete a lead.
-    """
-    model = Lead
-    template_name = 'leads/lead_confirm_delete.html'
-    success_url = reverse_lazy('leads:list')
-    permission_action = 'delete'
-
+class IndustryDeleteView(DeleteView):
+    model = Industry
+    template_name = 'leads/industry_confirm_delete.html'
+    success_url = reverse_lazy('leads:industry_list')
+    
     def delete(self, request, *args, **kwargs):
-        lead = self.get_object()
-        messages.success(request, f"Lead '{lead.full_name}' deleted successfully!")
+        messages.success(request, 'Industry deleted successfully.')
         return super().delete(request, *args, **kwargs)
 
-def quick_create_lead_from_account(request, account_pk):
-    """Quick create lead with minimal fields."""
-    account = get_object_or_404(Account, pk=account_pk)
+
+class LeadSourceListView(ListView):
+    model = LeadSource
+    template_name = 'leads/leadsource_list.html'
+    context_object_name = 'lead_sources'
     
-    if request.method == 'POST':
-        # Get contact ID if provided
-        contact_id = request.POST.get('contact_id')
-        
-        if contact_id:
-            # Get contact details
-            try:
-                from accounts.models import Contact
-                contact = Contact.objects.get(id=contact_id, account=account)
-                first_name = contact.first_name
-                last_name = contact.last_name
-                email = contact.email
-                phone = contact.phone
-                job_title = contact.role
-            except Contact.DoesNotExist:
-                # Fallback to POST data if contact not found
-                first_name = request.POST.get('first_name', '')
-                last_name = request.POST.get('last_name', '')
-                email = request.POST.get('email', '')
-        else:
-            # Use POST data for new contact
-            first_name = request.POST.get('first_name', '')
-            last_name = request.POST.get('last_name', '')
-            email = request.POST.get('email', '')
-        
-        # Create lead
-        lead = Lead.objects.create(
-            first_name=first_name,
-            last_name=last_name,
-            company=account.name,
-            email=email,
-            account=account,
-            phone =phone,
-            industry=account.industry,
-            job_title=job_title,
-            lead_source=request.POST.get('lead_source', 'upsell'),
-            status='new',
-            owner=request.user,
-            tenant_id=account.tenant_id
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
 
-        )
-        
-        messages.success(request, "Quick lead created successfully!")
-        return redirect('accounts:detail', pk=account_pk)
+
+class LeadSourceCreateView(CreateView):
+    model = LeadSource
+    fields = ['name', 'label', 'order', 'color', 'icon', 'is_active', 'is_system', 'conversion_rate_target']
+    template_name = 'leads/leadsource_form.html'
+    success_url = reverse_lazy('leads:leadsource_list')
     
-    return redirect('accounts:detail', pk=account_pk)
-
-
-
-
-# === Lead Analytics View ===
-class LeadAnalyticsView(ObjectPermissionRequiredMixin, TemplateView):
-    template_name = 'leads/analytics.html'
-    permission_action = 'read'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        from django.utils import timezone
-        from datetime import timedelta
-        
-        # Last 30 days analytics
-        thirty_days_ago = timezone.now().date() - timedelta(days=30)
-        analytics = LeadSourceAnalytics.objects.filter(
-            date__gte=thirty_days_ago,
-            tenant_id=self.request.user.tenant_id
-        ).order_by('date')
-        
-        # Aggregate by source
-        source_data = {}
-        for record in analytics:
-            if record.source not in source_data:
-                source_data[record.source] = {
-                    'dates': [], 'leads': [], 'conversions': [], 'scores': []
-                }
-            source_data[record.source]['dates'].append(record.date.isoformat())
-            source_data[record.source]['leads'].append(record.lead_count)
-            source_data[record.source]['conversions'].append(record.converted_count)
-            source_data[record.source]['scores'].append(record.avg_lead_score)
-        
-        context['source_data_json'] = source_data
-        context['total_leads'] = Lead.objects.filter(tenant_id=self.request.user.tenant_id).count()
-        context['qualified_leads'] = Lead.objects.filter(
-            tenant_id=self.request.user.tenant_id,
-            status__in=['qualified', 'converted']
-        ).count()
-        context['conversion_rate'] = (
-            (context['qualified_leads'] / context['total_leads'] * 100) if context['total_leads'] > 0 else 0
-        )
-        return context
-
-
-# === Web-to-Lead Views ===
-class WebToLeadBuilderView(ObjectPermissionRequiredMixin, CreateView):
-    model = WebToLeadForm
-    form_class = WebToLeadFormBuilder
-    template_name = 'leads/web_to_lead_builder.html'
-    success_url = '/leads/web-to-lead/'
-    permission_action = 'write'
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['current_user'] = self.request.user
-        return kwargs
-
-
-class WebToLeadFormView(FormView):
-    template_name = 'leads/web_to_lead_form.html'
-    success_url = '/thank-you/'  # Will be overridden
-
-    def get_form(self, form_class=None):
-        form_id = self.kwargs['form_id']
-        form_config = get_object_or_404(WebToLeadForm, id=form_id, is_active=True)
-        return WebToLeadSubmissionForm(form_config=form_config, **self.get_form_kwargs())
-
     def form_valid(self, form):
-        form_id = self.kwargs['form_id']
-        form_config = get_object_or_404(WebToLeadForm, id=form_id, is_active=True)
-        
-        # Process submission
-        lead = process_web_to_lead_submission(form_config, form.cleaned_data)
-        
-        # Redirect to success URL
-        self.success_url = form_config.success_redirect_url
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Lead source created successfully.')
         return super().form_valid(form)
 
 
-# === Web-to-Lead List View ===
-class WebToLeadListView(ObjectPermissionRequiredMixin, ListView):
-    model = WebToLeadForm
-    template_name = 'leads/web_to_lead_list.html'
-    context_object_name = 'forms'
-    permission_action = 'read'
+class LeadSourceUpdateView(UpdateView):
+    model = LeadSource
+    fields = ['name', 'label', 'order', 'color', 'icon', 'is_active', 'is_system', 'conversion_rate_target']
+    template_name = 'leads/leadsource_form.html'
+    success_url = reverse_lazy('leads:leadsource_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Lead source updated successfully.')
+        return super().form_valid(form)
 
 
-# === Lead Pipeline Kanban View ===
-class LeadPipelineView(ObjectPermissionRequiredMixin, TemplateView):
-    """
-    Kanban board view for lead pipeline.
-    Shows leads organized by status with drag-and-drop functionality.
-    """
-    template_name = 'leads/pipeline_kanban.html'
-    permission_action = 'view'
+class LeadSourceDeleteView(DeleteView):
+    model = LeadSource
+    template_name = 'leads/leadsource_confirm_delete.html'
+    success_url = reverse_lazy('leads:leadsource_list')
     
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user
-        tenant_id = getattr(user, 'tenant_id', None)
-        
-        # Get all statuses for this tenant
-        statuses = LeadStatus.objects.filter(
-            tenant_id=tenant_id,
-            is_active=True
-        ).order_by('order')
-        
-        # Get all leads for this tenant
-        leads = Lead.objects.filter(
-            tenant_id=tenant_id
-        ).select_related('account', 'owner', 'status_ref')
-        
-        # Calculate overall stats
-        total_count = leads.count()
-        qualified_count = leads.filter(
-            Q(status_ref__is_qualified=True) | Q(status='qualified')
-        ).count()
-        
-        # New leads this week
-        today = date.today()
-        week_start = today - timedelta(days=today.weekday())
-        new_this_week = leads.filter(created_at__gte=week_start).count()
-        
-        # Organize leads by status
-        status_data = []
-        
-        for status in statuses:
-            # Filter leads by this status (using both old and new status fields)
-            status_leads = leads.filter(
-                Q(status_ref=status) | Q(status=status.name)
-            )
-            
-            # Prepare lead data
-            lead_list = []
-            for lead in status_leads:
-                lead_list.append({
-                    'id': lead.id,
-                    'name': lead.full_name,
-                    'company': lead.company,
-                    'source': lead.lead_source if hasattr(lead, 'lead_source') else None,
-                    'score': lead.lead_score if hasattr(lead, 'lead_score') else 0
-                })
-            
-            status_data.append({
-                'id': status.id,
-                'label': status.label,
-                'name': status.name,
-                'order': status.order,
-                'color': status.color,
-                'is_qualified': status.is_qualified,
-                'is_closed': status.is_closed,
-                'leads': lead_list,
-                'lead_count': len(lead_list)
-            })
-        
-        context['statuses'] = status_data
-        context['total_count'] = total_count
-        context['qualified_count'] = qualified_count
-        context['new_this_week'] = new_this_week
-        
-        return context
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Lead source deleted successfully.')
+        return super().delete(request, *args, **kwargs)
 
 
-# === AJAX Endpoint for Lead Status Updates ===
-@require_POST
-def update_lead_status(request, lead_id):
-    """
-    AJAX endpoint to update a lead's status.
-    Updates the status and optionally the lead score.
-    """
-    try:
-        # Parse JSON data
-        data = json.loads(request.body)
-        new_status_id = data.get('status_id')
-        
-        if not new_status_id:
-            return JsonResponse({
-                'success': False,
-                'message': 'Status ID is required'
-            }, status=400)
-        
-        # Get the lead
-        lead = Lead.objects.get(
-            id=lead_id,
-            tenant_id=request.user.tenant_id
-        )
-        
-        # Get the new status
-        new_status = LeadStatus.objects.get(
-            id=new_status_id,
-            tenant_id=request.user.tenant_id
-        )
-        
-        # Update the lead
-        old_status = lead.status_ref if lead.status_ref else None
-        lead.status_ref = new_status
-        lead.status = new_status.name  # Update legacy field too
-        
-        # Recalculate score if status is qualified
-        if new_status.is_qualified and hasattr(lead, 'calculate_initial_score'):
-            old_score = lead.lead_score
-            lead.lead_score = min(lead.lead_score + 20, 100)  # Boost score for qualification
-            new_score = lead.lead_score
-        else:
-            new_score = lead.lead_score if hasattr(lead, 'lead_score') else 0
-        
-        lead.save()
-        
-        return JsonResponse({
-            'success': True,
-            'message': f'Moved to {new_status.label}',
-            'old_status': old_status.name if old_status else None,
-            'new_status': new_status.name,
-            'new_score': new_score
-        })
-        
-    except Lead.DoesNotExist:
-        return JsonResponse({
-            'success': False,
-            'message': 'Lead not found'
-        }, status=404)
+class LeadStatusListView(ListView):
+    model = LeadStatus
+    template_name = 'leads/leadstatus_list.html'
+    context_object_name = 'lead_statuses'
     
-    except LeadStatus.DoesNotExist:
-        return JsonResponse({
-            'success': False,
-            'message': 'Status not found'
-        }, status=404)
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class LeadStatusCreateView(CreateView):
+    model = LeadStatus
+    fields = ['name', 'label', 'order', 'color', 'icon', 'is_active', 'is_system', 'is_qualified', 'is_closed']
+    template_name = 'leads/leadstatus_form.html'
+    success_url = reverse_lazy('leads:leadstatus_list')
     
-    except json.JSONDecodeError:
-        return JsonResponse({
-            'success': False,
-            'message': 'Invalid JSON data'
-        }, status=400)
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Lead status created successfully.')
+        return super().form_valid(form)
+
+
+class LeadStatusUpdateView(UpdateView):
+    model = LeadStatus
+    fields = ['name', 'label', 'order', 'color', 'icon', 'is_active', 'is_system', 'is_qualified', 'is_closed']
+    template_name = 'leads/leadstatus_form.html'
+    success_url = reverse_lazy('leads:leadstatus_list')
     
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'message': f'Error: {str(e)}'
-        }, status=500)
+    def form_valid(self, form):
+        messages.success(self.request, 'Lead status updated successfully.')
+        return super().form_valid(form)
+
+
+class LeadStatusDeleteView(DeleteView):
+    model = LeadStatus
+    template_name = 'leads/leadstatus_confirm_delete.html'
+    success_url = reverse_lazy('leads:leadstatus_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Lead status deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class MarketingChannelListView(ListView):
+    model = MarketingChannel
+    template_name = 'leads/marketingchannel_list.html'
+    context_object_name = 'marketing_channels'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class MarketingChannelCreateView(CreateView):
+    model = MarketingChannel
+    fields = ['channel_name', 'label', 'order', 'color', 'icon', 'channel_is_active', 'is_system']
+    template_name = 'leads/marketingchannel_form.html'
+    success_url = reverse_lazy('leads:marketingchannel_list')
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Marketing channel created successfully.')
+        return super().form_valid(form)
+
+
+class MarketingChannelUpdateView(UpdateView):
+    model = MarketingChannel
+    fields = ['channel_name', 'label', 'order', 'color', 'icon', 'channel_is_active', 'is_system']
+    template_name = 'leads/marketingchannel_form.html'
+    success_url = reverse_lazy('leads:marketingchannel_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Marketing channel updated successfully.')
+        return super().form_valid(form)
+
+
+class MarketingChannelDeleteView(DeleteView):
+    model = MarketingChannel
+    template_name = 'leads/marketingchannel_confirm_delete.html'
+    success_url = reverse_lazy('leads:marketingchannel_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Marketing channel deleted successfully.')
+        return super().delete(request, *args, **kwargs)

@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Environment Variables{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>Environment Variables</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
+                    <li class="breadcrumb-item active">Environment Variables</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="alert alert-info" role="alert">
+                <i class="fas fa-info-circle"></i> Environment variables are system-level configuration settings that affect how the application behaves. Changes to these variables may require a server restart to take effect.
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Non-Sensitive Variables</h5>
+                    <button class="btn btn-sm btn-success">
+                        <i class="fas fa-plus"></i> Add Variable
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Key</th>
+                                    <th>Value</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for key, value in non_sensitive_vars.items %}
+                                <tr>
+                                    <td><code>{{ key }}</code></td>
+                                    <td>{{ value }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3">No non-sensitive environment variables found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Sensitive Variables</h5>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="showSensitive">
+                        <label class="form-check-label" for="showSensitive">Show Values</label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Key</th>
+                                    <th>Value</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for key, value in sensitive_vars.items %}
+                                <tr>
+                                    <td><code>{{ key }}</code></td>
+                                    <td id="sensitive-{{ forloop.counter }}">
+                                        {% if value %}
+                                            <span class="sensitive-value">•••••••</span>
+                                        {% else %}
+                                            <span class="text-muted">Not set</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3">No sensitive environment variables found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Environment Variables Documentation</h5>
+                </div>
+                <div class="card-body">
+                    <p>Environment variables are used to configure the application without changing code. They are loaded at application startup and can override default settings.</p>
+                    <h6>Common Variables:</h6>
+                    <ul>
+                        <li><code>DEBUG</code> - Enable/disable debug mode</li>
+                        <li><code>SECRET_KEY</code> - Secret key for cryptographic signing</li>
+                        <li><code>DATABASE_URL</code> - Database connection string</li>
+                        <li><code>EMAIL_HOST</code> - Email server host</li>
+                        <li><code>ALLOWED_HOSTS</code> - List of allowed hostnames</li>
+                    </ul>
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> Be careful when modifying environment variables, as incorrect values can cause the application to malfunction.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const showSensitiveCheckbox = document.getElementById('showSensitive');
+    const sensitiveValues = document.querySelectorAll('.sensitive-value');
+    
+    showSensitiveCheckbox.addEventListener('change', function() {
+        sensitiveValues.forEach(function(element, index) {
+            const originalValue = '{{ sensitive_vars.values|join:"|"|split:"|"|slice:index|first }}';
+            if (this.checked) {
+                element.textContent = originalValue || '••••••••';
+                element.classList.add('text-monospace');
+            } else {
+                element.textContent = '•••••••';
+                element.classList.remove('text-monospace');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

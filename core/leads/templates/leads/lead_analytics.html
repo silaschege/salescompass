@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block title %}Lead Analytics{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-2">Lead Analytics</h1>
+            <p class="mb-4">Analyze lead metrics and performance.</p>
+        </div>
+    </div>
+
+    <!-- Analytics Cards -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Leads</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_leads }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-friends fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Converted Leads</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ converted_leads }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Conversion Rate</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ conversion_rate|floatformat:2 }}%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-percentage fa-2x text-gray-30"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Average CAC</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">$0.00</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-30"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Charts -->
+    <div class="row">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Lead Conversion Rate by Source</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="conversionRateChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Lead Sources</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4">
+                        <canvas id="leadSourcesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Metrics -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Detailed Metrics by Source</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="metricsTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Source</th>
+                                    <th>Total Leads</th>
+                                    <th>Converted</th>
+                                    <th>Conversion Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for source, data in metrics_by_source.items %}
+                                <tr>
+                                    <td>{{ source }}</td>
+                                    <td>{{ data.total }}</td>
+                                    <td>{{ data.converted }}</td>
+                                    <td>{{ data.conversion_rate|floatformat:2 }}%</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js for visualizations -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Conversion Rate Chart
+    const conversionCtx = document.getElementById('conversionRateChart').getContext('2d');
+    const conversionChart = new Chart(conversionCtx, {
+        type: 'line',
+        data: {
+            labels: [{% for source, data in metrics_by_source.items %}'{{ source }}',{% endfor %}],
+            datasets: [{
+                label: 'Conversion Rate (%)',
+                data: [{% for source, data in metrics_by_source.items %}{{ data.conversion_rate|floatformat:2 }},{% endfor %}],
+                borderColor: 'rgba(78, 115, 223, 1)',
+                backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                borderWidth: 2,
+                fill: true
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    left: 10,
+                    right: 25,
+                    top: 25,
+                    bottom: 0
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false,
+                        drawBorder: false
+                    }
+                },
+                y: {
+                    grid: {
+                        color: 'rgb(234, 236, 244)',
+                        zeroLineColor: 'rgb(234, 236, 244)',
+                        drawBorder: false,
+                        borderDash: [2],
+                        zeroLineBorderDash: [2]
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgb(255, 255, 255)',
+                    bodyFontColor: 'rgb(87, 87, 87)',
+                    titleMarginBottom: 10,
+                    titleFontColor: 'rgb(54, 56, 58)',
+                    titleFontSize: 14,
+                    borderColor: 'rgb(234, 236, 244)',
+                    borderWidth: 1,
+                    usePointStyle: true,
+                    intersect: false
+                }
+            }
+        }
+    });
+
+    // Lead Sources Chart
+    const sourcesCtx = document.getElementById('leadSourcesChart').getContext('2d');
+    const sourcesChart = new Chart(sourcesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for source, data in metrics_by_source.items %}'{{ source }}',{% endfor %}],
+            datasets: [{
+                data: [{% for source, data in metrics_by_source.items %}{{ data.total }},{% endfor %}],
+                backgroundColor: [
+                    '#4e73df',
+                    '#1cc88a',
+                    '#36b9cc',
+                    '#f6c23e',
+                    '#e74a3b',
+                    '#858796'
+                ],
+                hoverBorderColor: 'rgba(234, 236, 244, 1)'
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                },
+                tooltip: {
+                    backgroundColor: 'rgb(255, 255, 255)',
+                    bodyFontColor: 'rgb(87, 87, 87)',
+                    borderColor: 'rgb(234, 236, 244)',
+                    borderWidth: 1,
+                    usePointStyle: true,
+                    intersect: false
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

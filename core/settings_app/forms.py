@@ -1,246 +1,225 @@
-# apps/crm_settings/forms.py
 from django import forms
-from .models import (
-    TeamMember, Setting, CustomField, ModuleLabel, AssignmentRule, PipelineStage, APIKey, Webhook,
-    BehavioralScoringRule, DemographicScoringRule, ScoreDecayConfig
-)
+from .models import Setting, CustomField, ModuleLabel, TeamMember, AssignmentRule, PipelineStage, EmailIntegration, BehavioralScoringRule, DemographicScoringRule, SettingType, ModelChoice, FieldType, ModuleChoice, TeamRole, Territory, AssignmentRuleType, PipelineType, EmailProvider, ActionType, OperatorType
+from tenants.models import Tenant as TenantModel
+from core.forms import DynamicChoiceWidget
 
-class TeamMemberForm(forms.ModelForm):
-    class Meta:
-        model = TeamMember
-        fields = [
-            'user', 'role', 'manager', 'territory', 
-            'phone', 'hire_date', 'status',
-            'quota_amount', 'quota_period'
-        ]
-        widgets = { 
-            'hire_date': forms.DateInput(attrs={'type': 'date'}),
-            'status': forms.Select(),  # We handle this manually in the template
-        }
-
-class DynamicSettingForm(forms.ModelForm):
+class SettingForm(forms.ModelForm):
     class Meta:
         model = Setting
-        fields = []
-
+        fields = ['group', 'setting_name', 'setting_label', 'setting_description', 'setting_type', 
+                  'value_text', 'value_number', 'value_boolean', 'is_required', 'is_visible', 'order']
+    
     def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
         super().__init__(*args, **kwargs)
-        if self.instance.pk:
-            # Add field based on setting type
-            if self.instance.setting_type == 'boolean':
-                self.fields['value'] = forms.BooleanField(
-                    label=self.instance.name,
-                    required=False,
-                    initial=self.instance.value_boolean
-                )
-            elif self.instance.setting_type == 'select':
-                self.fields['value'] = forms.ChoiceField(
-                    label=self.instance.name,
-                    choices=[(opt, opt) for opt in self.instance.options],
-                    initial=self.instance.value_text
-                )
-            else:
-                self.fields['value'] = forms.CharField(
-                    label=self.instance.name,
-                    initial=self.instance.get_value(),
-                    widget=forms.Textarea() if self.instance.setting_type == 'json' else forms.TextInput()
-                )
+        
+        # Load dynamic choices based on tenant
+        if self.tenant:
+            self.fields['setting_type_ref'].queryset = SettingType.objects.filter(tenant_id=self.tenant.id)
+        else:
+            self.fields['setting_type_ref'].queryset = SettingType.objects.none()
 
-    def save(self, commit=True):
-        setting = super().save(commit=False)
-        value = self.cleaned_data['value']
-        setting.set_value(value)
-        if commit:
-            setting.save()
-        return setting
 
-class TenantSettingsForm(forms.ModelForm):
-    class Meta:
-        from tenants.models import Tenant
-        model = Tenant
-        fields = ['name', 'domain', 'logo', 'primary_color', 'secondary_color', 
-                  'business_hours', 'default_currency', 'date_format', 'time_zone']
-        widgets = {
-            'logo': forms.FileInput(attrs={
-                'accept': 'image/*',
-                'class': 'form-control'
-            }),
-            'primary_color': forms.TextInput(attrs={
-                'type': 'color',
-                'class': 'form-control'
-            }),
-            'secondary_color': forms.TextInput(attrs={
-                'type': 'color',
-                'class': 'form-control'
-            }),
-            'business_hours': forms.Textarea(attrs={
-                'rows': 10,
-                'class': 'form-control json-editor',
-                'placeholder': '{"monday": {"open": "09:00", "close": "17:00"}}'
-            }),
-            'default_currency': forms.Select(attrs={'class': 'form-control'}),
-            'time_zone': forms.Select(attrs={'class': 'form-control'}),
-        }
-
-class LeadStatusForm(forms.ModelForm):
-    class Meta:
-        from leads.models import LeadStatus
-        model = LeadStatus
-        fields = ['label', 'name', 'color', 'is_active', 'is_qualified', 'is_closed', 'order']
-        widgets = {
-            'color': forms.TextInput(attrs={'type': 'color'}),
-        }
-
-class LeadSourceForm(forms.ModelForm):
-    class Meta:
-        from leads.models import LeadSource
-        model = LeadSource
-        fields = ['label', 'name', 'color', 'is_active', 'conversion_rate_target', 'order']
-        widgets = {
-            'color': forms.TextInput(attrs={'type': 'color'}),
-        }
-
-class OpportunityStageForm(forms.ModelForm):
-    class Meta:
-        from opportunities.models import OpportunityStage
-        model = OpportunityStage
-        fields = ['name', 'order', 'probability', 'is_won', 'is_lost']
 
 class CustomFieldForm(forms.ModelForm):
     class Meta:
         model = CustomField
-        fields = ['model_name', 'field_name', 'field_label', 'field_type', 'is_required', 
-                  'options', 'default_value', 'help_text', 'order', 'is_active']
-        widgets = {
-            'model_name': forms.Select(attrs={'class': 'form-control'}),
-            'field_name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'pattern': '[a-z_][a-z0-9_]*',
-                'placeholder': 'e.g., industry_sector'
-            }),
-            'field_label': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'e.g., Industry Sector'
-            }),
-            'field_type': forms.RadioSelect(),
-            'options': forms.Textarea(attrs={
-                'rows': 6,
-                'class': 'form-control',
-                'placeholder': 'Enter each option on a new line'
-            }),
-            'help_text': forms.Textarea(attrs={
-                'rows': 2,
-                'class': 'form-control'
-            }),
-            'default_value': forms.TextInput(attrs={'class': 'form-control'}),
-        }
+        fields = ['model_name', 'field_name', 'field_label', 'field_type', 'field_options', 
+                  'is_required', 'is_visible', 'order', 'help_text']
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        # Load dynamic choices based on tenant
+        if self.tenant:
+            self.fields['model_name_ref'].queryset = ModelChoice.objects.filter(tenant_id=self.tenant.id)
+            self.fields['field_type_ref'].queryset = FieldType.objects.filter(tenant_id=self.tenant.id)
+        else:
+            self.fields['model_name_ref'].queryset = ModelChoice.objects.none()
+            self.fields['field_type_ref'].queryset = FieldType.objects.none()
+
 
 class ModuleLabelForm(forms.ModelForm):
     class Meta:
         model = ModuleLabel
-        fields = ['module_key', 'custom_label', 'custom_label_plural']
+        fields = ['module_key', 'custom_label', 'module_label_is_active']
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        # Load dynamic choices based on tenant
+        if self.tenant:
+            self.fields['module_key_ref'].queryset = ModuleChoice.objects.filter(tenant_id=self.tenant.id)
+        else:
+            self.fields['module_key_ref'].queryset = ModuleChoice.objects.none()
+
+
+class TeamMemberForm(forms.ModelForm):
+    class Meta:
+        model = TeamMember
+        fields = ['user', 'role', 'territory', 'manager', 'status', 'hire_date', 'termination_date', 
+                  'quota_amount', 'quota_period', 'commission_rate']
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        # Load dynamic choices based on tenant
+        if self.tenant:
+            self.fields['role_ref'].queryset = TeamRole.objects.filter(tenant_id=self.tenant.id)
+            self.fields['territory_ref'].queryset = Territory.objects.filter(tenant_id=self.tenant.id)
+        else:
+            self.fields['role_ref'].queryset = TeamRole.objects.none()
+            self.fields['territory_ref'].queryset = Territory.objects.none()
+
 
 class AssignmentRuleForm(forms.ModelForm):
     class Meta:
         model = AssignmentRule
-        fields = ['name', 'module', 'rule_type', 'criteria', 'assignees', 
-                  'priority', 'is_active']
-        widgets = {
-            'name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'e.g., Assign US Leads to US Team'
-            }),
-            'module': forms.Select(attrs={'class': 'form-control'}),
-            'rule_type': forms.RadioSelect(),
-            'criteria': forms.Textarea(attrs={
-                'rows': 8,
-                'class': 'form-control json-editor',
-                'placeholder': '{"country": "US", "industry": "Technology"}'
-            }),
-            'assignees': forms.SelectMultiple(attrs={
-                'class': 'form-control',
-                'size': '10'
-            }),
-            'priority': forms.NumberInput(attrs={
-                'class': 'form-control priority-input',
-                'min': 0,
-                'max': 100
-            }),
-        }
+        fields = ['assignment_rule_name', 'module', 'rule_type', 'criteria', 'assigned_to', 'rule_is_active', 'priority']
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        # Load dynamic choices based on tenant
+        if self.tenant:
+            self.fields['module_ref'].queryset = ModuleChoice.objects.filter(tenant_id=self.tenant.id)
+            self.fields['rule_type_ref'].queryset = AssignmentRuleType.objects.filter(tenant_id=self.tenant.id)
+        else:
+            self.fields['module_ref'].queryset = ModuleChoice.objects.none()
+            self.fields['rule_type_ref'].queryset = AssignmentRuleType.objects.none()
+
 
 class PipelineStageForm(forms.ModelForm):
     class Meta:
         model = PipelineStage
-        fields = ['pipeline_type', 'name', 'order', 'probability', 'required_fields',
-                  'approval_required', 'is_closed', 'is_won', 'color', 'is_active']
-        widgets = {
-            'color': forms.TextInput(attrs={'type': 'color'}),
-            'required_fields': forms.Textarea(attrs={'rows': 2, 'placeholder': '["field1", "field2"]'}),
-        }
+        fields = ['pipeline_type', 'pipeline_stage_name', 'stage_description', 'order', 'probability', 
+                  'is_won_stage', 'is_lost_stage']
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        # Load dynamic choices based on tenant
+        if self.tenant:
+            self.fields['pipeline_type_ref'].queryset = PipelineType.objects.filter(tenant_id=self.tenant.id)
+        else:
+            self.fields['pipeline_type_ref'].queryset = PipelineType.objects.none()
 
-class APIKeyForm(forms.ModelForm):
+
+class EmailIntegrationForm(forms.ModelForm):
     class Meta:
-        model = APIKey
-        fields = ['name', 'scopes', 'expires_at']
-        widgets = {
-            'scopes': forms.Textarea(attrs={'rows': 3, 'placeholder': '["accounts:read", "leads:write"]'}),
-            'expires_at': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-        }
-
-class WebhookForm(forms.ModelForm):
-    class Meta:
-        model = Webhook
-        fields = ['name', 'url', 'events', 'is_active']
-        widgets = {
-            'events': forms.Textarea(attrs={'rows': 3, 'placeholder': '["lead.created", "opportunity.won"]'}),
-        }
-
-class TeamRoleForm(forms.ModelForm):
-    class Meta:
-        from .models import TeamRole
-        model = TeamRole
-        fields = ['name', 'description', 'base_permissions', 'is_active']
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'base_permissions': forms.HiddenInput(),
-        }
+        model = EmailIntegration
+        fields = ['user', 'provider', 'email_address', 'api_key', 'integration_is_active']
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        # Load dynamic choices based on tenant
+        if self.tenant:
+            self.fields['provider_ref'].queryset = EmailProvider.objects.filter(tenant_id=self.tenant.id)
+        else:
+            self.fields['provider_ref'].queryset = EmailProvider.objects.none()
 
 
-# Lead Scoring Forms
 class BehavioralScoringRuleForm(forms.ModelForm):
     class Meta:
         model = BehavioralScoringRule
-        fields = ['name', 'action_type', 'points', 'frequency_cap', 'priority', 'is_active']
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Email Open Scoring'}),
-            'action_type': forms.Select(attrs={'class': 'form-control'}),
-            'points': forms.NumberInput(attrs={'class': 'form-control', 'min': -100, 'max': 100}),
-            'frequency_cap': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
-            'priority': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 100}),
-        }
+        fields = ['behavioral_scoring_rule_name', 'action_type', 'points', 'time_decay_factor', 
+                  'business_impact', 'rule_is_active']
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        # Load dynamic choices based on tenant
+        if self.tenant:
+            self.fields['action_type_ref'].queryset = ActionType.objects.filter(tenant_id=self.tenant.id)
+        else:
+            self.fields['action_type_ref'].queryset = ActionType.objects.none()
 
 
 class DemographicScoringRuleForm(forms.ModelForm):
     class Meta:
         model = DemographicScoringRule
-        fields = ['name', 'field_name', 'operator', 'field_value', 'points', 'priority', 'is_active']
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Enterprise Company Scoring'}),
-            'field_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., job_title, industry'}),
-            'operator': forms.Select(attrs={'class': 'form-control'}),
-            'field_value': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Manager, Technology'}),
-            'points': forms.NumberInput(attrs={'class': 'form-control', 'min': -100, 'max': 100}),
-            'priority': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 100}),
-        }
+        fields = ['demographic_scoring_rule_name', 'field_name', 'operator', 'field_value', 'points', 'rule_is_active']
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        # Load dynamic choices based on tenant
+        if self.tenant:
+            self.fields['operator_ref'].queryset = OperatorType.objects.filter(tenant_id=self.tenant.id)
+        else:
+            self.fields['operator_ref'].queryset = OperatorType.objects.none()
 
 
-class ScoreDecayConfigForm(forms.ModelForm):
+class SettingTypeForm(forms.ModelForm):
     class Meta:
-        model = ScoreDecayConfig
-        fields = ['decay_enabled', 'decay_rate', 'decay_period_days', 'min_score']
-        widgets = {
-            'decay_rate': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 100, 'step': 0.1}),
-            'decay_period_days': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
-            'min_score': forms.NumberInput(attrs={'class': 'form-control'}),
-        }
+        model = SettingType
+        fields = ['setting_type_name', 'label', 'order', 'setting_type_is_active', 'is_system']
+
+
+class ModelChoiceForm(forms.ModelForm):
+    class Meta:
+        model = ModelChoice
+        fields = ['model_choice_name', 'label', 'order', 'model_choice_is_active', 'is_system']
+
+
+class FieldTypeForm(forms.ModelForm):
+    class Meta:
+        model = FieldType
+        fields = ['field_type_name', 'label', 'order', 'field_type_is_active', 'is_system']
+
+
+class ModuleChoiceForm(forms.ModelForm):
+    class Meta:
+        model = ModuleChoice
+        fields = ['module_choice_name', 'label', 'order', 'module_choice_is_active', 'is_system']
+
+
+class TeamRoleForm(forms.ModelForm):
+    class Meta:
+        model = TeamRole
+        fields = ['role_name', 'label', 'order', 'role_is_active', 'is_system']
+
+
+class TerritoryForm(forms.ModelForm):
+    class Meta:
+        model = Territory
+        fields = ['territory_name', 'label', 'order', 'territory_is_active', 'is_system']
+
+
+class AssignmentRuleTypeForm(forms.ModelForm):
+    class Meta:
+        model = AssignmentRuleType
+        fields = ['rule_type_name', 'label', 'order', 'rule_type_is_active', 'is_system']
+
+
+class PipelineTypeForm(forms.ModelForm):
+    class Meta:
+        model = PipelineType
+        fields = ['pipeline_type_name', 'label', 'order', 'pipeline_type_is_active', 'is_system']
+
+
+class EmailProviderForm(forms.ModelForm):
+    class Meta:
+        model = EmailProvider
+        fields = ['provider_name', 'label', 'order', 'provider_is_active', 'is_system']
+
+
+class ActionTypeForm(forms.ModelForm):
+    class Meta:
+        model = ActionType
+        fields = ['action_type_name', 'label', 'order', 'action_type_is_active', 'is_system']
+
+
+class OperatorTypeForm(forms.ModelForm):
+    class Meta:
+        model = OperatorType
+        fields = ['operator_name', 'label', 'order', 'operator_is_active', 'is_system']

@@ -144,7 +144,7 @@
 <body>
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="{% url 'app_selection' %}">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'core:app_selection' %}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#6f42c1" class="me-2"
                     viewBox="0 0 16 16">
                     <circle cx="8" cy="8" r="7" stroke="#6f42c1" stroke-width="2" fill="white" />
@@ -161,7 +161,13 @@
                     </div>
                 </div>
 
-                <a href="{% url 'logout' %}"
+                {% if user.is_superuser %}
+                <a href="{% url 'core:app_settings' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3 me-2">
+                    <i class="bi bi-gear-fill me-2"></i> Settings
+                </a>
+                {% endif %}
+
+                <a href="{% url 'core:logout' %}"
                     class="btn btn-outline-danger btn-sm d-flex align-items-center rounded-pill px-3">
                     <i class="bi bi-box-arrow-right me-2"></i> Log Out
                 </a>
@@ -180,11 +186,9 @@
                 <h3 class="section-subtitle text-center mb-4 text-muted">Customer Relationship</h3>
                 <div class="app-grid">
                     {% for app in grouped_apps.customer %}
-                    <a href="{% url app.url_name %}" class="app-item">
+                    <a href="{{ app.url }}" class="app-item">
                         <div class="app-icon-container">
-                            <svg width="40" height="40" fill="#6f42c1" viewBox="0 0 16 16">
-                                {{ app.icon_svg|safe }}
-                            </svg>
+                            <i class="{{ app.icon }} fs-1 text-primary"></i>
                         </div>
                         <span class="app-name">{{ app.name }}</span>
                     </a>
@@ -199,11 +203,9 @@
                 <h3 class="section-subtitle text-center mb-4 text-muted">Sales & Operations</h3>
                 <div class="app-grid">
                     {% for app in grouped_apps.work %}
-                    <a href="{% url app.url_name %}" class="app-item">
+                    <a href="{{ app.url }}" class="app-item">
                         <div class="app-icon-container">
-                            <svg width="40" height="40" fill="#6f42c1" viewBox="0 0 16 16">
-                                {{ app.icon_svg|safe }}
-                            </svg>
+                            <i class="{{ app.icon }} fs-1 text-primary"></i>
                         </div>
                         <span class="app-name">{{ app.name }}</span>
                     </a>
@@ -218,11 +220,9 @@
                 <h3 class="section-subtitle text-center mb-4 text-muted">Insights & Support</h3>
                 <div class="app-grid">
                     {% for app in grouped_apps.analytics %}
-                    <a href="{% url app.url_name %}" class="app-item">
+                    <a href="{{ app.url }}" class="app-item">
                         <div class="app-icon-container">
-                            <svg width="40" height="40" fill="#6f42c1" viewBox="0 0 16 16">
-                                {{ app.icon_svg|safe }}
-                            </svg>
+                            <i class="{{ app.icon }} fs-1 text-primary"></i>
                         </div>
                         <span class="app-name">{{ app.name }}</span>
                     </a>
@@ -237,11 +237,9 @@
                 <h3 class="section-subtitle text-center mb-4 text-muted">Administration</h3>
                 <div class="app-grid">
                     {% for app in grouped_apps.admin %}
-                    <a href="{% url app.url_name %}" class="app-item">
+                    <a href="{{ app.url }}" class="app-item">
                         <div class="app-icon-container">
-                            <svg width="40" height="40" fill="#6f42c1" viewBox="0 0 16 16">
-                                {{ app.icon_svg|safe }}
-                            </svg>
+                            <i class="{{ app.icon }} fs-1 text-primary"></i>
                         </div>
                         <span class="app-name">{{ app.name }}</span>
                     </a>
@@ -256,11 +254,9 @@
                 <h3 class="section-subtitle text-center mb-4 text-muted">Control Plane</h3>
                 <div class="app-grid">
                     {% for app in grouped_apps.control %}
-                    <a href="{% url app.url_name %}" class="app-item">
+                    <a href="{{ app.url }}" class="app-item">
                         <div class="app-icon-container">
-                            <svg width="40" height="40" fill="#dc3545" viewBox="0 0 16 16">
-                                {{ app.icon_svg|safe }}
-                            </svg>
+                            <i class="{{ app.icon }} fs-1 text-danger"></i>
                         </div>
                         <span class="app-name">{{ app.name }}</span>
                     </a>

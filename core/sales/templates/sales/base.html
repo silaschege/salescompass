@@ -20,4 +20,12 @@
     <a class="nav-link ms-3" href="{% url 'sales:product_list' %}">Products List</a>
     <a class="nav-link ms-3" href="{% url 'sales:product_create' %}">Create Product</a>
 </div>
+
+<!-- Commissions Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#commissionsMenu">
+    <i class="bi bi-currency-dollar"></i> Commissions
+</a>
+<div class="collapse" id="commissionsMenu">
+    <a class="nav-link ms-3" href="{% url 'sales:commission_dashboard' %}">Commission Dashboard</a>
+</div>
 {% endblock %}

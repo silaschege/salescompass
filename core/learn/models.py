@@ -18,11 +18,11 @@
 #     ├── export_pdf.html
 #     └── usage_analytics.html
 
-from django.db import models
 
 # Create your models here.
 from django.db import models
-from core.models import TenantModel, TimeStampedModel
+from tenants.models import TenantAwareModel as TenantModel
+from core.models import  TimeStampedModel
 from core.models import User
 
 ARTICLE_TYPES = [
@@ -45,17 +45,17 @@ class Category(TenantModel):
     """
     Documentation categories (e.g., "Sales", "ESG", "API").
     """
-    name = models.CharField(max_length=100)
-    description = models.TextField(blank=True)
+    category_name = models.CharField(max_length=100)
+    category_description = models.TextField(blank=True)
     order = models.IntegerField(default=0)
     parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='children')
 
     class Meta:
         ordering = ['order']
-        unique_together = [('name', 'tenant_id')]
+        unique_together = [('category_name', 'tenant')]
 
     def __str__(self):
-        return self.name
+        return self.category_name
 
 
 class Article(TenantModel):
@@ -63,7 +63,7 @@ class Article(TenantModel):
     Documentation article.
     """
     title = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255, unique=True)
+    article_slug = models.SlugField(max_length=255, unique=True)
     summary = models.TextField(blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='articles')
     article_type = models.CharField(max_length=20, choices=ARTICLE_TYPES)
@@ -100,7 +100,7 @@ class ArticleVersion(TenantModel):
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
-        unique_together = [('article', 'version_number')]
+        unique_together = [('article', 'version_number', 'tenant')]
 
     def __str__(self):
         return f"{self.article.title} v{self.version_number}"
@@ -139,7 +139,7 @@ class SearchIndex(TimeStampedModel):
     index_name = models.CharField(max_length=100)
     document_count = models.IntegerField(default=0)
     last_updated = models.DateTimeField(null=True, blank=True)
-    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
+
 
     def __str__(self):
         return self.index_name

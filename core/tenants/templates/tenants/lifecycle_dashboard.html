@@ -1,0 +1,170 @@
+{% extends 'logged_in/base.html' %}
+
+{% block title %}Tenant Lifecycle Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Tenant Lifecycle Dashboard</h1>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-10 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Active Tenants</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_tenants }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Suspended Tenants</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ suspended_tenants }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-slash fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Archived Tenants</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ archived_tenants }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-archive fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Active Rules</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ automated_rules }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-cogs fa-2x text-gray-30"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'tenants:status-management' %}" class="btn btn-primary btn-block">
+                                <i class="fas fa-list"></i> Manage Tenant Status
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'tenants:initiate-suspension' %}" class="btn btn-warning btn-block">
+                                <i class="fas fa-user-slash"></i> Initiate Suspension
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'tenants:initiate-termination' %}" class="btn btn-danger btn-block">
+                                <i class="fas fa-user-times"></i> Initiate Termination
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'tenants:automated-lifecycle-rules' %}" class="btn btn-success btn-block">
+                                <i class="fas fa-cog"></i> Manage Rules
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Events -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Lifecycle Events</h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_events %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Tenant</th>
+                                        <th>Rule</th>
+                                        <th>Event Type</th>
+                                        <th>Status</th>
+                                        <th>Details</th>
+                                        <th>Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for event in recent_events %}
+                                    <tr>
+                                        <td>{{ event.tenant.name }}</td>
+                                        <td>{{ event.rule.name }}</td>
+                                        <td>{{ event.event_type }}</td>
+                                        <td>
+                                            {% if event.status == 'success' %}
+                                                <span class="badge badge-success">{{ event.status }}</span>
+                                            {% elif event.status == 'failed' %}
+                                                <span class="badge badge-danger">{{ event.status }}</span>
+                                            {% else %}
+                                                <span class="badge badge-warning">{{ event.status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ event.details|truncatechars:50 }}</td>
+                                        <td>{{ event.triggered_at }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p>No recent lifecycle events found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

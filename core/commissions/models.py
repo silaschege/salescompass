@@ -1,16 +1,17 @@
 from django.db import models
 from django.conf import settings
-from core.models import TenantModel, TimeStampedModel
+from core.models import  TimeStampedModel
 from opportunities.models import Opportunity
+from tenants.models import Tenant as TenantModel
 from products.models import Product
 
 class CommissionPlan(TenantModel):
     """
     Defines a commission plan that can be assigned to users.
     """
-    name = models.CharField(max_length=100)
-    description = models.TextField(blank=True)
-    is_active = models.BooleanField(default=True)
+    commission_plan_name = models.CharField(max_length=100)
+    commission_plan_description = models.TextField(blank=True)
+    commission_plan_is_active = models.BooleanField(default=True)
     
     BASIS_CHOICES = [
         ('revenue', 'Total Revenue'),
@@ -35,8 +36,13 @@ class CommissionRule(TenantModel):
     """
     Specific rules within a plan (e.g., 10% on hardware, 5% on software).
     """
+<<<<<<< Updated upstream
     plan = models.ForeignKey(CommissionPlan, on_delete=models.CASCADE, related_name='rules', null=True, blank=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True, related_name='commission_rules', help_text="Specific product this rule applies to. Leave blank for all.")
+=======
+    commission_rule_plan = models.ForeignKey(CommissionPlan, on_delete=models.CASCADE, related_name='rules', null=True, blank=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True, help_text="Specific product this rule applies to. Leave blank for all.")
+>>>>>>> Stashed changes
     product_category = models.CharField(max_length=100, blank=True, help_text="Category of products this rule applies to.")
     
     RATE_TYPE_CHOICES = [
@@ -59,7 +65,7 @@ class UserCommissionPlan(TenantModel):
     Assigns a plan to a user for a specific period.
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='commission_plans')
-    plan = models.ForeignKey(CommissionPlan, on_delete=models.CASCADE)
+    user_commission_plan = models.ForeignKey(CommissionPlan, on_delete=models.CASCADE)
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
 
@@ -98,7 +104,7 @@ class Adjustment(TenantModel):
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='commission_adjustments')
     amount = models.DecimalField(max_digits=12, decimal_places=2, help_text="Positive for bonus, negative for deduction.")
-    description = models.CharField(max_length=255)
+    adjusted_description = models.CharField(max_length=255)
     date = models.DateField()
     type = models.CharField(max_length=20, choices=[('bonus', 'Bonus'), ('deduction', 'Deduction'), ('draw', 'Draw'), ('clawback', 'Clawback')])
 

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from core.permissions import PermissionRequiredMixin, require_permission
-from .models import Automation, AutomationCondition, AutomationAction, Workflow, WorkflowTemplate
+from .models import Automation, AutomationCondition, AutomationAction, Workflow, WorkflowTemplate,WorkflowAction,WorkflowTrigger,WorkflowExecution,WebhookDeliveryLog,WebhookEndpoint
 from .forms import AutomationForm, AutomationConditionForm, AutomationActionForm
 from .utils import get_available_triggers
 from django.http import JsonResponse
@@ -10,35 +10,34 @@ from django.views import View
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 import json
-from .models import AutomationExecutionLog
+from .models import AutomationExecutionLog, WorkflowExecution
 from .utils import emit_event, execute_automation
- 
-class AutomationListView(PermissionRequiredMixin, ListView):
+
+class WorkflowListView(PermissionRequiredMixin, ListView):
     model = Workflow
     template_name = 'automation/list.html'
-    context_object_name = 'automations'
+    context_object_name = 'workflows'
     required_permission = 'automation:read'
+    
     def get_queryset(self):
-        # Ensure we're getting all automations, or apply specific filters
+        # Ensure we're getting all workflows, or apply specific filters
         return Workflow.objects.all()
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        for automation in context['automations']:
-            print(f"Automation ID: {automation.pk}")
-        print(f"Automations count: {context['automations'].count()}")  # Debug line
+        for workflow in context['workflows']:
+            print(f"Workflow ID: {workflow.pk}")
+        print(f"Workflows count: {context['workflows'].count()}")  # Debug line
         return context
 
-class AutomationDetailView(PermissionRequiredMixin, DetailView):
+class WorkflowDetailView(PermissionRequiredMixin, DetailView):
     model = Workflow
     template_name = 'automation/detail.html'
     required_permission = 'automation:read'
 
-
-
-class AutomationUpdateView(PermissionRequiredMixin, UpdateView):
+class WorkflowUpdateView(PermissionRequiredMixin, UpdateView):
     model = Workflow
-    form_class = AutomationForm
+    fields = ['workflow_name', 'workflow_description', 'workflow_trigger_type', 'workflow_is_active', 'workflow_builder_data']
     template_name = 'automation/form.html'
     success_url = '/automation/'
     required_permission = 'automation:write'
@@ -48,11 +47,9 @@ class AutomationUpdateView(PermissionRequiredMixin, UpdateView):
         context['trigger_types'] = get_available_triggers()
         return context
 
-
-# Standardize on Workflow model throughout (since ListView uses it)
-class AutomationCreateView(PermissionRequiredMixin, CreateView):
-    model = Workflow  # Change from Automation to Workflow
-    form_class = AutomationForm
+class WorkflowCreateView(PermissionRequiredMixin, CreateView):
+    model = Workflow
+    fields = ['workflow_name', 'workflow_description', 'workflow_trigger_type', 'workflow_is_active', 'workflow_builder_data']
     template_name = 'automation/form.html'
     success_url = '/automation/'
     required_permission = 'automation:write'
@@ -62,66 +59,52 @@ class AutomationCreateView(PermissionRequiredMixin, CreateView):
         context['trigger_types'] = get_available_triggers()
         return context
 
-class AutomationDeleteView(PermissionRequiredMixin, DeleteView):
-    model = Workflow  # Change from Automation to Workflow
+class WorkflowDeleteView(PermissionRequiredMixin, DeleteView):
+    model = Workflow
     template_name = 'automation/confirm_delete.html'
     success_url = '/automation/'
     required_permission = 'automation:delete'
+    
     def delete(self, request, *args, **kwargs):
-        automation = self.get_object()
-        if automation.is_system:
-            messages.error(request, "System automations cannot be deleted.")
-            return redirect('automation:list')
-        messages.success(request, f"Automation '{automation.name}' deleted.")
+        workflow = self.get_object()
+        # Check if workflow is system workflow if such a field exists
+        # if hasattr(workflow, 'is_system') and workflow.is_system:
+        #     messages.error(request, "System workflows cannot be deleted.")
+        #     return redirect('automation:list')
+        messages.success(request, f"Workflow '{workflow.workflow_name}' deleted.")
         return super().delete(request, *args, **kwargs)
-    
 
-#     link with other apps
-#         from automation.utils import emit_event
+# Standard views for the older Automation model
+class AutomationListView(PermissionRequiredMixin, ListView):
+    model = Automation
+    template_name = 'automation/list.html'
+    context_object_name = 'automations'
+    required_permission = 'automation:read'
 
-# def create_account(request):
-#     # ... account creation logic ...
-#     account = Account.objects.create(...)
-    
-#     # Emit automation event
-#     emit_event('account.created', {
-#         'account_id': account.id,
-#         'account_name': account.name,
-#         'industry': account.industry,
-#         'health_score': account.health_score,
-#         'tenant_id': account.tenant_id,
-#     })
+class AutomationDetailView(PermissionRequiredMixin, DetailView):
+    model = Automation
+    template_name = 'automation/detail.html'
+    required_permission = 'automation:read'
 
+class AutomationUpdateView(PermissionRequiredMixin, UpdateView):
+    model = Automation
+    fields = ['automation_name', 'automation_description', 'automation_is_active', 'trigger_type', 'trigger_config']
+    template_name = 'automation/form.html'
+    success_url = '/automation/'
+    required_permission = 'automation:write'
 
-# from automation.utils import emit_event
+class AutomationCreateView(PermissionRequiredMixin, CreateView):
+    model = Automation
+    fields = ['automation_name', 'automation_description', 'automation_is_active', 'trigger_type', 'trigger_config']
+    template_name = 'automation/form.html'
+    success_url = '/automation/'
+    required_permission = 'automation:write'
 
-# def close_case_with_csat(case_id: int, csat_score: int, csat_comment: str = ""):
-#     # ... CSAT logic ...
-#     emit_event('case.csat_submitted', {
-#         'case_id': case.id,
-#         'account_id': case.account_id,
-#         'csat_score': csat_score,
-#         'csat_comment': csat_comment,
-#         'tenant_id': case.tenant_id,
-#     })
-
-
-
-
-# # Automation settings
-# AUTOMATION_ASYNC = True  # Use Celery for async execution
-# AUTOMATION_MAX_EXECUTION_TIME = 30  # seconds
-# AUTOMATION_LOG_RETENTION_DAYS = 30
-
-# # Celery configuration
-# CELERY_BROKER_URL = 'redis://localhost:6379/0'
-# CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
-# CELERY_TASK_ROUTES = {
-#     'automation.tasks.execute_automation_task': {'queue': 'automation'},
-# }
-
-# Add these views to your existing views.py
-
+class AutomationDeleteView(PermissionRequiredMixin, DeleteView):
+    model = Automation
+    template_name = 'automation/confirm_delete.html'
+    success_url = '/automation/'
+    required_permission = 'automation:delete'
 
 class TriggerAutomationView(View):
     """API endpoint to trigger automations from other modules."""
@@ -178,8 +161,18 @@ class ExecuteAutomationView(View):
                 return JsonResponse({'error': 'Automation execution failed'}, status=500)
                 
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
+            return JsonResponse({'error': str(e)}, status=40)
 
+class WorkflowExecutionListView(PermissionRequiredMixin, ListView):
+    """List all workflow execution logs."""
+    model = WorkflowExecution
+    template_name = 'automation/log_list.html'
+    context_object_name = 'logs'
+    paginate_by = 50
+    required_permission = 'automation:read'
+
+    def get_queryset(self):
+        return super().get_queryset().select_related('workflow')
 
 class AutomationLogListView(PermissionRequiredMixin, ListView):
     """List all automation execution logs."""
@@ -192,13 +185,17 @@ class AutomationLogListView(PermissionRequiredMixin, ListView):
     def get_queryset(self):
         return super().get_queryset().select_related('automation', 'executed_by')
 
+class WorkflowExecutionDetailView(PermissionRequiredMixin, DetailView):
+    """Detail view for workflow execution logs."""
+    model = WorkflowExecution
+    template_name = 'automation/log_detail.html'
+    required_permission = 'automation:read'
 
 class AutomationLogDetailView(PermissionRequiredMixin, DetailView):
     """Detail view for automation execution logs."""
     model = AutomationExecutionLog
     template_name = 'automation/log_detail.html'
     required_permission = 'automation:read'
-
 
 class SystemAutomationListView(PermissionRequiredMixin, ListView):
     """List system automations (cannot be deleted)."""
@@ -210,7 +207,6 @@ class SystemAutomationListView(PermissionRequiredMixin, ListView):
     def get_queryset(self):
         return Automation.objects.filter(is_system=True)
 
-
 def import_automation_view(request):
     """Import automation rules from JSON file."""
     if request.method == 'POST' and request.user.has_perm('automation:write'):
@@ -218,7 +214,6 @@ def import_automation_view(request):
         messages.success(request, "Automation rules imported successfully!")
         return redirect('automation:list')
     return render(request, 'automation/import.html')
-
 
 def export_automation_view(request):
     """Export automation rules as JSON."""
@@ -249,7 +244,6 @@ class AutomationConditionCreateView(PermissionRequiredMixin, CreateView):
         form.instance.automation_id = automation_id
         return super().form_valid(form)
 
-
 class AutomationActionCreateView(PermissionRequiredMixin, CreateView):
     model = AutomationAction
     form_class = AutomationActionForm
@@ -268,9 +262,6 @@ class AutomationActionCreateView(PermissionRequiredMixin, CreateView):
         form.instance.automation_id = automation_id
         return super().form_valid(form)
 
-
-
-
 @require_permission('automation:write')
 def workflow_builder(request, workflow_id=None):
     """Visual workflow builder interface."""
@@ -279,7 +270,7 @@ def workflow_builder(request, workflow_id=None):
     
     context = {
         'page_title': 'Workflow Builder',
-        'templates': WorkflowTemplate.objects.filter(is_active=True),
+        'templates': WorkflowTemplate.objects.filter(workflow_template_is_active=True),
         'module_config': MODULE_CONFIG,
         'module_config_json': json.dumps(MODULE_CONFIG) if MODULE_CONFIG else '{}'
     }
@@ -288,14 +279,14 @@ def workflow_builder(request, workflow_id=None):
         workflow = get_object_or_404(Workflow, id=workflow_id)
         context['workflow'] = workflow
         context['workflow_id'] = workflow_id
-        if hasattr(workflow, 'builder_data') and workflow.builder_data:
-            context['workflow_data'] = json.dumps(workflow.builder_data)
+        if hasattr(workflow, 'workflow_builder_data') and workflow.workflow_builder_data:
+            context['workflow_data'] = json.dumps(workflow.workflow_builder_data)
             
     template_id = request.GET.get('template_id')
     if template_id and not workflow_id:
         template = get_object_or_404(WorkflowTemplate, id=template_id)
-        context['workflow_data'] = json.dumps(template.builder_data)
-        context['template_name'] = template.name
+        context['workflow_data'] = json.dumps(template.workflow_template_builder_data)
+        context['template_name'] = template.workflow_template_name
     
     return render(request, 'automation/workflow_builder.html', context)
 
@@ -307,7 +298,7 @@ def save_workflow(request):
         return JsonResponse({'error': 'POST required'}, status=400)
     
     try:
-        from .models import Workflow, WorkflowTrigger, WorkflowAction
+        from .models import Workflow
         
         data = json.loads(request.body)
         workflow_name = data.get('name')
@@ -320,8 +311,8 @@ def save_workflow(request):
         # Handle update vs create
         if workflow_id:
             workflow = get_object_or_404(Workflow, id=workflow_id)
-            workflow.name = workflow_name
-            workflow.builder_data = workflow_data
+            workflow.workflow_name = workflow_name
+            workflow.workflow_builder_data = workflow_data
         else:
             # Extract trigger type from workflow data
             trigger_type = 'default.trigger'
@@ -343,12 +334,12 @@ def save_workflow(request):
                         break
             
             workflow = Workflow(
-                name=workflow_name,
-                trigger_type=trigger_type,
-                is_active=True,
+                workflow_name=workflow_name,
+                workflow_trigger_type=trigger_type,
+                workflow_is_active=True,
                 tenant_id=request.user.tenant_id if hasattr(request.user, 'tenant_id') else None,
                 created_by=request.user if request.user.is_authenticated else None,
-                builder_data=workflow_data
+                workflow_builder_data=workflow_data
             )
         
         workflow.save()
@@ -362,7 +353,6 @@ def save_workflow(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
 def load_workflow(request, workflow_id):
     """Load workflow data for visual builder."""
     from .models import Workflow
@@ -372,8 +362,8 @@ def load_workflow(request, workflow_id):
         
         # Convert workflow to drawflow format
         workflow_data = {
-            'name': workflow.name,
-            'trigger_type': workflow.trigger_type,
+            'name': workflow.workflow_name,
+            'trigger_type': workflow.workflow_trigger_type,
             # Add drawflow data here
         }
         
@@ -384,3 +374,181 @@ def load_workflow(request, workflow_id):
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+# Additional views for Workflow models
+class WorkflowActionCreateView(PermissionRequiredMixin, CreateView):
+    model = WorkflowAction
+    fields = ['workflow_action_type', 'workflow_action_parameters', 'workflow_action_order', 'workflow_action_is_active']
+    template_name = 'automation/action_form.html'
+    required_permission = 'automation:write'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        workflow_id = self.kwargs.get('workflow_id')
+        if workflow_id:
+            workflow = get_object_or_404(Workflow, id=workflow_id)
+            kwargs['initial'] = {'workflow': workflow}
+        return kwargs
+
+    def form_valid(self, form):
+        workflow_id = self.kwargs.get('workflow_id')
+        form.instance.workflow_id = workflow_id
+        return super().form_valid(form)
+
+class WorkflowActionUpdateView(PermissionRequiredMixin, UpdateView):
+    model = WorkflowAction
+    fields = ['workflow_action_type', 'workflow_action_parameters', 'workflow_action_order', 'workflow_action_is_active']
+    template_name = 'automation/action_form.html'
+    required_permission = 'automation:write'
+
+class WorkflowActionDeleteView(PermissionRequiredMixin, DeleteView):
+    model = WorkflowAction
+    template_name = 'automation/confirm_delete.html'
+    success_url = '/automation/'
+    required_permission = 'automation:delete'
+
+class WorkflowTriggerCreateView(PermissionRequiredMixin, CreateView):
+    model = WorkflowTrigger
+    fields = ['workflow_trigger_event', 'workflow_trigger_conditions', 'workflow_trigger_is_active']
+    template_name = 'automation/condition_form.html'
+    required_permission = 'automation:write'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        workflow_id = self.kwargs.get('workflow_id')
+        if workflow_id:
+            workflow = get_object_or_404(Workflow, id=workflow_id)
+            kwargs['initial'] = {'workflow': workflow}
+        return kwargs
+
+    def form_valid(self, form):
+        workflow_id = self.kwargs.get('workflow_id')
+        form.instance.workflow_id = workflow_id
+        return super().form_valid(form)
+
+class WorkflowTriggerUpdateView(PermissionRequiredMixin, UpdateView):
+    model = WorkflowTrigger
+    fields = ['workflow_trigger_event', 'workflow_trigger_conditions', 'workflow_trigger_is_active']
+    template_name = 'automation/condition_form.html'
+    required_permission = 'automation:write'
+
+class WorkflowTriggerDeleteView(PermissionRequiredMixin, DeleteView):
+    model = WorkflowTrigger
+    template_name = 'automation/confirm_delete.html'
+    success_url = '/automation/'
+    required_permission = 'automation:delete'
+
+
+# Additional views for Workflow models
+class WorkflowActionListView(PermissionRequiredMixin, ListView):
+    model = WorkflowAction
+    template_name = 'automation/workflow_action_list.html'
+    context_object_name = 'workflow_actions'
+    required_permission = 'automation:read'
+
+    def get_queryset(self):
+        return super().get_queryset().select_related('workflow')
+
+
+class WorkflowActionDetailView(PermissionRequiredMixin, DetailView):
+    model = WorkflowAction
+    template_name = 'automation/workflow_action_detail.html'
+    required_permission = 'automation:read'
+
+
+class WorkflowActionUpdateView(PermissionRequiredMixin, UpdateView):
+    model = WorkflowAction
+    fields = ['workflow_action_type', 'workflow_action_parameters', 'workflow_action_order', 'workflow_action_is_active']
+    template_name = 'automation/workflow_action_form.html'
+    success_url = '/automation/workflow-actions/'
+    required_permission = 'automation:write'
+
+
+class WorkflowActionDeleteView(PermissionRequiredMixin, DeleteView):
+    model = WorkflowAction
+    template_name = 'automation/confirm_delete.html'
+    success_url = '/automation/workflow-actions/'
+    required_permission = 'automation:delete'
+
+
+class WorkflowExecutionListView(PermissionRequiredMixin, ListView):
+    model = WorkflowExecution
+    template_name = 'automation/workflow_execution_list.html'
+    context_object_name = 'workflow_executions'
+    required_permission = 'automation:read'
+
+    def get_queryset(self):
+        return super().get_queryset().select_related('workflow')
+
+
+class WorkflowExecutionDetailView(PermissionRequiredMixin, DetailView):
+    model = WorkflowExecution
+    template_name = 'automation/workflow_execution_detail.html'
+    required_permission = 'automation:read'
+
+
+class WorkflowExecutionUpdateView(PermissionRequiredMixin, UpdateView):
+    model = WorkflowExecution
+    fields = ['workflow_execution_status', 'workflow_execution_error_message', 'workflow_execution_completed_at']
+    template_name = 'automation/workflow_execution_form.html'
+    success_url = '/automation/workflow-executions/'
+    required_permission = 'automation:write'
+
+
+class WorkflowTriggerListView(PermissionRequiredMixin, ListView):
+    model = WorkflowTrigger
+    template_name = 'automation/workflow_trigger_list.html'
+    context_object_name = 'workflow_triggers'
+    required_permission = 'automation:read'
+
+    def get_queryset(self):
+        return super().get_queryset().select_related('workflow')
+
+
+class WorkflowTriggerDetailView(PermissionRequiredMixin, DetailView):
+    model = WorkflowTrigger
+    template_name = 'automation/workflow_trigger_detail.html'
+    required_permission = 'automation:read'
+
+
+class WorkflowTriggerUpdateView(PermissionRequiredMixin, UpdateView):
+    model = WorkflowTrigger
+    fields = ['workflow_trigger_event', 'workflow_trigger_conditions', 'workflow_trigger_is_active']
+    template_name = 'automation/workflow_trigger_form.html'
+    success_url = '/automation/workflow-triggers/'
+    required_permission = 'automation:write'
+
+
+class WorkflowTriggerDeleteView(PermissionRequiredMixin, DeleteView):
+    model = WorkflowTrigger
+    template_name = 'automation/confirm_delete.html'
+    success_url = '/automation/workflow-triggers/'
+    required_permission = 'automation:delete'
+
+
+class WorkflowTemplateListView(PermissionRequiredMixin, ListView):
+    model = WorkflowTemplate
+    template_name = 'automation/workflow_template_list.html'
+    context_object_name = 'workflow_templates'
+    required_permission = 'automation:read'
+
+
+class WorkflowTemplateDetailView(PermissionRequiredMixin, DetailView):
+    model = WorkflowTemplate
+    template_name = 'automation/workflow_template_detail.html'
+    required_permission = 'automation:read'
+
+
+class WorkflowTemplateUpdateView(PermissionRequiredMixin, UpdateView):
+    model = WorkflowTemplate
+    fields = ['workflow_template_name', 'workflow_template_description', 'workflow_template_trigger_type', 'workflow_template_builder_data', 'workflow_template_is_active']
+    template_name = 'automation/workflow_template_form.html'
+    success_url = '/automation/workflow-templates/'
+    required_permission = 'automation:write'
+
+
+class WorkflowTemplateDeleteView(PermissionRequiredMixin, DeleteView):
+    model = WorkflowTemplate
+    template_name = 'automation/confirm_delete.html'
+    success_url = '/automation/workflow-templates/'
+    required_permission = 'automation:delete'

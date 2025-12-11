@@ -1,97 +1,207 @@
 from django import forms
-from .models import Report, ReportSchedule, DashboardWidget
+from .models import Report, ReportSchedule, ReportExport, ReportTemplate, ReportAnalytics, ReportSubscriber, ReportNotification, ReportType, ReportScheduleFrequency, ExportFormat, TemplateType, TemplateFormat, ReportAction, ReportFormat, SubscriptionType, NotificationChannel
+from tenants.models import Tenant as TenantModel
+from core.forms import DynamicChoiceWidget  # Import the DynamicChoiceWidget from core forms
+
+
 
 class ReportForm(forms.ModelForm):
-    """
-    Form for creating and updating reports.
-    """
     class Meta:
         model = Report
-        fields = ['name', 'description', 'report_type', 'config', 'is_active']
+        fields = ['report_name', 'report_description', 'report_type_ref', 'query_config', 'report_is_active', 
+                  'is_scheduled', 'schedule_frequency_ref', 'last_run', 'last_run_status']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'report_type': forms.Select(attrs={'class': 'form-control'}),
-            'config': forms.Textarea(attrs={'class': 'form-control', 'rows': 10}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Add help text for config field
-        self.fields['config'].help_text = """
-        JSON configuration for the report. Example:
-        {
-            "entities": ["account", "opportunity"],
-            "fields": ["name", "amount", "esg_score"],
-            "filters": {"industry": "manufacturing"},
-            "group_by": "owner",
-            "sort_by": "amount"
-        }
-        """
-
-
-class ReportScheduleForm(forms.ModelForm):
-    """
-    Form for creating and updating report schedules.
-    """
-    recipients = forms.CharField(
-        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'email1@example.com,email2@example.com'}),
-        help_text="Comma-separated email addresses"
-    )
-
-    class Meta:
-        model = ReportSchedule
-        fields = ['report', 'frequency', 'recipients', 'export_format', 'is_active']
-        widgets = {
-            'report': forms.Select(attrs={'class': 'form-control'}),
-            'frequency': forms.Select(attrs={'class': 'form-control'}),
-            'export_format': forms.Select(attrs={'class': 'form-control'}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user', None)
-        super().__init__(*args, **kwargs)
-        if user:
-            # Filter reports to user's tenant
-            self.fields['report'].queryset = Report.objects.filter(
-                tenant_id=user.tenant_id
-            )
-        
-        # Format recipients as comma-separated
-        if self.instance.pk and self.instance.recipients:
-            self.fields['recipients'].initial = ','.join(self.instance.recipients)
-
-    def clean_recipients(self):
-        recipients = self.cleaned_data['recipients']
-        if recipients:
-            # Convert comma-separated string to list
-            return [email.strip() for email in recipients.split(',') if email.strip()]
-        return []
-
-
-class DashboardWidgetForm(forms.ModelForm):
-    """
-    Form for creating and updating dashboard widgets.
-    """
-    class Meta:
-        model = DashboardWidget
-        fields = ['name', 'widget_type', 'report', 'position', 'order', 'is_active']
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'widget_type': forms.Select(attrs={'class': 'form-control'}),
-            'report': forms.Select(attrs={'class': 'form-control'}),
-            'position': forms.Select(attrs={'class': 'form-control'}),
-            'order': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'report_type_ref': DynamicChoiceWidget(choice_model=ReportType),
+            'schedule_frequency_ref': DynamicChoiceWidget(choice_model=ReportScheduleFrequency),
         }
     
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user', None)
+        self.tenant = kwargs.pop('tenant', None)
         super().__init__(*args, **kwargs)
-        if user:
-            self.fields['report'].queryset = Report.objects.filter(
-                tenant_id=user.tenant_id,
-                is_active=True
-            )
+        
+        # Load dynamic choices based on tenant
+        if self.tenant:
+            self.fields['report_type_ref'].queryset = ReportType.objects.filter(tenant_id=self.tenant.id)
+            self.fields['schedule_frequency_ref'].queryset = ReportScheduleFrequency.objects.filter(tenant_id=self.tenant.id)
+        else:
+            self.fields['report_type_ref'].queryset = ReportType.objects.none()
+            self.fields['schedule_frequency_ref'].queryset = ReportScheduleFrequency.objects.none()
+
+
+class ReportScheduleForm(forms.ModelForm):
+    class Meta:
+        model = ReportSchedule
+        fields = ['report', 'schedule_name', 'schedule_description', 'frequency_ref', 'recipients', 'schedule_is_active', 
+                  'next_run', 'last_run']
+        widgets = {
+            'frequency_ref': DynamicChoiceWidget(choice_model=ReportScheduleFrequency),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        # Load dynamic choices based on tenant
+        if self.tenant:
+            self.fields['frequency_ref'].queryset = ReportScheduleFrequency.objects.filter(tenant_id=self.tenant.id)
+        else:
+            self.fields['frequency_ref'].queryset = ReportScheduleFrequency.objects.none()
+
+
+class ReportExportForm(forms.ModelForm):
+    class Meta:
+        model = ReportExport
+        fields = ['report', 'export_format_ref', 'file', 'created_by', 'status', 'error_message', 
+                  'completed_at']
+        widgets = {
+            'export_format_ref': DynamicChoiceWidget(choice_model=ExportFormat),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        # Load dynamic choices based on tenant
+        if self.tenant:
+            self.fields['export_format_ref'].queryset = ExportFormat.objects.filter(tenant_id=self.tenant.id)
+        else:
+            self.fields['export_format_ref'].queryset = ExportFormat.objects.none()
+
+
+class ReportTemplateForm(forms.ModelForm):
+    class Meta:
+        model = ReportTemplate
+        fields = ['template_name', 'template_description', 'template_type_ref', 'template_format_ref', 'template_content', 
+                  'template_is_active', 'created_by']
+        widgets = {
+            'template_type_ref': DynamicChoiceWidget(choice_model=TemplateType),
+            'template_format_ref': DynamicChoiceWidget(choice_model=TemplateFormat),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        # Load dynamic choices based on tenant
+        if self.tenant:
+            self.fields['template_type_ref'].queryset = TemplateType.objects.filter(tenant_id=self.tenant.id)
+            self.fields['template_format_ref'].queryset = TemplateFormat.objects.filter(tenant_id=self.tenant.id)
+        else:
+            self.fields['template_type_ref'].queryset = TemplateType.objects.none()
+            self.fields['template_format_ref'].queryset = TemplateFormat.objects.none()
+
+
+class ReportAnalyticsForm(forms.ModelForm):
+    class Meta:
+        model = ReportAnalytics
+        fields = ['report', 'user', 'action_ref', 'metadata']
+        widgets = {
+            'action_ref': DynamicChoiceWidget(choice_model=ReportAction),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        # Load dynamic choices based on tenant
+        if self.tenant:
+            self.fields['action_ref'].queryset = ReportAction.objects.filter(tenant_id=self.tenant.id)
+        else:
+            self.fields['action_ref'].queryset = ReportAction.objects.none()
+
+
+class ReportSubscriptionForm(forms.ModelForm):
+    class Meta:
+        model = ReportSubscriber
+        fields = ['report', 'user', 'email', 'subscription_type_ref', 'report_format_ref', 'subscriber_is_active', 
+                  'next_scheduled_send']
+        widgets = {
+            'subscription_type_ref': DynamicChoiceWidget(choice_model=SubscriptionType),
+            'report_format_ref': DynamicChoiceWidget(choice_model=ReportFormat),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        # Load dynamic choices based on tenant
+        if self.tenant:
+            self.fields['subscription_type_ref'].queryset = SubscriptionType.objects.filter(tenant_id=self.tenant.id)
+            self.fields['report_format_ref'].queryset = ReportFormat.objects.filter(tenant_id=self.tenant.id)
+        else:
+            self.fields['subscription_type_ref'].queryset = SubscriptionType.objects.none()
+            self.fields['report_format_ref'].queryset = ReportFormat.objects.none()
+
+
+class ReportNotificationForm(forms.ModelForm):
+    class Meta:
+        model = ReportNotification
+        fields = ['report_schedule', 'recipient_email', 'status', 'sent_at', 'error_message', 
+                  'notification_channel_ref']
+        widgets = {
+            'notification_channel_ref': DynamicChoiceWidget(choice_model=NotificationChannel),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        # Load dynamic choices based on tenant
+        if self.tenant:
+            self.fields['notification_channel_ref'].queryset = NotificationChannel.objects.filter(tenant_id=self.tenant.id)
+        else:
+            self.fields['notification_channel_ref'].queryset = NotificationChannel.objects.none()
+
+
+class ReportTypeForm(forms.ModelForm):
+    class Meta:
+        model = ReportType
+        fields = ['type_name', 'label', 'order', 'type_is_active', 'is_system']
+
+
+class ReportScheduleFrequencyForm(forms.ModelForm):
+    class Meta:
+        model = ReportScheduleFrequency
+        fields = ['frequency_name', 'label', 'order', 'frequency_is_active', 'is_system']
+
+
+class ExportFormatForm(forms.ModelForm):
+    class Meta:
+        model = ExportFormat
+        fields = ['format_name', 'label', 'order', 'format_is_active', 'is_system']
+
+
+class TemplateTypeForm(forms.ModelForm):
+    class Meta:
+        model = TemplateType
+        fields = ['template_type_name', 'label', 'order', 'template_type_is_active', 'is_system']
+
+
+class TemplateFormatForm(forms.ModelForm):
+    class Meta:
+        model = TemplateFormat
+        fields = ['format_name', 'label', 'order', 'format_is_active', 'is_system']
+
+
+class ReportActionForm(forms.ModelForm):
+    class Meta:
+        model = ReportAction
+        fields = ['action_name', 'label', 'order', 'action_is_active', 'is_system']
+
+
+class ReportFormatForm(forms.ModelForm):
+    class Meta:
+        model = ReportFormat
+        fields = ['format_name', 'label', 'order', 'format_is_active', 'is_system']
+
+
+class SubscriptionTypeForm(forms.ModelForm):
+    class Meta:
+        model = SubscriptionType
+        fields = ['subscription_type_name', 'label', 'order', 'subscription_type_is_active', 'is_system']
+
+
+class NotificationChannelForm(forms.ModelForm):
+    class Meta:
+        model = NotificationChannel
+        fields = ['channel_name', 'label', 'order', 'channel_is_active', 'is_system']

@@ -123,11 +123,11 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'channels',
     'django_celery_beat',
-    # 'drf_spectacular',  # Commented out - not installed
+    'drf_spectacular',
 ]
 
 REST_FRAMEWORK = {
-    # 'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',  # Commented out - not installed
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 SPECTACULAR_SETTINGS = {
@@ -176,6 +176,7 @@ WSGI_APPLICATION = 'salescompass.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+<<<<<<< Updated upstream
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 if DATABASE_URL:
@@ -195,6 +196,18 @@ if DATABASE_URL:
             'CONN_MAX_AGE': 300,
             'CONN_HEALTH_CHECKS': True,
         }
+=======
+import dj_database_url
+
+# Use DATABASE_URL if available (PostgreSQL), otherwise fallback to SQLite for development
+if os.getenv('DATABASE_URL'):
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.getenv('DATABASE_URL'),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+>>>>>>> Stashed changes
     }
 else:
     DATABASES = {
@@ -254,19 +267,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #################
 
 # added changes 
-# Celery configuration (optional - requires Redis)
-# Only use eager mode when no broker is configured
-if os.getenv('REDIS_URL'):
-    CELERY_BROKER_URL = os.getenv('REDIS_URL')
-    CELERY_TASK_ALWAYS_EAGER = False
-elif os.getenv('CELERY_BROKER_URL'):
-    CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL')
-    CELERY_TASK_ALWAYS_EAGER = False
-else:
-    # No broker configured - use eager mode (tasks run synchronously)
-    # Use memory:// as a safe in-memory URL for eager mode
-    CELERY_BROKER_URL = 'memory://'
-    CELERY_TASK_ALWAYS_EAGER = True
+# Celery configuration - Redis is now deployed
+REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
+CELERY_TASK_ALWAYS_EAGER = False  # Tasks now run asynchronously
+CELERY_TASK_EAGER_PROPAGATES = False
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Africa/Nairobi'  # Or your timezone
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
 
 # Celery Beat periodic tasks
 from celery.schedules import crontab
@@ -280,29 +293,26 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'marketing.tasks.process_drip_enrollments',
         'schedule': crontab(minute='*/10'),  # Every 10 minutes
     },
+    'calculate-tenant-usage': {
+        'task': 'infrastructure.tasks.calculate_usage',
+        'schedule': crontab(hour='*/6'),  # Every 6 hours
+    },
 }
 
 # ASGI application (replace your current WSGI_APPLICATION)
 ASGI_APPLICATION = 'salescompass.routing.application'
 
-# Channels configuration
-# Use Redis channel layer if available, otherwise in-memory for development
-REDIS_URL = os.getenv('REDIS_URL')
-if REDIS_URL:
-    CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels_redis.core.RedisChannelLayer',
-            'CONFIG': {
-                "hosts": [REDIS_URL],
-            },
+# Channels Configuration - Use Redis
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [REDIS_URL],
+            "capacity": 1500,  # Max messages in channel
+            "expiry": 10,      # Message expiry in seconds
         },
-    }
-else:
-    CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels.layers.InMemoryChannelLayer',
-        },
-    }
+    },
+}
 
 
 # Elasticsearch Configuration

@@ -1,0 +1,54 @@
+{% extends "automation/base.html" %}
+
+{% block title %}Workflow Templates - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Workflow Templates</h1>
+    
+    {% if workflow_templates %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Trigger Type</th>
+                    <th>Active</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for template in workflow_templates %}
+                <tr>
+                    <td>{{ template.id }}</td>
+                    <td>{{ template.workflow_template_name }}</td>
+                    <td>{{ template.workflow_template_description|truncatechars:50 }}</td>
+                    <td>{{ template.workflow_template_trigger_type }}</td>
+                    <td>
+                        {% if template.workflow_template_is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ template.workflow_template_created_at }}</td>
+                    <td>
+                        <a href="{% url 'automation:workflow_template_detail' template.id %}" class="btn btn-sm btn-info">View</a>
+                        {% if perms.automation.write %}
+                        <a href="{% url 'automation:workflow_template_update' template.id %}" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="{% url 'automation:workflow_template_delete' template.id %}" class="btn btn-sm btn-danger">Delete</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p>No workflow templates found.</p>
+    {% endif %}
+</div>
+{% endblock %}

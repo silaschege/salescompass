@@ -3,17 +3,18 @@ from .models import CommissionPlan, CommissionRule, UserCommissionPlan, Quota, C
 
 class CommissionRuleInline(admin.TabularInline):
     model = CommissionRule
+    fk_name = 'commission_rule_plan'
     extra = 1
 
 @admin.register(CommissionPlan)
 class CommissionPlanAdmin(admin.ModelAdmin):
-    list_display = ('name', 'basis', 'period', 'is_active')
+    list_display = ('commission_plan_name', 'basis', 'period', 'commission_plan_is_active')
     inlines = [CommissionRuleInline]
 
 @admin.register(UserCommissionPlan)
 class UserCommissionPlanAdmin(admin.ModelAdmin):
-    list_display = ('user', 'plan', 'start_date', 'end_date')
-    list_filter = ('plan', 'start_date')
+    list_display = ('user', 'user_commission_plan', 'start_date', 'end_date')
+    list_filter = ('user_commission_plan', 'start_date')
 
 @admin.register(Quota)
 class QuotaAdmin(admin.ModelAdmin):

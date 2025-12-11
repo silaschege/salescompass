@@ -12,8 +12,8 @@ class NpsAbTestForm(forms.ModelForm):
         model = NpsAbTest
         fields = [
             'survey', 
-            'name', 
-            'is_active', 
+            'nps_abtest_name', 
+            'nps_abtest_is_active', 
             'auto_winner', 
             'min_responses', 
             'confidence_level'
@@ -23,9 +23,12 @@ class NpsAbTestForm(forms.ModelForm):
                 'class': 'form-select',
                 'placeholder': 'Select NPS survey to test'
             }),
-            'name': forms.TextInput(attrs={
+            'nps_abtest_name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'e.g., Question Wording Test'
+            }),
+            'nps_abtest_is_active': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
             }),
             'min_responses': forms.NumberInput(attrs={
                 'class': 'form-control',
@@ -43,8 +46,8 @@ class NpsAbTestForm(forms.ModelForm):
         }
         help_texts = {
             'survey': 'Select the NPS survey you want to A/B test',
-            'name': 'Give your A/B test a descriptive name',
-            'is_active': 'Enable this test to start sending variants',
+            'nps_abtest_name': 'Give your A/B test a descriptive name',
+            'nps_abtest_is_active': 'Enable this test to start sending variants',
             'auto_winner': 'Automatically select winner when statistical significance is reached',
             'min_responses': 'Minimum total responses needed before declaring a winner',
             'confidence_level': 'Statistical confidence level (95% = 0.95)'
@@ -57,11 +60,11 @@ class NpsAbTestForm(forms.ModelForm):
             # Filter surveys to user's tenant and active surveys only
             self.fields['survey'].queryset = NpsSurvey.objects.filter(
                 tenant_id=user.tenant_id,
-                is_active=True
+                nps_survey_is_active=True
             )
         else:
             # If no user, show only active surveys
-            self.fields['survey'].queryset = NpsSurvey.objects.filter(is_active=True)
+            self.fields['survey'].queryset = NpsSurvey.objects.filter(nps_survey_is_active=True)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -78,7 +81,7 @@ class NpsAbTestForm(forms.ModelForm):
 
     def clean_survey(self):
         survey = self.cleaned_data['survey']
-        if not survey.is_active:
+        if not survey.nps_survey_is_active:
             raise ValidationError('Selected survey must be active.')
         return survey
 
@@ -147,6 +150,7 @@ class NpsAbVariantForm(forms.ModelForm):
 NpsAbVariantFormSet = inlineformset_factory(
     NpsAbTest,
     NpsAbVariant,
+    fk_name='ab_test',  # <--- CRITICAL FIX: Specifies which ForeignKey to use
     form=NpsAbVariantForm,
     fields=[
         'variant', 
@@ -193,21 +197,22 @@ class NpsSurveyForm(forms.ModelForm):
     class Meta:
         model = NpsSurvey
         fields = [
-            'name',
-            'description', 
+            'nps_survey_name',
+            'nps_survey_description', 
             'question_text', 
             'follow_up_question', 
             'delivery_method', 
             'trigger_event',
-            'is_active'
+            'nps_survey_is_active'
         ]
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'nps_survey_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'nps_survey_description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'question_text': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'follow_up_question': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'delivery_method': forms.Select(attrs={'class': 'form-select'}),
             'trigger_event': forms.Select(attrs={'class': 'form-select'}),
+            'nps_survey_is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
 

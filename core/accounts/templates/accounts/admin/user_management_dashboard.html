@@ -1,0 +1,115 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+
+{% block title %}User Management Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>User Management Dashboard</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
+                    <li class="breadcrumb-item active">User Management</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Users</h5>
+                    <p class="card-text display-4">{{ total_users }}</p>
+                </div>
+            </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Active Users</h5>
+                    <p class="card-text display-4">{{ active_users }}</p>
+                </div>
+            </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Tenants</h5>
+                    <p class="card-text display-4">{{ tenants_count }}</p>
+                </div>
+            </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">MFA Enabled</h5>
+                    <p class="card-text display-4">{{ users_with_mfa|default:0 }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Recent Users</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th>Name</th>
+                                    <th>Tenant</th>
+                                    <th>Role</th>
+                                    <th>Date Joined</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in recent_users %}
+                                <tr>
+                                    <td>{{ user.email }}</td>
+                                    <td>{{ user.first_name }} {{ user.last_name }}</td>
+                                    <td>{{ user.tenant.name|default:"-" }}</td>
+                                    <td>{{ user.role.name|default:"-" }}</td>
+                                    <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5">No recent users found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="{% url 'accounts:admin_user_list' %}" class="btn btn-primary">View All Users</a>
+                </div>
+            </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'accounts:admin_user_create' %}" class="btn btn-success">
+                            <i class="fas fa-user-plus"></i> Create New User
+                        </a>
+                        <a href="{% url 'accounts:user_bulk_operations' %}" class="btn btn-info">
+                            <i class="fas fa-users-cog"></i> Bulk User Operations
+                        </a>
+                        <a href="{% url 'accounts:user_role_management' %}" class="btn btn-warning">
+                            <i class="fas fa-user-tag"></i> Manage Roles
+                        </a>
+                        <a href="{% url 'accounts:user_access_review' %}" class="btn btn-secondary">
+                            <i class="fas fa-user-check"></i> Access Reviews
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
