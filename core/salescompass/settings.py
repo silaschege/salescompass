@@ -176,27 +176,6 @@ WSGI_APPLICATION = 'salescompass.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-<<<<<<< Updated upstream
-DATABASE_URL = os.getenv('DATABASE_URL')
-
-if DATABASE_URL:
-    import urllib.parse
-    result = urllib.parse.urlparse(DATABASE_URL)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': result.path[1:],
-            'USER': result.username,
-            'PASSWORD': result.password,
-            'HOST': result.hostname,
-            'PORT': result.port or 5432,
-            'OPTIONS': {
-                'sslmode': 'require',
-            },
-            'CONN_MAX_AGE': 300,
-            'CONN_HEALTH_CHECKS': True,
-        }
-=======
 import dj_database_url
 
 # Use DATABASE_URL if available (PostgreSQL), otherwise fallback to SQLite for development
@@ -207,7 +186,6 @@ if os.getenv('DATABASE_URL'):
             conn_max_age=600,
             conn_health_checks=True,
         )
->>>>>>> Stashed changes
     }
 else:
     DATABASES = {

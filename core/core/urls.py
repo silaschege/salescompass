@@ -33,4 +33,5 @@ urlpatterns = [
     
     # Add other existing URLs for core
     # (Note: The actual existing URLs would need to be added based on the original file)
+    
 ]

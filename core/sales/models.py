@@ -16,6 +16,7 @@ from django.db.models import Sum, Count, Avg
 >>>>>>> Stashed changes
 
 
+
 class CommissionRule(models.Model):
     """
     Rules for calculating sales commissions.
