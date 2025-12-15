@@ -2,7 +2,9 @@ from django import forms
 from core.models import User
 from core.models import User as Account
 from accounts.models import  Contact
-from .models import Case
+from accounts.models import  Contact
+from .models import Case, AssignmentRule
+from settings_app.models import AssignmentRuleType
 
 PRIORITY_CHOICES = [
     ('low', 'Low'),
@@ -137,3 +139,27 @@ class CaseForm(forms.ModelForm):
         if commit:
             case.save()
         return case
+
+
+class AssignmentRuleForm(forms.ModelForm):
+    class Meta:
+        model = AssignmentRule
+        fields = ['assignment_rule_name', 'rule_type', 'rule_type_ref', 'criteria', 'assigned_to', 'rule_is_active', 'priority']
+        widgets = {
+            'criteria': forms.Textarea(attrs={'rows': 3, 'placeholder': 'JSON format: {"priority": "high"}'}),
+            'assigned_to': forms.Select(attrs={'class': 'form-select'}),
+            'rule_type': forms.Select(attrs={'class': 'form-select'}),
+            'rule_type_ref': forms.Select(attrs={'class': 'form-select'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        # Load dynamic choices based on tenant
+        if self.tenant:
+             if 'rule_type_ref' in self.fields:
+                 self.fields['rule_type_ref'].queryset = AssignmentRuleType.objects.filter(tenant_id=self.tenant.id)
+        else:
+             if 'rule_type_ref' in self.fields:
+                self.fields['rule_type_ref'].queryset = AssignmentRuleType.objects.none()

@@ -29,5 +29,11 @@ urlpatterns = [
         # Detractor status update
     path('api/update-detractor-status/', views.UpdateDetractorStatusView.as_view(), name='update_detractor_status'),
     path('api/update-case-status/', views.UpdateCaseStatusView.as_view(), name='update_case_status'),
+    
+    # Assignment Rules
+    path('assignment-rules/', views.AssignmentRuleListView.as_view(), name='assignment_rule_list'),
+    path('assignment-rules/create/', views.AssignmentRuleCreateView.as_view(), name='assignment_rule_create'),
+    path('assignment-rules/<int:pk>/edit/', views.AssignmentRuleUpdateView.as_view(), name='assignment_rule_update'),
+    path('assignment-rules/<int:pk>/delete/', views.AssignmentRuleDeleteView.as_view(), name='assignment_rule_delete'),
 ]
 

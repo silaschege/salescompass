@@ -1,6 +1,14 @@
 from django import forms
 from django.forms.widgets import Select
-from .models import SystemConfiguration, SystemEventLog, SystemHealthCheck, MaintenanceWindow, PerformanceMetric, SystemNotification, SystemConfigType, SystemConfigCategory, SystemEventType, SystemEventSeverity, HealthCheckType, HealthCheckStatus, MaintenanceStatus, MaintenanceType, PerformanceMetricType, PerformanceEnvironment, NotificationType, NotificationPriority
+from .models import (
+    SystemConfiguration, SystemEventLog, SystemHealthCheck, MaintenanceWindow, 
+    PerformanceMetric, SystemNotification, SystemConfigType, SystemConfigCategory, 
+    SystemEventType, SystemEventSeverity, HealthCheckType, HealthCheckStatus, 
+    MaintenanceStatus, MaintenanceType, PerformanceMetricType, PerformanceEnvironment, 
+    NotificationType, NotificationPriority, ModuleLabel, ModuleChoice, 
+    ModelChoice, FieldType, AssignmentRuleType
+)
+
 from .models_audit import DynamicChoiceAuditMixin
 from tenants.models import Tenant as TenantModel
 
@@ -608,3 +616,46 @@ class BusinessMetricsExportForm(forms.Form):
             raise forms.ValidationError("Start date must be before end date.")
         
         return cleaned_data
+
+class ModuleLabelForm(forms.ModelForm):
+    class Meta:
+        model = ModuleLabel
+        fields = ['module_key', 'module_key_ref', 'custom_label', 'module_label_is_active']
+        widgets = {
+            'module_key_ref': DynamicChoiceWidget(choice_model=ModuleChoice),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        if self.tenant:
+            if 'module_key_ref' in self.fields:
+                self.fields['module_key_ref'].queryset = ModuleChoice.objects.filter(tenant_id=self.tenant.id)
+        else:
+            if 'module_key_ref' in self.fields:
+                self.fields['module_key_ref'].queryset = ModuleChoice.objects.none()
+
+
+class ModuleChoiceForm(forms.ModelForm):
+    class Meta:
+        model = ModuleChoice
+        fields = ['module_choice_name', 'label', 'order', 'module_choice_is_active', 'is_system']
+
+
+class ModelChoiceForm(forms.ModelForm):
+    class Meta:
+        model = ModelChoice
+        fields = ['model_choice_name', 'label', 'order', 'model_choice_is_active', 'is_system']
+
+
+class FieldTypeForm(forms.ModelForm):
+    class Meta:
+        model = FieldType
+        fields = ['field_type_name', 'label', 'order', 'field_type_is_active', 'is_system']
+
+
+class AssignmentRuleTypeForm(forms.ModelForm):
+    class Meta:
+        model = AssignmentRuleType
+        fields = ['rule_type_name', 'label', 'order', 'rule_type_is_active', 'is_system']

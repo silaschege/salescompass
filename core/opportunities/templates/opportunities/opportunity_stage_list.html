@@ -1,0 +1,70 @@
+{% extends "settings_base.html" %}
+
+{% block title %}Pipeline Stages - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Pipeline Stages</h1>
+        <p class="text-white text-center lead">Configure sales pipeline stages</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Stages</h2>
+        <div>
+            <a href="{% url 'opportunities:type_list' %}" class="btn btn-outline-secondary me-2">Manage Types</a>
+            <a href="{% url 'opportunities:stage_create' %}" class="btn btn-primary">+ New Stage</a>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            {% if stages %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Pipeline Type</th>
+                            <th>Order</th>
+                            <th>Probability</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stage in stages %}
+                        <tr>
+                            <td>{{ stage.opportunity_stage_name }}</td>
+                            <td>{{ stage.get_pipeline_type_display }}</td>
+                            <td>{{ stage.order }}</td>
+                            <td>{{ stage.probability }}%</td>
+                            <td>
+                                {% if stage.is_won %}
+                                <span class="badge bg-success">Won</span>
+                                {% elif stage.is_lost %}
+                                <span class="badge bg-danger">Lost</span>
+                                {% else %}
+                                <span class="badge bg-info">Open</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'opportunities:stage_update' stage.pk %}"
+                                    class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="{% url 'opportunities:stage_delete' stage.pk %}"
+                                    class="btn btn-sm btn-outline-danger">Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No pipeline stages found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

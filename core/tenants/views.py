@@ -1,15 +1,21 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import CreateView, TemplateView, ListView, View, UpdateView, FormView
+from django.views.generic import CreateView, TemplateView, ListView, View, UpdateView, FormView, DetailView, DeleteView
 from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.db import transaction
 from django.contrib import messages
-from .models import Tenant
-from .forms import TenantSignupForm, TenantBrandingForm, TenantDomainForm, TenantSettingsForm, FeatureToggleForm
+from .models import Tenant, Setting, SettingGroup, SettingType
+from .forms import (
+    TenantSignupForm, TenantBrandingForm, TenantDomainForm, TenantSettingsForm, 
+    FeatureToggleForm, SettingForm, SettingGroupForm, SettingTypeForm
+)
 from billing.models import Plan, Subscription
 from core.models import User
 from accounts.models import Role
+from django.contrib.messages.views import SuccessMessageMixin # Import SuccessMessageMixin
+
+
 
 class TenantListView(LoginRequiredMixin, ListView):
     template_name = 'tenants/list.html'
@@ -47,6 +53,27 @@ class TenantSearchView(LoginRequiredMixin, ListView):
         if query:
             return Tenant.objects.filter(name__icontains=query)
         return Tenant.objects.none()
+
+class TenantUpdateView(UpdateView):
+    model = Tenant
+    template_name = 'tenant/update.html'
+    fields = ['name', 'subdomain', 'is_active']
+
+class TenantDeleteView(DeleteView):
+    model = Tenant
+    template_name = 'tenant/delete.html'
+    success_url = reverse_lazy('tenant-list')
+
+class TenantDetailView(DetailView):
+    model = Tenant
+    template_name = 'tenant/detail.html'
+
+class TenantActivateView(View):
+    def post(self, request, pk):
+        tenant = get_object_or_404(Tenant, pk=pk)
+        tenant.is_active = not tenant.is_active
+        tenant.save()
+        return redirect('tenant-list')
 
 class PlanSelectionView(LoginRequiredMixin, ListView):
     template_name = 'tenants/plan_selection.html'
@@ -299,3 +326,143 @@ class RevenueAnalyticsView(LoginRequiredMixin, TemplateView):
         context['subscriptions'] = subscriptions
         return context
 
+
+# Setting Views
+class SettingListView(LoginRequiredMixin, ListView):
+    model = Setting
+    template_name = 'tenants/setting_list.html'
+    context_object_name = 'settings'
+
+    def get_queryset(self):
+        return Setting.objects.filter(tenant=self.request.user.tenant).select_related('group')
+
+
+class SettingCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = Setting
+    form_class = SettingForm
+    template_name = 'tenants/setting_form.html'
+    success_message = "Setting created successfully."
+    success_url = reverse_lazy('tenants:setting_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if hasattr(self.request.user, 'tenant'):
+            kwargs['tenant'] = self.request.user.tenant
+        return kwargs
+
+    def form_valid(self, form):
+        if hasattr(self.request.user, 'tenant'):
+            form.instance.tenant = self.request.user.tenant
+        return super().form_valid(form)
+
+
+class SettingUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    model = Setting
+    form_class = SettingForm
+    template_name = 'tenants/setting_form.html'
+    success_message = "Setting updated successfully."
+    success_url = reverse_lazy('tenants:setting_list')
+
+    def get_queryset(self):
+        return Setting.objects.filter(tenant=self.request.user.tenant)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if hasattr(self.request.user, 'tenant'):
+            kwargs['tenant'] = self.request.user.tenant
+        return kwargs
+
+
+class SettingDeleteView(LoginRequiredMixin, DeleteView):
+    model = Setting
+    template_name = 'tenants/setting_confirm_delete.html'
+    success_url = reverse_lazy('tenants:setting_list')
+
+    def get_queryset(self):
+        return Setting.objects.filter(tenant=self.request.user.tenant)
+
+
+# Setting Group Views
+class SettingGroupListView(LoginRequiredMixin, ListView):
+    model = SettingGroup
+    template_name = 'tenants/setting_group_list.html'
+    context_object_name = 'groups'
+
+    def get_queryset(self):
+        return SettingGroup.objects.filter(tenant=self.request.user.tenant)
+
+
+class SettingGroupCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = SettingGroup
+    form_class = SettingGroupForm
+    template_name = 'tenants/setting_group_form.html'
+    success_message = "Setting Group created successfully."
+    success_url = reverse_lazy('tenants:setting_group_list')
+
+    def form_valid(self, form):
+        if hasattr(self.request.user, 'tenant'):
+            form.instance.tenant = self.request.user.tenant
+        return super().form_valid(form)
+
+
+class SettingGroupUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    model = SettingGroup
+    form_class = SettingGroupForm
+    template_name = 'tenants/setting_group_form.html'
+    success_message = "Setting Group updated successfully."
+    success_url = reverse_lazy('tenants:setting_group_list')
+
+    def get_queryset(self):
+        return SettingGroup.objects.filter(tenant=self.request.user.tenant)
+
+
+class SettingGroupDeleteView(LoginRequiredMixin, DeleteView):
+    model = SettingGroup
+    template_name = 'tenants/setting_group_confirm_delete.html'
+    success_url = reverse_lazy('tenants:setting_group_list')
+
+    def get_queryset(self):
+        return SettingGroup.objects.filter(tenant=self.request.user.tenant)
+
+
+# Setting Type Views
+class SettingTypeListView(LoginRequiredMixin, ListView):
+    model = SettingType
+    template_name = 'tenants/setting_type_list.html'
+    context_object_name = 'types'
+
+    def get_queryset(self):
+        return SettingType.objects.filter(tenant=self.request.user.tenant)
+
+
+class SettingTypeCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = SettingType
+    form_class = SettingTypeForm
+    template_name = 'tenants/setting_type_form.html'
+    success_message = "Setting Type created successfully."
+    success_url = reverse_lazy('tenants:setting_type_list')
+
+    def form_valid(self, form):
+        if hasattr(self.request.user, 'tenant'):
+            form.instance.tenant = self.request.user.tenant
+        return super().form_valid(form)
+
+
+class SettingTypeUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    model = SettingType
+    form_class = SettingTypeForm
+    template_name = 'tenants/setting_type_form.html'
+    success_message = "Setting Type updated successfully."
+    success_url = reverse_lazy('tenants:setting_type_list')
+
+    def get_queryset(self):
+        return SettingType.objects.filter(tenant=self.request.user.tenant)
+
+
+class SettingTypeDeleteView(LoginRequiredMixin, DeleteView):
+    model = SettingType
+    template_name = 'tenants/setting_type_confirm_delete.html'
+    success_url = reverse_lazy('tenants:setting_type_list')
+
+    def get_queryset(self):
+        return SettingType.objects.filter(tenant=self.request.user.tenant)

@@ -1,0 +1,71 @@
+{% extends "settings_base.html" %}
+
+{% block title %}Operator Types - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Operator Types</h1>
+        <p class="text-white text-center lead">Manage operator types for scoring conditions</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Operator Types</h2>
+        <a href="{% url 'leads:operator_type_create' %}" class="btn btn-primary">+ Add Type</a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            {% if operator_types %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Label</th>
+                            <th>Name (Internal)</th>
+                            <th>Order</th>
+                            <th>Status</th>
+                            <th>System</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for type in operator_types %}
+                        <tr>
+                            <td>{{ type.label }}</td>
+                            <td>{{ type.operator_name }}</td>
+                            <td>{{ type.order }}</td>
+                            <td>
+                                {% if type.operator_is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if type.is_system %}
+                                <span class="badge bg-info">System</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'leads:operator_type_update' type.pk %}"
+                                    class="btn btn-sm btn-outline-primary">Edit</a>
+                                {% if not type.is_system %}
+                                <a href="{% url 'leads:operator_type_delete' type.pk %}"
+                                    class="btn btn-sm btn-outline-danger">Delete</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No operator types found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

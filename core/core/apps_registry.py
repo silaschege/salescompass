@@ -84,6 +84,23 @@ AVAILABLE_APPS = [
         'url_name': 'tenants:create',
         'category': 'control',
         'description': 'Register new tenant customer'
+    },
+    {
+        'id': 'users',
+        'name': 'Users',
+        'icon': 'bi-people-fill',
+        'url_name': 'users:list',
+        'category': 'control',
+        'description': 'Manage users'
+    },
+    {
+        'id':'audit_logs',
+        'name': 'Audit Logs',
+        'icon': 'bi-journal-text',
+        'url_name': 'audit_logs:list',
+        'category': 'control',
+        'description': 'View audit logs'
+        
     }
 ]
 

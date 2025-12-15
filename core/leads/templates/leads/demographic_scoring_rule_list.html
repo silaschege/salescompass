@@ -1,0 +1,67 @@
+{% extends "settings_base.html" %}
+
+{% block title %}Demographic Scoring Rules - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Demographic Scoring Rules</h1>
+        <p class="text-white text-center lead">Manage rules for scoring lead demographics</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Rules</h2>
+        <a href="{% url 'leads:demographic_scoring_rule_create' %}" class="btn btn-primary">+ Add Rule</a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            {% if demographic_scoring_rules %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Field</th>
+                            <th>Operator</th>
+                            <th>Value</th>
+                            <th>Points</th>
+                            <th>Active</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rule in demographic_scoring_rules %}
+                        <tr>
+                            <td>{{ rule.demographic_scoring_rule_name }}</td>
+                            <td>{{ rule.field_name }}</td>
+                            <td>{{ rule.operator_ref.label|default:rule.get_operator_display }}</td>
+                            <td>{{ rule.field_value }}</td>
+                            <td>{{ rule.points }}</td>
+                            <td>
+                                {% if rule.rule_is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'leads:demographic_scoring_rule_update' rule.pk %}"
+                                    class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="{% url 'leads:demographic_scoring_rule_delete' rule.pk %}"
+                                    class="btn btn-sm btn-outline-danger">Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No demographic scoring rules found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

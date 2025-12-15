@@ -75,4 +75,10 @@ urlpatterns = [
     path('email-campaign/create/', views.EmailCampaignCreateView.as_view(), name='email_campaign_create'),
     path('email-campaign/<int:pk>/update/', views.EmailCampaignUpdateView.as_view(), name='email_campaign_update'),
     path('email-campaign/<int:pk>/delete/', views.EmailCampaignDeleteView.as_view(), name='email_campaign_delete'),
+
+    # Email Integration
+    path('email-integration/', views.EmailIntegrationListView.as_view(), name='email_integration_list'),
+    path('email-integration/create/', views.EmailIntegrationCreateView.as_view(), name='email_integration_create'),
+    path('email-integration/<int:pk>/edit/', views.EmailIntegrationUpdateView.as_view(), name='email_integration_update'),
+    path('email-integration/<int:pk>/delete/', views.EmailIntegrationDeleteView.as_view(), name='email_integration_delete'),
 ]

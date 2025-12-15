@@ -2,8 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from core.permissions import ObjectPermissionRequiredMixin
-from .models import Case, KnowledgeBaseArticle, CsatResponse, CsatDetractorAlert
-from .forms import CaseForm
+from .models import Case, KnowledgeBaseArticle, CsatResponse, CsatDetractorAlert, AssignmentRule
+from .forms import CaseForm, AssignmentRuleForm
 from .utils import get_overdue_cases
 from .utils import calculate_sla_due_date
 
@@ -15,7 +15,10 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import CsatDetractorAlert
 from core.object_permissions import CaseObjectPolicy
+from core.object_permissions import CaseObjectPolicy
 from django.utils import timezone
+from tenants.models import Tenant as TenantModel
+from django.urls import reverse_lazy
 
 class CaseListView(ObjectPermissionRequiredMixin, ListView):
     model = Case
@@ -215,3 +218,65 @@ class UpdateCaseStatusView(View):
             
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
+
+
+class AssignmentRuleListView(ListView):
+    model = AssignmentRule
+    template_name = 'cases/assignment_rule_list.html'
+    context_object_name = 'assignment_rules'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant and prefetch related objects
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('rule_type_ref', 'assigned_to')
+
+
+class AssignmentRuleCreateView(CreateView):
+    model = AssignmentRule
+    form_class = AssignmentRuleForm
+    template_name = 'cases/assignment_rule_form.html'
+    success_url = reverse_lazy('cases:assignment_rule_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Assignment rule created successfully.')
+        return super().form_valid(form)
+
+
+class AssignmentRuleUpdateView(UpdateView):
+    model = AssignmentRule
+    form_class = AssignmentRuleForm
+    template_name = 'cases/assignment_rule_form.html'
+    success_url = reverse_lazy('cases:assignment_rule_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Assignment rule updated successfully.')
+        return super().form_valid(form)
+
+
+class AssignmentRuleDeleteView(DeleteView):
+    model = AssignmentRule
+    template_name = 'cases/assignment_rule_confirm_delete.html'
+    success_url = reverse_lazy('cases:assignment_rule_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Assignment rule deleted successfully.')
+        return super().delete(request, *args, **kwargs)

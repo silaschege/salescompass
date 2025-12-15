@@ -6,8 +6,8 @@ from django.views.decorators.http import require_http_methods
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.db.models import Avg, Sum, Count
-from .models import Campaign, EmailTemplate, LandingPageBlock, MessageTemplate, EmailCampaign, CampaignStatus, EmailProvider, BlockType, EmailCategory, MessageType, MessageCategory
-from .forms import CampaignForm, EmailTemplateForm, LandingPageBlockForm, MessageTemplateForm, EmailCampaignForm, CampaignStatusForm, EmailProviderForm, BlockTypeForm, EmailCategoryForm, MessageTypeForm, MessageCategoryForm
+from .models import Campaign, EmailTemplate, LandingPageBlock, MessageTemplate, EmailCampaign, CampaignStatus, EmailProvider, BlockType, EmailCategory, MessageType, MessageCategory, EmailIntegration
+from .forms import CampaignForm, EmailTemplateForm, LandingPageBlockForm, MessageTemplateForm, EmailCampaignForm, CampaignStatusForm, EmailProviderForm, BlockTypeForm, EmailCategoryForm, MessageTypeForm, MessageCategoryForm, EmailIntegrationForm
 from tenants.models import Tenant as TenantModel
 from core.models import User
 from leads.models import Lead
@@ -715,3 +715,64 @@ def get_marketing_dynamic_choices(request, model_name):
         return JsonResponse(list(choices), safe=False)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+class EmailIntegrationListView(ListView):
+    model = EmailIntegration
+    template_name = 'marketing/email_integration_list.html'
+    context_object_name = 'email_integrations'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant and prefetch related objects
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('user', 'provider_ref')
+
+
+class EmailIntegrationCreateView(CreateView):
+    model = EmailIntegration
+    form_class = EmailIntegrationForm
+    template_name = 'marketing/email_integration_form.html'
+    success_url = reverse_lazy('marketing:email_integration_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Email integration created successfully.')
+        return super().form_valid(form)
+
+
+class EmailIntegrationUpdateView(UpdateView):
+    model = EmailIntegration
+    form_class = EmailIntegrationForm
+    template_name = 'marketing/email_integration_form.html'
+    success_url = reverse_lazy('marketing:email_integration_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Email integration updated successfully.')
+        return super().form_valid(form)
+
+
+class EmailIntegrationDeleteView(DeleteView):
+    model = EmailIntegration
+    template_name = 'marketing/email_integration_confirm_delete.html'
+    success_url = reverse_lazy('marketing:email_integration_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Email integration deleted successfully.')
+        return super().delete(request, *args, **kwargs)

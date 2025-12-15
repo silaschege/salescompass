@@ -1,6 +1,7 @@
 """
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 Celery Tasks for Core Event Processing
 
 Provides async task execution for:
@@ -133,6 +134,8 @@ def check_feature_flag_consistency() -> None:
     except Exception as e:
         logger.error(f"Failed to check feature flags: {e}")
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 Background tasks for business metrics calculations
@@ -427,6 +430,9 @@ def scheduled_metrics_refresh_task():
             'refresh_attempted_at': datetime.now().isoformat()
         }
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes

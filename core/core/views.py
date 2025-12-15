@@ -1,9 +1,19 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Sum
-from core.models import User
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
+from django.contrib.messages.views import SuccessMessageMixin
+from core.models import (
+    User, ModuleLabel, ModuleChoice, ModelChoice, FieldType, AssignmentRuleType
+)
+from core.forms import (
+    ModuleLabelForm, ModuleChoiceForm, ModelChoiceForm, FieldTypeForm, AssignmentRuleTypeForm
+)
+from tenants.models import Tenant as TenantModel
 from leads.models import Lead
 from opportunities.models import Opportunity
+
 
 
 def home(request):
@@ -65,7 +75,7 @@ from django.views.generic import TemplateView
 
 
 
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
 class AppSelectionView(LoginRequiredMixin, TemplateView):
     template_name = 'logged_in/app_selection.html'
@@ -204,3 +214,229 @@ class AppSettingsView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         from django.contrib import messages
         messages.success(request, "App permissions updated successfully.")
         return self.get(request, *args, **kwargs)
+
+# Module Label Views
+class ModuleLabelListView(LoginRequiredMixin, ListView):
+    model = ModuleLabel
+    template_name = 'core/module_label_list.html'
+    context_object_name = 'modules'
+
+    def get_queryset(self):
+        return ModuleLabel.objects.filter(tenant_id=self.request.user.tenant_id)
+
+
+class ModuleLabelCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = ModuleLabel
+    form_class = ModuleLabelForm
+    template_name = 'core/module_label_form.html'
+    success_message = "Module Label created successfully."
+    success_url = reverse_lazy('core:module_label_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+
+    def form_valid(self, form):
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        return super().form_valid(form)
+
+
+class ModuleLabelUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    model = ModuleLabel
+    form_class = ModuleLabelForm
+    template_name = 'core/module_label_form.html'
+    success_message = "Module Label updated successfully."
+    success_url = reverse_lazy('core:module_label_list')
+
+    def get_queryset(self):
+        return ModuleLabel.objects.filter(tenant_id=self.request.user.tenant_id)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+
+
+class ModuleLabelDeleteView(LoginRequiredMixin, DeleteView):
+    model = ModuleLabel
+    template_name = 'core/module_label_confirm_delete.html'
+    success_url = reverse_lazy('core:module_label_list')
+
+    def get_queryset(self):
+        return ModuleLabel.objects.filter(tenant_id=self.request.user.tenant_id)
+
+
+# Module Choice Views
+class ModuleChoiceListView(LoginRequiredMixin, ListView):
+    model = ModuleChoice
+    template_name = 'core/module_choice_list.html'
+    context_object_name = 'choices'
+
+    def get_queryset(self):
+        return ModuleChoice.objects.filter(tenant_id=self.request.user.tenant_id)
+
+
+class ModuleChoiceCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = ModuleChoice
+    form_class = ModuleChoiceForm
+    template_name = 'core/module_choice_form.html'
+    success_message = "Module Choice created successfully."
+    success_url = reverse_lazy('core:module_choice_list')
+
+    def form_valid(self, form):
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        return super().form_valid(form)
+
+
+class ModuleChoiceUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    model = ModuleChoice
+    form_class = ModuleChoiceForm
+    template_name = 'core/module_choice_form.html'
+    success_message = "Module Choice updated successfully."
+    success_url = reverse_lazy('core:module_choice_list')
+
+    def get_queryset(self):
+        return ModuleChoice.objects.filter(tenant_id=self.request.user.tenant_id)
+
+
+class ModuleChoiceDeleteView(LoginRequiredMixin, DeleteView):
+    model = ModuleChoice
+    template_name = 'core/module_choice_confirm_delete.html'
+    success_url = reverse_lazy('core:module_choice_list')
+
+    def get_queryset(self):
+        return ModuleChoice.objects.filter(tenant_id=self.request.user.tenant_id)
+
+
+# Model Choice Views
+class ModelChoiceListView(LoginRequiredMixin, ListView):
+    model = ModelChoice
+    template_name = 'core/model_choice_list.html'
+    context_object_name = 'choices'
+
+    def get_queryset(self):
+        return ModelChoice.objects.filter(tenant_id=self.request.user.tenant_id)
+
+
+class ModelChoiceCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = ModelChoice
+    form_class = ModelChoiceForm
+    template_name = 'core/model_choice_form.html'
+    success_message = "Model Choice created successfully."
+    success_url = reverse_lazy('core:model_choice_list')
+
+    def form_valid(self, form):
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        return super().form_valid(form)
+
+
+class ModelChoiceUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    model = ModelChoice
+    form_class = ModelChoiceForm
+    template_name = 'core/model_choice_form.html'
+    success_message = "Model Choice updated successfully."
+    success_url = reverse_lazy('core:model_choice_list')
+
+    def get_queryset(self):
+        return ModelChoice.objects.filter(tenant_id=self.request.user.tenant_id)
+
+
+class ModelChoiceDeleteView(LoginRequiredMixin, DeleteView):
+    model = ModelChoice
+    template_name = 'core/model_choice_confirm_delete.html'
+    success_url = reverse_lazy('core:model_choice_list')
+
+    def get_queryset(self):
+        return ModelChoice.objects.filter(tenant_id=self.request.user.tenant_id)
+
+
+# Field Type Views
+class FieldTypeListView(LoginRequiredMixin, ListView):
+    model = FieldType
+    template_name = 'core/field_type_list.html'
+    context_object_name = 'types'
+
+    def get_queryset(self):
+        return FieldType.objects.filter(tenant_id=self.request.user.tenant_id)
+
+
+class FieldTypeCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = FieldType
+    form_class = FieldTypeForm
+    template_name = 'core/field_type_form.html'
+    success_message = "Field Type created successfully."
+    success_url = reverse_lazy('core:field_type_list')
+
+    def form_valid(self, form):
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        return super().form_valid(form)
+
+
+class FieldTypeUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    model = FieldType
+    form_class = FieldTypeForm
+    template_name = 'core/field_type_form.html'
+    success_message = "Field Type updated successfully."
+    success_url = reverse_lazy('core:field_type_list')
+
+    def get_queryset(self):
+        return FieldType.objects.filter(tenant_id=self.request.user.tenant_id)
+
+
+class FieldTypeDeleteView(LoginRequiredMixin, DeleteView):
+    model = FieldType
+    template_name = 'core/field_type_confirm_delete.html'
+    success_url = reverse_lazy('core:field_type_list')
+
+    def get_queryset(self):
+        return FieldType.objects.filter(tenant_id=self.request.user.tenant_id)
+
+
+# Assignment Rule Type Views
+class AssignmentRuleTypeListView(LoginRequiredMixin, ListView):
+    model = AssignmentRuleType
+    template_name = 'core/assignment_rule_type_list.html'
+    context_object_name = 'types'
+
+    def get_queryset(self):
+        return AssignmentRuleType.objects.filter(tenant_id=self.request.user.tenant_id)
+
+
+class AssignmentRuleTypeCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = AssignmentRuleType
+    form_class = AssignmentRuleTypeForm
+    template_name = 'core/assignment_rule_type_form.html'
+    success_message = "Assignment Rule Type created successfully."
+    success_url = reverse_lazy('core:assignment_rule_type_list')
+
+    def form_valid(self, form):
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        return super().form_valid(form)
+
+
+class AssignmentRuleTypeUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    model = AssignmentRuleType
+    form_class = AssignmentRuleTypeForm
+    template_name = 'core/assignment_rule_type_form.html'
+    success_message = "Assignment Rule Type updated successfully."
+    success_url = reverse_lazy('core:assignment_rule_type_list')
+
+    def get_queryset(self):
+        return AssignmentRuleType.objects.filter(tenant_id=self.request.user.tenant_id)
+
+
+class AssignmentRuleTypeDeleteView(LoginRequiredMixin, DeleteView):
+    model = AssignmentRuleType
+    template_name = 'core/assignment_rule_type_confirm_delete.html'
+    success_url = reverse_lazy('core:assignment_rule_type_list')
+
+    def get_queryset(self):
+        return AssignmentRuleType.objects.filter(tenant_id=self.request.user.tenant_id)

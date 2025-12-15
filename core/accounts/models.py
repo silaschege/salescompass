@@ -7,6 +7,158 @@ from core.models import User
 from tenants.models import TenantAwareModel as TenantModel
 
 
+
+
+class TeamRole(TenantModel):
+    """
+    Dynamic team role values - allows tenant-specific team role tracking.
+    """
+    role_name = models.CharField(max_length=50, db_index=True, help_text="e.g., 'sales_rep', 'sales_manager'")
+    label = models.CharField(max_length=100)
+    order = models.IntegerField(default=0)
+    role_is_active = models.BooleanField(default=True, help_text="Whether this role is active")
+    is_system = models.BooleanField(default=False)
+    # Override tenant to avoid clash with settings_app.TeamRole
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='account_team_roles')
+    
+    class Meta:
+        ordering = ['order', 'role_name']
+        unique_together = [('tenant', 'role_name')]
+        verbose_name_plural = 'Team Roles'
+    
+    def __str__(self):
+        return self.label
+
+
+class Territory(TenantModel):
+    """
+    Dynamic territory values - allows tenant-specific territory tracking.
+    """
+    territory_name = models.CharField(max_length=100, db_index=True, help_text="e.g., 'north_america', 'emea'")
+    label = models.CharField(max_length=100)
+    order = models.IntegerField(default=0)
+    territory_is_active = models.BooleanField(default=True, help_text="Whether this territory is active")
+    is_system = models.BooleanField(default=False)
+    # Override tenant to avoid clash with settings_app.Territory
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='account_territories')
+    
+    class Meta:
+        ordering = ['order', 'territory_name']
+        unique_together = [('tenant', 'territory_name')]
+        verbose_name_plural = 'Territories'
+    
+    def __str__(self):
+        return self.label
+class OrganizationMember(TenantModel):
+    """
+    Represents a person in a specific tenant organization.
+    This replaces the TeamMember model from settings_app.
+    """
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='organization_membership')
+    
+    # Role using dynamic reference
+    role = models.CharField(max_length=50, choices=[
+        ('sales_rep', 'Sales Representative'),
+        ('sales_manager', 'Sales Manager'),
+        ('account_manager', 'Account Manager'),
+        ('sales_director', 'Sales Director'),
+        ('ceo', 'CEO'),
+        ('admin', 'Administrator'),
+    ])
+    
+    # New dynamic field for role
+    role_ref = models.ForeignKey(
+        TeamRole,  # Reference to the dynamic model
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='organization_members',
+        help_text="Dynamic role (replaces role field)"
+    )
+    
+    # Territory using dynamic reference
+    territory = models.CharField(max_length=100, choices=[
+        ('north_america', 'North America'),
+        ('emea', 'EMEA'),
+        ('apac', 'APAC'),
+        ('latam', 'Latin America'),
+    ], blank=True)
+    
+    # New dynamic field for territory
+    territory_ref = models.ForeignKey(
+        Territory,  # Reference to the dynamic model
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='organization_members',
+        help_text="Dynamic territory (replaces territory field)"
+    )
+    
+    # Manager relationship
+    manager = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='reports')
+    
+    # Status using dynamic reference
+    status = models.CharField(max_length=20, choices=[
+        ('active', 'Active'),
+        ('onboarding', 'Onboarding'),
+        ('leave', 'On Leave'),
+        ('terminated', 'Terminated'),
+    ], default='onboarding')
+    
+    # New dynamic field for status
+    status_ref = models.ForeignKey(
+        'self',  # Self reference for status
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='organization_members_by_status',
+        help_text="Dynamic status (replaces status field)"
+    )
+    
+    # Employment dates
+    hire_date = models.DateField(null=True, blank=True)
+    termination_date = models.DateField(null=True, blank=True)
+    
+    # Quota information
+    quota_amount = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+    
+    quota_period = models.CharField(max_length=20, choices=[
+        ('monthly', 'Monthly'),
+        ('quarterly', 'Quarterly'),
+        ('yearly', 'Yearly'),
+    ], default='quarterly')
+    
+    # New dynamic field for quota period
+    quota_period_ref = models.ForeignKey(
+        'self',  # Self reference for period
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='organization_members_by_period',
+        help_text="Dynamic quota period (replaces quota_period field)"
+    )
+    
+    # Commission information
+    commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.0, 
+                                        help_text="Commission rate (e.g. 10.0 for 10%)")
+    
+    # Territory Performance Metrics
+    territory_performance_score = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, 
+                                                     help_text="Performance score within assigned territory (0-100)")
+    territory_quota_attainment = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, 
+                                                    help_text="Percentage of territory quota attained")
+    territory_conversion_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, 
+                                                   help_text="Lead to opportunity conversion rate in territory (%)")
+    territory_revenue_contribution = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, 
+                                                        help_text="Revenue contribution to assigned territory")
+
+    def __str__(self):
+        return f"{self.user.email} - {self.role}"
+    
+    class Meta:
+        verbose_name = "Organization Member"
+        verbose_name_plural = "Organization Members"
+
 class Role(models.Model):
     """Model for managing user roles and permissions"""
     id = models.AutoField(primary_key=True)

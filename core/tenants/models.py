@@ -520,3 +520,74 @@ class TenantSettings(models.Model):
     
     def __str__(self):
         return f"Settings for {self.tenant.name}"
+
+
+class SettingType(models.Model):
+    """
+    Dynamic setting type values - allows tenant-specific setting type tracking.
+    """
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='dynamic_setting_types')
+    setting_type_name = models.CharField(max_length=20, db_index=True, help_text="e.g., 'text', 'number'")
+    label = models.CharField(max_length=50) # e.g., 'Text', 'Number'
+    order = models.IntegerField(default=0)
+    setting_type_is_active = models.BooleanField(default=True, help_text="Whether this setting type is active")
+    is_system = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['order', 'setting_type_name']
+        unique_together = [('tenant', 'setting_type_name')]
+        verbose_name_plural = 'Setting Types'
+    
+    def __str__(self):
+        return self.label
+
+
+class SettingGroup(models.Model):
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='dynamic_setting_groups')
+    setting_group_name = models.CharField(max_length=200, help_text="Name of the setting group")
+    setting_group_description = models.TextField(blank=True, help_text="Description of the setting group")
+    setting_group_is_active = models.BooleanField(default=True, help_text="Whether this setting group is active")
+
+    class Meta:
+        unique_together = [('tenant', 'setting_group_name')]
+
+    def __str__(self):
+        return self.setting_group_name
+
+
+class Setting(models.Model):
+    SETTING_TYPES = [
+        ('text', 'Text'),
+        ('number', 'Number'),
+        ('boolean', 'Boolean'),
+    ]
+
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='dynamic_settings')
+    group = models.ForeignKey(SettingGroup, on_delete=models.CASCADE, related_name='settings')
+    setting_name = models.CharField(max_length=200)
+    setting_label = models.CharField(max_length=200)
+    setting_description = models.TextField(blank=True, help_text="Description of the setting")
+    setting_type = models.CharField(max_length=20, choices=SETTING_TYPES, default='text')
+    # New dynamic field
+    setting_type_ref = models.ForeignKey(
+        SettingType,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='settings',
+        help_text="Dynamic setting type (replaces setting_type field)"
+    )
+    value_text = models.TextField(null=True, blank=True)
+    value_number = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    value_boolean = models.BooleanField(null=True, blank=True)
+    is_required = models.BooleanField(default=False)
+    is_visible = models.BooleanField(default=True)
+    order = models.IntegerField(default=0)
+
+    class Meta:
+        unique_together = [('tenant', 'setting_name')]
+
+    def __str__(self):
+        return self.setting_label
+
+

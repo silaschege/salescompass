@@ -1,0 +1,65 @@
+{% extends "settings_base.html" %}
+
+{% block title %}Email Integrations - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Email Integrations</h1>
+        <p class="text-white text-center lead">Connect your email accounts for syncing</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Integrations</h2>
+        <a href="{% url 'marketing:email_integration_create' %}" class="btn btn-primary">+ Connect Account</a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            {% if email_integrations %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Provider</th>
+                            <th>Email Address</th>
+                            <th>Status</th>
+                            <th>Last Sync</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for integration in email_integrations %}
+                        <tr>
+                            <td>{{ integration.user.username }}</td>
+                            <td>{{ integration.get_provider_display }}</td>
+                            <td>{{ integration.email_address }}</td>
+                            <td>
+                                {% if integration.integration_is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ integration.last_sync|default:"Never" }}</td>
+                            <td>
+                                <a href="{% url 'marketing:email_integration_update' integration.pk %}"
+                                    class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="{% url 'marketing:email_integration_delete' integration.pk %}"
+                                    class="btn btn-sm btn-outline-danger">Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No email integrations found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

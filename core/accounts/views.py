@@ -6,8 +6,8 @@ from django.http import JsonResponse
 # Make sure this import is at the top
 from core.object_permissions import AccountObjectPolicy, OBJECT_POLICIES
 from core.permissions import ObjectPermissionRequiredMixin
-from .models import Contact
-from .forms import AccountForm, ContactForm,BulkImportUploadForm
+from .models import Contact, OrganizationMember, TeamRole, Territory
+from .forms import AccountForm, ContactForm, BulkImportUploadForm, OrganizationMemberForm, TeamRoleForm, TerritoryForm
 from django.contrib.auth.views import LoginView
 from django.shortcuts import get_object_or_404, redirect, render
 from django.db import transaction, models
@@ -51,7 +51,7 @@ class AccountListView(ObjectPermissionRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        return super().get_queryset().select_related('owner')
+        return super().get_queryset().select_related('team_member')
 
 
 
@@ -497,3 +497,134 @@ class AccountContactListView(ContactListView):
         return context
 
 
+
+# === Organization Member Views ===
+class OrganizationMemberListView(ObjectPermissionRequiredMixin, ListView):
+    model = OrganizationMember
+    template_name = 'accounts/member_list.html'
+    context_object_name = 'team_members'
+    permission_action = 'view'
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if hasattr(self.request.user, 'tenant'):
+             return qs.filter(tenant=self.request.user.tenant)
+        return qs.none()
+
+class OrganizationMemberCreateView(ObjectPermissionRequiredMixin, CreateView):
+    model = OrganizationMember
+    form_class = OrganizationMemberForm
+    template_name = 'accounts/member_form.html'
+    success_url = reverse_lazy('accounts:member_list')
+    permission_action = 'change'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if hasattr(self.request.user, 'tenant'):
+            kwargs['tenant'] = self.request.user.tenant
+        return kwargs
+
+    def form_valid(self, form):
+        form.instance.tenant = self.request.user.tenant
+        return super().form_valid(form)
+
+class OrganizationMemberDetailView(ObjectPermissionRequiredMixin, DetailView):
+    model = OrganizationMember
+    template_name = 'accounts/member_detail.html'
+    context_object_name = 'member'
+    permission_action = 'view'
+
+class OrganizationMemberUpdateView(ObjectPermissionRequiredMixin, UpdateView):
+    model = OrganizationMember
+    form_class = OrganizationMemberForm
+    template_name = 'accounts/member_form.html'
+    success_url = reverse_lazy('accounts:member_list')
+    permission_action = 'change'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if hasattr(self.request.user, 'tenant'):
+            kwargs['tenant'] = self.request.user.tenant
+        return kwargs
+
+class OrganizationMemberDeleteView(ObjectPermissionRequiredMixin, DeleteView):
+    model = OrganizationMember
+    template_name = 'accounts/member_confirm_delete.html'
+    success_url = reverse_lazy('accounts:member_list')
+    permission_action = 'delete'
+
+
+# === Team Role Views ===
+class TeamRoleListView(ObjectPermissionRequiredMixin, ListView):
+    model = TeamRole
+    template_name = 'accounts/role_list.html'
+    context_object_name = 'roles'
+    permission_action = 'view'
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if hasattr(self.request.user, 'tenant'):
+             return qs.filter(tenant=self.request.user.tenant)
+        return qs.none()
+
+class TeamRoleCreateView(ObjectPermissionRequiredMixin, CreateView):
+    model = TeamRole
+    form_class = TeamRoleForm
+    template_name = 'accounts/role_form.html'
+    success_url = reverse_lazy('accounts:role_list')
+    permission_action = 'change'
+
+    def form_valid(self, form):
+        form.instance.tenant = self.request.user.tenant
+        return super().form_valid(form)
+
+class TeamRoleUpdateView(ObjectPermissionRequiredMixin, UpdateView):
+    model = TeamRole
+    form_class = TeamRoleForm
+    template_name = 'accounts/role_form.html'
+    success_url = reverse_lazy('accounts:role_list')
+    permission_action = 'change'
+
+class TeamRoleDeleteView(ObjectPermissionRequiredMixin, DeleteView):
+    model = TeamRole
+    template_name = 'accounts/role_confirm_delete.html'
+    success_url = reverse_lazy('accounts:role_list')
+    permission_action = 'delete'
+
+
+# === Territory Views ===
+class TerritoryListView(ObjectPermissionRequiredMixin, ListView):
+    model = Territory
+    template_name = 'accounts/territory_list.html'
+    context_object_name = 'territories'
+    permission_action = 'view'
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if hasattr(self.request.user, 'tenant'):
+             return qs.filter(tenant=self.request.user.tenant)
+        return qs.none()
+
+class TerritoryCreateView(ObjectPermissionRequiredMixin, CreateView):
+    model = Territory
+    form_class = TerritoryForm
+    template_name = 'accounts/territory_form.html'
+    success_url = reverse_lazy('accounts:territory_list')
+    permission_action = 'change'
+
+    def form_valid(self, form):
+        form.instance.tenant = self.request.user.tenant
+        return super().form_valid(form)
+
+class TerritoryUpdateView(ObjectPermissionRequiredMixin, UpdateView):
+    model = Territory
+    form_class = TerritoryForm
+    template_name = 'accounts/territory_form.html'
+    success_url = reverse_lazy('accounts:territory_list')
+    permission_action = 'change'
+
+class TerritoryDeleteView(ObjectPermissionRequiredMixin, DeleteView):
+    model = Territory
+    template_name = 'accounts/territory_confirm_delete.html'
+    success_url = reverse_lazy('accounts:territory_list')
+    permission_action = 'delete'

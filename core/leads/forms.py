@@ -1,7 +1,8 @@
 from django import forms
 from django.forms.widgets import Select
 from core.models import User
-from .models import Lead, LeadSource, LeadStatus, Industry, MarketingChannel
+from .models import Lead, LeadSource, LeadStatus, Industry, MarketingChannel, AssignmentRule, ActionType, OperatorType, BehavioralScoringRule, DemographicScoringRule
+from settings_app.models import AssignmentRuleType
 from tenants.models import Tenant as TenantModel
 
 
@@ -111,3 +112,85 @@ class IndustryForm(forms.ModelForm):
     class Meta:
         model = Industry
         fields = ['industry_name', 'label', 'order', 'industry_is_active', 'is_system']
+
+
+class AssignmentRuleForm(forms.ModelForm):
+    class Meta:
+        model = AssignmentRule
+        fields = ['assignment_rule_name', 'rule_type', 'rule_type_ref', 'criteria', 'assigned_to', 'rule_is_active', 'priority']
+        widgets = {
+            'criteria': forms.Textarea(attrs={'rows': 3, 'placeholder': 'JSON format: {"country": "US"}'}),
+            'assigned_to': forms.Select(attrs={'class': 'form-select'}),
+            'rule_type': forms.Select(attrs={'class': 'form-select'}),
+            'rule_type_ref': forms.Select(attrs={'class': 'form-select'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        # Load dynamic choices based on tenant
+        if self.tenant:
+             if 'rule_type_ref' in self.fields:
+                 self.fields['rule_type_ref'].queryset = AssignmentRuleType.objects.filter(tenant_id=self.tenant.id)
+        else:
+             if 'rule_type_ref' in self.fields:
+                self.fields['rule_type_ref'].queryset = AssignmentRuleType.objects.none()
+
+
+class ActionTypeForm(forms.ModelForm):
+    class Meta:
+        model = ActionType
+        fields = ['action_type_name', 'label', 'order', 'action_type_is_active', 'is_system']
+
+
+class OperatorTypeForm(forms.ModelForm):
+    class Meta:
+        model = OperatorType
+        fields = ['operator_name', 'label', 'order', 'operator_is_active', 'is_system']
+
+
+class BehavioralScoringRuleForm(forms.ModelForm):
+    class Meta:
+        model = BehavioralScoringRule
+        fields = ['behavioral_scoring_rule_name', 'action_type', 'action_type_ref', 'points', 'time_decay_factor', 'business_impact', 'business_impact_ref', 'rule_is_active']
+        widgets = {
+            'action_type_ref': DynamicChoiceWidget(choice_model=ActionType),
+            'business_impact_ref': forms.Select(attrs={'class': 'form-select'}), # Self-referencing might need care
+        }
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        if self.tenant:
+            if 'action_type_ref' in self.fields:
+                self.fields['action_type_ref'].queryset = ActionType.objects.filter(tenant_id=self.tenant.id)
+            if 'business_impact_ref' in self.fields:
+                # Assuming business_impact_ref points to BehavioralScoringRule (self)
+                self.fields['business_impact_ref'].queryset = BehavioralScoringRule.objects.filter(tenant_id=self.tenant.id)
+        else:
+            if 'action_type_ref' in self.fields:
+                self.fields['action_type_ref'].queryset = ActionType.objects.none()
+            if 'business_impact_ref' in self.fields:
+                self.fields['business_impact_ref'].queryset = BehavioralScoringRule.objects.none()
+
+
+class DemographicScoringRuleForm(forms.ModelForm):
+    class Meta:
+        model = DemographicScoringRule
+        fields = ['demographic_scoring_rule_name', 'field_name', 'operator', 'operator_ref', 'field_value', 'points', 'rule_is_active']
+        widgets = {
+            'operator_ref': DynamicChoiceWidget(choice_model=OperatorType),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        if self.tenant:
+            if 'operator_ref' in self.fields:
+                self.fields['operator_ref'].queryset = OperatorType.objects.filter(tenant_id=self.tenant.id)
+        else:
+            if 'operator_ref' in self.fields:
+                self.fields['operator_ref'].queryset = OperatorType.objects.none()

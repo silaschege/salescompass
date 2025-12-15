@@ -1,5 +1,4 @@
 from django.db import models
-
 from core.models import User as Account
 from settings_app.models import Territory, TeamMember
 from django.db.models import Sum, Count, Avg
@@ -146,30 +145,6 @@ class Commission(models.Model):
 
     def __str__(self):
         return f"{self.sales_rep.email} - {self.amount} ({self.status})"
-
-    
-    @classmethod
-    def create_from_sale(cls, sale, sales_rep=None):
-        """
-        Create a commission record from a sale.
-        """
-        sales_rep = sales_rep or sale.sales_rep
-        if not sales_rep:
-            return None
-        
-        amount, rule = sale.calculate_commission(sales_rep)
-        
-        if amount <= 0:
-            return None
-        
-        return cls.objects.create(
-            sale=sale,
-            sales_rep=sales_rep,
-            rule_applied=rule,
-            amount=amount,
-            status='pending',
-        )
-
 
 
 class TerritoryPerformance(models.Model):
@@ -521,25 +496,3 @@ class TeamMemberTerritoryMetrics(models.Model):
         self.territory_capacity_utilization = self.territory_revenue_contribution
         
         self.save()
-
-    def calculate_territory_performance_rank(self):
-        """
-        Calculates the territory's performance rank based on its revenue contribution and capacity utilization.
-        
-        Returns:
-            int: The territory's performance rank.
-        """
-        # This is a placeholder implementation. In a real scenario, you would compare this territory's
-        # metrics against other territories to determine the rank.
-        all_territories = Territory.objects.all()
-        rank = 1
-        for territory in all_territories:
-            if territory != self.territory:
-                try:
-                    other_metrics = territory.performance_metrics.latest('period_end')
-                    if (other_metrics.total_revenue > self.total_revenue) or \
-                       (other_metrics.opportunity_win_rate > self.opportunity_win_rate):
-                        rank += 1
-                except TerritoryPerformance.DoesNotExist:
-                    continue
-        return rank

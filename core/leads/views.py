@@ -5,8 +5,8 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
-from .models import Lead, LeadSource, LeadStatus, Industry, MarketingChannel
-from .forms import LeadForm
+from .models import Lead, LeadSource, LeadStatus, Industry, MarketingChannel, AssignmentRule, ActionType, OperatorType, BehavioralScoringRule, DemographicScoringRule
+from .forms import LeadForm, AssignmentRuleForm, ActionTypeForm, OperatorTypeForm, BehavioralScoringRuleForm, DemographicScoringRuleForm
 from tenants.models import Tenant as TenantModel
 
 
@@ -614,4 +614,274 @@ class MarketingChannelDeleteView(DeleteView):
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Marketing channel deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class AssignmentRuleListView(ListView):
+    model = AssignmentRule
+    template_name = 'leads/assignment_rule_list.html'
+    context_object_name = 'assignment_rules'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant and prefetch related objects
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('rule_type_ref', 'assigned_to')
+
+
+class AssignmentRuleCreateView(CreateView):
+    model = AssignmentRule
+    form_class = AssignmentRuleForm
+    template_name = 'leads/assignment_rule_form.html'
+    success_url = reverse_lazy('leads:assignment_rule_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Assignment rule created successfully.')
+        return super().form_valid(form)
+
+
+class AssignmentRuleUpdateView(UpdateView):
+    model = AssignmentRule
+    form_class = AssignmentRuleForm
+    template_name = 'leads/assignment_rule_form.html'
+    success_url = reverse_lazy('leads:assignment_rule_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Assignment rule updated successfully.')
+        return super().form_valid(form)
+
+
+class AssignmentRuleDeleteView(DeleteView):
+    model = AssignmentRule
+    template_name = 'leads/assignment_rule_confirm_delete.html'
+    success_url = reverse_lazy('leads:assignment_rule_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Assignment rule deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class ActionTypeListView(ListView):
+    model = ActionType
+    template_name = 'leads/action_type_list.html'
+    context_object_name = 'action_types'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class ActionTypeCreateView(CreateView):
+    model = ActionType
+    form_class = ActionTypeForm
+    template_name = 'leads/action_type_form.html'
+    success_url = reverse_lazy('leads:action_type_list')
+    
+    def form_valid(self, form):
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Action type created successfully.')
+        return super().form_valid(form)
+
+
+class ActionTypeUpdateView(UpdateView):
+    model = ActionType
+    form_class = ActionTypeForm
+    template_name = 'leads/action_type_form.html'
+    success_url = reverse_lazy('leads:action_type_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Action type updated successfully.')
+        return super().form_valid(form)
+
+
+class ActionTypeDeleteView(DeleteView):
+    model = ActionType
+    template_name = 'leads/action_type_confirm_delete.html'
+    success_url = reverse_lazy('leads:action_type_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Action type deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class OperatorTypeListView(ListView):
+    model = OperatorType
+    template_name = 'leads/operator_type_list.html'
+    context_object_name = 'operator_types'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class OperatorTypeCreateView(CreateView):
+    model = OperatorType
+    form_class = OperatorTypeForm
+    template_name = 'leads/operator_type_form.html'
+    success_url = reverse_lazy('leads:operator_type_list')
+    
+    def form_valid(self, form):
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Operator type created successfully.')
+        return super().form_valid(form)
+
+
+class OperatorTypeUpdateView(UpdateView):
+    model = OperatorType
+    form_class = OperatorTypeForm
+    template_name = 'leads/operator_type_form.html'
+    success_url = reverse_lazy('leads:operator_type_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Operator type updated successfully.')
+        return super().form_valid(form)
+
+
+class OperatorTypeDeleteView(DeleteView):
+    model = OperatorType
+    template_name = 'leads/operator_type_confirm_delete.html'
+    success_url = reverse_lazy('leads:operator_type_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Operator type deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class BehavioralScoringRuleListView(ListView):
+    model = BehavioralScoringRule
+    template_name = 'leads/behavioral_scoring_rule_list.html'
+    context_object_name = 'behavioral_scoring_rules'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('action_type_ref', 'business_impact_ref')
+
+
+class BehavioralScoringRuleCreateView(CreateView):
+    model = BehavioralScoringRule
+    form_class = BehavioralScoringRuleForm
+    template_name = 'leads/behavioral_scoring_rule_form.html'
+    success_url = reverse_lazy('leads:behavioral_scoring_rule_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Behavioral scoring rule created successfully.')
+        return super().form_valid(form)
+
+
+class BehavioralScoringRuleUpdateView(UpdateView):
+    model = BehavioralScoringRule
+    form_class = BehavioralScoringRuleForm
+    template_name = 'leads/behavioral_scoring_rule_form.html'
+    success_url = reverse_lazy('leads:behavioral_scoring_rule_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Behavioral scoring rule updated successfully.')
+        return super().form_valid(form)
+
+
+class BehavioralScoringRuleDeleteView(DeleteView):
+    model = BehavioralScoringRule
+    template_name = 'leads/behavioral_scoring_rule_confirm_delete.html'
+    success_url = reverse_lazy('leads:behavioral_scoring_rule_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Behavioral scoring rule deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class DemographicScoringRuleListView(ListView):
+    model = DemographicScoringRule
+    template_name = 'leads/demographic_scoring_rule_list.html'
+    context_object_name = 'demographic_scoring_rules'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('operator_ref')
+
+
+class DemographicScoringRuleCreateView(CreateView):
+    model = DemographicScoringRule
+    form_class = DemographicScoringRuleForm
+    template_name = 'leads/demographic_scoring_rule_form.html'
+    success_url = reverse_lazy('leads:demographic_scoring_rule_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Demographic scoring rule created successfully.')
+        return super().form_valid(form)
+
+
+class DemographicScoringRuleUpdateView(UpdateView):
+    model = DemographicScoringRule
+    form_class = DemographicScoringRuleForm
+    template_name = 'leads/demographic_scoring_rule_form.html'
+    success_url = reverse_lazy('leads:demographic_scoring_rule_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Demographic scoring rule updated successfully.')
+        return super().form_valid(form)
+
+
+class DemographicScoringRuleDeleteView(DeleteView):
+    model = DemographicScoringRule
+    template_name = 'leads/demographic_scoring_rule_confirm_delete.html'
+    success_url = reverse_lazy('leads:demographic_scoring_rule_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Demographic scoring rule deleted successfully.')
         return super().delete(request, *args, **kwargs)

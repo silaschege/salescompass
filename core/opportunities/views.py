@@ -1,9 +1,16 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Sum, Count
-from .models import Opportunity, OpportunityStage
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
+from django.contrib import messages
+
 from core.models import User
+from tenants.models import Tenant as TenantModel
 from leads.models import Lead
+
+from .models import Opportunity, OpportunityStage, AssignmentRule, PipelineType
+from .forms import AssignmentRuleForm, OpportunityStageForm, PipelineTypeForm
 
 
 @login_required
@@ -92,3 +99,164 @@ def opportunity_funnel_analysis(request):
     """
     # Implementation would go here
     pass
+
+
+class AssignmentRuleListView(ListView):
+    model = AssignmentRule
+    template_name = 'opportunities/assignment_rule_list.html'
+    context_object_name = 'assignment_rules'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant and prefetch related objects
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('rule_type_ref', 'assigned_to')
+
+
+class AssignmentRuleCreateView(CreateView):
+    model = AssignmentRule
+    form_class = AssignmentRuleForm
+    template_name = 'opportunities/assignment_rule_form.html'
+    success_url = reverse_lazy('opportunities:assignment_rule_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Assignment rule created successfully.')
+        return super().form_valid(form)
+
+
+class AssignmentRuleUpdateView(UpdateView):
+    model = AssignmentRule
+    form_class = AssignmentRuleForm
+    template_name = 'opportunities/assignment_rule_form.html'
+    success_url = reverse_lazy('opportunities:assignment_rule_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the current tenant to the form
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Assignment rule updated successfully.')
+        return super().form_valid(form)
+
+
+class AssignmentRuleDeleteView(DeleteView):
+    model = AssignmentRule
+    template_name = 'opportunities/assignment_rule_confirm_delete.html'
+    success_url = reverse_lazy('opportunities:assignment_rule_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Assignment rule deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+# Pipeline Stage Management
+class OpportunityStageListView(ListView):
+    model = OpportunityStage
+    template_name = 'opportunities/opportunity_stage_list.html'
+    context_object_name = 'stages'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.order_by('order')
+
+class OpportunityStageCreateView(CreateView):
+    model = OpportunityStage
+    form_class = OpportunityStageForm
+    template_name = 'opportunities/opportunity_stage_form.html'
+    success_url = reverse_lazy('opportunities:stage_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+    
+    def form_valid(self, form):
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Pipeline stage created successfully.')
+        return super().form_valid(form)
+
+class OpportunityStageUpdateView(UpdateView):
+    model = OpportunityStage
+    form_class = OpportunityStageForm
+    template_name = 'opportunities/opportunity_stage_form.html'
+    success_url = reverse_lazy('opportunities:stage_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Pipeline stage updated successfully.')
+        return super().form_valid(form)
+
+class OpportunityStageDeleteView(DeleteView):
+    model = OpportunityStage
+    template_name = 'opportunities/opportunity_stage_confirm_delete.html'
+    success_url = reverse_lazy('opportunities:stage_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(self.request, 'Pipeline stage deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+# Pipeline Type Management
+class PipelineTypeListView(ListView):
+    model = PipelineType
+    template_name = 'opportunities/pipeline_type_list.html'
+    context_object_name = 'pipeline_types'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.order_by('order')
+
+class PipelineTypeCreateView(CreateView):
+    model = PipelineType
+    form_class = PipelineTypeForm
+    template_name = 'opportunities/pipeline_type_form.html'
+    success_url = reverse_lazy('opportunities:type_list')
+    
+    def form_valid(self, form):
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Pipeline type created successfully.')
+        return super().form_valid(form)
+
+class PipelineTypeUpdateView(UpdateView):
+    model = PipelineType
+    form_class = PipelineTypeForm
+    template_name = 'opportunities/pipeline_type_form.html'
+    success_url = reverse_lazy('opportunities:type_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Pipeline type updated successfully.')
+        return super().form_valid(form)
+
+class PipelineTypeDeleteView(DeleteView):
+    model = PipelineType
+    template_name = 'opportunities/pipeline_type_confirm_delete.html'
+    success_url = reverse_lazy('opportunities:type_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(self.request, 'Pipeline type deleted successfully.')
+        return super().delete(request, *args, **kwargs)

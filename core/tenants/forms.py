@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from .models import Tenant, TenantSettings
+from django.forms.widgets import Select
+from .models import Tenant, TenantSettings, Setting, SettingGroup, SettingType
+
 
 User = get_user_model()
 
@@ -71,3 +73,53 @@ class FeatureToggleForm(forms.Form):
         required=False,
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3})
     )
+
+
+class DynamicChoiceWidget(Select):
+    """Custom widget for dynamic choices that loads choices from the database"""
+    def __init__(self, choice_model, *args, **kwargs):
+        self.choice_model = choice_model
+        super().__init__(*args, **kwargs)
+    
+    def build_attrs(self, base_attrs, extra_attrs=None):
+        attrs = super().build_attrs(base_attrs, extra_attrs)
+        # Add data attributes for JavaScript to load choices dynamically
+        attrs['data-dynamic-choice-model'] = self.choice_model._meta.label_lower
+        return attrs
+
+
+class SettingTypeForm(forms.ModelForm):
+    class Meta:
+        model = SettingType
+        fields = ['setting_type_name', 'label', 'order', 'setting_type_is_active', 'is_system']
+
+
+class SettingGroupForm(forms.ModelForm):
+    class Meta:
+        model = SettingGroup
+        fields = ['setting_group_name', 'setting_group_description', 'setting_group_is_active']
+
+
+class SettingForm(forms.ModelForm):
+    class Meta:
+        model = Setting
+        fields = ['group', 'setting_name', 'setting_label', 'setting_description', 'setting_type', 
+                  'setting_type_ref', 'value_text', 'value_number', 'value_boolean', 
+                  'is_required', 'is_visible', 'order']
+        widgets = {
+            'setting_type_ref': DynamicChoiceWidget(choice_model=SettingType),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        if self.tenant:
+            self.fields['group'].queryset = SettingGroup.objects.filter(tenant_id=self.tenant.id)
+            if 'setting_type_ref' in self.fields:
+                self.fields['setting_type_ref'].queryset = SettingType.objects.filter(tenant_id=self.tenant.id)
+        else:
+            self.fields['group'].queryset = SettingGroup.objects.none()
+            if 'setting_type_ref' in self.fields:
+                self.fields['setting_type_ref'].queryset = SettingType.objects.none()
+

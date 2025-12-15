@@ -1,0 +1,74 @@
+{% extends "settings_base.html" %}
+
+{% block title %}Pipeline Types - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Pipeline Types</h1>
+        <p class="text-white text-center lead">Manage different types of pipelines (Sales, Support, Renewal)</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Pipeline Types</h2>
+        <div>
+            <a href="{% url 'opportunities:stage_list' %}" class="btn btn-outline-secondary me-2">Back to Stages</a>
+            <a href="{% url 'opportunities:type_create' %}" class="btn btn-primary">+ New Type</a>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            {% if pipeline_types %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Label</th>
+                            <th>Order</th>
+                            <th>Active</th>
+                            <th>System</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for type in pipeline_types %}
+                        <tr>
+                            <td>{{ type.pipeline_type_name }}</td>
+                            <td>{{ type.label }}</td>
+                            <td>{{ type.order }}</td>
+                            <td>
+                                {% if type.pipeline_type_is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if type.is_system %}
+                                <span class="badge bg-info">System</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'opportunities:type_update' type.pk %}"
+                                    class="btn btn-sm btn-outline-primary">Edit</a>
+                                {% if not type.is_system %}
+                                <a href="{% url 'opportunities:type_delete' type.pk %}"
+                                    class="btn btn-sm btn-outline-danger">Delete</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No pipeline types found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

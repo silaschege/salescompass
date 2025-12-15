@@ -1,7 +1,7 @@
-
 from django.db import models
 from core.models import TimeStampedModel,User
 from tenants.models import TenantAwareModel as TenantModel
+from settings_app.models import AssignmentRuleType
 from django.urls import reverse
 from typing import Any
 from django.utils import timezone
@@ -614,3 +614,182 @@ class LeadSourceAnalytics(TenantModel):
 
     def __str__(self):
         return f"{self.source} - {self.date}"
+
+class AssignmentRule(TenantModel):
+    """
+    Assignment rules specifically for Leads.
+    """
+    tenant = models.ForeignKey(
+        "tenants.Tenant", 
+        on_delete=models.CASCADE, 
+        related_name="lead_assignment_rules"
+    )
+    RULE_TYPE_CHOICES = [
+        ('round_robin', 'Round Robin'),
+        ('territory', 'Territory-Based'),
+        ('load_balanced', 'Load Balanced'),
+        ('criteria', 'Criteria-Based'),
+    ]
+
+    assignment_rule_name = models.CharField(max_length=200)
+    rule_type = models.CharField(max_length=50, choices=RULE_TYPE_CHOICES)
+    # Dynamic field reference
+    rule_type_ref = models.ForeignKey(
+        AssignmentRuleType,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='lead_assignment_rules',
+        help_text="Dynamic rule type (replaces rule_type field)"
+    )
+    criteria = models.JSONField(default=dict, blank=True, help_text="Matching criteria, e.g., {'country': 'US', 'industry': 'Tech'}")
+    assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='lead_assigned_rules')
+    rule_is_active = models.BooleanField(default=True, help_text="Whether this rule is active")
+    priority = models.IntegerField(default=1, help_text="Priority of the rule (lower numbers = higher priority)")
+
+    def __str__(self):
+        return self.assignment_rule_name
+
+
+class ActionType(TenantModel):
+    """
+    Dynamic action type values - allows tenant-specific action type tracking.
+    """
+    tenant = models.ForeignKey(
+        "tenants.Tenant", 
+        on_delete=models.CASCADE, 
+        related_name="lead_action_types"
+    )
+    action_type_name = models.CharField(max_length=50, db_index=True, help_text="e.g., 'email_open', 'link_click'")
+    label = models.CharField(max_length=100)
+    order = models.IntegerField(default=0)
+    action_type_is_active = models.BooleanField(default=True, help_text="Whether this action type is active")
+    is_system = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['order', 'action_type_name']
+        unique_together = [('tenant', 'action_type_name')]
+        verbose_name_plural = 'Action Types'
+    
+    def __str__(self):
+        return self.label
+
+
+class OperatorType(TenantModel):
+    """
+    Dynamic operator type values - allows tenant-specific operator type tracking.
+    """
+    tenant = models.ForeignKey(
+        "tenants.Tenant", 
+        on_delete=models.CASCADE, 
+        related_name="lead_operator_types"
+    )
+    operator_name = models.CharField(max_length=20, db_index=True, help_text="e.g., 'equals', 'contains'")
+    label = models.CharField(max_length=50)
+    order = models.IntegerField(default=0)
+    operator_is_active = models.BooleanField(default=True, help_text="Whether this operator is active")
+    is_system = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['order', 'operator_name']
+        unique_together = [('tenant', 'operator_name')]
+        verbose_name_plural = 'Operator Types'
+    
+    def __str__(self):
+        return self.label
+
+
+class BehavioralScoringRule(TenantModel):
+    ACTION_TYPE_CHOICES = [
+        ('email_open', 'Email Open'),
+        ('link_click', 'Link Click'),
+        ('web_visit', 'Website Visit'),
+        ('form_submit', 'Form Submission'),
+        ('content_download', 'Content Download'),
+        ('landing_page_visit', 'Landing Page Visit'),
+    ]
+
+    OPERATOR_CHOICES = [
+        ('equals', 'Equals'),
+        ('contains', 'Contains'),
+        ('in', 'In List'),
+        ('gt', 'Greater Than'),
+        ('lt', 'Less Than'),
+    ]
+
+    BUSINESS_IMPACT_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+        ('critical', 'Critical'),
+    ]
+
+    tenant = models.ForeignKey(
+        "tenants.Tenant", 
+        on_delete=models.CASCADE, 
+        related_name="lead_behavioral_scoring_rules"
+    )
+
+    behavioral_scoring_rule_name = models.CharField(max_length=200, help_text="Rule name, e.g., 'Email Open Scoring'")
+    action_type = models.CharField(max_length=50, choices=ACTION_TYPE_CHOICES)
+    # New dynamic field
+    action_type_ref = models.ForeignKey(
+        ActionType,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='behavioral_scoring_rules',
+        help_text="Dynamic action type (replaces action_type field)"
+    )
+    points = models.IntegerField(help_text="Points to award for this action")
+    time_decay_factor = models.FloatField(default=1.0, help_text="Multiplier for time-based decay of this action's value")
+    business_impact = models.CharField(max_length=50, choices=BUSINESS_IMPACT_CHOICES)
+    # New dynamic field
+    business_impact_ref = models.ForeignKey(
+        'self',  # Self reference for impact - this might need to be a separate model
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='behavioral_scoring_rules_by_impact',
+        help_text="Dynamic business impact (replaces business_impact field)"
+    )
+    rule_is_active = models.BooleanField(default=True, help_text="Whether this rule is active")
+
+    def __str__(self):
+        return self.behavioral_scoring_rule_name
+
+
+class DemographicScoringRule(TenantModel):
+    OPERATOR_CHOICES = [
+        ('equals', 'Equals'),
+        ('contains', 'Contains'),
+        ('in', 'In List'),
+        ('gt', 'Greater Than'),
+        ('lt', 'Less Than'),
+    ]
+
+    tenant = models.ForeignKey(
+        "tenants.Tenant", 
+        on_delete=models.CASCADE, 
+        related_name="lead_demographic_scoring_rules"
+    )
+
+    demographic_scoring_rule_name = models.CharField(max_length=200, help_text="Rule name, e.g., 'Job Title Scoring'")
+    field_name = models.CharField(max_length=100, help_text="Field to evaluate, e.g., 'job_title', 'industry', 'company_size'")
+    operator = models.CharField(max_length=20, choices=OPERATOR_CHOICES, default='equals')
+    # New dynamic field
+    operator_ref = models.ForeignKey(
+        OperatorType,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='demographic_scoring_rules',
+        help_text="Dynamic operator (replaces operator field)"
+    )
+    field_value = models.CharField(max_length=500, help_text="Value to match against")
+    points = models.IntegerField(help_text="Points to award when condition is met")
+    rule_is_active = models.BooleanField(default=True, help_text="Whether this rule is active")
+
+    def __str__(self):
+        return self.demographic_scoring_rule_name
+

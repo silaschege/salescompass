@@ -1,0 +1,56 @@
+{% extends "settings_base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Assignment Rule Type - SalesCompass{% endblock
+%}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">{% if form.instance.pk %}Edit{% else %}Create{% endif %} Assignment Rule Type</h1>
+        <p class="text-white text-center lead">Define an assignment rule type</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card shadow" style="max-width: 800px; margin: 0 auto;">
+        <div class="card-body p-4">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.rule_type_name|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.label|as_crispy_field }}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.order|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch mt-4 pt-2">
+                            {{ form.rule_type_is_active }}
+                            <label class="form-check-label"
+                                for="{{ form.rule_type_is_active.id_for_label }}">Active</label>
+                        </div>
+                        <div class="form-check form-switch mt-2">
+                            {{ form.is_system }}
+                            <label class="form-check-label" for="{{ form.is_system.id_for_label }}">System
+                                Default</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 border-top pt-3 d-flex justify-content-between">
+                    <a href="{% url 'core:assignment_rule_type_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-4">Save Type</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

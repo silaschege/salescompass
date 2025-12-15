@@ -1,5 +1,5 @@
 from django import forms
-from .models import Campaign, EmailTemplate, LandingPageBlock, MessageTemplate, EmailCampaign, CampaignStatus, EmailProvider, BlockType, EmailCategory, MessageType, MessageCategory
+from .models import Campaign, EmailTemplate, LandingPageBlock, MessageTemplate, EmailCampaign, CampaignStatus, EmailProvider, BlockType, EmailCategory, MessageType, MessageCategory, EmailIntegration
 from tenants.models import Tenant as TenantModel
 from core.forms import DynamicChoiceWidget  # Import the DynamicChoiceWidget from core forms
 
@@ -148,3 +148,22 @@ class MessageCategoryForm(forms.ModelForm):
     class Meta:
         model = MessageCategory
         fields = ['category_name', 'label', 'order', 'category_is_active', 'is_system']
+
+
+class EmailIntegrationForm(forms.ModelForm):
+    class Meta:
+        model = EmailIntegration
+        fields = ['user', 'provider', 'provider_ref', 'email_address', 'api_key', 'integration_is_active']
+        widgets = {
+            'provider_ref': DynamicChoiceWidget(choice_model=EmailProvider),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        # Load dynamic choices based on tenant
+        if self.tenant:
+            self.fields['provider_ref'].queryset = EmailProvider.objects.filter(tenant_id=self.tenant.id)
+        else:
+            self.fields['provider_ref'].queryset = EmailProvider.objects.none()

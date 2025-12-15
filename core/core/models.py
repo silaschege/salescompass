@@ -740,3 +740,135 @@ class SystemNotification(models.Model):
     
     def __str__(self):
         return f"{self.title} - {self.notification_type.upper()}"
+
+
+class ModelChoice(models.Model):
+    """
+    Dynamic model choice values - allows tenant-specific model choice tracking.
+    """
+    tenant = models.ForeignKey(
+        'tenants.Tenant',
+        on_delete=models.CASCADE,
+        related_name='core_model_choices'
+    )
+    model_choice_name = models.CharField(max_length=50, db_index=True, help_text="e.g., 'Account', 'Lead'")
+    label = models.CharField(max_length=100) # e.g., 'Account', 'Lead'
+    order = models.IntegerField(default=0)
+    model_choice_is_active = models.BooleanField(default=True, help_text="Whether this model choice is active")
+    is_system = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['order', 'model_choice_name']
+        unique_together = [('tenant', 'model_choice_name')]
+        verbose_name_plural = 'Model Choices'
+    
+    def __str__(self):
+        return self.label
+
+
+class FieldType(models.Model):
+    """
+    Dynamic field type values - allows tenant-specific field type tracking.
+    """
+    tenant = models.ForeignKey(
+        'tenants.Tenant',
+        on_delete=models.CASCADE,
+        related_name='core_field_types'
+    )
+    field_type_name = models.CharField(max_length=20, db_index=True, help_text="e.g., 'text', 'number'")
+    label = models.CharField(max_length=50) # e.g., 'Text', 'Number'
+    order = models.IntegerField(default=0)
+    field_type_is_active = models.BooleanField(default=True, help_text="Whether this field type is active")
+    is_system = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['order', 'field_type_name']
+        unique_together = [('tenant', 'field_type_name')]
+        verbose_name_plural = 'Field Types'
+    
+    def __str__(self):
+        return self.label
+
+
+class ModuleChoice(models.Model):
+    """
+    Dynamic module choice values - allows tenant-specific module choice tracking.
+    """
+    tenant = models.ForeignKey(
+        'tenants.Tenant',
+        on_delete=models.CASCADE,
+        related_name='core_module_choices'
+    )
+    module_choice_name = models.CharField(max_length=50, db_index=True, help_text="e.g., 'leads', 'accounts'")
+    label = models.CharField(max_length=100) # e.g., 'Leads', 'Accounts'
+    order = models.IntegerField(default=0)
+    module_choice_is_active = models.BooleanField(default=True, help_text="Whether this module choice is active")
+    is_system = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['order', 'module_choice_name']
+        unique_together = [('tenant', 'module_choice_name')]
+        verbose_name_plural = 'Module Choices'
+    
+    def __str__(self):
+        return self.label
+
+
+class ModuleLabel(models.Model):
+    MODULE_CHOICES = [
+        ('leads', 'Leads'),
+        ('accounts', 'Accounts'),
+        ('opportunities', 'Opportunities'),
+        ('cases', 'Cases'),
+        ('proposals', 'Proposals'),
+        ('products', 'Products'),
+        ('tasks', 'Tasks'),
+        ('dashboard', 'Dashboard'),
+        ('reports', 'Reports'),
+        ('commissions', 'Commissions'),
+    ]
+
+    tenant = models.ForeignKey(
+        'tenants.Tenant',
+        on_delete=models.CASCADE,
+        related_name='core_module_labels'
+    )
+    module_key = models.CharField(max_length=50, choices=MODULE_CHOICES)
+    # New dynamic field
+    module_key_ref = models.ForeignKey(
+        ModuleChoice,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='module_labels',
+        help_text="Dynamic module key (replaces module_key field)"
+    )
+    custom_label = models.CharField(max_length=100, help_text="e.g., 'Prospects' instead of 'Leads'")
+    module_label_is_active = models.BooleanField(default=True, help_text="Whether this module label is active")
+
+    def __str__(self):
+        return f"{self.module_key}: {self.custom_label}"
+
+
+class AssignmentRuleType(models.Model):
+    """
+    Dynamic assignment rule type values - allows tenant-specific rule type tracking.
+    """
+    tenant = models.ForeignKey(
+        'tenants.Tenant',
+        on_delete=models.CASCADE,
+        related_name='core_assignment_rule_types'
+    )
+    rule_type_name = models.CharField(max_length=50, db_index=True, help_text="e.g., 'round_robin', 'territory'")
+    label = models.CharField(max_length=100) # e.g., 'Round Robin', 'Territory-Based'
+    order = models.IntegerField(default=0)
+    rule_type_is_active = models.BooleanField(default=True, help_text="Whether this rule type is active")
+    is_system = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['order', 'rule_type_name']
+        unique_together = [('tenant', 'rule_type_name')]
+        verbose_name_plural = 'Assignment Rule Types'
+    
+    def __str__(self):
+        return self.label

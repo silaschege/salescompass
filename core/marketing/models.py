@@ -622,3 +622,37 @@ class ABAutomatedTest(TenantModel):
 
     def __str__(self):
         return self.test_name
+
+
+class EmailIntegration(TenantModel):
+    PROVIDER_CHOICES = [
+        ('gmail', 'Gmail'),
+        ('outlook', 'Outlook/Office 365'),
+    ]
+
+    tenant = models.ForeignKey(
+        "tenants.Tenant", 
+        on_delete=models.CASCADE, 
+        related_name="marketing_email_integrations_tenant"
+    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='marketing_email_integrations')
+    provider = models.CharField(max_length=20, choices=PROVIDER_CHOICES)
+    # New dynamic field
+    provider_ref = models.ForeignKey(
+        EmailProvider,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        # Use a distinct related_name to avoiding clashing with settings_app
+        related_name='marketing_email_integrations',
+        help_text="Dynamic provider (replaces provider field)"
+    )
+    email_address = models.EmailField()
+    integration_is_active = models.BooleanField(default=True, help_text="Whether this integration is active")
+    last_sync = models.DateTimeField(null=True, blank=True)
+    api_key = models.TextField(blank=True, help_text="API key or access token")
+    refresh_token = models.TextField(blank=True, help_text="Refresh token for OAuth")
+
+    def __str__(self):
+        return f"{self.email_address} ({self.provider})"
+

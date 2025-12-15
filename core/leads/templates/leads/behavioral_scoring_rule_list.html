@@ -1,0 +1,69 @@
+{% extends "settings_base.html" %}
+
+{% block title %}Behavioral Scoring Rules - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Behavioral Scoring Rules</h1>
+        <p class="text-white text-center lead">Manage rules for scoring lead behavior</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Rules</h2>
+        <a href="{% url 'leads:behavioral_scoring_rule_create' %}" class="btn btn-primary">+ Add Rule</a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            {% if behavioral_scoring_rules %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Action Type</th>
+                            <th>Points</th>
+                            <th>Decay Factor</th>
+                            <th>Business Impact</th>
+                            <th>Active</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rule in behavioral_scoring_rules %}
+                        <tr>
+                            <td>{{ rule.behavioral_scoring_rule_name }}</td>
+                            <td>{{ rule.action_type_ref.label|default:rule.get_action_type_display }}</td>
+                            <td>{{ rule.points }}</td>
+                            <td>{{ rule.time_decay_factor }}</td>
+                            <td>{{
+                                rule.business_impact_ref.behavioral_scoring_rule_name|default:rule.get_business_impact_display
+                                }}</td>
+                            <td>
+                                {% if rule.rule_is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'leads:behavioral_scoring_rule_update' rule.pk %}"
+                                    class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="{% url 'leads:behavioral_scoring_rule_delete' rule.pk %}"
+                                    class="btn btn-sm btn-outline-danger">Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No behavioral scoring rules found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

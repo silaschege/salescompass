@@ -2,6 +2,8 @@ from django.db import models
 from core.models import TimeStampedModel
 from tenants.models import TenantAwareModel as TenantModel
 from core.models import User
+from settings_app.models import AssignmentRuleType
+from settings_app.models import AssignmentRuleType
 
 from core.managers import VisibilityAwareManager
 
@@ -12,6 +14,37 @@ DEAL_SIZE_CATEGORIES = [
     ('large', 'Large'),
     ('enterprise', 'Enterprise'),
 ]
+
+PIPELINE_TYPE_CHOICES = [
+    ('sales', 'Sales Pipeline'),
+    ('support', 'Support Pipeline'),
+    ('onboarding', 'Customer Onboarding'),
+    ('renewal', 'Renewal Process'),
+]
+
+class PipelineType(TenantModel):
+    """
+    Dynamic pipeline type values - allows tenant-specific pipeline type tracking.
+    """
+    tenant = models.ForeignKey(
+        "tenants.Tenant", 
+        on_delete=models.CASCADE, 
+        related_name="opportunity_pipeline_types"
+    )
+    pipeline_type_name = models.CharField(max_length=50, db_index=True, help_text="e.g., 'sales', 'support'")
+    label = models.CharField(max_length=100)
+    order = models.IntegerField(default=0)
+    pipeline_type_is_active = models.BooleanField(default=True, help_text="Whether this pipeline type is active")
+    is_system = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['order', 'pipeline_type_name']
+        unique_together = [('tenant', 'pipeline_type_name')]
+        verbose_name_plural = 'Pipeline Types'
+    
+    def __str__(self):
+        return self.label
+
 
 
 class DealSizeCategory(TenantModel):
@@ -34,9 +67,20 @@ class DealSizeCategory(TenantModel):
 
 
 class OpportunityStage(TenantModel):
-    opportunity_stage_name = models.CharField(max_length=50)
+    pipeline_type = models.CharField(max_length=50, choices=PIPELINE_TYPE_CHOICES, default='sales')
+    # Dynamic field
+    pipeline_type_ref = models.ForeignKey(
+        PipelineType,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='stages',
+        help_text="Dynamic pipeline type"
+    )
+    opportunity_stage_name = models.CharField(max_length=100)
+    stage_description = models.TextField(blank=True, help_text="Description of the pipeline stage")
     order = models.IntegerField(default=0)
-    probability = models.FloatField(default=0.0, help_text="Default probability for this stage (0-10)")
+    probability = models.DecimalField(max_digits=5, decimal_places=2, default=0.0, help_text="Default probability (0-100)")
     is_won = models.BooleanField(default=False)
     is_lost = models.BooleanField(default=False)
     
@@ -416,3 +460,38 @@ class WinLossAnalysis(TenantModel):
 
     def __str__(self):
         return f"{'Won' if self.is_won else 'Lost'}: {self.opportunity.opportunity_name}"
+
+class AssignmentRule(TenantModel):
+    """
+    Assignment rules specifically for Opportunities.
+    """
+    tenant = models.ForeignKey(
+        "tenants.Tenant", 
+        on_delete=models.CASCADE, 
+        related_name="opportunity_assignment_rules"
+    )
+    RULE_TYPE_CHOICES = [
+        ('round_robin', 'Round Robin'),
+        ('territory', 'Territory-Based'),
+        ('load_balanced', 'Load Balanced'),
+        ('criteria', 'Criteria-Based'),
+    ]
+
+    assignment_rule_name = models.CharField(max_length=200)
+    rule_type = models.CharField(max_length=50, choices=RULE_TYPE_CHOICES)
+    # Dynamic field reference
+    rule_type_ref = models.ForeignKey(
+        AssignmentRuleType,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='opportunity_assignment_rules',
+        help_text="Dynamic rule type (replaces rule_type field)"
+    )
+    criteria = models.JSONField(default=dict, blank=True, help_text="Matching criteria, e.g., {'stage': 'negotiation', 'value_gt': 10000}")
+    assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='opportunity_assigned_rules')
+    rule_is_active = models.BooleanField(default=True, help_text="Whether this rule is active")
+    priority = models.IntegerField(default=1, help_text="Priority of the rule (lower numbers = higher priority)")
+
+    def __str__(self):
+        return self.assignment_rule_name

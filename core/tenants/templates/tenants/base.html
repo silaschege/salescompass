@@ -155,7 +155,7 @@
 
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
-        <a class="navbar-brand" href="{% url 'app_selection' %}">
+        <a class="navbar-brand" href="{% url 'core:app_selection' %}">
             <i class="bi bi-compass me-2"></i> SalesCompass
         </a>
 
@@ -220,12 +220,12 @@
                 <i class="bi bi-palette"></i> Domain & Branding
             </a>
             <div class="collapse" id="brandingMenu">
-                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'domain_management' %}active{% endif %}"
-                    href="{% url 'tenants:domain_management' %}">Custom Domains</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'domain_management_list' %}active{% endif %}"
+                    href="{% url 'tenants:domain_management_list' %}">Custom Domains</a>
                 <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'ssl_certificates' %}active{% endif %}"
                     href="{% url 'tenants:ssl_certificates' %}">SSL Certificates</a>
-                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'branding_config' %}active{% endif %}"
-                    href="{% url 'tenants:branding_config' %}">Branding Configuration</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'branding_config_list' %}active{% endif %}"
+                    href="{% url 'tenants:branding_config_list' %}">Branding Configuration</a>
                 <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'logo_management' %}active{% endif %}"
                     href="{% url 'tenants:logo_management' %}">Logo Management</a>
             </div>
@@ -249,12 +249,12 @@
                 <i class="bi bi-house-door"></i> Admin Dashboard
             </a>
 
-            <a class="nav-link" href="{% url 'app_selection' %}">
+            <a class="nav-link" href="{% url 'core:app_selection' %}">
                 <i class="bi bi-grid"></i> Control Plane Apps
             </a>
 
             <div class="mt-auto pt-4 border-top">
-                <a class="nav-link text-danger" href="{% url 'logout' %}">
+                <a class="nav-link text-danger" href="{% url 'core:logout' %}">
                     <i class="bi bi-box-arrow-right"></i> Log Out
                 </a>
             </div>

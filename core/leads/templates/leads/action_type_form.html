@@ -1,0 +1,30 @@
+{% extends "settings_base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Action Type - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">{% if form.instance.pk %}Edit{% else %}Create{% endif %} Action Type</h1>
+        <p class="text-white text-center lead">Define a new action type for scoring</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card shadow" style="max-width: 600px; margin: 0 auto;">
+        <div class="card-body p-4">
+            <form method="post">
+                {% csrf_token %}
+
+                {{ form|crispy }}
+
+                <div class="mt-4 border-top pt-3 d-flex justify-content-between">
+                    <a href="{% url 'leads:action_type_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-4">Save Action Type</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -30,6 +30,25 @@ urlpatterns = [
     # Account-specific contact URLs
     path('accounts/<int:account_pk>/contacts/', views.AccountContactListView.as_view(), name='account_contact_list'),
     
+    # Team Members
+    path('members/', views.OrganizationMemberListView.as_view(), name='member_list'),
+    path('members/create/', views.OrganizationMemberCreateView.as_view(), name='member_create'),
+    path('members/<int:pk>/', views.OrganizationMemberDetailView.as_view(), name='member_detail'),
+    path('members/<int:pk>/edit/', views.OrganizationMemberUpdateView.as_view(), name='member_update'),
+    path('members/<int:pk>/delete/', views.OrganizationMemberDeleteView.as_view(), name='member_delete'),
+
+    # Team Roles
+    path('roles/', views.TeamRoleListView.as_view(), name='role_list'),
+    path('roles/create/', views.TeamRoleCreateView.as_view(), name='role_create'),
+    path('roles/<int:pk>/edit/', views.TeamRoleUpdateView.as_view(), name='role_update'),
+    path('roles/<int:pk>/delete/', views.TeamRoleDeleteView.as_view(), name='role_delete'),
+
+    # Territories
+    path('territories/', views.TerritoryListView.as_view(), name='territory_list'),
+    path('territories/create/', views.TerritoryCreateView.as_view(), name='territory_create'),
+    path('territories/<int:pk>/edit/', views.TerritoryUpdateView.as_view(), name='territory_update'),
+    path('territories/<int:pk>/delete/', views.TerritoryDeleteView.as_view(), name='territory_delete'),
+
     # Admin URLs
     path('admin/', include('accounts.admin_urls')),
 ]

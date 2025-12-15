@@ -1,6 +1,6 @@
 from django import forms
 from core.models import User
-from .models import  Contact
+from .models import Contact, TeamRole, Territory, OrganizationMember
 
 
 # class AccountForm(forms.ModelForm):
@@ -169,3 +169,46 @@ class BulkImportUploadForm(forms.Form):
         if not file.name.endswith('.csv'):
             raise forms.ValidationError("Only CSV files are allowed.")
         return file
+
+
+class TeamRoleForm(forms.ModelForm):
+    class Meta:
+        model = TeamRole
+        fields = ['role_name', 'label', 'order', 'role_is_active', 'is_system']
+
+
+class TerritoryForm(forms.ModelForm):
+    class Meta:
+        model = Territory
+        fields = ['territory_name', 'label', 'order', 'territory_is_active', 'is_system']
+
+
+class OrganizationMemberForm(forms.ModelForm):
+    class Meta:
+        model = OrganizationMember
+        fields = ['user', 'role_ref', 'territory_ref', 'manager', 'status_ref', 'hire_date', 'termination_date', 
+                  'quota_amount', 'quota_period', 'commission_rate']
+        widgets = {
+             'hire_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+             'termination_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+             'user': forms.Select(attrs={'class': 'form-select'}),
+             'role_ref': forms.Select(attrs={'class': 'form-select'}),
+             'territory_ref': forms.Select(attrs={'class': 'form-select'}),
+             'manager': forms.Select(attrs={'class': 'form-select'}),
+             'status_ref': forms.Select(attrs={'class': 'form-select'}),
+             'quota_amount': forms.NumberInput(attrs={'class': 'form-control'}),
+             'quota_period': forms.Select(attrs={'class': 'form-select'}),
+             'commission_rate': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        # Load dynamic choices based on tenant
+        if self.tenant:
+            self.fields['role_ref'].queryset = TeamRole.objects.filter(tenant=self.tenant)
+            self.fields['territory_ref'].queryset = Territory.objects.filter(tenant=self.tenant)
+        else:
+            self.fields['role_ref'].queryset = TeamRole.objects.none()
+            self.fields['territory_ref'].queryset = Territory.objects.none()

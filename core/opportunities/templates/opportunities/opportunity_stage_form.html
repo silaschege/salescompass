@@ -1,0 +1,67 @@
+{% extends "settings_base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Pipeline Stage - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">{% if form.instance.pk %}Edit{% else %}Create{% endif %} Pipeline Stage</h1>
+        <p class="text-white text-center lead">Define a stage in your pipeline</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card shadow" style="max-width: 800px; margin: 0 auto;">
+        <div class="card-body p-4">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label requiredField">Pipeline Type Reference</label>
+                        {{ form.pipeline_type_ref|as_crispy_field }}
+                        <small class="text-muted">Associate with a custom pipeline type</small>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        {{ form.opportunity_stage_name|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.order|as_crispy_field }}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    {{ form.stage_description|as_crispy_field }}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        {{ form.probability|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4 mb-3 d-flex align-items-center pt-3">
+                        <div class="form-check">
+                            {{ form.is_won }}
+                            <label class="form-check-label" for="{{ form.is_won.id_for_label }}">Won Stage</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3 d-flex align-items-center pt-3">
+                        <div class="form-check">
+                            {{ form.is_lost }}
+                            <label class="form-check-label" for="{{ form.is_lost.id_for_label }}">Lost Stage</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 border-top pt-3 d-flex justify-content-between">
+                    <a href="{% url 'opportunities:stage_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-4">Save Stage</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

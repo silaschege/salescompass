@@ -5,6 +5,7 @@ from accounts.models import Contact
 from datetime import timedelta
 from django.utils import timezone
 from core.managers import VisibilityAwareManager
+from settings_app.models import AssignmentRuleType
 
 PRIORITY_CHOICES = [
     ('low', 'Low'),
@@ -279,4 +280,40 @@ class SlaPolicy(TenantModel):
     business_hours_only = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.name} ({self.get_priority_display()})"
+        return f"{self.sla_policy_name} ({self.get_priority_display()})"
+
+
+class AssignmentRule(TenantModel):
+    """
+    Assignment rules specifically for Cases.
+    """
+    tenant = models.ForeignKey(
+        "tenants.Tenant", 
+        on_delete=models.CASCADE, 
+        related_name="case_assignment_rules"
+    )
+    RULE_TYPE_CHOICES = [
+        ('round_robin', 'Round Robin'),
+        ('territory', 'Territory-Based'),
+        ('load_balanced', 'Load Balanced'),
+        ('criteria', 'Criteria-Based'),
+    ]
+
+    assignment_rule_name = models.CharField(max_length=200)
+    rule_type = models.CharField(max_length=50, choices=RULE_TYPE_CHOICES)
+    # Dynamic field reference
+    rule_type_ref = models.ForeignKey(
+        AssignmentRuleType,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='case_assignment_rules',
+        help_text="Dynamic rule type (replaces rule_type field)"
+    )
+    criteria = models.JSONField(default=dict, blank=True, help_text="Matching criteria, e.g., {'priority': 'high', 'type': 'bug'}")
+    assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='case_assigned_rules')
+    rule_is_active = models.BooleanField(default=True, help_text="Whether this rule is active")
+    priority = models.IntegerField(default=1, help_text="Priority of the rule (lower numbers = higher priority)")
+
+    def __str__(self):
+        return self.assignment_rule_name

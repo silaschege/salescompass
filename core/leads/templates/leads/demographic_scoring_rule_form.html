@@ -1,0 +1,71 @@
+{% extends "settings_base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Demographic Scoring Rule - SalesCompass{%
+endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">{% if form.instance.pk %}Edit{% else %}Create{% endif %} Demographic Scoring Rule</h1>
+        <p class="text-white text-center lead">Define scoring logic for lead attributes</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card shadow" style="max-width: 800px; margin: 0 auto;">
+        <div class="card-body p-4">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label requiredField">Rule Name</label>
+                        {{ form.demographic_scoring_rule_name|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label requiredField">Field Name</label>
+                        {{ form.field_name|as_crispy_field }}
+                        <small class="text-muted">e.g., job_title, industry</small>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label requiredField">Operator</label>
+                        {{ form.operator|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.operator_ref|as_crispy_field }}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        <label class="form-label requiredField">Value</label>
+                        {{ form.field_value|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label requiredField">Points</label>
+                        {{ form.points|as_crispy_field }}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        {{ form.rule_is_active }}
+                        <label class="form-check-label" for="{{ form.rule_is_active.id_for_label }}">Rule is
+                            Active</label>
+                    </div>
+                </div>
+
+                <div class="mt-4 border-top pt-3 d-flex justify-content-between">
+                    <a href="{% url 'leads:demographic_scoring_rule_list' %}"
+                        class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-4">Save Rule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

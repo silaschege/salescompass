@@ -906,9 +906,97 @@ class NotificationPriorityObjectPolicy(ObjectPermissionPolicy):
             return queryset.filter(tenant_id=user.tenant_id)
         return queryset
 
+class UserObjectPolicy(ObjectPermissionPolicy):
+    """
+    Object-level permission policy for User model.
+    """
+    @classmethod
+    def can_view(cls, user: User, obj: Any) -> bool:
+        if user.is_superuser:
+            return True
+        if user.has_perm('auth.view_user'):
+            return True
+        # Users can view their own user object
+        if obj == user:
+            return True
+        return False
+
+    @classmethod
+    def _get_policy_queryset(cls, user: User, queryset: models.QuerySet) -> models.QuerySet:
+        if user.has_perm('auth.*'):
+            return queryset
+        # Return only the user's own user object
+        return queryset.filter(id=user.id)
+
+# In core/object_permissions.py
+
+class OrganizationMemberObjectPolicy(ObjectPermissionPolicy):
+    """
+    Object-level permission policy for OrganizationMember model.
+    """
+    @classmethod
+    def can_view(cls, user: User, obj: Any) -> bool:
+        # Superusers can view all organization members
+        if user.is_superuser:
+            return True
+        # Users with specific permission can view
+        if user.has_perm('accounts.view_organizationmember'):
+            return True
+        # Users can view their own membership
+        if hasattr(user, 'organization_membership') and user.organization_membership == obj:
+            return True
+        # Users can view their direct reports
+        if obj.manager == getattr(user, 'organization_membership', None):
+            return True
+        return False
+
+    @classmethod
+    def can_change(cls, user: User, obj: Any) -> bool:
+        # Superusers can change all organization members
+        if user.is_superuser:
+            return True
+        # Users with specific permission can change
+        if user.has_perm('accounts.change_organizationmember'):
+            return True
+        # Managers can change their direct reports
+        if obj.manager == getattr(user, 'organization_membership', None):
+            return True
+        return False
+
+    @classmethod
+    def can_delete(cls, user: User, obj: Any) -> bool:
+        # Only superusers can delete organization members
+        if user.is_superuser:
+            return True
+        # Users with specific permission can delete
+        if user.has_perm('accounts.delete_organizationmember'):
+            return True
+        return False
+
+    @classmethod
+    def _get_policy_queryset(cls, user: User, queryset: models.QuerySet) -> models.QuerySet:
+        # Superusers see all organization members
+        if user.is_superuser:
+            return queryset
+        
+        # Users with specific permission see all
+        if user.has_perm('accounts.*'):
+            return queryset
+            
+        # Regular users only see themselves and their direct reports
+        if hasattr(user, 'organization_membership'):
+            return queryset.filter(
+                models.Q(id=user.organization_membership.id) |  # Themselves
+                models.Q(manager=user.organization_membership)   # Their direct reports
+            )
+        
+        # Users without organization membership can't see any
+        return queryset.none()
+
 
 # Registry for easy lookup
 OBJECT_POLICIES = {
+    'core.User': UserObjectPolicy,
     'accounts.Account': AccountObjectPolicy,
     'accounts.Contact': ContactObjectPolicy,
     'leads.Lead': LeadsObjectPolicy,

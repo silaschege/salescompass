@@ -32,7 +32,7 @@ urlpatterns = [
     path('lifecycle/workflows/approve-suspension/<int:workflow_id>/', lifecycle_views.ApproveSuspensionWorkflowView.as_view(), name='approve-suspension'),
     path('lifecycle/workflows/approve-termination/<int:workflow_id>/', lifecycle_views.ApproveTerminationWorkflowView.as_view(), name='approve-termination'),
     path('lifecycle/event-log/', lifecycle_views.TenantLifecycleEventLogView.as_view(), name='lifecycle-event-log'),
-    
+     
     # Existing lifecycle URLs
     path('suspend/<int:tenant_id>/', views.SuspendTenantView.as_view(), name='suspend'),
     path('archive/<int:tenant_id>/', views.ArchiveTenantView.as_view(), name='archive'),
@@ -55,4 +55,23 @@ urlpatterns = [
     # Billing Oversight URLs
     path('subscription-overview/', views.SubscriptionOverviewView.as_view(), name='subscription_overview'),
     path('revenue-analytics/', views.RevenueAnalyticsView.as_view(), name='revenue_analytics'),
+    # Setting URLs
+    path('settings/', views.SettingListView.as_view(), name='setting_list'),
+    path('settings/create/', views.SettingCreateView.as_view(), name='setting_create'),
+    path('settings/<int:pk>/edit/', views.SettingUpdateView.as_view(), name='setting_edit'),
+    path('settings/<int:pk>/delete/', views.SettingDeleteView.as_view(), name='setting_delete'),
+
+    # Setting Group URLs
+    path('setting-groups/', views.SettingGroupListView.as_view(), name='setting_group_list'),
+    path('setting-groups/create/', views.SettingGroupCreateView.as_view(), name='setting_group_create'),
+    path('setting-groups/<int:pk>/edit/', views.SettingGroupUpdateView.as_view(), name='setting_group_edit'),
+    path('setting-groups/<int:pk>/delete/', views.SettingGroupDeleteView.as_view(), name='setting_group_delete'),
+
+    # Setting Type URLs
+    path('setting-types/', views.SettingTypeListView.as_view(), name='setting_type_list'),
+    path('setting-types/create/', views.SettingTypeCreateView.as_view(), name='setting_type_create'),
+    path('setting-types/<int:pk>/edit/', views.SettingTypeUpdateView.as_view(), name='setting_type_edit'),
+    path('setting-types/<int:pk>/delete/', views.SettingTypeDeleteView.as_view(), name='setting_type_delete'),
+
 ]
+

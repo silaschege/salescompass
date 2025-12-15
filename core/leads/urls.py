@@ -42,4 +42,36 @@ urlpatterns = [
     
     # Public API
     path('api/v1/capture/', api.WebToLeadView.as_view(), name='api_lead_capture'),
+
+    # Assignment Rules
+    path('assignment-rules/', views.AssignmentRuleListView.as_view(), name='assignment_rule_list'),
+    path('assignment-rules/create/', views.AssignmentRuleCreateView.as_view(), name='assignment_rule_create'),
+    path('assignment-rules/<int:pk>/edit/', views.AssignmentRuleUpdateView.as_view(), name='assignment_rule_update'),
+    path('assignment-rules/<int:pk>/delete/', views.AssignmentRuleDeleteView.as_view(), name='assignment_rule_delete'),
+
+    # Action Types
+    path('action-types/', views.ActionTypeListView.as_view(), name='action_type_list'),
+    path('action-types/create/', views.ActionTypeCreateView.as_view(), name='action_type_create'),
+    path('action-types/<int:pk>/edit/', views.ActionTypeUpdateView.as_view(), name='action_type_update'),
+    path('action-types/<int:pk>/delete/', views.ActionTypeDeleteView.as_view(), name='action_type_delete'),
+
+    # Operator Types
+    path('operator-types/', views.OperatorTypeListView.as_view(), name='operator_type_list'),
+    path('operator-types/create/', views.OperatorTypeCreateView.as_view(), name='operator_type_create'),
+    path('operator-types/<int:pk>/edit/', views.OperatorTypeUpdateView.as_view(), name='operator_type_update'),
+    path('operator-types/<int:pk>/delete/', views.OperatorTypeDeleteView.as_view(), name='operator_type_delete'),
+
+    # Behavioral Scoring Rules
+    path('behavioral-scoring-rules/', views.BehavioralScoringRuleListView.as_view(), name='behavioral_scoring_rule_list'),
+    path('behavioral-scoring-rules/create/', views.BehavioralScoringRuleCreateView.as_view(), name='behavioral_scoring_rule_create'),
+    path('behavioral-scoring-rules/<int:pk>/edit/', views.BehavioralScoringRuleUpdateView.as_view(), name='behavioral_scoring_rule_update'),
+    path('behavioral-scoring-rules/<int:pk>/delete/', views.BehavioralScoringRuleDeleteView.as_view(), name='behavioral_scoring_rule_delete'),
+
+    # Demographic Scoring Rules
+    path('demographic-scoring-rules/', views.DemographicScoringRuleListView.as_view(), name='demographic_scoring_rule_list'),
+    path('demographic-scoring-rules/create/', views.DemographicScoringRuleCreateView.as_view(), name='demographic_scoring_rule_create'),
+    path('demographic-scoring-rules/<int:pk>/edit/', views.DemographicScoringRuleUpdateView.as_view(), name='demographic_scoring_rule_update'),
+    path('demographic-scoring-rules/<int:pk>/delete/', views.DemographicScoringRuleDeleteView.as_view(), name='demographic_scoring_rule_delete'),
+
+
 ]

@@ -1,16 +1,14 @@
 {% extends "accounts/base.html" %}
-{% load auth_extras  %}
+{% load auth_extras %}
 
 {% block title %}Accounts - SalesCompass{% endblock %}
 
 {% block content %}
- 
-
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="block-title fw-bold mb-0">Accounts List</h2>
 
-    {% if request.user.is_authenticated and request.user|has_perm:"accounts:write" %}
-        <a href="{% url 'accounts:create' %}" class="btn btn-primary">+ New Account</a>
+    {% if perms.accounts.add_account %}
+        <a href="{% url 'accounts:accounts_create' %}" class="btn btn-primary">+ New Account</a>
     {% endif %}
 </div>
 
@@ -55,8 +53,8 @@
                             {% endif %}
                         </td>
                         <td>
-                            <a href="{% url 'accounts:detail' account.pk %}" class="btn  btn-primary">View</a>
-                            {% if request.user.is_authenticated and request.user|has_perm:"accounts:write" %}
+                            <a href="{% url 'accounts:detail' account.pk %}" class="btn btn-primary">View</a>
+                            {% if perms.accounts.change_account %}
                                 <a href="{% url 'accounts:update' account.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
                             {% endif %}
                         </td>
@@ -87,7 +85,7 @@
 
 {% else %}
     <p class="text-muted">No accounts found.</p>
-     {% if request.user.is_authenticated and request.user|has_perm:"accounts:write" %}
+    {% if perms.accounts.add_account %}
         <a href="{% url 'accounts:create' %}" class="btn btn-primary">Create your first account</a>
     {% endif %}
 {% endif %}
