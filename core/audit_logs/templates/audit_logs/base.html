@@ -147,11 +147,15 @@
     <button class="toggle-sidebar" id="toggleSidebar"><i class="bi bi-list"></i></button>
 
     <div class="sidebar" id="sidebar">
-        <a class="navbar-brand" href="{% url 'app_selection' %}">
+        <a class="navbar-brand" href="{% url 'core:app_selection' %}">
             <i class="bi bi-compass me-2"></i> SalesCompass
         </a>
 
         <nav class="nav flex-column">
+            <!-- Dashboard -->
+            <a class="nav-link {% if request.resolver_match.url_name == 'list' %}active{% endif %}"
+                href="{% url 'audit_logs:list' %}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+
             <!-- Audit Logs -->
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#logsMenu">
                 <i class="bi bi-file-text"></i> Audit Logs
@@ -206,9 +210,9 @@
             <div class="section-title mt-4">NAVIGATION</div>
             <a class="nav-link" href="{% url 'dashboard:admin_dashboard' %}"><i class="bi bi-house-door"></i> Admin
                 Dashboard</a>
-            <a class="nav-link" href="{% url 'app_selection' %}"><i class="bi bi-grid"></i> Control Plane Apps</a>
+            <a class="nav-link" href="{% url 'core:app_selection' %}"><i class="bi bi-grid"></i> Control Plane Apps</a>
             <div class="mt-auto pt-4 border-top">
-                <a class="nav-link text-danger" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i> Log
+                <a class="nav-link text-danger" href="{% url 'core:logout' %}"><i class="bi bi-box-arrow-right"></i> Log
                     Out</a>
             </div>
         </nav>

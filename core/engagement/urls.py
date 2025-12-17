@@ -11,6 +11,8 @@ urlpatterns = [
     path('events/<int:pk>/edit/', views.EngagementEventUpdateView.as_view(), name='event_update'),
     
 # Next Best Actions - Complete CRUD + API
+    path('reports/disengaged/', views.DisengagedAccountsView.as_view(), name='disengaged_accounts'),
+    path('reports/leaderboard/', views.EngagementLeaderboardView.as_view(), name='leaderboard'),
     path('next-best-actions/', views.NextBestActionListView.as_view(), name='next_best_action'),
     path('next-best-actions/create/', views.NextBestActionCreateView.as_view(), name='next_best_action_create'),
     path('next-best-actions/<int:pk>/', views.NextBestActionDetailView.as_view(), name='next_best_action_detail'),
@@ -29,6 +31,17 @@ urlpatterns = [
     # path('next-best-action-templates/', views.NextBestActionTemplateListView.as_view(), name='nba_template_list'),
     # path('next-best-action-templates/create/', views.NextBestActionTemplateCreateView.as_view(), name='nba_template_create'),
     
+    # Playbooks
+    path('playbooks/', views.EngagementPlaybookListView.as_view(), name='playbook_list'),
+    path('playbooks/create/', views.EngagementPlaybookCreateView.as_view(), name='playbook_create'),
+    path('playbooks/<int:pk>/', views.EngagementPlaybookDetailView.as_view(), name='playbook_detail'),
+    path('playbooks/<int:pk>/edit/', views.EngagementPlaybookUpdateView.as_view(), name='playbook_update'),
+    
+    # Playbook Steps
+    path('playbooks/<int:playbook_id>/steps/add/', views.PlaybookStepCreateView.as_view(), name='playbook_step_create'),
+    path('playbooks/steps/<int:pk>/edit/', views.PlaybookStepUpdateView.as_view(), name='playbook_step_update'),
+    path('playbooks/steps/<int:pk>/delete/', views.PlaybookStepDeleteView.as_view(), name='playbook_step_delete'),
+
     # Dashboard
     path('dashboard/', views.EngagementDashboardView.as_view(), name='dashboard'),
     

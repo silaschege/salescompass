@@ -5,7 +5,7 @@ app_name = 'tenants'
 
 urlpatterns = [
     # Existing URLs
-    path('', views.TenantListView.as_view(), name='list'),
+    path('', views.TenantListView.as_view(), name='tenant_list'),
     path('create/', views.TenantCreateView.as_view(), name='create'),
     path('search/', views.TenantSearchView.as_view(), name='search'),
     path('plan-selection/', views.PlanSelectionView.as_view(), name='plan_selection'),

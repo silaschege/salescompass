@@ -56,7 +56,12 @@ class AuditLog(models.Model):
     is_successful = models.BooleanField(default=True, help_text="Whether the action was successful")
     error_message = models.TextField(blank=True, help_text="Error message if the action failed")
     metadata = models.JSONField(default=dict, blank=True, help_text="Additional metadata about the action")
-    
+    severity = models.CharField(max_length=20, choices=[
+        ('info', 'Info'),
+        ('warning', 'Warning'),
+        ('error', 'Error'),
+        ('critical', 'Critical'),
+    ], default='info', help_text="Severity level of the audit log")
     audit_log_created_at = models.DateTimeField(auto_now_add=True)
     audit_log_updated_at = models.DateTimeField(auto_now=True)
     

@@ -8,34 +8,23 @@ import json
 
 def calculate_weighted_forecast(tenant_id: str = None) -> dict:
     """
-    Compute total pipeline and weighted forecast.
+    Compute total pipeline and weighted forecast using ML model.
     """
+    from ml_models.revenue.forecasting.inference import predict_forecast_for_opportunities
+    
+    # Filter for open opportunities
     queryset = Opportunity.objects.filter(
-        stage__name__in=['prospecting', 'qualification', 'proposal', 'negotiation']
+        stage__is_won=False,
+        stage__is_lost=False
     )
     if tenant_id:
         queryset = queryset.filter(tenant_id=tenant_id)
-
-    # Annotate with probability
-    opportunities = queryset.annotate(
-        probability_value=Case(
-            When(stage__name='prospecting', then=0.1),
-            When(stage__name='qualification', then=0.3),
-            When(stage__name='proposal', then=0.6),
-            When(stage__name='negotiation', then=0.85),
-            default=0.0,
-            output_field=FloatField()
-        )
-    )
-
-    totals = opportunities.aggregate(
-        total_pipeline=Sum('amount'),
-        weighted_forecast=Sum(F('amount') * F('probability_value'),output_field=FloatField()),
-    )
-
+        
+    result = predict_forecast_for_opportunities(queryset)
+    
     return {
-        'total_pipeline': totals['total_pipeline'] or 0,
-        'weighted_forecast': totals['weighted_forecast'] or 0,
+        'total_pipeline': result['forecast_amount'],
+        'weighted_forecast': result['weighted_forecast_amount'],
     }
 
 
@@ -50,6 +39,75 @@ def create_forecast_snapshot(tenant_id: str = None) -> ForecastSnapshot:
         weighted_forecast=data['weighted_forecast'],
         tenant_id=tenant_id
     )
+
+
+def calculate_forecast_accuracy(tenant_id: str = None) -> dict:
+    """
+    Calculate forecast accuracy (MAPE) for the last 30 days.
+    """
+    # Compare forecast from 30 days ago vs Actuals closed since then
+    thirty_days_ago = timezone.now().date() - timedelta(days=30)
+    old_snapshot = ForecastSnapshot.objects.filter(
+        tenant_id=tenant_id,
+        date__lte=thirty_days_ago
+    ).order_by('-date').first()
+    
+    if not old_snapshot:
+        return {'accuracy_percentage': 0, 'message': 'Insufficient historical data'}
+        
+    forecast_then = float(old_snapshot.weighted_forecast)
+    
+    # Actuals: Closed Won opportunities in the last 30 days
+    actual_revenue = Opportunity.objects.filter(
+        tenant_id=tenant_id,
+        stage__is_won=True,
+        close_date__gte=thirty_days_ago
+    ).aggregate(total=Sum('amount'))['total'] or 0
+    actual_revenue = float(actual_revenue)
+    
+    # Accuracy logic
+    if actual_revenue > 0:
+        error = abs(actual_revenue - forecast_then)
+        error_pct = error / actual_revenue
+        accuracy = max(0, (1 - error_pct) * 100)
+    elif forecast_then > 0:
+        accuracy = 0.0 # Forecasted something, got nothing
+    else:
+        accuracy = 100.0 # Forecasted 0, got 0
+        
+    return {
+        'accuracy_percentage': round(accuracy, 1),
+        'forecast_was': forecast_then,
+        'actual_was': actual_revenue,
+        'window_days': 30
+    }
+
+
+def check_forecast_alerts(tenant_id: str = None) -> list:
+    """
+    Check for significant forecast drops (>10%).
+    """
+    alerts = []
+    
+    # Compare today vs yesterday
+    today = timezone.now().date()
+    yesterday_snap = ForecastSnapshot.objects.filter(
+        tenant_id=tenant_id, 
+        date__lt=today
+    ).order_by('-date').first()
+    
+    if yesterday_snap:
+        today_data = calculate_weighted_forecast(tenant_id)
+        curr_val = float(today_data['weighted_forecast'])
+        prev_val = float(yesterday_snap.weighted_forecast)
+        
+        if prev_val > 0:
+            change_pct = ((curr_val - prev_val) / prev_val) * 100
+            
+            if change_pct < -10:
+                alerts.append(f"ALARM: Forecast dropped by {abs(round(change_pct, 1))}% since last snapshot.")
+                
+    return alerts
 
 
 def analyze_win_loss(opportunity_id: int) -> WinLossAnalysis:

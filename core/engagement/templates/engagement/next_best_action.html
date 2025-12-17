@@ -62,14 +62,16 @@
             <form method="get" class="row g-3">
                 <div class="col-md-3">
                     <label class="form-label fw-bold">Search</label>
-                    <input type="text" class="form-control" name="search" value="{{ current_search }}" placeholder="Account, description, contact...">
+                    <input type="text" class="form-control" name="search" value="{{ current_search }}"
+                        placeholder="Account, description, contact...">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold">Account</label>
                     <select class="form-select" name="account">
                         <option value="">All Accounts</option>
                         {% for account in accounts %}
-                        <option value="{{ account.id }}" {% if current_account == account.id|stringformat:"s" %}selected{% endif %}>
+                        <option value="{{ account.id }}" {% if current_account==account.id|stringformat:"s" %}selected{%
+                            endif %}>
                             {{ account.name }}
                         </option>
                         {% endfor %}
@@ -80,7 +82,7 @@
                     <select class="form-select" name="priority">
                         <option value="">All Priorities</option>
                         {% for value, display in priority_choices %}
-                        <option value="{{ value }}" {% if current_priority == value %}selected{% endif %}>
+                        <option value="{{ value }}" {% if current_priority==value %}selected{% endif %}>
                             {{ display }}
                         </option>
                         {% endfor %}
@@ -91,7 +93,7 @@
                     <select class="form-select" name="action_type">
                         <option value="">All Types</option>
                         {% for value, display in action_types %}
-                        <option value="{{ value }}" {% if current_action_type == value %}selected{% endif %}>
+                        <option value="{{ value }}" {% if current_action_type==value %}selected{% endif %}>
                             {{ display }}
                         </option>
                         {% endfor %}
@@ -100,22 +102,26 @@
                 <div class="col-md-3">
                     <label class="form-label fw-bold d-block">&nbsp;</label>
                     <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" name="overdue" id="overdue" {% if current_overdue %}checked{% endif %}>
+                        <input class="form-check-input" type="checkbox" name="overdue" id="overdue" {% if
+                            current_overdue %}checked{% endif %}>
                         <label class="form-check-label" for="overdue">Overdue Only</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="show_completed" id="show_completed" {% if show_completed %}checked{% endif %}>
+                        <input class="form-check-input" type="checkbox" name="show_completed" id="show_completed" {% if
+                            show_completed %}checked{% endif %}>
                         <label class="form-check-label" for="show_completed">Show Completed</label>
                     </div>
                 </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100 me-2">
+                        <i class="bi bi-filter"></i> Filter
+                    </button>
+                    <a href="{% url 'engagement:next_best_action' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i>
+                    </a>
+                </div>
                 <div class="col-md-12">
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-funnel"></i> Apply Filters
-                        </button>
-                        <a href="{% url 'engagement:next_best_action' %}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-clockwise"></i> Reset
-                        </a>
                         <div class="ms-auto">
                             <span class="badge bg-info text-dark">
                                 {{ actions|length }} of {{ total_actions }} actions
@@ -126,158 +132,187 @@
             </form>
         </div>
     </div>
+</div>
 
-    <!-- Actions Table -->
-    <div class="card">
-        <div class="card-body">
-            {% if actions %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th style="width: 35%;">Action</th>
-                            <th style="width: 20%;">Account</th>
-                            <th style="width: 15%;">Due Date</th>
-                            <th style="width: 10%;">Priority</th>
-                            <th style="width: 10%;">Status</th>
-                            <th style="width: 15%;">Assigned To</th>
-                            <th style="width: 15%;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for action in actions %}
-                        <tr class="{% if action.completed %}table-success{% elif action.due_date < now %}table-danger{% endif %}">
-                            <td>
-                                <div class="d-flex align-items-start">
-                                    {% if "esg" in action.action_type|lower or "sustainability" in action.action_type|lower or "carbon" in action.description|lower %}
-                                    <i class="bi bi-leaf-fill text-success me-2 mt-1"></i>
-                                    {% endif %}
-                                    <div>
-                                        <strong>{{ action.get_action_type_display }}</strong>
-                                        <div class="text-muted small mt-1">{{ action.description|truncatewords:8 }}</div>
+<!-- Smart Insight Banner (Only when Account is selected) -->
+{% if best_time_to_engage %}
+<div class="alert alert-info border-info d-flex align-items-center shadow-sm mb-4" role="alert">
+    <i class="bi bi-lightbulb-fill fs-3 me-3 text-primary"></i>
+    <div>
+        <h6 class="alert-heading fw-bold mb-0">Smart Recommendation</h6>
+        <p class="mb-0">
+            The best time to engage with <strong>{{ selected_account.name }}</strong> is usually
+            <span class="badge bg-primary fs-6">{{ best_time_to_engage }}</span> based on past successful interactions.
+        </p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Actions Table -->
+<div class="card">
+    <div class="card-body">
+        {% if actions %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 35%;">Action</th>
+                        <th style="width: 20%;">Account</th>
+                        <th style="width: 15%;">Due Date</th>
+                        <th class="d-none d-lg-table-cell" style="width: 10%;">Priority</th>
+                        <th class="d-none d-md-table-cell" style="width: 10%;">Status</th>
+                        <th class="d-none d-xl-table-cell" style="width: 15%;">Assigned To</th>
+                        <th style="width: 15%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for action in actions %}
+                    <tr
+                        class="{% if action.completed %}table-success{% elif action.due_date < now %}table-danger{% endif %}">
+                        <td>
+                            <div class="d-flex align-items-start">
+                                {% if "esg" in action.action_type|lower or "sustainability" in
+                                action.action_type|lower or "carbon" in action.description|lower %}
+                                <i class="bi bi-leaf-fill text-success me-2 mt-1"></i>
+                                {% endif %}
+                                <div>
+                                    <strong>{{ action.get_action_type_display }}</strong>
+                                    <div class="text-muted small mt-1">{{ action.description|truncatewords:8 }}
                                     </div>
                                 </div>
-                            </td>
-                            <td>
-                                <a href="{% url 'accounts:detail' action.account.pk %}" class="text-decoration-none">
-                                    <strong class="text-primary">{{ action.account.name }}</strong>
+                            </div>
+                        </td>
+                        <td>
+                            <a href="{% url 'accounts:detail' action.account.pk %}" class="text-decoration-none">
+                                <strong class="text-primary">{{ action.account.name }}</strong>
+                            </a>
+                            {% if action.opportunity %}
+                            <div class="text-muted small mt-1">
+                                <i class="bi bi-graph-up me-1"></i>{{ action.opportunity.name|truncatechars:25 }}
+                            </div>
+                            {% endif %}
+                            {% if action.contact %}
+                            <div class="text-muted small">
+                                <i class="bi bi-person me-1"></i>{{ action.contact.first_name }} {{
+                                action.contact.last_name|truncatechars:10 }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div
+                                class="{% if action.due_date < now and not action.completed %}text-danger fw-bold{% endif %}">
+                                {{ action.due_date|date:"M d, Y H:i" }}
+                            </div>
+                            {% if action.due_date < now and not action.completed %} <span class="badge bg-danger mt-1">
+                                Overdue</span>
+                                {% endif %}
+                        </td>
+                        <td class="d-none d-lg-table-cell">
+                            <span
+                                class="badge bg-{% if action.priority == 'critical' %}danger{% elif action.priority == 'high' %}warning{% elif action.priority == 'medium' %}info{% else %}secondary{% endif %} text-white w-100">
+                                {{ action.get_priority_display }}
+                            </span>
+                        </td>
+                        <td class="d-none d-md-table-cell">
+                            <span
+                                class="badge bg-{% if action.status == 'resolved' %}success{% elif action.status == 'in_progress' %}warning{% else %}secondary{% endif %} text-white w-100">
+                                {{ action.get_status_display }}
+                            </span>
+                            {% if action.completed %}
+                            <div class="mt-1">
+                                <span class="badge bg-success text-white">Completed</span>
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td class="d-none d-xl-table-cell">
+                            {% if action.assigned_to %}
+                            <div class="text-primary">{{ action.assigned_to.email }}</div>
+                            {% else %}
+                            <span class="text-muted">Unassigned</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column gap-1">
+                                <a href="{% url 'engagement:next_best_action_detail' action.pk %}"
+                                    class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View
                                 </a>
-                                {% if action.opportunity %}
-                                <div class="text-muted small mt-1">
-                                    <i class="bi bi-graph-up me-1"></i>{{ action.opportunity.name|truncatechars:25 }}
-                                </div>
+                                {% if not action.completed and perms.engagement.change_nextbestaction %}
+                                <button type="button" class="btn btn-sm btn-success complete-btn"
+                                    data-action-id="{{ action.pk }}">
+                                    <i class="bi bi-check-lg"></i> Complete
+                                </button>
                                 {% endif %}
-                                {% if action.contact %}
-                                <div class="text-muted small">
-                                    <i class="bi bi-person me-1"></i>{{ action.contact.first_name }} {{ action.contact.last_name|truncatechars:10 }}
-                                </div>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="{% if action.due_date < now and not action.completed %}text-danger fw-bold{% endif %}">
-                                    {{ action.due_date|date:"M d, Y H:i" }}
-                                </div>
-                                {% if action.due_date < now and not action.completed %}
-                                <span class="badge bg-danger mt-1">Overdue</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <span class="badge bg-{% if action.priority == 'critical' %}danger{% elif action.priority == 'high' %}warning{% elif action.priority == 'medium' %}info{% else %}secondary{% endif %} text-white w-100">
-                                    {{ action.get_priority_display }}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="badge bg-{% if action.status == 'resolved' %}success{% elif action.status == 'in_progress' %}warning{% else %}secondary{% endif %} text-white w-100">
-                                    {{ action.get_status_display }}
-                                </span>
-                                {% if action.completed %}
-                                <div class="mt-1">
-                                    <span class="badge bg-success text-white">Completed</span>
-                                </div>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if action.assigned_to %}
-                                <div class="text-primary">{{ action.assigned_to.email }}</div>
-                                {% else %}
-                                <span class="text-muted">Unassigned</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="d-flex flex-column gap-1">
-                                    <a href="{% url 'engagement:next_best_action_detail' action.pk %}" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye"></i> View
-                                    </a>
-                                    {% if not action.completed and perms.engagement.change_nextbestaction %}
-                                    <button type="button" class="btn btn-sm btn-success complete-btn" data-action-id="{{ action.pk }}">
-                                        <i class="bi bi-check-lg"></i> Complete
-                                    </button>
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-            <!-- Pagination -->
-            {% if is_paginated %}
-            <nav aria-label="Next Best Actions pagination" class="mt-4">
-                <ul class="pagination justify-content-center">
-                    {% if page_obj.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous">
-                            <span aria-hidden="true">&laquo;</span>
-                        </a>
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav aria-label="Next Best Actions pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                        aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{
+                        num }}</a>
                     </li>
                     {% endif %}
-                    
-                    {% for num in page_obj.paginator.page_range %}
-                        {% if page_obj.number == num %}
-                        <li class="page-item active">
-                            <span class="page-link">{{ num }}</span>
-                        </li>
-                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
-                        </li>
-                        {% endif %}
                     {% endfor %}
-                    
+
                     {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next">
+                        <a class="page-link"
+                            href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                            aria-label="Next">
                             <span aria-hidden="true">&raquo;</span>
                         </a>
                     </li>
                     {% endif %}
-                </ul>
-            </nav>
-            {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
 
-            {% else %}
-            <div class="text-center py-5">
-                <div class="mb-3">
-                    <i class="bi bi-lightbulb fs-1 text-muted"></i>
-                </div>
-                <h4>No Next Best Actions</h4>
-                <p class="text-muted">
-                    {% if show_completed %}
-                    No completed actions found. 
-                    {% else %}
-                    No pending actions found. 
-                    {% endif %}
-                    {% if perms.engagement.add_nextbestaction %}
-                    <a href="{% url 'engagement:next_best_action_create' %}" class="btn btn-primary btn-sm mt-2">
-                        <i class="bi bi-plus-circle"></i> Create your first action
-                    </a>
-                    {% endif %}
-                </p>
+        {% else %}
+        <div class="text-center py-5">
+            <div class="mb-3">
+                <i class="bi bi-lightbulb fs-1 text-muted"></i>
             </div>
-            {% endif %}
+            <h4>No Next Best Actions</h4>
+            <p class="text-muted">
+                {% if show_completed %}
+                No completed actions found.
+                {% else %}
+                No pending actions found.
+                {% endif %}
+                {% if perms.engagement.add_nextbestaction %}
+                <a href="{% url 'engagement:next_best_action_create' %}" class="btn btn-primary btn-sm mt-2">
+                    <i class="bi bi-plus-circle"></i> Create your first action
+                </a>
+                {% endif %}
+            </p>
         </div>
+        {% endif %}
     </div>
+</div>
 </div>
 
 <!-- Complete Action Modal -->
@@ -292,8 +327,10 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="completionNote" class="form-label fw-bold">Completion Note (Optional)</label>
-                        <textarea class="form-control" id="completionNote" rows="4" placeholder="Describe how you completed this action..."></textarea>
-                        <div class="form-text">This note will be added to the action description and visible in the history.</div>
+                        <textarea class="form-control" id="completionNote" rows="4"
+                            placeholder="Describe how you completed this action..."></textarea>
+                        <div class="form-text">This note will be added to the action description and visible in the
+                            history.</div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -317,68 +354,68 @@
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    let currentActionId = null;
-    
-    // Complete button click handler
-    document.querySelectorAll('.complete-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            currentActionId = this.dataset.actionId;
-            const modal = new bootstrap.Modal(document.getElementById('completeModal'));
-            modal.show();
+    document.addEventListener('DOMContentLoaded', function () {
+        let currentActionId = null;
+
+        // Complete button click handler
+        document.querySelectorAll('.complete-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                currentActionId = this.dataset.actionId;
+                const modal = new bootstrap.Modal(document.getElementById('completeModal'));
+                modal.show();
+            });
         });
-    });
-    
-    // Form submission handler
-    document.getElementById('completeForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const completionNote = document.getElementById('completionNote').value;
-        
-        fetch('{% url "engagement:complete_next_best_action" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                action_id: currentActionId,
-                completion_note: completionNote
+
+        // Form submission handler
+        document.getElementById('completeForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const completionNote = document.getElementById('completionNote').value;
+
+            fetch('{% url "engagement:complete_next_best_action" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    action_id: currentActionId,
+                    completion_note: completionNote
+                })
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Close modal
-                const modal = bootstrap.Modal.getInstance(document.getElementById('completeModal'));
-                modal.hide();
-                
-                // Show success message
-                const toast = new bootstrap.Toast(document.getElementById('successToast'));
-                document.getElementById('toastMessage').textContent = data.message;
-                toast.show();
-                
-                // Reload the page after a short delay
-                setTimeout(function() {
-                    location.reload();
-                }, 1500);
-            } else {
-                alert('Error: ' + (data.error || 'Unknown error occurred'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while completing the action.');
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Close modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('completeModal'));
+                        modal.hide();
+
+                        // Show success message
+                        const toast = new bootstrap.Toast(document.getElementById('successToast'));
+                        document.getElementById('toastMessage').textContent = data.message;
+                        toast.show();
+
+                        // Reload the page after a short delay
+                        setTimeout(function () {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        alert('Error: ' + (data.error || 'Unknown error occurred'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while completing the action.');
+                });
+        });
+
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
         });
     });
-    
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl)
-    });
-});
 </script>
 
 <!-- Success Toast -->
@@ -398,41 +435,41 @@ document.addEventListener('DOMContentLoaded', function() {
 
 {% block extra_head %}
 <style>
-.card-header h5 {
-    margin-bottom: 0;
-    font-weight: 600;
-}
+    .card-header h5 {
+        margin-bottom: 0;
+        font-weight: 600;
+    }
 
-.badge {
-    font-size: 0.75em;
-    padding: 0.3em 0.6em;
-    font-weight: 500;
-}
+    .badge {
+        font-size: 0.75em;
+        padding: 0.3em 0.6em;
+        font-weight: 500;
+    }
 
-.btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-}
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
 
-.table th {
-    font-weight: 600;
-    color: #495057;
-}
+    .table th {
+        font-weight: 600;
+        color: #495057;
+    }
 
-.table-hover tbody tr:hover {
-    background-color: rgba(138, 43, 226, 0.05);
-}
+    .table-hover tbody tr:hover {
+        background-color: rgba(138, 43, 226, 0.05);
+    }
 
-.fs-6 {
-    font-size: 0.875rem !important;
-}
+    .fs-6 {
+        font-size: 0.875rem !important;
+    }
 
-.bg-opacity-10 {
-    --bs-bg-opacity: 0.1;
-}
+    .bg-opacity-10 {
+        --bs-bg-opacity: 0.1;
+    }
 
-.toast {
-    min-width: 250px;
-}
+    .toast {
+        min-width: 250px;
+    }
 </style>
 {% endblock %}

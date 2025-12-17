@@ -3,10 +3,11 @@
 {% block extra_css %}{% endblock %}
 
 {% block module_nav %}
-<a class="nav-link ms-3" href="{% url 'opportunities:pipeline' %}">Pipeline</a>
-<a class="nav-link ms-3" href="{% url 'opportunities:opportunities_list' %}">List</a>
-<a class="nav-link ms-3" href="{% url 'opportunities:create' %}">Create</a>
-<a class="nav-link ms-3" href="{% url 'opportunities:forecast_dashboard' %}">Forecast</a>
-<a class="nav-link ms-3" href="{% url 'opportunities:win_loss_analysis' %}">Win/Loss</a>
-<a class="nav-link ms-3" href="">Update Stage</a>
+<a class="nav-link ms-3" href="{% url 'opportunities:sales_velocity_dashboard' %}">Sales Velocity</a>
+<a class="nav-link ms-3" href="{% url 'opportunities:opportunity_list' %}">List</a>
+<a class="nav-link ms-3" href="{% url 'opportunities:pipeline_kanban' %}">Pipeline</a>
+<a class="nav-link ms-3" href="{% url 'opportunities:revenue_forecast' %}">Forecast</a>
+<a class="nav-link ms-3" href="{% url 'opportunities:assignment_rule_list' %}">Assignment Rules</a>
+<a class="nav-link ms-3" href="{% url 'opportunities:stage_list' %}">Stages</a>
+<a class="nav-link ms-3" href="{% url 'opportunities:type_list' %}">Pipeline Types</a>
 {% endblock %}

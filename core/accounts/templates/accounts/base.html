@@ -10,14 +10,10 @@
     <a class="nav-link ms-3" href="{% url 'accounts:accounts_create' %}">Create</a>
     <a class="nav-link ms-3" href="{% url 'accounts:accounts_kanban' %}">Dashboard</a>
     <a class="nav-link ms-3" href="{% url 'accounts:bulk_import_upload' %}">Upload Account</a>
-</div>
-
-<!-- Contacts Dropdown -->
-<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#contactsMenu">
-    <i class="bi bi-person-lines-fill"></i> Contact
-</a>
-<div class="collapse" id="contactsMenu">
-    <a class="nav-link ms-3" href="{% url 'accounts:contact_list' %}">List</a>
-    <a class="nav-link ms-3" href="{% url 'accounts:contact_create' %}">Create</a>
-</div>
-{% endblock %}
+    <a class="nav-link ms-3" href="{% url 'accounts:account_kanban' %}">Kanban Board</a>
+    <a class="nav-link ms-3" href="{% url 'accounts:account_list' %}">Accounts List</a>
+    <a class="nav-link ms-3" href="{% url 'accounts:account_create' %}">Create Account</a>
+    <a class="nav-link ms-3" href="{% url 'accounts:contact_list' %}">Contacts</a>
+    <a class="nav-link ms-3" href="{% url 'accounts:member_list' %}">Team Members</a>
+    <a class="nav-link ms-3" href="{% url 'accounts:territory_list' %}">Territories</a>
+    {% endblock %}

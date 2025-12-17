@@ -197,7 +197,7 @@
 
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
-        <a class="navbar-brand" href="{% url 'app_selection' %}">
+        <a class="navbar-brand" href="{% url 'core:app_selection' %}">
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#6f42c1" class="me-2"
                 viewBox="0 0 16 16">
                 <circle cx="8" cy="8" r="7" stroke="#6f42c1" stroke-width="2" fill="white" />
@@ -266,6 +266,13 @@
             </div>
             {% endif %}
 
+            <!-- Sales Analytics -->
+            {% if perms.reports.read %}
+            <a class="nav-link" href="{% url 'reports:sales_analytics' %}">
+                <i class="bi bi-graph-up-arrow"></i> Sales Analytics
+            </a>
+            {% endif %}
+
             <!-- Workflow Management -->
             {% if perms.automation.read %}
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#workflowMenu">
@@ -285,7 +292,7 @@
             {% endif %}
 
             <!-- Back to Main App -->
-            <a class="nav-link" href="{% url 'app_selection' %}">
+            <a class="nav-link" href="{% url 'core:app_selection' %}">
                 <i class="bi bi-house-door"></i> Main App
             </a>
 

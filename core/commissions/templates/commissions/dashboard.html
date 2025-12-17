@@ -102,11 +102,41 @@
         </div>
     </div>
 
+    <!-- Forecast Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow h-100 py-2 border-left-primary">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="font-weight-bold text-primary mb-1">Commission Forecast (Open Pipeline)</h5>
+                            <div class="text-muted small">Based on {{ forecast.opportunity_count }} open opportunities
+                                closing this period</div>
+                        </div>
+                        <div class="col-auto text-right">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Projected</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{
+                                forecast.forecast_amount|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto text-right ml-4">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Weighted</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{
+                                forecast.weighted_forecast_amount|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Recent Commissions Table -->
     <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
             <h6 class="m-0 font-weight-bold text-primary">Recent Commissions</h6>
-            <a href="{% url 'commissions:list' %}" class="btn btn-sm btn-primary">View All</a>
+            <div>
+                <a href="{% url 'commissions:payments' %}" class="btn btn-sm btn-info mr-2">View Payments</a>
+                <a href="{% url 'commissions:history' %}" class="btn btn-sm btn-primary">View All History</a>
+            </div>
         </div>
         <div class="card-body">
             <div class="table-responsive">

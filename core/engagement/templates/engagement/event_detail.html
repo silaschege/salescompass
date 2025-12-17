@@ -24,10 +24,11 @@
                     <div class="card shadow-sm mb-4">
                         <div class="card-header bg-light d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">Event Details</h5>
-                            <span class="badge bg-{% if event.priority == 'critical' %}danger{% elif event.priority == 'high' %}warning{% elif event.priority == 'medium' %}info{% else %}secondary{% endif %}">
+                            <span
+                                class="badge bg-{% if event.priority == 'critical' %}danger{% elif event.priority == 'high' %}warning{% elif event.priority == 'medium' %}info{% else %}secondary{% endif %}">
                                 {{ event.get_priority_display }}
                                 {% if event.is_important %}
-                                    <i class="bi bi-star-fill ms-1" style="color: gold;"></i>
+                                <i class="bi bi-star-fill ms-1" style="color: gold;"></i>
                                 {% endif %}
                             </span>
                         </div>
@@ -39,85 +40,101 @@
                                         <label class="fw-bold text-muted small mb-1">Event Type</label>
                                         <div>{{ event.get_event_type_display }}</div>
                                     </div>
-                                    
+
                                     <div class="mb-3">
                                         <label class="fw-bold text-muted small mb-1">Account</label>
                                         <div>
                                             {% if event.account %}
-                                                <a href="{% url 'accounts:detail' event.account.pk %}">{{ event.account.name }}</a>
+                                            <a href="{% url 'accounts:detail' event.account.pk %}">{{ event.account.name
+                                                }}</a>
                                             {% else %}
-                                                <span class="text-muted">Unknown</span>
+                                            <span class="text-muted">Unknown</span>
                                             {% endif %}
                                         </div>
                                     </div>
-                                    
+
                                     <div class="mb-3">
                                         <label class="fw-bold text-muted small mb-1">Created By</label>
                                         <div>
                                             {% if event.created_by %}
-                                                {{ event.created_by.email }}
+                                            {{ event.created_by.email }}
                                             {% else %}
-                                                <span class="text-muted">System</span>
+                                            <span class="text-muted">System</span>
                                             {% endif %}
                                         </div>
                                     </div>
-                                    
+
                                     <div class="mb-3">
                                         <label class="fw-bold text-muted small mb-1">Engagement Score</label>
                                         <div>
-                                            <span class="badge bg-{% if event.engagement_score >= 70 %}success{% elif event.engagement_score >= 40 %}warning{% else %}secondary{% endif %}">
+                                            <span
+                                                class="badge bg-{% if event.engagement_score >= 70 %}success{% elif event.engagement_score >= 40 %}warning{% else %}secondary{% endif %}">
                                                 {{ event.engagement_score|floatformat:1 }}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Right Column -->
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="fw-bold text-muted small mb-1">Created</label>
                                         <div>{{ event.created_at|date:"M d, Y H:i" }}</div>
                                     </div>
-                                    
+
                                     {% if event.contact_email %}
                                     <div class="mb-3">
                                         <label class="fw-bold text-muted small mb-1">Contact Email</label>
                                         <div>{{ event.contact_email }}</div>
                                     </div>
                                     {% endif %}
-                                    
+
                                     {% if event.ip_address %}
                                     <div class="mb-3">
                                         <label class="fw-bold text-muted small mb-1">IP Address</label>
                                         <div><code>{{ event.ip_address }}</code></div>
                                     </div>
                                     {% endif %}
-                                    
+
                                     {% if event.opportunity %}
                                     <div class="mb-3">
                                         <label class="fw-bold text-muted small mb-1">Opportunity</label>
                                         <div>
-                                            <a href="{% url 'opportunities:detail' event.opportunity.pk %}">{{ event.opportunity.name }}</a>
+                                            <a href="{% url 'opportunities:detail' event.opportunity.pk %}">{{
+                                                event.opportunity.name }}</a>
                                         </div>
                                     </div>
                                     {% endif %}
                                 </div>
                             </div>
-                            
+
                             <!-- Description Section -->
                             <div class="mt-4">
                                 <label class="fw-bold text-muted small mb-2">Description</label>
                                 <div class="border rounded p-3 bg-light">
-                                    {{ event.description|linebreaks|default:"<span class='text-muted'>No description provided</span>" }}
+                                    {{ event.description|linebreaks|default:"<span class='text-muted'>No description
+                                        provided</span>" }}
                                 </div>
                             </div>
+
+                            <!-- Internal Notes Section -->
+                            {% if event.internal_notes %}
+                            <div class="mt-4">
+                                <label class="fw-bold text-muted small mb-2">Internal Notes <i
+                                        class="bi bi-lock-fill"></i></label>
+                                <div class="border rounded p-3" style="background-color: #fff3cd;">
+                                    {{ event.internal_notes|linebreaks }}
+                                </div>
+                            </div>
+                            {% endif %}
 
                             <!-- Metadata Section -->
                             {% if event.metadata %}
                             <div class="mt-4">
                                 <label class="fw-bold text-muted small mb-2">Event Metadata</label>
                                 <div class="border rounded p-3 bg-dark text-light">
-                                    <pre class="mb-0" style="white-space: pre-wrap; word-break: break-word;">{{ event.metadata|pprint }}</pre>
+                                    <pre class="mb-0"
+                                        style="white-space: pre-wrap; word-break: break-word;">{{ event.metadata|pprint }}</pre>
                                 </div>
                             </div>
                             {% endif %}
@@ -137,21 +154,23 @@
                                     <div class="mb-3">
                                         <label class="fw-bold text-muted small mb-1">Case</label>
                                         <div>
-                                            <a href="{% url 'cases:detail' event.case.pk %}">{{ event.case.subject }}</a>
+                                            <a href="{% url 'cases:detail' event.case.pk %}">{{ event.case.subject
+                                                }}</a>
                                         </div>
                                     </div>
                                     {% endif %}
-                                    
+
                                     {% if event.nps_response %}
                                     <div class="mb-3">
                                         <label class="fw-bold text-muted small mb-1">NPS Response</label>
                                         <div>
-                                            <a href="{% url 'nps:response_detail' event.nps_response.pk %}">View Response</a>
+                                            <a href="{% url 'nps:response_detail' event.nps_response.pk %}">View
+                                                Response</a>
                                         </div>
                                     </div>
                                     {% endif %}
                                 </div>
-                                
+
                                 <!-- Right Column -->
                                 <div class="col-md-6">
                                     {% if event.contact %}
@@ -163,7 +182,7 @@
                                         </div>
                                     </div>
                                     {% endif %}
-                                    
+
                                     {% if event.engagementevent %}
                                     <div class="mb-3">
                                         <label class="fw-bold text-muted small mb-1">Source Event</label>
@@ -193,26 +212,29 @@
                                     <i class="bi bi-arrow-left"></i> Back to Feed
                                 </a>
                                 {% if perms.engagement.change %}
-                                    <a href="{% url 'engagement:event_update' event.pk %}" class="btn btn-outline-secondary">
-                                        <i class="bi bi-pencil"></i> Edit Event
-                                    </a>
+                                <a href="{% url 'engagement:event_update' event.pk %}"
+                                    class="btn btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i> Edit Event
+                                </a>
                                 {% endif %}
                             </div>
-                            
+
                             <!-- Quick Actions Section -->
                             <hr>
                             <h6 class="mb-3">Quick Actions</h6>
                             <div class="d-grid gap-2">
-                                <button class="btn btn-primary btn-sm" onclick="createTask('follow_up')" {% if not event.account %}disabled{% endif %}>
+                                <button class="btn btn-primary btn-sm" onclick="createTask('follow_up')" {% if not
+                                    event.account %}disabled{% endif %}>
                                     <i class="bi bi-check-circle"></i> Create Follow-up Task
                                 </button>
-                                <button class="btn btn-success btn-sm" onclick="createNBA('check_in')" {% if not event.account %}disabled{% endif %}>
+                                <button class="btn btn-success btn-sm" onclick="createNBA('check_in')" {% if not
+                                    event.account %}disabled{% endif %}>
                                     <i class="bi bi-lightbulb"></i> Create Next Best Action
                                 </button>
                                 {% if event.account %}
-                                    <a href="{% url 'accounts:detail' event.account.pk %}" class="btn btn-info btn-sm">
-                                        <i class="bi bi-briefcase"></i> View Account
-                                    </a>
+                                <a href="{% url 'accounts:detail' event.account.pk %}" class="btn btn-info btn-sm">
+                                    <i class="bi bi-briefcase"></i> View Account
+                                </a>
                                 {% endif %}
                             </div>
                         </div>
@@ -226,19 +248,21 @@
                         </div>
                         <div class="card-body">
                             {% for nba in event.nextbestaction_set.all %}
-                                <div class="border rounded p-3 mb-3">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <strong>{{ nba.get_action_type_display }}</strong>
-                                        <span class="badge bg-{% if nba.priority == 'critical' %}danger{% elif nba.priority == 'high' %}warning{% elif nba.priority == 'medium' %}info{% else %}secondary{% endif %}">
-                                            {{ nba.get_priority_display }}
-                                        </span>
-                                    </div>
-                                    <p class="small text-muted mb-3">{{ nba.description|truncatewords:15 }}</p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted">Due: {{ nba.due_date|date:"M d, Y" }}</small>
-                                        <a href="{% url 'engagement:next_best_action_detail' nba.pk %}" class="btn btn-sm btn-outline-primary">View</a>
-                                    </div>
+                            <div class="border rounded p-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <strong>{{ nba.get_action_type_display }}</strong>
+                                    <span
+                                        class="badge bg-{% if nba.priority == 'critical' %}danger{% elif nba.priority == 'high' %}warning{% elif nba.priority == 'medium' %}info{% else %}secondary{% endif %}">
+                                        {{ nba.get_priority_display }}
+                                    </span>
                                 </div>
+                                <p class="small text-muted mb-3">{{ nba.description|truncatewords:15 }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">Due: {{ nba.due_date|date:"M d, Y" }}</small>
+                                    <a href="{% url 'engagement:next_best_action_detail' nba.pk %}"
+                                        class="btn btn-sm btn-outline-primary">View</a>
+                                </div>
+                            </div>
                             {% endfor %}
                         </div>
                     </div>
@@ -259,95 +283,95 @@
 
 {% block extra_js %}
 <script>
-function createTask(actionType) {
-    // Check if account exists
-    const accountId = "{{ event.account.id }}";
-    
-    if (!accountId || accountId === "None") {
-        alert('Cannot create task: No account associated with this event.');
-        return;
-    }
-    
-    // Use Django's URL template tag for proper URL generation
-    const url = "{% url 'tasks:create' %}?account_id=" + accountId + "&related_event_id={{ event.id }}&task_type=account_followup";
-    window.location.href = url;
-}
+    function createTask(actionType) {
+        // Check if account exists
+        const accountId = "{{ event.account.id }}";
 
-function createNBA(actionType) {
-    // Check if account exists
-    const accountId = "{{ event.account.id }}";
-    
-    if (!accountId || accountId === "None") {
-        alert('Cannot create next best action: No account associated with this event.');
-        return;
-    }
-    
-    // Use Django's URL template tag for proper URL generation
-    const url = "{% url 'engagement:next_best_action_create' %}?account_id=" + accountId + "&engagement_event_id={{ event.id }}&action_type=" + actionType;
-    window.location.href = url;
-}
+        if (!accountId || accountId === "None") {
+            alert('Cannot create task: No account associated with this event.');
+            return;
+        }
 
-// Debug: Log to console to check if functions are accessible
-console.log("Event detail page loaded");
-console.log("Account ID:", "{{ event.account.id }}");
+        // Use Django's URL template tag for proper URL generation
+        const url = "{% url 'tasks:create' %}?account_id=" + accountId + "&related_event_id={{ event.id }}&task_type=account_followup";
+        window.location.href = url;
+    }
+
+    function createNBA(actionType) {
+        // Check if account exists
+        const accountId = "{{ event.account.id }}";
+
+        if (!accountId || accountId === "None") {
+            alert('Cannot create next best action: No account associated with this event.');
+            return;
+        }
+
+        // Use Django's URL template tag for proper URL generation
+        const url = "{% url 'engagement:next_best_action_create' %}?account_id=" + accountId + "&engagement_event_id={{ event.id }}&action_type=" + actionType;
+        window.location.href = url;
+    }
+
+    // Debug: Log to console to check if functions are accessible
+    console.log("Event detail page loaded");
+    console.log("Account ID:", "{{ event.account.id }}");
 </script>
 {% endblock %}
 
 {% block extra_head %}
 <style>
-.card {
-    border-radius: 0.5rem;
-    border: 1px solid rgba(0, 0, 0, 0.125);
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-}
+    .card {
+        border-radius: 0.5rem;
+        border: 1px solid rgba(0, 0, 0, 0.125);
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
 
-.card-header {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
-    padding: 1rem 1.25rem;
-}
+    .card-header {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+        padding: 1rem 1.25rem;
+    }
 
-.card-body {
-    padding: 1.25rem;
-}
+    .card-body {
+        padding: 1.25rem;
+    }
 
-.badge {
-    font-size: 0.75em;
-    padding: 0.3em 0.6em;
-    font-weight: 500;
-}
+    .badge {
+        font-size: 0.75em;
+        padding: 0.3em 0.6em;
+        font-weight: 500;
+    }
 
-.btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-}
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
 
-pre {
-    font-size: 0.85em;
-    margin: 0;
-}
+    pre {
+        font-size: 0.85em;
+        margin: 0;
+    }
 
-.bi-star-fill {
-    font-size: 0.9em;
-}
+    .bi-star-fill {
+        font-size: 0.9em;
+    }
 
-.text-muted.small {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
+    .text-muted.small {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
 
-.border.rounded {
-    border-radius: 0.375rem !important;
-}
+    .border.rounded {
+        border-radius: 0.375rem !important;
+    }
 
-.bg-light {
-    background-color: #f8f9fa !important;
-}
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
 
-/* Disabled button styling */
-.btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
+    /* Disabled button styling */
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
 </style>
 {% endblock %}

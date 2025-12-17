@@ -6,23 +6,29 @@
 {% block content %}
 <div class="container-fluid py-4">
     <!-- Wizard Progress -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="wizard-progress d-flex justify-content-center align-items-center">
-                <div class="step active">
-                    <div class="step-circle">1</div>
-                    <div class="step-label">Choose Template</div>
-                </div>
-                <div class="step-line"></div>
-                <div class="step">
-                    <div class="step-circle">2</div>
-                    <div class="step-label">Configure</div>
-                </div>
-                <div class="step-line"></div>
-                <div class="step">
-                    <div class="step-circle">3</div>
-                    <div class="step-label">Arrange</div>
-                </div>
+    <div class="text-center mb-5">
+        <h1 class="h2 mb-2">Phase 1: Foundation & Data Architecture</h1>
+        <p class="text-muted">Define your objectives and organize your source boards (modules) to build a solid data
+            foundation.</p>
+
+        <!-- Progress Steps -->
+        <div class="d-flex justify-content-center mt-4">
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                    style="width: 32px; height: 32px;">1</div>
+                <div class="ms-2 fw-bold text-primary">Foundation</div>
+            </div>
+            <div class="mx-3 text-muted">----------</div>
+            <div class="d-flex align-items-center text-muted">
+                <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center"
+                    style="width: 32px; height: 32px;">2</div>
+                <div class="ms-2">Construction</div>
+            </div>
+            <div class="mx-3 text-muted">----------</div>
+            <div class="d-flex align-items-center text-muted">
+                <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center"
+                    style="width: 32px; height: 32px;">3</div>
+                <div class="ms-2">Render</div>
             </div>
         </div>
     </div>
@@ -99,39 +105,58 @@
                         <!-- Module Selection -->
                         <div class="mb-4">
                             <h5 class="fw-bold mb-3">
-                                <i class="bi bi-puzzle me-2"></i>Select Modules
+                                <i class="bi bi-puzzle me-2"></i>Select Source Boards
                             </h5>
-                            <p class="text-muted">Choose which modules to include in your dashboard</p>
+                            <p class="text-muted">Choose the data sources you want to pull into your dashboard.</p>
 
                             <div class="row g-3" id="moduleSelection">
-                                {% for widget in available_modules %}
-                                <div class="col-md-6 col-lg-3">
-                                    <div class="form-check module-checkbox">
-                                        <input class="form-check-input" type="checkbox" name="modules"
-                                            value="{{ widget.widget_type }}" id="module_{{ widget.widget_type }}">
-                                        <label class="form-check-label w-100" for="module_{{ widget.widget_type }}">
-                                            <div class="card h-100 module-card">
-                                                <div class="card-body text-center p-3">
-                                                    <i class="bi {{ widget.icon }} fs-3 text-primary mb-2"></i>
-                                                    <h6 class="mb-1">{{ widget.name }}</h6>
-                                                    <small class="text-muted">{{ widget.get_category_display }}</small>
-                                                </div>
+                                {% for module in available_modules %}
+                                <div class="col-md-4">
+                                    <div class="card h-100 module-card"
+                                        onclick="toggleModule('{{ module.widget_type }}')">
+                                        <div class="card-body text-center p-3">
+                                            <div class="form-check position-absolute top-0 end-0 mt-2 me-2">
+                                                <input class="form-check-input module-checkbox" type="checkbox"
+                                                    name="modules" value="{{ module.widget_type }}"
+                                                    id="mod_{{ module.id }}" {% if module.widget_type in wizard_data.selected_modules %}checked{% endif %}>
                                             </div>
-                                        </label>
+                                            <i class="{{ module.icon|default:'bi-grid' }} fs-2 text-primary mb-2"></i>
+                                            <h6 class="card-title mb-1">{{ module.widget_name }}</h6>
+                                            <p class="card-text small text-muted">{{
+                                                module.widget_description|truncatechars:50 }}</p>
+                                        </div>
                                     </div>
                                 </div>
                                 {% endfor %}
                             </div>
                         </div>
 
+                        <hr class="my-4">
+
+                        <!-- Integrations Placeholder -->
+                        <div class="mb-4">
+                            <h5 class="fw-bold mb-3">
+                                <i class="bi bi-plug me-2"></i>Integrations (Optional)
+                            </h5>
+                            <p class="text-muted">Connect your dashboard to external services or data sources.</p>
+                            <div class="alert alert-info" role="alert">
+                                Integrations functionality will be available in a future update.
+                            </div>
+                        </div>
+
                         <!-- Navigation Buttons -->
-                        <div class="d-flex justify-content-between mt-4">
-                            <a href="{% url 'dashboard:cockpit' %}" class="btn btn-secondary">
-                                <i class="bi bi-x-circle me-1"></i>Cancel
-                            </a>
-                            <button type="submit" class="btn btn-primary btn-lg" id="nextBtn">
-                                Next Step <i class="bi bi-arrow-right ms-1"></i>
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary" disabled>
+                                <i class="bi bi-arrow-left"></i> Back
                             </button>
+                            <div class="d-flex align-items-center gap-3">
+                                <a href="#" class="text-decoration-none small text-muted">
+                                    <i class="bi bi-diagram-3"></i> Manage Integrations
+                                </a>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    Next: Dashboard Construction <i class="bi bi-arrow-right"></i>
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>

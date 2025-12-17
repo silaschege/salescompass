@@ -22,20 +22,20 @@ from django.urls import reverse_lazy
 
 class CaseListView(ObjectPermissionRequiredMixin, ListView):
     model = Case
-    template_name = 'cases/list.html'
+    template_name = 'cases/case_list.html'
     context_object_name = 'cases'
     paginate_by = 20
 
 class CaseDetailView(ObjectPermissionRequiredMixin, DetailView):
     model = Case
-    template_name = 'cases/detail.html'
+    template_name = 'cases/case_detail.html'
 
 
 class CaseCreateView(ObjectPermissionRequiredMixin, CreateView):
     model = Case
     form_class = CaseForm
-    template_name = 'cases/form.html'
-    success_url = '/cases/'
+    template_name = 'cases/case_form.html'
+    success_url = reverse_lazy('cases:case_list')
 
     def form_valid(self, form):
         
@@ -53,14 +53,14 @@ class CaseCreateView(ObjectPermissionRequiredMixin, CreateView):
 class CaseUpdateView(ObjectPermissionRequiredMixin, UpdateView):
     model = Case
     form_class = CaseForm
-    template_name = 'cases/form.html'
-    success_url = '/cases/'
+    template_name = 'cases/case_form.html'
+    success_url = reverse_lazy('cases:case_list')
 
 
 class CaseDeleteView(ObjectPermissionRequiredMixin, DeleteView):
     model = Case
-    template_name = 'cases/confirm_delete.html'
-    success_url = '/cases/'
+    template_name = 'cases/case_confirm_delete.html'
+    success_url = reverse_lazy('cases:case_list')
 
     def delete(self, request, *args, **kwargs):
         case = self.get_object()
@@ -99,7 +99,7 @@ class KnowledgeBaseView(ListView):
 
 # === Kanban View ===
 class CaseKanbanView(ObjectPermissionRequiredMixin, TemplateView):
-    template_name = 'cases/kanban.html'
+    template_name = 'cases/case_kanban.html'
     permission_action = 'view'
 
     def get_context_data(self, **kwargs):

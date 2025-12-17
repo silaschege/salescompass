@@ -1,31 +1,11 @@
 {% extends 'core/base_module.html' %}
 
+{% block extra_css %}{% endblock %}
+
 {% block module_nav %}
-<!-- Sales Dropdown -->
-<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#salesMenu">
-    <i class="bi bi-graph-up"></i> Sales
-</a>
-<div class="collapse show" id="salesMenu">
-    <a class="nav-link ms-3" href="{% url 'sales:sales_dashboard' %}">Dashboard</a>
-    <a class="nav-link ms-3" href="{% url 'sales:sale_list' %}">Sales List</a>
-    <a class="nav-link ms-3" href="{% url 'sales:sale_create' %}">Create Sale</a>
-</div>
-
-<!-- Products Dropdown -->
-<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#productsMenu">
-    <i class="bi bi-box-seam"></i> Products
-</a>
-<div class="collapse" id="productsMenu">
-    <a class="nav-link ms-3" href="{% url 'sales:product_dashboard' %}">Dashboard</a>
-    <a class="nav-link ms-3" href="{% url 'sales:product_list' %}">Products List</a>
-    <a class="nav-link ms-3" href="{% url 'sales:product_create' %}">Create Product</a>
-</div>
-
-<!-- Commissions Dropdown -->
-<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#commissionsMenu">
-    <i class="bi bi-currency-dollar"></i> Commissions
-</a>
-<div class="collapse" id="commissionsMenu">
-    <a class="nav-link ms-3" href="{% url 'sales:commission_dashboard' %}">Commission Dashboard</a>
-</div>
+<a class="nav-link ms-3" href="{% url 'sales:sales_dashboard' %}">Sales Dashboard</a>
+<a class="nav-link ms-3" href="{% url 'sales:sale_list' %}">Sales List</a>
+<a class="nav-link ms-3" href="{% url 'sales:sale_create' %}">Record Sale</a>
+<a class="nav-link ms-3" href="{% url 'sales:commission_dashboard' %}">Commissions</a>
+<a class="nav-link ms-3" href="{% url 'sales:territory_performance_dashboard' %}">Territory Performance</a>
 {% endblock %}

@@ -18,15 +18,15 @@ from django.contrib.messages.views import SuccessMessageMixin # Import SuccessMe
 
 
 class TenantListView(LoginRequiredMixin, ListView):
-    template_name = 'tenants/list.html'
+    template_name = 'tenants/tenant_list.html'
     model = Tenant
     context_object_name = 'tenants'
     paginate_by = 20
 
 class TenantCreateView(LoginRequiredMixin, CreateView):
-    template_name = 'tenants/create.html'
+    template_name = 'tenants/signup.html'
     form_class = TenantSignupForm
-    success_url = reverse_lazy('tenants:list')
+    success_url = reverse_lazy('tenants:tenant_list')
 
     def form_valid(self, form):
         # reuse signup logic without creating admin user
@@ -56,17 +56,18 @@ class TenantSearchView(LoginRequiredMixin, ListView):
 
 class TenantUpdateView(UpdateView):
     model = Tenant
-    template_name = 'tenant/update.html'
+    template_name = 'tenants/tenant_form.html'
     fields = ['name', 'subdomain', 'is_active']
+    success_url = reverse_lazy('tenants:tenant_list')
 
 class TenantDeleteView(DeleteView):
     model = Tenant
-    template_name = 'tenant/delete.html'
-    success_url = reverse_lazy('tenant-list')
+    template_name = 'tenants/tenant_confirm_delete.html'
+    success_url = reverse_lazy('tenants:tenant_list')
 
 class TenantDetailView(DetailView):
     model = Tenant
-    template_name = 'tenant/detail.html'
+    template_name = 'tenants/tenant_detail.html'
 
 class TenantActivateView(View):
     def post(self, request, pk):

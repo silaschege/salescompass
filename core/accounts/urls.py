@@ -4,11 +4,11 @@ from . import views
 app_name = 'accounts'
 urlpatterns = [
     # CRUD
-    path('accounts/', views.AccountListView.as_view(), name='accounts_list'),
-    path('create/', views.AccountCreateView.as_view(), name='accounts_create'),
-    path('<int:pk>/', views.AccountDetailView.as_view(), name='detail'),
-    path('<int:pk>/edit/', views.AccountUpdateView.as_view(), name='update'),
-    path('<int:pk>/delete/', views.AccountDeleteView.as_view(), name='delete'),
+    path('accounts/', views.AccountListView.as_view(), name='account_list'),
+    path('create/', views.AccountCreateView.as_view(), name='account_create'),
+    path('<int:pk>/', views.AccountDetailView.as_view(), name='account_detail'),
+    path('<int:pk>/edit/', views.AccountUpdateView.as_view(), name='account_update'),
+    path('<int:pk>/delete/', views.AccountDeleteView.as_view(), name='account_delete'),
 
     
     # Bulk Import
@@ -17,7 +17,7 @@ urlpatterns = [
     path('import/preview/', views.BulkImportPreviewView.as_view(), name='bulk_import_preview'),
     
     # Kanban
-    path('', views.AccountKanbanView.as_view(), name='accounts_kanban'),
+    path('', views.AccountKanbanView.as_view(), name='account_kanban'),
     path('api/update-status/', views.update_account_status, name='update_status'),
 
     # Contact URLs

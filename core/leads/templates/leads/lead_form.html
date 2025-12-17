@@ -1,36 +1,14 @@
-{% extends "leads/base.html" %}
+{% extends "core/patterns/form_view.html" %}
 
-{% block title %}{% if form.instance.pk %}Edit Lead{% else %}Create Lead{% endif %} - SalesCompass{% endblock %}
-
-{% block content %}
-<div class="header-bar mb-4">
-    <div class="container">
-        <h1 class="block-title">{% if form.instance.pk %}Edit Lead{% else %}New Lead{% endif %}</h1>
-        <p class="text-white text-center lead">
-            {% if form.instance.pk %}Update lead information{% else %}Add a new potential customer{% endif %}
-        </p>
-    </div>
-</div>
-
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-4">
-                    <form method="post">
-                        {% csrf_token %}
-                        {{ form.as_p }}
-
-                        <div class="d-flex justify-content-end gap-2 mt-4">
-                            <a href="{% url 'leads:leads_list' %}" class="btn btn-outline-secondary">Cancel</a>
-                            <button type="submit" class="btn btn-primary px-4">
-                                {% if form.instance.pk %}Save Changes{% else %}Create Lead{% endif %}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+{% block module_nav %}
+{% include "leads/includes/module_nav.html" %}
 {% endblock %}
+
+{% block page_title %}{% if form.instance.pk %}Edit Lead{% else %}New Lead{% endif %}{% endblock %}
+
+{% block page_subtitle %}
+{% if form.instance.pk %}Update lead information{% else %}Add a new potential customer{% endif %}
+{% endblock %}
+
+{% block cancel_url %}{% url 'leads:lead_list' %}{% endblock %}
+{% block submit_button_text %}{% if form.instance.pk %}Save Changes{% else %}Create Lead{% endif %}{% endblock %}

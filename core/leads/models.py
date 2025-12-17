@@ -240,6 +240,15 @@ class Lead(TenantModel):
         blank=True,
         help_text="Specific campaign that generated this lead"
     )
+    # Direct link to internal Campaign
+    campaign_ref = models.ForeignKey(
+        'marketing.Campaign',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='leads',
+        help_text="Internal Campaign reference"
+    )
     lead_acquisition_date = models.DateTimeField(
         null=True, 
         blank=True,
@@ -290,7 +299,7 @@ class Lead(TenantModel):
             score += 10
         if self.job_title:
             score += 5
-        if self.description:
+        if self.lead_description:
             score += 5
             
         # Company information
@@ -386,7 +395,7 @@ class Lead(TenantModel):
             # Low priority nurturing task
             Task.objects.create(
                 title=f"Review lead: {self.full_name}",
-                description="This lead needs initial review and potential outreach",
+                task_description="This lead needs initial review and potential outreach",
                 assigned_to=self.owner,
                 account=self.account,
                 priority='low',
@@ -394,14 +403,14 @@ class Lead(TenantModel):
                 due_date=timezone.now() + timedelta(days=3),
                 task_type='lead_review',
                 tenant_id=self.tenant_id,
-                related_lead=self
+                lead=self
             )
             
         elif self.status == 'contacted':
             # Medium priority contact task
             Task.objects.create(
                 title=f"Contact lead: {self.full_name}",
-                description="Follow up with this lead based on their engagement score",
+                task_description="Follow up with this lead based on their engagement score",
                 assigned_to=self.owner,
                 account=self.account,
                 priority='medium',
@@ -409,14 +418,14 @@ class Lead(TenantModel):
                 due_date=timezone.now() + timedelta(days=1),
                 task_type='lead_contact',
                 tenant_id=self.tenant_id,
-                related_lead=self
+                lead=self
             )
             
         elif self.status == 'qualified':
             # High priority qualification task
             Task.objects.create(
                 title=f"Qualify lead: {self.full_name}",
-                description="This lead has high engagement score and needs immediate qualification",
+                task_description="This lead has high engagement score and needs immediate qualification",
                 assigned_to=self.owner,
                 account=self.account,
                 priority='high',
@@ -424,7 +433,7 @@ class Lead(TenantModel):
                 due_date=timezone.now() + timedelta(hours=4),
                 task_type='lead_qualify',
                 tenant_id=self.tenant_id,
-                related_lead=self
+                lead=self
             )
 
     def calculate_cac(self):

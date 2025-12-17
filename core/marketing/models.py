@@ -656,3 +656,5 @@ class EmailIntegration(TenantModel):
     def __str__(self):
         return f"{self.email_address} ({self.provider})"
 
+
+from .models_attribution import *

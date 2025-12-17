@@ -1,9 +1,8 @@
 from django.test import TestCase, Client
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from tenants.models import Tenant
-
 from accounts.models import Role
+from tenants.models import Tenant
 
 User = get_user_model()
 

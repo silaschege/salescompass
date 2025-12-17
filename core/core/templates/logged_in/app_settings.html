@@ -14,57 +14,125 @@
     </div>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        <form method="post">
-            {% csrf_token %}
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 200px;">Role</th>
-                            {% for app in configurable_apps %}
-                            <th class="text-center" title="{{ app.description }}">
-                                <i class="{{ app.icon }} me-1"></i><br>
-                                {{ app.name }}
-                            </th>
-                            {% endfor %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for role, perms in permission_matrix.items %}
-                        <tr>
-                            <td class="fw-bold">{{ role.name }}</td>
-                            {% for perm in perms %}
-                            <td class="text-center">
-                                <div class="form-check d-flex justify-content-center">
-                                    <input class="form-check-input" type="checkbox"
-                                        name="perm_{{ role.id }}_{{ perm.app_id }}"
-                                        id="perm_{{ role.id }}_{{ perm.app_id }}" {% if perm.is_visible %}checked{%
-                                        endif %}>
-                                </div>
-                            </td>
-                            {% endfor %}
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+<form method="post" id="permissionForm">
+    {% csrf_token %}
+    <div class="row">
+        <!-- Sidebar: Roles -->
+        <div class="col-md-3">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 fw-bold">Roles</h6>
+                </div>
+                <div class="list-group list-group-flush" id="role-tabs" role="tablist">
+                    {% for role in permission_matrix %}
+                    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if forloop.first %}active{% endif %}"
+                        id="role-tab-{{ role.id }}" data-bs-toggle="list" href="#role-content-{{ role.id }}" role="tab">
+                        {{ role.name }}
+                        <span class="badge bg-secondary rounded-pill">{{ role.users.count }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
             </div>
 
-            <div class="d-flex justify-content-end mt-4">
-                <button type="button" class="btn btn-outline-secondary me-2"
-                    onclick="window.location.reload()">Reset</button>
+            <div class="d-grid gap-2">
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-save me-2"></i>Save Changes
+                    <i class="bi bi-save me-2"></i>Save All Changes
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="window.location.reload()">
+                    <i class="bi bi-arrow-counterclockwise me-2"></i>Reset
                 </button>
             </div>
-        </form>
+        </div>
+
+        <!-- Content: App Permissions -->
+        <div class="col-md-9">
+            <div class="tab-content" id="role-content">
+                {% for role, perms in permission_matrix.items %}
+                <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="role-content-{{ role.id }}"
+                    role="tabpanel">
+
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white py-3 border-bottom">
+                            <h5 class="mb-0">Permissions for <span class="text-primary">{{ role.name }}</span></h5>
+                        </div>
+                        <div class="card-body">
+
+                            {% regroup perms by category as category_list %}
+
+                            {% for category in category_list %}
+                            <div class="mb-4">
+                                <h6 class="text-uppercase text-muted fw-bold small border-bottom pb-2 mb-3">
+                                    {{ category.grouper|title }} Apps
+                                </h6>
+                                <div class="row g-3">
+                                    {% for perm in category.list %}
+                                    <div class="col-md-6 col-lg-4">
+                                        <div
+                                            class="form-check form-switch p-3 border rounded bg-light h-100 d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <label class="form-check-label fw-medium cursor-pointer"
+                                                    for="perm_{{ role.id }}_{{ perm.app_id }}">
+                                                    <i class="{{ perm.icon }} me-2 text-secondary"></i>
+                                                    {{ perm.app_name }}
+                                                </label>
+                                            </div>
+                                            <input class="form-check-input ms-3" type="checkbox" role="switch"
+                                                name="perm_{{ role.id }}_{{ perm.app_id }}"
+                                                id="perm_{{ role.id }}_{{ perm.app_id }}" {% if perm.is_visible%}checked{% endif %}>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
+
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="alert alert-light border mt-4">
+    <div class="d-flex">
+        <div class="me-3">
+            <i class="bi bi-info-circle-fill text-info fs-4"></i>
+        </div>
+        <div>
+            <h6 class="fw-bold mb-1">About App Visibility</h6>
+            <p class="mb-0 text-muted small">
+                Unchecking an app hides it from the "My Apps" dashboard and navigation menus for users with this role.
+                It does <strong>not</strong> revoke underlying data permissions (which are managed via Django Object
+                Permissions).
+                Superusers always see "Control" apps regardless of these settings.
+            </p>
+        </div>
     </div>
 </div>
 
-<div class="alert alert-info mt-4">
-    <i class="bi bi-info-circle me-2"></i>
-    <strong>Note:</strong> Superusers always have access to all applications, including Control Plane apps not listed
-    here.
-</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Keep sidebar active state in sync (optional enhancement if list-group-item doesn't auto-style)
+    // Bootstrap list-group w/ data-bs-toggle handles this automatically.
+</script>
+<style>
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    .list-group-item.active {
+        background-color: #6f42c1;
+        /* SalesCompass Primary Purple */
+        border-color: #6f42c1;
+    }
+
+    .form-check-input:checked {
+        background-color: #6f42c1;
+        border-color: #6f42c1;
+    }
+</style>
 {% endblock %}

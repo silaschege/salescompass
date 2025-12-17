@@ -6,7 +6,7 @@ from django.http import JsonResponse
 # Make sure this import is at the top
 from core.object_permissions import AccountObjectPolicy, OBJECT_POLICIES
 from core.permissions import ObjectPermissionRequiredMixin
-from .models import Contact, OrganizationMember, TeamRole, Territory
+from .models import Contact, OrganizationMember, TeamRole, Territory,RoleAppPermission
 from .forms import AccountForm, ContactForm, BulkImportUploadForm, OrganizationMemberForm, TeamRoleForm, TerritoryForm
 from django.contrib.auth.views import LoginView
 from django.shortcuts import get_object_or_404, redirect, render
@@ -46,7 +46,7 @@ class CustomLoginView(LoginView):
 
 class AccountListView(ObjectPermissionRequiredMixin, ListView):
     model = User
-    template_name = 'accounts/list.html'
+    template_name = 'accounts/account_list.html'
     context_object_name = 'accounts'
     paginate_by = 20
 
@@ -144,8 +144,8 @@ class AccountDetailView(ObjectPermissionRequiredMixin, DetailView):
 class AccountCreateView(ObjectPermissionRequiredMixin, CreateView):
     model = User
     form_class = AccountForm
-    template_name = 'accounts/form.html'
-    success_url = reverse_lazy('accounts:accounts_list')
+    template_name = 'accounts/account_form.html'
+    success_url = reverse_lazy('accounts:account_list')
     permission_action = 'change'
 
     def get_form_kwargs(self):
@@ -161,8 +161,8 @@ class AccountCreateView(ObjectPermissionRequiredMixin, CreateView):
 class AccountUpdateView(ObjectPermissionRequiredMixin, UpdateView):
     model = User
     form_class = AccountForm
-    template_name = 'accounts/form.html'
-    success_url = reverse_lazy('accounts:accounts_list')
+    template_name = 'accounts/account_form.html'
+    success_url = reverse_lazy('accounts:account_list')
     permission_action = 'change'
 
     def get_form_kwargs(self):
@@ -233,7 +233,7 @@ class BulkImportMapView(ObjectPermissionRequiredMixin,TemplateView):
 class BulkImportPreviewView(ObjectPermissionRequiredMixin, FormView):
     template_name = 'bulk_imports/preview.html'
     permission_action = 'change'
-    success_url = reverse_lazy('accounts:accounts_list')
+    success_url = reverse_lazy('accounts:account_list')
 
     def get(self, request, *args, **kwargs):
         rows = request.session.get('bulk_import_data')
@@ -294,7 +294,7 @@ class BulkImportPreviewView(ObjectPermissionRequiredMixin, FormView):
 
 # === Kanban View ===
 class AccountKanbanView(ObjectPermissionRequiredMixin, TemplateView):
-    template_name = 'accounts/kanban.html'
+    template_name = 'accounts/account_kanban.html'
     permission_action = 'view'
 
     def get_context_data(self, **kwargs):

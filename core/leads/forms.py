@@ -1,7 +1,7 @@
 from django import forms
 from django.forms.widgets import Select
 from core.models import User
-from .models import Lead, LeadSource, LeadStatus, Industry, MarketingChannel, AssignmentRule, ActionType, OperatorType, BehavioralScoringRule, DemographicScoringRule
+from .models import Lead, LeadSource, LeadStatus, Industry, MarketingChannel, AssignmentRule, ActionType, OperatorType, BehavioralScoringRule, DemographicScoringRule, WebToLeadForm
 from settings_app.models import AssignmentRuleType
 from tenants.models import Tenant as TenantModel
 
@@ -194,3 +194,38 @@ class DemographicScoringRuleForm(forms.ModelForm):
         else:
             if 'operator_ref' in self.fields:
                 self.fields['operator_ref'].queryset = OperatorType.objects.none()
+
+
+class MarketingChannelForm(forms.ModelForm):
+    class Meta:
+        model = MarketingChannel
+        fields = ['channel_name', 'label', 'order', 'color', 'icon', 'channel_is_active', 'is_system']
+        widgets = {
+            'color': forms.TextInput(attrs={'type': 'color'}),
+        }
+
+
+class WebToLeadForm(forms.ModelForm):
+    class Meta:
+        model = WebToLeadForm
+        fields = [
+            'form_name', 'form_description', 'form_is_active', 'success_redirect_url',
+            'include_first_name', 'include_last_name', 'include_email', 'include_phone',
+            'include_company', 'include_job_title', 'include_industry',
+            'assign_to', 'assign_to_role'
+        ]
+        widgets = {
+            'form_description': forms.Textarea(attrs={'rows': 3}),
+            'assign_to': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        if self.tenant:
+            # Filter users by tenant (if User model has tenant link, usually user.tenant_id or similar)
+            # Assuming User is available globally but we want to restrict to tenant users if possible
+            # For now, simplistic approach or just pass
+            pass
+

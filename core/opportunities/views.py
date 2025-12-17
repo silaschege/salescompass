@@ -10,7 +10,68 @@ from tenants.models import Tenant as TenantModel
 from leads.models import Lead
 
 from .models import Opportunity, OpportunityStage, AssignmentRule, PipelineType
-from .forms import AssignmentRuleForm, OpportunityStageForm, PipelineTypeForm
+from .forms import AssignmentRuleForm, OpportunityStageForm, PipelineTypeForm, OpportunityForm
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from core.views import TenantAwareViewMixin
+
+class OpportunityListView(LoginRequiredMixin, TenantAwareViewMixin, ListView):
+    model = Opportunity
+    template_name = 'opportunities/opportunity_list.html'
+    context_object_name = 'opportunities'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('account', 'stage', 'owner')
+
+class OpportunityDetailView(LoginRequiredMixin, TenantAwareViewMixin, DetailView):
+    model = Opportunity
+    template_name = 'opportunities/opportunity_detail.html'
+    context_object_name = 'opportunity'
+
+class OpportunityCreateView(LoginRequiredMixin, TenantAwareViewMixin, CreateView):
+    model = Opportunity
+    form_class = OpportunityForm
+    template_name = 'opportunities/opportunity_form.html'
+    success_url = reverse_lazy('opportunities:opportunity_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+        
+    def form_valid(self, form):
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Opportunity created successfully.')
+        return super().form_valid(form)
+
+class OpportunityUpdateView(LoginRequiredMixin, TenantAwareViewMixin, UpdateView):
+    model = Opportunity
+    form_class = OpportunityForm
+    template_name = 'opportunities/opportunity_form.html'
+    success_url = reverse_lazy('opportunities:opportunity_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if hasattr(self.request.user, 'tenant_id'):
+            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+        return kwargs
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Opportunity updated successfully.')
+        return super().form_valid(form)
+
+class OpportunityDeleteView(LoginRequiredMixin, TenantAwareViewMixin, DeleteView):
+    model = Opportunity
+    template_name = 'opportunities/opportunity_confirm_delete.html'
+    success_url = reverse_lazy('opportunities:opportunity_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Opportunity deleted successfully.')
+        return super().delete(request, *args, **kwargs)
 
 
 @login_required
@@ -260,3 +321,60 @@ class PipelineTypeDeleteView(DeleteView):
     def delete(self, request, *args, **kwargs):
         messages.success(self.request, 'Pipeline type deleted successfully.')
         return super().delete(request, *args, **kwargs)
+
+
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils import timezone
+from commissions.models import Quota
+from .utils import calculate_weighted_forecast, calculate_forecast_accuracy, check_forecast_alerts
+from .models import ForecastSnapshot
+
+class RevenueForecastView(LoginRequiredMixin, TemplateView):
+    template_name = 'opportunities/forecast_dashboard.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if hasattr(self.request.user, 'tenant'):
+            tenant = self.request.user.tenant
+        else:
+             tenant = getattr(self.request.user, 'tenant', None)
+             
+        if not tenant:
+             current_forecast = {'weighted_forecast': 0, 'total_pipeline': 0}
+             context['current_forecast'] = current_forecast
+             return context
+
+        # 1. Current Forecast
+        forecast_data = calculate_weighted_forecast(tenant_id=tenant.id)
+        context['current_forecast'] = forecast_data
+        
+        # 2. Historical Trend (Snapshots)
+        snapshots = ForecastSnapshot.objects.filter(
+            tenant=tenant
+        ).order_by('date')[:30]
+        
+        context['snapshot_labels'] = [s.date.strftime('%Y-%m-%d') for s in snapshots]
+        context['snapshot_pipeline'] = [float(s.total_pipeline_value) for s in snapshots]
+        context['snapshot_weighted'] = [float(s.weighted_forecast) for s in snapshots]
+        
+        # 3. Quota
+        current_date = timezone.now().date()
+        total_quota = Quota.objects.filter(
+            user__tenant=tenant,
+            period_start__lte=current_date,
+            period_end__gte=current_date
+        ).aggregate(total=Sum('target_amount'))['total'] or 0
+        
+        context['total_quota'] = float(total_quota)
+        
+        if context['total_quota'] > 0:
+            context['quota_attainment'] = (context['current_forecast']['weighted_forecast'] / context['total_quota']) * 100
+        else:
+            context['quota_attainment'] = 0
+            
+        # 4. Accuracy & Alerts
+        context['accuracy_metrics'] = calculate_forecast_accuracy(tenant_id=tenant.id)
+        context['forecast_alerts'] = check_forecast_alerts(tenant_id=tenant.id)
+            
+        return context

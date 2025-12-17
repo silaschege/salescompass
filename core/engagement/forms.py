@@ -19,7 +19,7 @@ class EngagementEventForm(forms.ModelForm):
         fields = [
             'account', 'opportunity', 'case', 'nps_response', 'contact',
             'event_type', 'title', 'description', 'contact_email', 
-            'priority', 'is_important', 'engagement_score'
+            'priority', 'is_important', 'engagement_score', 'internal_notes'
         ]
         widgets = {
             
@@ -35,6 +35,7 @@ class EngagementEventForm(forms.ModelForm):
             'contact_email': forms.EmailInput(attrs={'class': 'form-control','placeholder': 'Enter contact email (optional)...'}),
             'priority': forms.Select(attrs={'class': 'form-select','data-placeholder': 'Select priority  (optional)...'}),
             'is_important': forms.CheckboxInput(),
+            'internal_notes': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Internal notes (private)...'}),
 
         }
 
@@ -193,9 +194,28 @@ class NextBestActionForm(forms.ModelForm):
             raise forms.ValidationError("Selected contact does not belong to the selected account.")
         
         # Due date validation (only for new actions or if due date changed)
-        if due_date:
-            if not self.instance.pk or self.instance.due_date != due_date:
-                if due_date < timezone.now():
-                    raise forms.ValidationError("Due date cannot be in the past.")
-        
         return cleaned_data
+
+
+from .models import EngagementPlaybook, PlaybookStep
+
+class EngagementPlaybookForm(forms.ModelForm):
+    class Meta:
+        model = EngagementPlaybook
+        fields = ['name', 'description', 'is_active']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Playbook Name'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Description...'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+class PlaybookStepForm(forms.ModelForm):
+    class Meta:
+        model = PlaybookStep
+        fields = ['day_offset', 'action_type', 'description', 'priority']
+        widgets = {
+            'day_offset': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+            'action_type': forms.Select(attrs={'class': 'form-select'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Instructions...'}),
+            'priority': forms.Select(attrs={'class': 'form-select'}),
+        }

@@ -1,16 +1,32 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
+from django.urls import reverse_lazy, reverse
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.urls import reverse_lazy
-from .models import Lead, LeadSource, LeadStatus, Industry, MarketingChannel, AssignmentRule, ActionType, OperatorType, BehavioralScoringRule, DemographicScoringRule
-from .forms import LeadForm, AssignmentRuleForm, ActionTypeForm, OperatorTypeForm, BehavioralScoringRuleForm, DemographicScoringRuleForm
-from tenants.models import Tenant as TenantModel
+from django.contrib.auth.decorators import login_required
+from django.views import View
+
+from .models import (
+    Lead, AssignmentRule, ActionType, OperatorType,
+    BehavioralScoringRule, DemographicScoringRule, MarketingChannel,
+    WebToLeadForm, Industry, LeadSource, LeadStatus
+)
+from .forms import (
+    LeadForm, AssignmentRuleForm, ActionTypeForm, OperatorTypeForm,
+    BehavioralScoringRuleForm, DemographicScoringRuleForm, MarketingChannelForm,
+    WebToLeadForm as WebToLeadModelForm
+)
+from tenants.models import TenantAwareModel
+
+from core.views import (
+    TenantAwareViewMixin, SalesCompassListView, SalesCompassDetailView, 
+    SalesCompassCreateView, SalesCompassUpdateView, SalesCompassDeleteView
+)
 
 
-class LeadPipelineView(ListView):
+class LeadPipelineView(SalesCompassListView):
     """
     View to display leads in a pipeline/kanban format
     """
@@ -20,13 +36,10 @@ class LeadPipelineView(ListView):
     
     def get_queryset(self):
         queryset = super().get_queryset()
-        # Filter by current tenant
-        if hasattr(self.request.user, 'tenant_id'):
-            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
         return queryset.select_related('source_ref', 'status_ref', 'industry_ref', 'account', 'owner')
 
 
-class LeadAnalyticsView(ListView):
+class LeadAnalyticsView(SalesCompassListView):
     """
     View to display lead analytics and metrics
     """
@@ -36,9 +49,6 @@ class LeadAnalyticsView(ListView):
     
     def get_queryset(self):
         queryset = super().get_queryset()
-        # Filter by current tenant
-        if hasattr(self.request.user, 'tenant_id'):
-            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
         return queryset.select_related('source_ref', 'status_ref', 'industry_ref', 'account', 'owner')
     
     def get_context_data(self, **kwargs):
@@ -72,52 +82,31 @@ class LeadAnalyticsView(ListView):
         return context
 
 
-class WebToLeadListView(ListView):
+class WebToLeadListView(SalesCompassListView):
     """
     View to display web-to-lead forms
     """
     model = Lead
     template_name = 'leads/web_to_lead_list.html'
     context_object_name = 'leads'
-    
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        # Filter by current tenant
-        if hasattr(self.request.user, 'tenant_id'):
-            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
-        return queryset
 
 
-class WebToLeadBuilderView(ListView):
+class WebToLeadBuilderView(SalesCompassListView):
     """
     View to build web-to-lead forms
     """
     model = Lead
     template_name = 'leads/web_to_lead_builder.html'
     context_object_name = 'leads'
-    
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        # Filter by current tenant
-        if hasattr(self.request.user, 'tenant_id'):
-            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
-        return queryset
 
 
-class WebToLeadFormView(ListView):
+class WebToLeadFormView(SalesCompassListView):
     """
     View to display a specific web-to-lead form
     """
     model = Lead
     template_name = 'leads/web_to_lead_form.html'
     context_object_name = 'leads'
-    
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        # Filter by current tenant
-        if hasattr(self.request.user, 'tenant_id'):
-            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
-        return queryset
 
 
 @login_required
@@ -158,62 +147,37 @@ def update_lead_status(request, lead_id):
 
 
 
-class LeadListView(ListView):
+class LeadListView(SalesCompassListView):
     model = Lead
     template_name = 'leads/lead_list.html'
     context_object_name = 'leads'
     
     def get_queryset(self):
         queryset = super().get_queryset()
-        # Filter by current tenant
-        if hasattr(self.request.user, 'tenant_id'):
-            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
         return queryset.select_related('source_ref', 'status_ref', 'industry_ref', 'account', 'owner')
 
 
-class LeadDetailView(DetailView):
+class LeadDetailView(SalesCompassDetailView):
     model = Lead
     template_name = 'leads/lead_detail.html'
     context_object_name = 'lead'
 
 
-class LeadCreateView(CreateView):
+class LeadCreateView(SalesCompassCreateView):
     model = Lead
     form_class = LeadForm
     template_name = 'leads/lead_form.html'
     success_url = reverse_lazy('leads:lead_list')
-    
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        # Pass the current tenant to the form
-        if hasattr(self.request.user, 'tenant_id'):
-            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
-        return kwargs
-    
-    def form_valid(self, form):
-        # Set tenant automatically
-        if hasattr(self.request.user, 'tenant_id'):
-            form.instance.tenant_id = self.request.user.tenant_id
-        messages.success(self.request, 'Lead created successfully.')
-        return super().form_valid(form)
+    success_message = 'Lead created successfully.'
 
 
-class LeadUpdateView(UpdateView):
+class LeadUpdateView(SalesCompassUpdateView):
     model = Lead
     form_class = LeadForm
     template_name = 'leads/lead_form.html'
     success_url = reverse_lazy('leads:lead_list')
-    
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        # Pass the current tenant to the form
-        if hasattr(self.request.user, 'tenant_id'):
-            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
-        return kwargs
-    
-    def form_valid(self, form):
-        messages.success(self.request, 'Lead updated successfully.')
-        return super().form_valid(form)
+    success_message = 'Lead updated successfully.'
+
 
 
 @login_required

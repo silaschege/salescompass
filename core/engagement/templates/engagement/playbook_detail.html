@@ -1,0 +1,105 @@
+{% extends "engagement/base.html" %}
+
+{% block title %}{{ playbook.name }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <h1 class="mb-0">{{ playbook.name }}</h1>
+                {% if playbook.is_active %}
+                <span class="badge bg-success">Active</span>
+                {% else %}
+                <span class="badge bg-secondary">Inactive</span>
+                {% endif %}
+            </div>
+            <p class="text-muted lead mb-0">{{ playbook.description }}</p>
+        </div>
+        <div class="btn-group">
+            <a href="{% url 'engagement:playbook_update' playbook.pk %}" class="btn btn-outline-secondary">
+                <i class="bi bi-pencil"></i> Edit Playbook
+            </a>
+            <a href="{% url 'engagement:playbook_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <!-- Steps -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom-0 py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Playbook Steps</h5>
+            <a href="{% url 'engagement:playbook_step_create' playbook.pk %}" class="btn btn-sm btn-primary">
+                <i class="bi bi-plus-lg"></i> Add Step
+            </a>
+        </div>
+        <div class="card-body p-0">
+            {% if playbook.steps.all %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 100px;">Timeline</th>
+                            <th>Action</th>
+                            <th>Instructions</th>
+                            <th>Priority</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for step in playbook.steps.all %}
+                        <tr>
+                            <td>
+                                <div class="d-flex flex-column align-items-center bg-light rounded p-2 border">
+                                    <span class="small text-uppercase text-muted fw-bold">Day</span>
+                                    <span class="h4 mb-0 text-primary">{{ step.day_offset }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-info text-dark">{{ step.get_action_type_display }}</span>
+                            </td>
+                            <td>{{ step.description }}</td>
+                            <td>
+                                {% if step.priority == 'critical' %}
+                                <span class="badge bg-danger">Critical</span>
+                                {% elif step.priority == 'high' %}
+                                <span class="badge bg-warning text-dark">High</span>
+                                {% elif step.priority == 'medium' %}
+                                <span class="badge bg-info text-dark">Medium</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Low</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group">
+                                    <a href="{% url 'engagement:playbook_step_update' step.pk %}"
+                                        class="btn btn-sm btn-outline-secondary" title="Edit Step">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'engagement:playbook_step_delete' step.pk %}"
+                                        class="btn btn-sm btn-outline-danger" title="Delete Step">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center p-5">
+                <i class="bi bi-list-check display-4 text-muted mb-3"></i>
+                <h5>No steps defined</h5>
+                <p class="text-muted">Add steps to define the engagement sequence for this playbook.</p>
+                <a href="{% url 'engagement:playbook_step_create' playbook.pk %}" class="btn btn-primary mt-2">
+                    Add First Step
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

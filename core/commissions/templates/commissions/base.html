@@ -130,7 +130,7 @@
 
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
-        <a class="navbar-brand" href="{% url 'app_selection' %}">
+        <a class="navbar-brand" href="{% url 'core:app_selection' %}">
             <i class="bi bi-compass me-2"></i> SalesCompass
         </a>
 
@@ -141,14 +141,21 @@
                 href="{% url 'commissions:list' %}">
                 <i class="bi bi-speedometer2"></i> Dashboard
             </a>
-
+            <a class="nav-link {% if request.resolver_match.url_name == 'history' %}active{% endif %}"
+                href="{% url 'commissions:list' %}">
+                <i class="bi bi-list"></i>List
+            </a>
             <a class="nav-link {% if request.resolver_match.url_name == 'history' %}active{% endif %}"
                 href="{% url 'commissions:history' %}">
                 <i class="bi bi-clock-history"></i> History
             </a>
-
+            <a class="nav-link {% if request.resolver_match.url_name == 'history' %}active{% endif %}"
+                href="{% url 'commissions:payments' %}">
+                <i class="bi  bi-wallet"></i> Payments
+            </a>
+             
             <div class="mt-auto pt-4 border-top">
-                <a class="nav-link text-danger" href="{% url 'logout' %}">
+                <a class="nav-link text-danger" href="{% url 'core:logout' %}">
                     <i class="bi bi-box-arrow-right"></i> Log Out
                 </a>
             </div>

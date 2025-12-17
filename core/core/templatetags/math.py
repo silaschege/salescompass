@@ -58,5 +58,19 @@ def mul(value, arg):
         return float(value) * float(arg)
     except (ValueError, TypeError):
         return 0
+    
+
+
+@register.filter
+def count_enabled(queryset):
+    """
+    Counts items where enabled is True.
+    Works for Lists and QuerySets.
+    """
+    if hasattr(queryset, 'filter'):
+        # Efficient DB count for QuerySets
+        return queryset.filter(enabled=True).count()
+    # List comprehension for standard lists
+    return len([item for item in queryset if getattr(item, 'enabled', False)])
 
 

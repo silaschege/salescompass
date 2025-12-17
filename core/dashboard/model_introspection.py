@@ -28,43 +28,46 @@ WIDGET_MODEL_MAPPING = {
 }
 
 
-# Models available for dashboard widgets
-AVAILABLE_MODELS = {
-    'tasks': 'tasks.Task',
-    'leads': 'leads.Lead',
-    'opportunities': 'opportunities.Opportunity',
-    'accounts': 'accounts.Account',
-    'cases': 'cases.Case',
-    'nps_responses': 'nps.NpsResponse',
-}
-
 
 def get_available_models() -> List[Dict[str, str]]:
     """
-    Get list of available models for dashboard widgets.
+    Get list of available models for dashboard widgets using dynamic discovery.
     
     Returns:
         List of dicts with model information: {id, name, app_label, model_name}
     """
     available = []
     
-    for model_id, model_path in AVAILABLE_MODELS.items():
-        try:
-            app_label, model_name = model_path.split('.')
-            model_class = apps.get_model(app_label, model_name)
+    # Internal apps to include (or external apps if needed)
+    # We filter out Django system apps and administrative apps
+    EXCLUDED_APPS = [
+        'admin', 'auth', 'contenttypes', 'sessions', 'messages', 'staticfiles', 
+        'axes', 'reversion', 'django_extensions', 'rest_framework'
+    ]
+    
+    for app_config in apps.get_app_configs():
+        if app_config.label in EXCLUDED_APPS:
+            continue
+            
+        for model in app_config.get_models():
+            # Skip ManyToMany intermediary models
+            if model._meta.auto_created:
+                continue
+                
+            model_id = f"{app_config.label}.{model._meta.model_name}"
             
             available.append({
                 'id': model_id,
-                'name': model_class._meta.verbose_name_plural.title(),
-                'app_label': app_label,
-                'model_name': model_name,
-                'model_path': model_path,
+                'name': model._meta.verbose_name_plural.title(),
+                'app_label': app_config.label,
+                'model_name': model._meta.model_name,
+                'model_path': model_id,
             })
-        except (LookupError, ValueError):
-            # Model not found or invalid path, skip it
-            continue
-    
-    return available
+            
+    # Sort by name
+    return sorted(available, key=lambda x: x['name'])
+
+
 
 
 def get_model_class(model_id: str) -> Optional[Any]:
@@ -72,20 +75,23 @@ def get_model_class(model_id: str) -> Optional[Any]:
     Get Django model class from model ID.
     
     Args:
-        model_id: Model identifier (e.g., 'tasks', 'leads')
+        model_id: Model identifier (e.g., 'leads.lead', 'accounts.account')
     
     Returns:
         Django model class or None if not found
     """
-    model_path = AVAILABLE_MODELS.get(model_id)
-    if not model_path:
-        return None
-    
     try:
-        app_label, model_name = model_path.split('.')
+        # Expected format: app_label.model_name
+        if '.' not in model_id:
+            # Try legacy lookup for backward compatibility if needed, or fail
+            # For now, let's assume we strictly follow app_label.model_name
+            return None
+            
+        app_label, model_name = model_id.split('.')
         return apps.get_model(app_label, model_name)
     except (LookupError, ValueError):
         return None
+
 
 
 def get_field_type(field) -> str:

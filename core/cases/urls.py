@@ -4,11 +4,11 @@ from . import views
 app_name = 'cases'
 urlpatterns = [
     # CRUD
-    path('', views.CaseListView.as_view(), name='list'),
-    path('create/', views.CaseCreateView.as_view(), name='create'),
-    path('<int:pk>/', views.CaseDetailView.as_view(), name='detail'),
-    path('<int:pk>/edit/', views.CaseUpdateView.as_view(), name='update'),
-    path('<int:pk>/delete/', views.CaseDeleteView.as_view(), name='delete'),
+    path('', views.CaseListView.as_view(), name='case_list'),
+    path('create/', views.CaseCreateView.as_view(), name='case_create'),
+    path('<int:pk>/', views.CaseDetailView.as_view(), name='case_detail'),
+    path('<int:pk>/edit/', views.CaseUpdateView.as_view(), name='case_update'),
+    path('<int:pk>/delete/', views.CaseDeleteView.as_view(), name='case_delete'),
     
     # CSAT
     path('csat/survey/', views.CsatSurveyView.as_view(), name='csat_survey'),
@@ -18,7 +18,7 @@ urlpatterns = [
     path('knowledge-base/', views.KnowledgeBaseView.as_view(), name='knowledge_base'),
     
     # Kanban
-    path('kanban/', views.CaseKanbanView.as_view(), name='kanban'),
+    path('kanban/', views.CaseKanbanView.as_view(), name='case_kanban'),
 
     path('detractors/', views.DetractorKanbanView.as_view(), name='detractor_kanban'),
     

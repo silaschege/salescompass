@@ -62,12 +62,7 @@ REGION_CHOICES = [
 
 
 
-class TenantAwareModel(models.Model):
-    """Abstract base class for models that belong to a tenant"""
-    tenant = models.ForeignKey('Tenant', on_delete=models.CASCADE, related_name='%(class)ss')
-    
-    class Meta:
-        abstract = True
+
 
 
 

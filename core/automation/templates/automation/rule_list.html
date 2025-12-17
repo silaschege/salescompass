@@ -1,0 +1,99 @@
+{% extends "logged_in/base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1>Business Rules</h1>
+        <p class="text-muted">Define automated logic (If This Then That) for your business processes.</p>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{% url 'automation:rule_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Create New Rule
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Rule Name</th>
+                        <th>Trigger Event</th>
+                        <th>Status</th>
+                        <th>Executions</th>
+                        <th>Failure Rate</th>
+                        <th>Created By</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rule in rules %}
+                    <tr>
+                        <td class="ps-4">
+                            <a href="{% url 'automation:rule_update' rule.pk %}" class="text-decoration-none fw-bold">
+                                {{ rule.automation_rule_name }}
+                            </a>
+                            <div class="small text-muted text-truncate" style="max-width: 250px;">
+                                {{ rule.automation_rule_description }}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-info text-dark">{{ rule.get_trigger_type_display }}</span>
+                        </td>
+                        <td>
+                            {% if rule.automation_rule_is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ rule.execution_count }}</td>
+                        <td>
+                            {% if rule.execution_count > 0 %}
+                            {% widthratio rule.failure_count rule.execution_count 100 %}%
+                            {% else %}
+                            0%
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-xs me-2" title="{{ rule.created_by.get_full_name }}">
+                                    <span class="avatar-title rounded-circle bg-primary text-white">
+                                        {{ rule.created_by.get_full_name|first|upper }}
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group">
+                                <a href="{% url 'automation:rule_update' rule.pk %}"
+                                    class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'automation:rule_delete' rule.pk %}"
+                                    class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fas fa-robot fa-3x mb-3"></i>
+                                <p class="mb-0">No business rules defined yet.</p>
+                                <a href="{% url 'automation:rule_create' %}" class="btn btn-link mt-2">Create your first
+                                    rule</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

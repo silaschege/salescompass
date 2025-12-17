@@ -1,382 +1,85 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'core/base_module.html' %}
 
-<head>
-    <title>{% block title %}SalesCompass{% endblock %}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #f7f8fc 0%, #e3e6f3 100%);
-            font-family: 'Segoe UI', Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            min-height: 100vh;
-            overflow-x: hidden;
-            /* Prevent horizontal scroll during slide */
-        }
+{% block title %}Settings - SalesCompass{% endblock %}
 
-        /* Sidebar - Slides off-screen to the left when hidden */
-        .sidebar {
-            width: 250px;
-            background: #fff;
-            border-right: 1px solid #e3e6f3;
-            padding: 1.5rem 1rem;
-            position: fixed;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            overflow-y: auto;
-            z-index: 1000;
-            transition: transform 0.3s ease;
-            /* Smooth slide */
-        }
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+{% endblock %}
 
-        /* When sidebar is hidden, slide it off-screen */
-        .sidebar.hidden {
-            transform: translateX(-100%);
-        }
+{% block module_nav %}
+<!-- Dashboard -->
+<a class="nav-link ms-3" href="{% url 'settings_app:dashboard' %}">Dashboard</a>
 
-        .sidebar .navbar-brand {
-            color: #6f42c1 !important;
-            font-weight: bold;
-            font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
+<!-- System Configuration -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#systemMenu">
+    System Configuration
+</a>
+<div class="collapse" id="systemMenu">
+    <a class="nav-link ms-3" href="{% url 'settings_app:tenant_settings' %}">Tenant Settings</a>
+    <a class="nav-link ms-3" href="{% url 'settings_app:list' %}">Module Settings</a>
+</div>
 
-        .sidebar .nav-link {
-            color: #333;
-            margin-bottom: 0.5rem;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            transition: all 0.2s ease;
-        }
+<!-- Lead Settings -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#leadSettingsMenu">
+    Lead Settings
+</a>
+<div class="collapse" id="leadSettingsMenu">
+    <a class="nav-link ms-3" href="{% url 'settings_app:lead_status_list' %}">Statuses</a>
+    <a class="nav-link ms-3" href="{% url 'settings_app:lead_source_list' %}">Sources</a>
+</div>
 
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link:focus {
-            color: #6f42c1;
-            background-color: #f0e6ff;
-            font-weight: 500;
-        }
+<!-- Opportunity Settings -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#oppSettingsMenu">
+    Opportunity Settings
+</a>
+<div class="collapse" id="oppSettingsMenu">
+    <a class="nav-link ms-3" href="{% url 'settings_app:opportunity_stage_list' %}">Stages</a>
+</div>
 
-        .sidebar .dropdown-toggle::after {
-            margin-left: auto;
-            float: right;
-        }
+<!-- Team Management -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#teamMenu">
+    Team Management
+</a>
+<div class="collapse" id="teamMenu">
+    <a class="nav-link ms-3" href="{% url 'accounts:member_list' %}">Team Members</a>
+    <a class="nav-link ms-3" href="{% url 'accounts:member_create' %}">Add Member</a>
+    <a class="nav-link ms-3" href="{% url 'accounts:role_list' %}">Roles & Permissions</a>
+</div>
 
-        /* Main content adjusts when sidebar is hidden */
-        .main-content {
-            margin-left: 250px;
-            padding: 2rem;
-            flex-grow: 1;
-            transition: margin-left 0.3s ease;
-        }
+<!-- Territories -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#territoriesMenu">
+    Territories
+</a>
+<div class="collapse" id="territoriesMenu">
+    <a class="nav-link ms-3" href="{% url 'accounts:territory_list' %}">List</a>
+    <a class="nav-link ms-3" href="{% url 'accounts:territory_create' %}">Create</a>
+</div>
 
-        .main-content.sidebar-hidden {
-            margin-left: 0;
-        }
+<!-- Customization -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#customizationMenu">
+    Customization
+</a>
+<div class="collapse" id="customizationMenu">
+    <a class="nav-link ms-3" href="{% url 'settings_app:custom_field_list' %}">Custom Fields</a>
+    <a class="nav-link ms-3" href="{% url 'settings_app:module_label_list' %}">Module Labels</a>
+</div>
 
-        /* Hamburger button (top-left corner) */
-        .toggle-sidebar {
-            position: fixed;
-            top: 1rem;
-            left: 1rem;
-            z-index: 1001;
-            background: #6f42c1;
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            width: 40px;
-            height: 40px;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
+<!-- Automation -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#automationMenu">
+    Automation
+</a>
+<div class="collapse" id="automationMenu">
+    <a class="nav-link ms-3" href="{% url 'settings_app:assignment_rule_list' %}">Assignment Rules</a>
+    <a class="nav-link ms-3" href="{% url 'settings_app:pipeline_stage_list' %}">Pipeline Stages</a>
+    <a class="nav-link ms-3" href="{% url 'settings_app:scoring_rules_list' %}">Lead Scoring</a>
+</div>
 
-        .header-bar {
-            background: #6f42c1;
-            color: #fff;
-            padding: 2rem 0 1rem 0;
-            border-radius: 0 0 2rem 2rem;
-            box-shadow: 0 4px 24px rgba(111, 66, 193, 0.08);
-            margin-bottom: 2rem;
-        }
-
-        .footer-bar {
-            background: #6f42c1;
-            color: #fff;
-            padding: 1rem 0;
-            border-radius: 2rem 2rem 0 0;
-            box-shadow: 0 -4px 24px rgba(111, 66, 193, 0.08);
-            text-align: center;
-            margin-top: 2rem;
-        }
-
-        .btn-primary {
-            background-color: #6f42c1;
-            border-color: #6f42c1;
-        }
-
-        .btn-warning {
-            background-color: #ffd600;
-            border-color: #ffd600;
-            color: #212529;
-        }
-
-        .btn-light {
-            background-color: #fff;
-            border-color: #e3e6f3;
-            color: #6f42c1;
-        }
-
-        .table thead {
-            background: #6f42c1;
-            color: #fff;
-        }
-
-        .card {
-            border-radius: 1rem;
-            box-shadow: 0 2px 16px rgba(111, 66, 193, 0.08);
-        }
-
-        .lead {
-            font-size: 1.1rem;
-        }
-
-        .block-title {
-            color: #6f42c1;
-            font-size: 2rem;
-            letter-spacing: 0.5px;
-            margin-bottom: 0;
-            text-align: center;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .sidebar.visible {
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 0;
-                padding: 2rem 1rem;
-            }
-
-            .toggle-sidebar {
-                display: flex;
-            }
-        }
-
-        /* Always show toggle on desktop for usability */
-        @media (min-width: 769px) {
-            .toggle-sidebar {
-                display: flex;
-            }
-        }
-    </style>
-    {% load static %}
-    {% block extra_head %}{% endblock %}
-</head>
-
-<body>
-
-    <!-- Hamburger Toggle Button -->
-    <button class="toggle-sidebar" id="toggleSidebar">
-        ☰
-    </button>
-
-
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-        <a class="navbar-brand" href="{% url 'app_selection' %}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#6f42c1" class="me-2"
-                viewBox="0 0 16 16">
-                <circle cx="8" cy="8" r="7" stroke="#6f42c1" stroke-width="2" fill="white" />
-                <polygon points="8,3 10,10 8,13 6,6" fill="#6f42c1" />
-            </svg>
-            SalesCompass
-        </a>
-        <nav class="nav flex-column">
-            <!-- Dashboard -->
-            <a class="nav-link" href="{% url 'settings_app:dashboard' %}">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    class="bi bi-speedometer2 me-2" viewBox="0 0 16 16">
-                    <path
-                        d="M8 4a.5.5 0 0 1 .5.5V6a.5.5 0 0 1-1 0V4.5A.5.5 0 0 1 8 4zM3.732 5.732a.5.5 0 0 1 .707 0l.915.914a.5.5 0 1 1-.708.708l-.914-.915a.5.5 0 0 1 0-.707zM2 10a.5.5 0 0 1 .5-.5h1.586a.5.5 0 0 1 0 1H2.5A.5.5 0 0 1 2 10zm9.5 0a.5.5 0 0 1 .5-.5h1.5a.5.5 0 0 1 0 1H12a.5.5 0 0 1-.5-.5zm.754-4.246a.389.389 0 0 0-.527-.02L7.547 9.31a.91.91 0 1 0 1.302 1.258l3.434-4.297a.389.389 0 0 0-.029-.518z" />
-                    <path fill-rule="evenodd"
-                        d="M0 10a8 8 0 1 1 15.547 2.661c-.442 1.253-1.845 1.602-2.932 1.25C11.309 13.488 9.475 13 8 13c-1.474 0-3.31.488-4.615.911-1.087.352-2.49.003-2.932-1.25A7.988 7.988 0 0 1 0 10zm8-7a7 7 0 0 0-6.603 9.329c.203.575.923.876 1.68.63C4.397 12.533 6.358 12 8 12s3.604.532 4.923.96c.757.245 1.477-.056 1.68-.631A7 7 0 0 0 8 3z" />
-                </svg>
-                Dashboard
-            </a>
-
-            <!-- System Configuration -->
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#systemMenu">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    class="bi bi-gear me-2" viewBox="0 0 16 16">
-                    <path
-                        d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z" />
-                    <path
-                        d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319z" />
-                </svg>
-                System Configuration
-            </a>
-            <div class="collapse" id="systemMenu">
-                <a class="nav-link ms-3" href="{% url 'settings_app:tenant_settings' %}">Tenant Settings</a>
-                <a class="nav-link ms-3" href="{% url 'settings_app:list' %}">Module Settings</a>
-            </div>
-
-            <!-- Lead Settings -->
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#leadSettingsMenu">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    class="bi bi-person-badge me-2" viewBox="0 0 16 16">
-                    <path d="M6.5 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3zM11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
-                    <path
-                        d="M4.5 0A2.5 2.5 0 0 0 2 2.5V14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2.5A2.5 2.5 0 0 0 11.5 0h-7zM3 2.5A1.5 1.5 0 0 1 4.5 1h7A1.5 1.5 0 0 1 13 2.5v10.795a4.2 4.2 0 0 0-.776-.492C11.392 12.387 10.063 12 8 12s-3.392.387-4.224.803a4.2 4.2 0 0 0-.776.492V2.5z" />
-                </svg>
-                Lead Settings
-            </a>
-            <div class="collapse" id="leadSettingsMenu">
-                <a class="nav-link ms-3" href="{% url 'settings_app:lead_status_list' %}">Statuses</a>
-                <a class="nav-link ms-3" href="{% url 'settings_app:lead_source_list' %}">Sources</a>
-            </div>
-
-            <!-- Opportunity Settings -->
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#oppSettingsMenu">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    class="bi bi-briefcase me-2" viewBox="0 0 16 16">
-                    <path
-                        d="M6.5 1A1.5 1.5 0 0 0 5 2.5V3H1.5A1.5 1.5 0 0 0 0 4.5v8A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 14.5 3H11v-.5A1.5 1.5 0 0 0 9.5 1h-3zm0 1h3a.5.5 0 0 1 .5.5V3H6v-.5a.5.5 0 0 1 .5-.5zm1.886 6.914L15 7.151V12.5a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5V7.15l6.614 1.764a1.5 1.5 0 0 0 .772 0zM1.5 4h13a.5.5 0 0 1 .5.5v1.616L8.129 7.948a.5.5 0 0 1-.258 0L1 6.116V4.5a.5.5 0 0 1 .5-.5z" />
-                </svg>
-                Opportunity Settings
-            </a>
-            <div class="collapse" id="oppSettingsMenu">
-                <a class="nav-link ms-3" href="{% url 'settings_app:opportunity_stage_list' %}">Stages</a>
-            </div>
-
-            <!-- Team Management -->
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#teamMenu">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    class="bi bi-people me-2" viewBox="0 0 16 16">
-                    <path
-                        d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1h8Zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022ZM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 0 .667.333 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816ZM4.92 10A5.493 5.493 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275ZM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0Zm3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z" />
-                </svg>
-                Team Management
-            </a>
-            <div class="collapse" id="teamMenu">
-                <a class="nav-link ms-3" href="{% url 'settings_app:team_list' %}">Team Members</a>
-                <a class="nav-link ms-3" href="{% url 'settings_app:team_create' %}">Add Member</a>
-                <a class="nav-link ms-3" href="{% url 'settings_app:role_list' %}">Roles & Permissions</a>
-            </div>
-
-            <!-- Territories -->
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#territoriesMenu">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    class="bi bi-map me-2" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd"
-                        d="M15.817.113A.5.5 0 0 1 16 .5v14a.5.5 0 0 1-.402.49l-5 1a.502.502 0 0 1-.196 0L5.5 15.01l-4.902.98A.5.5 0 0 1 0 15.5v-14a.5.5 0 0 1 .402-.49l5-1a.5.5 0 0 1 .196 0L10.5.99l4.902-.98a.5.5 0 0 1 .415.103zM10 1.91l-4-.8v12.98l4 .8V1.91zm1 12.98 4-.8V1.11l-4 .8v12.98zm-6-.8V1.11l-4 .8v12.98l4-.8z" />
-                </svg>
-                Territories
-            </a>
-            <div class="collapse" id="territoriesMenu">
-                <a class="nav-link ms-3" href="{% url 'settings_app:territory_list' %}">List</a>
-                <a class="nav-link ms-3" href="{% url 'settings_app:territory_create' %}">Create</a>
-            </div>
-
-            <!-- Customization -->
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#customizationMenu">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    class="bi bi-sliders me-2" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd"
-                        d="M11.5 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM9.05 3a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0V3h9.05zM4.5 7a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM2.05 8a2.5 2.5 0 0 1 4.9 0H16v1H6.95a2.5 2.5 0 0 1-4.9 0H0V8h2.05zm9.45 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-2.45 1a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0v-1h9.05z" />
-                </svg>
-                Customization
-            </a>
-            <div class="collapse" id="customizationMenu">
-                <a class="nav-link ms-3" href="{% url 'settings_app:custom_field_list' %}">Custom Fields</a>
-                <a class="nav-link ms-3" href="{% url 'settings_app:module_label_list' %}">Module Labels</a>
-            </div>
-
-            <!-- Automation -->
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#automationMenu">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    class="bi bi-lightning me-2" viewBox="0 0 16 16">
-                    <path
-                        d="M5.52.359A.5.5 0 0 1 6 0h4a.5.5 0 0 1 .474.658L8.694 6H12.5a.5.5 0 0 1 .395.807l-7 9a.5.5 0 0 1-.873-.454L6.823 9.5H3.5a.5.5 0 0 1-.48-.641l2.5-8.5zM6.374 1 4.168 8.5H7.5a.5.5 0 0 1 .478.647L6.78 13.04 11.478 7H8a.5.5 0 0 1-.474-.658L9.306 1H6.374z" />
-                </svg>
-                Automation
-            </a>
-            <div class="collapse" id="automationMenu">
-                <a class="nav-link ms-3" href="{% url 'settings_app:assignment_rule_list' %}">Assignment Rules</a>
-                <a class="nav-link ms-3" href="{% url 'settings_app:pipeline_stage_list' %}">Pipeline Stages</a>
-            </div>
-
-            <!-- Integrations -->
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#integrationsMenu">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    class="bi bi-plug me-2" viewBox="0 0 16 16">
-                    <path
-                        d="M6 0a.5.5 0 0 1 .5.5V3h3V.5a.5.5 0 0 1 1 0V3h1a.5.5 0 0 1 .5.5v3A3.5 3.5 0 0 1 8.5 10c-.002.434-.01.845-.04 1.22-.041.514-.126 1.003-.317 1.424a2.083 2.083 0 0 1-.97 1.028C6.725 13.9 6.169 14 5.5 14c-.998 0-1.61.33-1.974.718A1.922 1.922 0 0 0 3 16H2c0-.616.232-1.367.797-1.968C3.374 13.42 4.261 13 5.5 13c.581 0 .962-.088 1.218-.219.241-.123.4-.3.514-.55.121-.266.193-.621.23-1.09.027-.34.035-.718.037-1.141A3.5 3.5 0 0 1 4 6.5v-3a.5.5 0 0 1 .5-.5h1V.5A.5.5 0 0 1 6 0zM5 4v2.5A2.5 2.5 0 0 0 7.5 9h1A2.5 2.5 0 0 0 11 6.5V4H5z" />
-                </svg>
-                Integrations
-            </a>
-            <div class="collapse" id="integrationsMenu">
-                <a class="nav-link ms-3" href="{% url 'settings_app:apikey_list' %}">API Keys</a>
-                <a class="nav-link ms-3" href="{% url 'settings_app:webhook_list' %}">Webhooks</a>
-            </div>
-
-            <!-- Lead Scoring -->
-            <a class="nav-link" href="{% url 'settings_app:scoring_rules_list' %}">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    class="bi bi-bar-chart me-2" viewBox="0 0 16 16">
-                    <path
-                        d="M4 11H2v3h2v-3zm5-4H7v7h2V7zm5-5v12h-2V2h2zm-2-1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1h-2zM6 7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7zm-5 4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-3z" />
-                </svg>
-                Lead Scoring
-            </a>
-
-        </nav>
-    </div>
-
-    <!-- Main content -->
-    <div class="main-content" id="mainContent">
-        {% block content %}
-        <!-- Page-specific content goes here -->
-        {% endblock %}
-
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
-            const toggleBtn = document.getElementById('toggleSidebar');
-
-            // Toggle sidebar visibility
-            toggleBtn.addEventListener('click', function () {
-                sidebar.classList.toggle('hidden');
-                mainContent.classList.toggle('sidebar-hidden');
-            });
-
-            // On mobile, clicking outside closes sidebar
-            if (window.innerWidth <= 768) {
-                document.addEventListener('click', function (e) {
-                    if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
-                        sidebar.classList.remove('visible');
-                    }
-                });
-            }
-        });
-    </script>
-</body>
-
-</html>
+<!-- Integrations -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#integrationsMenu">
+    Integrations
+</a>
+<div class="collapse" id="integrationsMenu">
+    <a class="nav-link ms-3" href="{% url 'settings_app:apikey_list' %}">API Keys</a>
+    <a class="nav-link ms-3" href="{% url 'settings_app:webhook_list' %}">Webhooks</a>
+</div>
+{% endblock %}

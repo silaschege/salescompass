@@ -1,7 +1,7 @@
 from django.urls import path
 from . import security_views
 
-app_name = 'core'
+
 
 urlpatterns = [
     # Security Views

@@ -1,88 +1,149 @@
-{% extends 'base.html' %}
+{% extends 'logged_in/base.html' %}
+{% load auth_extras core_extras filters_extras math %}
 {% load static %}
 
 {% block title %}Feature Toggle Management{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <h1>Feature Toggle Management</h1>
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h1 class="h3 mb-1">Feature Toggle Management</h1>
             <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
+                <ol class="breadcrumb mb-0 bg-transparent p-0">
                     <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
-                    <li class="breadcrumb-item active">Feature Toggle Management</li>
+                    <li class="breadcrumb-item active">Feature Toggles</li>
                 </ol>
             </nav>
         </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <button class="btn btn-primary shadow-sm">
+                <i class="fas fa-plus-circle me-1"></i> Add Feature Toggle
+            </button>
+        </div>
     </div>
 
-    <div class="row mb-3">
-        <div class="col-md-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="mb-0">Feature Toggles</h5>
-                    <p class="text-muted mb-0">Manage feature availability across your application</p>
+    <!-- Stats Section (Moved to Top) -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm border-start border-primary border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted text-uppercase mb-1">Total Features</h6>
+                            <h2 class="mb-0">{{ features|length }}</h2>
+                        </div>
+                        <div class="text-primary bg-light rounded-circle p-3">
+                            <i class="fas fa-list fa-lg"></i>
+                        </div>
+                    </div>
                 </div>
-                <button class="btn btn-success">
-                    <i class="fas fa-plus"></i> Add Feature Toggle
-                </button>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm border-start border-success border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted text-uppercase mb-1">Active / Enabled</h6>
+                            <h2 class="mb-0 text-success">{{ features|count_enabled }}</h2>
+                        </div>
+                        <div class="text-success bg-light rounded-circle p-3">
+                            <i class="fas fa-check-circle fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm border-start border-secondary border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted text-uppercase mb-1">Strategies</h6>
+                            <h2 class="mb-0">5</h2>
+                        </div>
+                        <div class="text-secondary bg-light rounded-circle p-3">
+                            <i class="fas fa-chess-knight fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Main Content Row -->
     <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-body">
+        <!-- Left Column: Feature Table -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Feature Toggles</h5>
+                    <div class="input-group input-group-sm w-auto">
+                        <input type="text" class="form-control" placeholder="Search features...">
+                        <button class="btn btn-outline-secondary" type="button"><i class="fas fa-search"></i></button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
                                 <tr>
-                                    <th>Feature</th>
-                                    <th>Key</th>
-                                    <th>Description</th>
-                                    <th>Status</th>
+                                    <th class="ps-4">Feature Name</th>
+                                    <th>Key / Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for feature in features %}
                                 <tr>
-                                    <td>{{ feature.name }}</td>
-                                    <td><code>{{ feature.key }}</code></td>
-                                    <td>{{ feature.description }}</td>
+                                    <td class="ps-4">
+                                        <span class="fw-bold text-dark">{{ feature.name }}</span>
+                                        <br>
+                                        <small class="text-muted">{{ feature.description|truncatechars:60 }}</small>
+                                    </td>
                                     <td>
+                                        <code class="d-block mb-1 text-primary">{{ feature.key }}</code>
                                         {% if feature.enabled %}
-                                            <span class="badge bg-success">Enabled</span>
+                                            <span class="badge bg-success rounded-pill">
+                                                <i class="fas fa-check me-1"></i> Enabled
+                                            </span>
                                         {% else %}
-                                            <span class="badge bg-danger">Disabled</span>
+                                            <span class="badge bg-danger rounded-pill">
+                                                <i class="fas fa-times me-1"></i> Disabled
+                                            </span>
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <form method="post" style="display: inline;">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="feature_key" value="{{ feature.key }}">
-                                            {% if feature.enabled %}
-                                                <input type="hidden" name="status" value="disable">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                    <i class="fas fa-toggle-off"></i> Disable
-                                                </button>
-                                            {% else %}
-                                                <input type="hidden" name="status" value="enable">
-                                                <button type="submit" class="btn btn-sm btn-outline-success">
-                                                    <i class="fas fa-toggle-on"></i> Enable
-                                                </button>
-                                            {% endif %}
-                                        </form>
-                                        <button class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </button>
+                                        <div class="btn-group" role="group">
+                                            <form method="post" style="display: inline;">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="feature_key" value="{{ feature.key }}">
+                                                {% if feature.enabled %}
+                                                    <input type="hidden" name="status" value="disable">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Disable">
+                                                        <i class="fas fa-power-off"></i>
+                                                    </button>
+                                                {% else %}
+                                                    <input type="hidden" name="status" value="enable">
+                                                    <button type="submit" class="btn btn-sm btn-outline-success" title="Enable">
+                                                        <i class="fas fa-power-off"></i>
+                                                    </button>
+                                                {% endif %}
+                                            </form>
+                                            <button class="btn btn-sm btn-outline-primary ms-1" title="Edit Configuration">
+                                                <i class="fas fa-cog"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="5">No features found.</td>
+                                    <td colspan="3" class="text-center py-4 text-muted">
+                                        <i class="fas fa-code-branch fa-2x mb-2"></i>
+                                        <p>No feature toggles found.</p>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -91,76 +152,64 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="row mt-3">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">Feature Toggle Strategy</h5>
+        <!-- Right Column: Info & Audit -->
+        <div class="col-lg-4">
+            
+            <!-- Strategy Info -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h6 class="card-title mb-0 fw-bold"><i class="fas fa-lightbulb text-warning me-2"></i>Available Strategies</h6>
                 </div>
                 <div class="card-body">
-                    <h6>Available Strategies:</h6>
-                    <ul>
-                        <li><strong>Gradual Rollout:</strong> Enable feature for a percentage of users</li>
-                        <li><strong>User-based:</strong> Enable feature for specific users or roles</li>
-                        <li><strong>Tenant-based:</strong> Enable feature for specific tenants</li>
-                        <li><strong>Date-based:</strong> Enable feature after a specific date</li>
-                        <li><strong>Kill Switch:</strong> Completely disable a feature</li>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item px-0 py-2 d-flex align-items-start">
+                            <i class="fas fa-users-cog text-muted mt-1 me-2"></i>
+                            <div><strong>Gradual Rollout:</strong><br><small class="text-muted">Enable for % of users</small></div>
+                        </li>
+                        <li class="list-group-item px-0 py-2 d-flex align-items-start">
+                            <i class="fas fa-user-tag text-muted mt-1 me-2"></i>
+                            <div><strong>User/Role Based:</strong><br><small class="text-muted">Specific targets</small></div>
+                        </li>
+                        <li class="list-group-item px-0 py-2 d-flex align-items-start">
+                            <i class="fas fa-calendar-alt text-muted mt-1 me-2"></i>
+                            <div><strong>Date-based:</strong><br><small class="text-muted">Automated release</small></div>
+                        </li>
+                        <li class="list-group-item px-0 py-2 d-flex align-items-start">
+                            <i class="fas fa-skull-crossbones text-muted mt-1 me-2"></i>
+                            <div><strong>Kill Switch:</strong><br><small class="text-muted">Emergency disable</small></div>
+                        </li>
                     </ul>
-                    <p>Feature toggles allow you to enable or disable functionality without deploying new code.</p>
                 </div>
             </div>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">Quick Stats</h5>
-                </div>
+
+            <!-- Best Practices -->
+            <div class="card shadow-sm mb-4 bg-light border-0">
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="card text-white bg-primary mb-3">
-                                <div class="card-body text-center">
-                                    <h5 class="card-title">Total Features</h5>
-                                    <p class="card-text display-4">{{ features|length }}</p>
-                                </div>
-                            </div>
-                        <div class="col-md-6">
-                            <div class="card text-white bg-success mb-3">
-                                <div class="card-body text-center">
-                                    <h5 class="card-title">Enabled</h5>
-                                    <p class="card-text display-4">{{ features|selectattr:"enabled", "equalto", True|length }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    <div class="card bg-light">
-                        <div class="card-body">
-                            <h6 class="card-title">Feature Toggle Best Practices</h6>
-                            <ul class="mb-0">
-                                <li>Use descriptive feature keys</li>
-                                <li>Document the purpose of each toggle</li>
-                                <li>Remove toggles after features are stable</li>
-                                <li>Monitor feature usage</li>
-                            </ul>
-                        </div>
-                    </div>
+                    <h6 class="card-title fw-bold"><i class="fas fa-check-double text-info me-2"></i>Best Practices</h6>
+                    <ul class="small mb-0 ps-3">
+                        <li class="mb-1">Use descriptive feature keys (e.g., <code>NEW_checkout_flow</code>).</li>
+                        <li class="mb-1">Document the "why" in the description.</li>
+                        <li class="mb-1">Remove toggles once the feature is 100% stable.</li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row mt-3">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">Feature Toggle Audit</h5>
+    <!-- Audit Log Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title mb-0">Recent Audit Logs</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-sm">
+                        <table class="table table-sm table-striped mb-0">
                             <thead>
                                 <tr>
-                                    <th>Date</th>
+                                    <th class="ps-4">Date</th>
                                     <th>User</th>
                                     <th>Feature</th>
                                     <th>Action</th>
@@ -168,26 +217,20 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                <!-- Static Data Example -->
                                 <tr>
-                                    <td>May 10, 2023 14:30</td>
+                                    <td class="ps-4">May 10, 2023 14:30</td>
                                     <td>admin@example.com</td>
-                                    <td>NEW_DASHBOARD_UI</td>
-                                    <td>Enabled</td>
+                                    <td><code>NEW_DASHBOARD_UI</code></td>
+                                    <td><span class="badge bg-success">Enabled</span></td>
                                     <td>Enabled for 50% of users</td>
                                 </tr>
                                 <tr>
-                                    <td>May 9, 2023 09:15</td>
+                                    <td class="ps-4">May 9, 2023 09:15</td>
                                     <td>superadmin@example.com</td>
-                                    <td>ADVANCED_ANALYTICS</td>
-                                    <td>Disabled</td>
+                                    <td><code>ADVANCED_ANALYTICS</code></td>
+                                    <td><span class="badge bg-danger">Disabled</span></td>
                                     <td>Issue with data processing</td>
-                                </tr>
-                                <tr>
-                                    <td>May 8, 2023 16:45</td>
-                                    <td>admin@example.com</td>
-                                    <td>AI_FEATURES</td>
-                                    <td>Enabled</td>
-                                    <td>Enabled for beta testers</td>
                                 </tr>
                             </tbody>
                         </table>

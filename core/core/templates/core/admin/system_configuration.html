@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'logged_in/base.html' %}
 {% load static %}
 
 {% block title %}System Configuration{% endblock %}
@@ -26,6 +26,8 @@
                 <div class="card-body">
                     <form method="post">
                         {% csrf_token %}
+                        
+                        <!-- Company Settings -->
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -35,6 +37,7 @@
                                         <div class="text-danger">{{ form.company_name.errors }}</div>
                                     {% endif %}
                                 </div>
+                            </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="{{ form.company_email.id_for_label }}" class="form-label">Company Email</label>
@@ -44,26 +47,32 @@
                                     {% endif %}
                                 </div>
                             </div>
-                        <div class="mb-3">
-                            <label for="{{ form.company_phone.id_for_label }}" class="form-label">Company Phone</label>
-                            {{ form.company_phone }}
-                            {% if form.company_phone.errors %}
-                                <div class="text-danger">{{ form.company_phone.errors }}</div>
-                            {% endif %}
-                        </div>
+                        </div> <!-- End Row -->
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.company_phone.id_for_label }}" class="form-label">Company Phone</label>
+                                    {{ form.company_phone }}
+                                    {% if form.company_phone.errors %}
+                                        <div class="text-danger">{{ form.company_phone.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div> <!-- End Row -->
                         
                         <h5 class="mt-4">User Management Settings</h5>
                         <hr>
+                        
+                        <!-- MFA & Min Length -->
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="mb-3 form-check">
+                                <div class="mb-3 form-check mt-4">
                                     {{ form.require_mfa }}
                                     <label for="{{ form.require_mfa.id_for_label }}" class="form-check-label">Require MFA for all users</label>
                                 </div>
                             </div>
-                        
-                        <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="{{ form.password_min_length.id_for_label }}" class="form-label">Minimum Password Length</label>
                                     {{ form.password_min_length }}
@@ -72,7 +81,9 @@
                                     {% endif %}
                                 </div>
                             </div>
+                        </div> <!-- End Row -->
                         
+                        <!-- Password Complexity Checkboxes -->
                         <div class="row">
                             <div class="col-md-3">
                                 <div class="mb-3 form-check">
@@ -85,17 +96,20 @@
                                     {{ form.password_require_lowercase }}
                                     <label for="{{ form.password_require_lowercase.id_for_label }}" class="form-check-label">Require Lowercase</label>
                                 </div>
+                            </div>
                             <div class="col-md-3">
                                 <div class="mb-3 form-check">
                                     {{ form.password_require_numbers }}
                                     <label for="{{ form.password_require_numbers.id_for_label }}" class="form-check-label">Require Numbers</label>
                                 </div>
+                            </div>
                             <div class="col-md-3">
                                 <div class="mb-3 form-check">
                                     {{ form.password_require_special }}
                                     <label for="{{ form.password_require_special.id_for_label }}" class="form-check-label">Require Special Characters</label>
                                 </div>
                             </div>
+                        </div> <!-- End Row -->
                         
                         <h5 class="mt-4">Session Settings</h5>
                         <hr>
@@ -130,6 +144,7 @@
                                     <div class="form-text">Time user is locked out after max attempts</div>
                                 </div>
                             </div>
+                        </div> <!-- End Row -->
                         
                         <h5 class="mt-4">Email Settings</h5>
                         <hr>
@@ -142,6 +157,7 @@
                                         <div class="text-danger">{{ form.smtp_host.errors }}</div>
                                     {% endif %}
                                 </div>
+                            </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="{{ form.smtp_port.id_for_label }}" class="form-label">SMTP Port</label>
@@ -151,6 +167,8 @@
                                     {% endif %}
                                 </div>
                             </div>
+                        </div> <!-- End Row -->
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -160,6 +178,7 @@
                                         <div class="text-danger">{{ form.smtp_username.errors }}</div>
                                     {% endif %}
                                 </div>
+                            </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="{{ form.smtp_password.id_for_label }}" class="form-label">SMTP Password</label>
@@ -167,20 +186,24 @@
                                     <div class="form-text">Leave blank to keep current password</div>
                                 </div>
                             </div>
+                        </div> <!-- End Row -->
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3 form-check">
                                     {{ form.smtp_use_tls }}
                                     <label for="{{ form.smtp_use_tls.id_for_label }}" class="form-check-label">Use TLS</label>
                                 </div>
+                            </div>
                             <div class="col-md-6">
                                 <div class="mb-3 form-check">
                                     {{ form.smtp_use_ssl }}
                                     <label for="{{ form.smtp_use_ssl.id_for_label }}" class="form-check-label">Use SSL</label>
                                 </div>
                             </div>
+                        </div> <!-- End Row -->
                         
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                             <button type="submit" class="btn btn-primary">Save Configuration</button>
                             <button type="button" class="btn btn-secondary">Cancel</button>
                         </div>

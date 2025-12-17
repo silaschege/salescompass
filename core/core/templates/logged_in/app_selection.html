@@ -86,7 +86,6 @@
             height: 80px;
             background: #fff;
             border-radius: 22px;
-            /* Squircle-ish */
             box-shadow: 0 10px 25px rgba(111, 66, 193, 0.1);
             display: flex;
             align-items: center;
@@ -180,13 +179,13 @@
 
         <div class="app-container">
 
-            <!-- Customer Facing -->
-            {% if grouped_apps.customer %}
+            <!-- 1. Core Apps (Home, Dashboard, Accounts, etc.) -->
+            {% if grouped_apps.core %}
             <div class="app-section mb-5">
-                <h3 class="section-subtitle text-center mb-4 text-muted">Customer Relationship</h3>
+                <h3 class="section-subtitle text-center mb-4 text-muted">Core Platform</h3>
                 <div class="app-grid">
-                    {% for app in grouped_apps.customer %}
-                    <a href="{{ app.url }}" class="app-item">
+                    {% for app in grouped_apps.core %}
+                    <a href="{{ app.url }}" class="app-item" title="{{ app.description }}">
                         <div class="app-icon-container">
                             <i class="{{ app.icon }} fs-1 text-primary"></i>
                         </div>
@@ -197,13 +196,13 @@
             </div>
             {% endif %}
 
-            <!-- Work / Deals -->
-            {% if grouped_apps.work %}
+            <!-- 2. Feature Apps (Sales, Leads, Marketing, etc.) -->
+            {% if grouped_apps.feature %}
             <div class="app-section mb-5">
-                <h3 class="section-subtitle text-center mb-4 text-muted">Sales & Operations</h3>
+                <h3 class="section-subtitle text-center mb-4 text-muted">Applications & Features</h3>
                 <div class="app-grid">
-                    {% for app in grouped_apps.work %}
-                    <a href="{{ app.url }}" class="app-item">
+                    {% for app in grouped_apps.feature %}
+                    <a href="{{ app.url }}" class="app-item" title="{{ app.description }}">
                         <div class="app-icon-container">
                             <i class="{{ app.icon }} fs-1 text-primary"></i>
                         </div>
@@ -214,48 +213,15 @@
             </div>
             {% endif %}
 
-            <!-- Analytics / Support -->
-            {% if grouped_apps.analytics %}
-            <div class="app-section mb-5">
-                <h3 class="section-subtitle text-center mb-4 text-muted">Insights & Support</h3>
-                <div class="app-grid">
-                    {% for app in grouped_apps.analytics %}
-                    <a href="{{ app.url }}" class="app-item">
-                        <div class="app-icon-container">
-                            <i class="{{ app.icon }} fs-1 text-primary"></i>
-                        </div>
-                        <span class="app-name">{{ app.name }}</span>
-                    </a>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Admin / Config -->
-            {% if grouped_apps.admin %}
-            <div class="app-section mb-5">
-                <h3 class="section-subtitle text-center mb-4 text-muted">Administration</h3>
-                <div class="app-grid">
-                    {% for app in grouped_apps.admin %}
-                    <a href="{{ app.url }}" class="app-item">
-                        <div class="app-icon-container">
-                            <i class="{{ app.icon }} fs-1 text-primary"></i>
-                        </div>
-                        <span class="app-name">{{ app.name }}</span>
-                    </a>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Control Plane -->
+            <!-- 3. Control Plane (Superuser / Admin) -->
             {% if grouped_apps.control %}
             <div class="app-section mb-5">
-                <h3 class="section-subtitle text-center mb-4 text-muted">Control Plane</h3>
+                <h3 class="section-subtitle text-center mb-4 text-muted">System Control</h3>
                 <div class="app-grid">
                     {% for app in grouped_apps.control %}
-                    <a href="{{ app.url }}" class="app-item">
+                    <a href="{{ app.url }}" class="app-item" title="{{ app.description }}">
                         <div class="app-icon-container">
+                            <!-- Using text-danger to visually distinguish Admin/Control apps -->
                             <i class="{{ app.icon }} fs-1 text-danger"></i>
                         </div>
                         <span class="app-name">{{ app.name }}</span>
@@ -266,7 +232,10 @@
             {% endif %}
 
             {% if not has_any_apps %}
-            <p class="text-center text-muted">No apps available for your role.</p>
+            <div class="text-center py-5">
+                <i class="bi bi-shield-lock display-1 text-muted"></i>
+                <p class="mt-3 text-muted fs-5">No applications are available for your current role permissions.</p>
+            </div>
             {% endif %}
         </div>
 

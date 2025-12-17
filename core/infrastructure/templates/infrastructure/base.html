@@ -149,7 +149,7 @@
     </button>
 
     <div class="sidebar" id="sidebar">
-        <a class="navbar-brand" href="{% url 'app_selection' %}">
+        <a class="navbar-brand" href="{% url 'core:app_selection' %}">
             <i class="bi bi-compass me-2"></i> SalesCompass
         </a>
 
@@ -195,15 +195,30 @@
                     href="{% url 'infrastructure:resource_alerts' %}">Resource Alerts</a>
             </div>
 
+            <!-- Module Management -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#moduleMenu">
+                <i class="bi bi-boxes"></i> Module Management
+            </a>
+            <div class="collapse" id="moduleMenu">
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'app_module_list' %}active{% endif %}"
+                    href="{% url 'infrastructure:app_module_list' %}">App Modules</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'module_dependency_list' %}active{% endif %}"
+                    href="{% url 'infrastructure:module_dependency_list' %}">Dependencies</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'tenant_module_provision_list' %}active{% endif %}"
+                    href="{% url 'infrastructure:tenant_module_provision_list' %}">Tenant Provisions</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'alert_configuration' %}active{% endif %}"
+                    href="{% url 'infrastructure:alert_configuration' %}">Alert Config</a>
+            </div>
+
             <div class="section-title mt-4">NAVIGATION</div>
             <a class="nav-link" href="{% url 'dashboard:admin_dashboard' %}">
                 <i class="bi bi-house-door"></i> Admin Dashboard
             </a>
-            <a class="nav-link" href="{% url 'app_selection' %}">
+            <a class="nav-link" href="{% url 'core:app_selection' %}">
                 <i class="bi bi-grid"></i> Control Plane Apps
             </a>
             <div class="mt-auto pt-4 border-top">
-                <a class="nav-link text-danger" href="{% url 'logout' %}">
+                <a class="nav-link text-danger" href="{% url 'core:logout' %}">
                     <i class="bi bi-box-arrow-right"></i> Log Out
                 </a>
             </div>

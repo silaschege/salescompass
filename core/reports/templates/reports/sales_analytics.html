@@ -1,0 +1,173 @@
+{% extends 'logged_in/base.html' %}
+{% load humanize %}
+
+{% block title %}Sales Performance Analytics | SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row align-items-center mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0 text-gray-800">Sales Performance Analytics</h1>
+            <p class="text-muted small mb-0">Overview of key sales metrics and trends</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-calendar3 me-1"></i> Last 30 Days
+            </button>
+            <button class="btn btn-sm btn-primary ms-2">
+                <i class="bi bi-download me-1"></i> Export
+            </button>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-sm-6">
+            <div class="card h-100 shadow-sm border-0 border-start border-primary border-4">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Revenue</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">${{ metrics.total_revenue|floatform:2|intcomma
+                        }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <div class="card h-100 shadow-sm border-0 border-start border-success border-4">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Win Rate</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ metrics.win_rate|floatform:1 }}%</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <div class="card h-100 shadow-sm border-0 border-start border-info border-4">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Deals Closed</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ metrics.total_deals }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <div class="card h-100 shadow-sm border-0 border-start border-warning border-4">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Avg Deal Size</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">${{ metrics.avg_deal_size|floatform:2|intcomma
+                        }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <!-- Revenue Trend -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header py-3 bg-white d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Revenue Trend (Last 6 Months)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area" style="height: 320px;">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Win Rate Trend -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header py-3 bg-white">
+                    <h6 class="m-0 font-weight-bold text-primary">Win Rate Trend</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area" style="height: 320px;">
+                        <canvas id="winRateChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Revenue Chart
+    const revCtx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(revCtx, {
+        type: 'line',
+        data: {
+            labels: {{ trend_labels| safe }},
+        datasets: [{
+            label: 'Revenue ($)',
+            data: {{ revenue_trend| safe }},
+        backgroundColor: 'rgba(78, 115, 223, 0.05)',
+        borderColor: 'rgba(78, 115, 223, 1)',
+        pointRadius: 3,
+        pointBackgroundColor: 'rgba(78, 115, 223, 1)',
+        pointBorderColor: 'rgba(78, 115, 223, 1)',
+        pointHoverRadius: 3,
+        pointHoverBackgroundColor: 'rgba(78, 115, 223, 1)',
+        pointHoverBorderColor: 'rgba(78, 115, 223, 1)',
+        pointHitRadius: 10,
+        pointBorderWidth: 2,
+        tension: 0.3,
+        fill: true
+            }]
+        },
+        options: {
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: { borderDash: [2, 2] }
+            },
+            x: {
+                grid: { display: false }
+            }
+        },
+        plugins: {
+            legend: { display: false }
+        }
+    }
+    });
+
+    // Win Rate Chart
+    const winCtx = document.getElementById('winRateChart').getContext('2d');
+    new Chart(winCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ trend_labels| safe }},
+        datasets: [{
+            label: 'Win Rate (%)',
+            data: {{ win_rate_trend| safe }},
+        backgroundColor: '#1cc88a',
+        hoverBackgroundColor: '#17a673',
+        borderColor: '#4e73df',
+        borderWidth: 0,
+        borderRadius: 4
+            }]
+        },
+        options: {
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                grid: { borderDash: [2, 2] }
+            },
+            x: {
+                grid: { display: false }
+            }
+        },
+        plugins: {
+            legend: { display: false }
+        }
+    }
+    });
+</script>
+{% endblock %}

@@ -17,8 +17,8 @@ def lead_webhook_signal(sender, instance, created, **kwargs):
         'email': instance.email,
         'status': instance.status,
         'source': str(instance.source_ref) if instance.source_ref else None,
-        'created_at': instance.created_at.isoformat(),
-        'updated_at': instance.updated_at.isoformat()
+        'created_at': instance.lead_acquisition_date.isoformat() if instance.lead_acquisition_date else None,
+        'updated_at': instance.updated_at.isoformat() if hasattr(instance, 'updated_at') and instance.updated_at else None
     }
     
     trigger_webhook.delay(event_type, payload, instance.tenant_id)
@@ -39,12 +39,12 @@ def opportunity_webhook_signal(sender, instance, created, **kwargs):
         
     payload = {
         'id': instance.id,
-        'name': instance.name,
+        'name': instance.opportunity_name,
         'amount': float(instance.amount) if instance.amount else 0.0,
-        'stage': instance.stage.name,
-        'account': instance.account.name if instance.account else None,
+        'stage': instance.stage.opportunity_stage_name if instance.stage else None,
+        'account': instance.account.email if instance.account else None,
         'close_date': str(instance.close_date),
-        'created_at': instance.created_at.isoformat()
+        'created_at': instance.created_at.isoformat() if hasattr(instance, 'created_at') and instance.created_at else None
     }
     
     trigger_webhook.delay(event_type, payload, instance.tenant_id)

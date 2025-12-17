@@ -1,180 +1,258 @@
-{% extends 'base.html' %}
+{% extends 'logged_in/base.html' %}
 {% load static %}
 
-{% block title %}System Maintenance{% endblock %}
+{% block title %}Data Management{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
+    <!-- Header Section -->
     <div class="row">
         <div class="col-12">
-            <h1>System Maintenance</h1>
+            <h1>Data Management</h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
-                    <li class="breadcrumb-item active">System Maintenance</li>
+                    <li class="breadcrumb-item active">Data Management</li>
                 </ol>
             </nav>
         </div>
     </div>
 
+    <!-- Info Alert -->
     <div class="row">
         <div class="col-md-12">
             <div class="alert alert-info" role="alert">
-                <i class="fas fa-info-circle"></i> System maintenance tools allow you to manage system operations, perform backups, and schedule maintenance windows.
+                <i class="fas fa-info-circle"></i> Data management tools allow you to manage data across tenants, implement retention policies, and perform bulk operations.
             </div>
         </div>
     </div>
 
+    <!-- Statistics Row (Added h-100 for equal heights) -->
     <div class="row">
-        <div class="col-md-3">
-            <div class="card text-white bg-primary mb-3">
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-primary h-100">
                 <div class="card-body">
-                    <h5 class="card-title">System Uptime</h5>
-                    <p class="card-text">{{ maintenance_info.system_uptime }}</p>
+                    <h5 class="card-title">Total Tenants</h5>
+                    <p class="card-text display-4">{{ data_stats.total_tenants }}</p>
                 </div>
             </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-success mb-3">
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-success h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Database Size</h5>
-                    <p class="card-text">{{ maintenance_info.database_size }}</p>
+                    <h5 class="card-title">Total Users</h5>
+                    <p class="card-text display-4">{{ data_stats.total_users }}</p>
                 </div>
             </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-warning mb-3">
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-warning h-100">
                 <div class="card-body">
-                    <h5 class="card-title">File Storage</h5>
-                    <p class="card-text">{{ maintenance_info.file_storage_used }}</p>
+                    <h5 class="card-title">Storage Used</h5>
+                    <p class="card-text">{{ data_stats.total_storage_used }}</p>
                 </div>
             </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-info mb-3">
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-info h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Last Backup</h5>
-                    <p class="card-text">{{ maintenance_info.last_backup|date:"M d, Y" }}</p>
+                    <h5 class="card-title">Next Cleanup</h5>
+                    <p class="card-text">{{ data_stats.next_cleanup|date:"M d, Y" }}</p>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Data Operations Section -->
     <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Data Operations</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- 
+                           FIX: Added 'h-100' to cards.
+                           FIX: Added 'd-flex flex-column' to card-body.
+                           FIX: Added 'mt-auto' to buttons to push them to the bottom.
+                        -->
+                        <div class="col-md-3 mb-3">
+                            <div class="card text-center h-100 border-success">
+                                <div class="card-body d-flex flex-column">
+                                    <i class="fas fa-file-export fa-2x text-success mb-2"></i>
+                                    <h6 class="card-title">Export Data</h6>
+                                    <p class="card-text">Export data for compliance or migration</p>
+                                    <button class="btn btn-sm btn-outline-success mt-auto" data-bs-toggle="modal" data-bs-target="#exportDataModal">
+                                        Export
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <div class="card text-center h-100 border-primary">
+                                <div class="card-body d-flex flex-column">
+                                    <i class="fas fa-file-import fa-2x text-primary mb-2"></i>
+                                    <h6 class="card-title">Import Data</h6>
+                                    <p class="card-text">Import data from external sources</p>
+                                    <button class="btn btn-sm btn-outline-primary mt-auto" data-bs-toggle="modal" data-bs-target="#importDataModal">
+                                        Import
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <div class="card text-center h-100 border-warning">
+                                <div class="card-body d-flex flex-column">
+                                    <i class="fas fa-trash-alt fa-2x text-warning mb-2"></i>
+                                    <h6 class="card-title">Purge Data</h6>
+                                    <p class="card-text">Remove data based on retention policies</p>
+                                    <button class="btn btn-sm btn-outline-warning mt-auto" data-bs-toggle="modal" data-bs-target="#purgeDataModal">
+                                        Purge
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <div class="card text-center h-100 border-info">
+                                <div class="card-body d-flex flex-column">
+                                    <i class="fas fa-clone fa-2x text-info mb-2"></i>
+                                    <h6 class="card-title">Migrate Data</h6>
+                                    <p class="card-text">Migrate data between tenants or systems</p>
+                                    <button class="btn btn-sm btn-outline-info mt-auto" data-bs-toggle="modal" data-bs-target="#migrateDataModal">
+                                        Migrate
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Policy and Quality Row (Added h-100 for equal heights) -->
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Data Retention Policy</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Retention Period</label>
+                        <select class="form-select">
+                            <option selected>{{ data_stats.retention_policy }}</option>
+                            <option>30 days</option>
+                            <option>90 days</option>
+                            <option>180 days</option>
+                            <option>1 year</option>
+                            <option>2 years</option>
+                            <option>7 years</option>
+                            <option>Forever</option>
+                        </select>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="autoPurge" checked>
+                        <label class="form-check-label" for="autoPurge">
+                            Automatically purge data after retention period
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="notifyBeforePurge" checked>
+                        <label class="form-check-label" for="notifyBeforePurge">
+                            Notify before purging data
+                        </label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notification Days</label>
+                        <input type="number" class="form-control" value="7">
+                    </div>
+                    <button class="btn btn-primary w-100 mt-auto">Save Policy</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Data Quality</h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: 92%">
+                            Data Quality: 92%
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><i class="fas fa-check-circle text-success"></i> <strong>Valid Records:</strong> 98.7%</p>
+                            <p><i class="fas fa-exclamation-triangle text-warning"></i> <strong>Duplicates:</strong> 0.3%</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><i class="fas fa-ban text-danger"></i> <strong>Invalid Records:</strong> 1.0%</p>
+                            <p><i class="fas fa-sync-alt text-info"></i> <strong>Missing Values:</strong> 5.2%</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline-info w-100 mt-auto">Run Data Quality Check</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Operations Table -->
+    <div class="row mb-4">
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title">Maintenance Options</h5>
-                </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <h6 class="card-title">Maintenance Mode</h6>
-                                        <p class="card-text">Temporarily disable system access for maintenance</p>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" id="maintenanceToggle" {% if maintenance_info.maintenance_mode %}checked{% endif %}>
-                                            <label class="form-check-label" for="maintenanceToggle">
-                                                {% if maintenance_info.maintenance_mode %}Maintenance Mode Active{% else %}Maintenance Mode Inactive{% endif %}
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            <div class="col-md-6">
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <h6 class="card-title">Schedule Maintenance</h6>
-                                        <p class="card-text">Schedule maintenance for a future time</p>
-                                        <div class="mb-3">
-                                            <label for="scheduledTime" class="form-label">Scheduled Time</label>
-                                            <input type="datetime-local" class="form-control" id="scheduledTime" name="scheduled_time">
-                                        </div>
-                                        <button type="submit" name="action" value="schedule_maintenance" class="btn btn-warning">Schedule Maintenance</button>
-                                    </div>
-                                </div>
-                            </div>
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <button type="submit" name="action" value="run_backup" class="btn btn-success me-md-2">
-                                <i class="fas fa-database"></i> Run Backup
-                            </button>
-                            <button type="submit" name="action" value="clear_cache" class="btn btn-info me-md-2">
-                                <i class="fas fa-broom"></i> Clear Cache
-                            </button>
-                            <button type="submit" name="action" value="toggle_maintenance" class="btn btn-warning">
-                                <i class="fas fa-tools"></i> Toggle Maintenance Mode
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row mt-3">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">System Health</h5>
-                </div>
-                <div class="card-body">
-                    <div class="progress mb-3">
-                        <div class="progress-bar bg-success" role="progressbar" style="width: 95%"></div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><i class="fas fa-microchip text-primary"></i> <strong>CPU Usage:</strong> 45%</p>
-                            <p><i class="fas fa-memory text-primary"></i> <strong>Memory Usage:</strong> 60%</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><i class="fas fa-hdd text-primary"></i> <strong>Disk Usage:</strong> 30%</p>
-                            <p><i class="fas fa-network-wired text-primary"></i> <strong>Network:</strong> Normal</p>
-                        </div>
-                    </div>
-                    <div class="alert alert-success" role="alert">
-                        <i class="fas fa-check-circle"></i> All systems operational
-                    </div>
-                </div>
-            </div>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">Recent Maintenance Activities</h5>
+                    <h5 class="card-title mb-0">Recent Data Operations</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-sm">
+                        <table class="table table-sm table-hover">
                             <thead>
                                 <tr>
-                                    <th>Time</th>
-                                    <th>Activity</th>
+                                    <th>Operation</th>
+                                    <th>Target</th>
                                     <th>Status</th>
-                                    <th>Performed By</th>
+                                    <th>Time</th>
+                                    <th>Details</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>May 10, 2023 02:00</td>
-                                    <td>Daily Backup</td>
-                                    <td><span class="badge bg-success">Success</span></td>
-                                    <td>System</td>
+                                    <td>Data Export</td>
+                                    <td>Tenant A</td>
+                                    <td><span class="badge bg-success">Completed</span></td>
+                                    <td>May 10, 2023 14:30</td>
+                                    <td>Exported 1,245 records</td>
                                 </tr>
                                 <tr>
-                                    <td>May 9, 2023 23:30</td>
-                                    <td>Cache Clear</td>
-                                    <td><span class="badge bg-success">Success</span></td>
-                                    <td>admin@example.com</td>
+                                    <td>Data Purge</td>
+                                    <td>Logs</td>
+                                    <td><span class="badge bg-success">Completed</span></td>
+                                    <td>May 10, 2023 02:15</td>
+                                    <td>Removed 5,678 old records</td>
                                 </tr>
                                 <tr>
-                                    <td>May 9, 2023 14:15</td>
-                                    <td>Database Optimization</td>
-                                    <td><span class="badge bg-success">Success</span></td>
-                                    <td>system</td>
+                                    <td>Data Import</td>
+                                    <td>Tenant B</td>
+                                    <td><span class="badge bg-warning">In Progress</span></td>
+                                    <td>May 9, 2023 16:45</td>
+                                    <td>Processing 2,341 records</td>
                                 </tr>
                                 <tr>
-                                    <td>May 8, 2023 02:00</td>
-                                    <td>Daily Backup</td>
-                                    <td><span class="badge bg-success">Success</span></td>
-                                    <td>System</td>
+                                    <td>Data Migration</td>
+                                    <td>Tenant C to D</td>
+                                    <td><span class="badge bg-success">Completed</span></td>
+                                    <td>May 8, 2023 10:20</td>
+                                    <td>Migrated 15,678 records</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -183,52 +261,193 @@
             </div>
         </div>
     </div>
+</div>
 
-    <div class="row mt-3">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">Maintenance Tasks</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <i class="fas fa-database fa-2x text-success mb-2"></i>
-                                    <h6 class="card-title">Database Backup</h6>
-                                    <button class="btn btn-sm btn-outline-success">Run Now</button>
-                                </div>
+<!-- Modals placed outside the main container structure for cleaner DOM -->
+<!-- Export Data Modal -->
+<div class="modal fade" id="exportDataModal" tabindex="-1" aria-labelledby="exportDataModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportDataModalLabel">Export Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Export Format</label>
+                        <select class="form-select">
+                            <option>CSV</option>
+                            <option>JSON</option>
+                            <option>Excel</option>
+                            <option>PDF</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Data Types</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="exportUsers">
+                            <label class="form-check-label" for="exportUsers">Users</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="exportAccounts">
+                            <label class="form-check-label" for="exportAccounts">Accounts</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="exportLeads">
+                            <label class="form-check-label" for="exportLeads">Leads</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date Range</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="date" class="form-control" placeholder="Start date">
                             </div>
-                        <div class="col-md-3">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <i class="fas fa-file-export fa-2x text-info mb-2"></i>
-                                    <h6 class="card-title">Data Export</h6>
-                                    <button class="btn btn-sm btn-outline-info">Export</button>
-                                </div>
-                            </div>
-                        <div class="col-md-3">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <i class="fas fa-trash-alt fa-2x text-warning mb-2"></i>
-                                    <h6 class="card-title">Cleanup Logs</h6>
-                                    <button class="btn btn-sm btn-outline-warning">Clean</button>
-                                </div>
-                            </div>
-                        <div class="col-md-3">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <i class="fas fa-sync-alt fa-2x text-primary mb-2"></i>
-                                    <h6 class="card-title">Update System</h6>
-                                    <button class="btn btn-sm btn-outline-primary">Update</button>
-                                </div>
+                            <div class="col-md-6">
+                                <input type="date" class="form-control" placeholder="End date">
                             </div>
                         </div>
                     </div>
-                </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success">Export Data</button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Import Data Modal -->
+<div class="modal fade" id="importDataModal" tabindex="-1" aria-labelledby="importDataModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importDataModalLabel">Import Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="importFile" class="form-label">Select File</label>
+                        <input type="file" class="form-control" id="importFile">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Import Type</label>
+                        <select class="form-select">
+                            <option>Users</option>
+                            <option>Accounts</option>
+                            <option>Leads</option>
+                            <option>Opportunities</option>
+                        </select>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="overwriteData">
+                        <label class="form-check-label" for="overwriteData">
+                            Overwrite existing data
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Import Data</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Purge Data Modal -->
+<div class="modal fade" id="purgeDataModal" tabindex="-1" aria-labelledby="purgeDataModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="purgeDataModalLabel">Purge Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Data Type to Purge</label>
+                        <select class="form-select">
+                            <option>Logs</option>
+                            <option>Temporary Files</option>
+                            <option>Old Records</option>
+                            <option>Archived Data</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Purge Criteria</label>
+                        <select class="form-select">
+                            <option>Older than 30 days</option>
+                            <option>Older than 90 days</option>
+                            <option>Older than 180 days</option>
+                            <option>Older than 1 year</option>
+                        </select>
+                    </div>
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-exclamation-triangle"></i> Data purging is irreversible. Please confirm before proceeding.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger">Purge Data</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Migrate Data Modal -->
+<div class="modal fade" id="migrateDataModal" tabindex="-1" aria-labelledby="migrateDataModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="migrateDataModalLabel">Migrate Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Source</label>
+                        <select class="form-select">
+                            <option>Tenant A</option>
+                            <option>Tenant B</option>
+                            <option>Tenant C</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Destination</label>
+                        <select class="form-select">
+                            <option>Tenant A</option>
+                            <option>Tenant B</option>
+                            <option>Tenant C</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Data Types</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="migrateUsers" checked>
+                            <label class="form-check-label" for="migrateUsers">Users</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="migrateAccounts" checked>
+                            <label class="form-check-label" for="migrateAccounts">Accounts</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="migrateLeads">
+                            <label class="form-check-label" for="migrateLeads">Leads</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-info">Migrate Data</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

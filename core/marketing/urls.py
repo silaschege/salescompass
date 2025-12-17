@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import views_analytics
 
 app_name = 'marketing'
 
@@ -81,4 +82,7 @@ urlpatterns = [
     path('email-integration/create/', views.EmailIntegrationCreateView.as_view(), name='email_integration_create'),
     path('email-integration/<int:pk>/edit/', views.EmailIntegrationUpdateView.as_view(), name='email_integration_update'),
     path('email-integration/<int:pk>/delete/', views.EmailIntegrationDeleteView.as_view(), name='email_integration_delete'),
+    
+    # Analytics
+    path('analytics/performance/', views_analytics.CampaignPerformanceView.as_view(), name='campaign_performance'),
 ]

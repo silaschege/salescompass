@@ -15,6 +15,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views import View
 from core.models import User
 import json
+from .query_builder import get_widget_data
+from .bi_services import DataAggregationService, AdvancedVisualizationService, RealTimeProcessor
+
 
 
 
@@ -108,6 +111,84 @@ class DashboardRenderView(LoginRequiredMixin, TemplateView):
         context['dashboard'] = dashboard
         context['layout'] = dashboard.layout or {}
         context['widget_settings'] = dashboard.widget_settings or {}
+        
+        # Parse layout and fetch widget data
+        widgets_data = []
+        rows = (dashboard.layout or {}).get('rows', [])
+        widget_settings = dashboard.widget_settings or {}
+        
+        # Initialize services
+        tenant = self.request.user.tenant if hasattr(self.request.user, 'tenant') else None
+        bi_service = DataAggregationService(tenant) if tenant else None
+        viz_service = AdvancedVisualizationService(tenant) if tenant else None
+        
+        for row in rows:
+            row_widgets = []
+            for widget_info in row.get('widgets', []):
+                widget_id = widget_info.get('id')
+                widget_type = widget_info.get('type')
+                
+                # Base widget context
+                widget_ctx = {
+                    'span': widget_info.get('span', 6),
+                    'widget_name': widget_info.get('name', 'Widget'),
+                    'widget_type': widget_type,
+                    'id': widget_id,
+                }
+                
+                # Determine Template & Data
+                if widget_type == 'battery':
+                    widget_ctx['template'] = 'dashboard/widgets/battery.html'
+                    # Mock or Fetch Battery Data
+                    widget_ctx['data'] = {
+                        'percent_complete': 68,
+                        'subtitle': 'Overall Project Health',
+                        'breakdown': [
+                            {'label': 'Done', 'count': 12, 'color': '#198754'},
+                            {'label': 'In Progress', 'count': 5, 'color': '#ffc107'},
+                            {'label': 'Todo', 'count': 8, 'color': '#6c757d'},
+                        ]
+                    }
+                elif widget_type == 'workload':
+                    widget_ctx['template'] = 'dashboard/widgets/workload.html'
+                    # Mock Workload Data (or fetch from User/Task models if possible)
+                    widget_ctx['data'] = {
+                         'sample_members': [
+                            {'name': 'Alice Johnson', 'initials': 'AJ', 'load': 85, 'tasks_count': 12},
+                            {'name': 'Bob Smith', 'initials': 'BS', 'load': 45, 'tasks_count': 6},
+                            {'name': 'Charlie Day', 'initials': 'CD', 'load': 20, 'tasks_count': 3},
+                        ]
+                    }
+                elif widget_type == 'ai_block':
+                    widget_ctx['template'] = 'dashboard/widgets/ai_block.html'
+                    widget_ctx['data'] = {
+                        'headline': 'Sales Velocity Increasing',
+                        'insight': 'Your team is closing deals 15% faster than last month. Focus on upsells for current qualified leads.'
+                    }
+                elif widget_type == 'revenue_heatmap' and viz_service:
+                     widget_ctx['template'] = 'dashboard/bi/heatmap_widget.html' # Need to create this or reuse
+                     widget_ctx['data'] = viz_service.get_heatmap_data()
+                else:
+                    # Standard Dynamic Widget
+                    config = widget_settings.get(widget_id, {})
+                    if config and config.get('model'):
+                        data_result = get_widget_data(config, tenant.id if tenant else None)
+                        widget_ctx['data'] = data_result
+                        widget_ctx['template'] = 'dashboard/widgets/dynamic.html' # Need to ensure this exists or use generic
+                    else:
+                         # Fallback for unconfigured or standard widgets checks
+                         try:
+                             # Try to find a template matching the type
+                             widget_ctx['template'] = f'dashboard/widgets/{widget_type}.html'
+                             # Add generic data if needed
+                         except:
+                             widget_ctx['template'] = None
+
+                row_widgets.append(widget_ctx)
+            if row_widgets:
+                widgets_data.append(row_widgets)
+
+        context['widgets_data'] = widgets_data
         
         return context
 

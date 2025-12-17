@@ -1,0 +1,73 @@
+{% extends "logged_in/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8 offset-md-2">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h2 class="h4 mb-0">
+                    {% if form.instance.pk %}Edit Business Rule{% else %}Create Business Rule{% endif %}
+                </h2>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            {{ form.automation_rule_name|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            {{ form.automation_rule_description|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.trigger_type|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6 mb-3 d-flex align-items-center">
+                            {{ form.automation_rule_is_active|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5 class="mb-3">Conditions (JSON)</h5>
+                    <p class="text-muted small">
+                        Define conditions as a JSON list. Example:
+                        <code>[{"field": "opportunity.amount", "operator": "gt", "value": 10000}]</code>
+                    </p>
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            {{ form.conditions|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5 class="mb-3">Actions (JSON)</h5>
+                    <p class="text-muted small">
+                        Define actions as a JSON list. Example:
+                        <code>[{"type": "create_task", "config": {"title": "High Value Deal"}}]</code>
+                    </p>
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            {{ form.actions|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-4">
+                        <a href="{% url 'automation:rule_list' %}" class="btn btn-outline-secondary me-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save Rule</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

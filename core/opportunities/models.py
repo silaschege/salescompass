@@ -90,7 +90,7 @@ class OpportunityStage(TenantModel):
     def __str__(self):
         return self.opportunity_stage_name
 
-class Opportunity(TenantModel):
+class Opportunity(TenantModel, TimeStampedModel):
     opportunity_name = models.CharField(max_length=255)
     account = models.ForeignKey(User, on_delete=models.CASCADE, related_name='opportunities')
     amount = models.DecimalField(max_digits=14, decimal_places=2)

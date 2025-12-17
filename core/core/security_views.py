@@ -5,7 +5,8 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Count, Q
 from .models import User
-from audit_logs.models import AuditLog
+from audit_logs.models import AuditLog, AnomalyDetectionResult, AuditReport
+
 from accounts.models import Role
 from tenants.models import Tenant
 
@@ -30,26 +31,26 @@ class SecurityDashboardView(LoginRequiredMixin, SuperuserRequiredMixin, Template
         
         # Recent security events
         context['recent_security_events'] = AuditLog.objects.filter(
-            Q(action_type__icontains='LOGIN') |
-            Q(action_type__icontains='AUTH') |
-            Q(action_type__icontains='PERMISSION') |
-            Q(action_type__icontains='ACCESS') |
+            Q(action__icontains='LOGIN') |
+            Q(action__icontains='AUTH') |
+            Q(action__icontains='PERMISSION') |
+            Q(action__icontains='ACCESS') |
             Q(severity__in=['critical', 'error'])
-        ).order_by('-timestamp')[:10]
+        ).order_by('-audit_log_created_at')[:10]
         
         # Security trends
         context['security_trends'] = {
             'logins_today': AuditLog.objects.filter(
-                action_type__icontains='LOGIN',
-                timestamp__date=timezone.now().date()
+                action__icontains='LOGIN',
+                audit_log_created_at__date=timezone.now().date()
             ).count(),
             'failed_attempts_today': AuditLog.objects.filter(
-                action_type__icontains='LOGIN_FAILED',
-                timestamp__date=timezone.now().date()
+                action__icontains='LOGIN_FAILED',
+                audit_log_created_at__date=timezone.now().date()
             ).count(),
             'permission_changes_today': AuditLog.objects.filter(
-                action_type__icontains='PERMISSION',
-                timestamp__date=timezone.now().date()
+                action__icontains='PERMISSION',
+                audit_log_created_at__date=timezone.now().date()
             ).count(),
         }
         
@@ -97,23 +98,23 @@ class SecurityEventMonitoringView(LoginRequiredMixin, SuperuserRequiredMixin, Li
     
     def get_queryset(self):
         queryset = AuditLog.objects.filter(
-            Q(action_type__icontains='LOGIN') |
-            Q(action_type__icontains='AUTH') |
-            Q(action_type__icontains='PERMISSION') |
-            Q(action_type__icontains='ACCESS') |
+            Q(action__icontains='LOGIN') |
+            Q(action__icontains='AUTH') |
+            Q(action__icontains='PERMISSION') |
+            Q(action__icontains='ACCESS') |
             Q(severity__in=['critical', 'error'])
-        ).order_by('-timestamp')
+        ).order_by('-audit_log_created_at')
         
         # Apply filters
         severity = self.request.GET.get('severity')
-        action_type = self.request.GET.get('action_type')
+        action = self.request.GET.get('action')
         date_from = self.request.GET.get('date_from')
         date_to = self.request.GET.get('date_to')
         
         if severity:
             queryset = queryset.filter(severity=severity)
-        if action_type:
-            queryset = queryset.filter(action_type__icontains=action_type)
+        if action:
+            queryset = queryset.filter(action__icontains=action)
         if date_from:
             queryset = queryset.filter(timestamp__date__gte=date_from)
         if date_to:
@@ -124,7 +125,7 @@ class SecurityEventMonitoringView(LoginRequiredMixin, SuperuserRequiredMixin, Li
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['severities'] = ['critical', 'error', 'warning', 'info']
-        context['action_types'] = [
+        context['actions'] = [
             'LOGIN', 'LOGIN_FAILED', 'LOGOUT', 'PERMISSION', 
             'ACCESS', 'ACCESS_DENIED', 'DATA_MODIFICATION'
         ]

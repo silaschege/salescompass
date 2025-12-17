@@ -3,6 +3,7 @@ from core.models import User as Account
 from settings_app.models import Territory, TeamMember
 from django.db.models import Sum, Count, Avg
 from products.models import Product
+from tenants.models import TenantAwareModel as TenantModel
 
 SALE_TYPE_CHOICES = [
     ('new_business', 'New Business'),
@@ -496,3 +497,71 @@ class TeamMemberTerritoryMetrics(models.Model):
         self.territory_capacity_utilization = self.territory_revenue_contribution
         
         self.save()
+
+
+class SalesTarget(TenantModel):
+    """
+    Targets for sales performance (e.g., revenue, deal count, win rate).
+    """
+    TARGET_TYPE_CHOICES = [
+        ('user', 'User'),
+        ('team', 'Team'),
+        ('territory', 'Territory'),
+        ('organization', 'Organization'),
+    ]
+
+    METRIC_NAME_CHOICES = [
+        ('revenue', 'Revenue'),
+        ('deals_count', 'Number of Deals'),
+        ('win_rate', 'Win Rate'),
+        ('sales_cycle', 'Sales Cycle Duration'),
+    ]
+
+    target_type = models.CharField(max_length=20, choices=TARGET_TYPE_CHOICES)
+    # Generic relation or specific fields could be used. specific fields are simpler for now.
+    user_target = models.ForeignKey('core.User', on_delete=models.CASCADE, null=True, blank=True)
+    team_target = models.ForeignKey('settings_app.TeamMember', on_delete=models.CASCADE, null=True, blank=True) # Using TeamMember as team representation (simplified)
+    territory_target = models.ForeignKey(Territory, on_delete=models.CASCADE, null=True, blank=True)
+    
+    metric_name = models.CharField(max_length=50, choices=METRIC_NAME_CHOICES)
+    target_value = models.DecimalField(max_digits=12, decimal_places=2)
+    
+    start_date = models.DateField()
+    end_date = models.DateField()
+    
+    class Meta:
+        ordering = ['-end_date']
+        
+    def __str__(self):
+        return f"{self.metric_name} Target ({self.start_date} - {self.end_date})"
+
+
+class SalesPerformanceMetric(TenantModel):
+    """
+    Pre-aggregated sales performance snapshots.
+    Allows historical trending without expensive real-time queries.
+    """
+    DIMENSION_CHOICES = [
+        ('user', 'User'),
+        ('product', 'Product'),
+        ('territory', 'Territory'),
+        ('organization', 'Organization'),
+    ]
+
+    date = models.DateField(help_text="Date of the snapshot")
+    metric_name = models.CharField(max_length=50, db_index=True) # e.g. 'revenue', 'win_rate'
+    value = models.DecimalField(max_digits=12, decimal_places=2)
+    
+    dimension = models.CharField(max_length=20, choices=DIMENSION_CHOICES)
+    dimension_id = models.IntegerField(null=True, blank=True, help_text="ID of the related object (User/Product/Territory)")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date']
+        indexes = [
+            models.Index(fields=['date', 'metric_name', 'dimension']),
+        ]
+
+    def __str__(self):
+        return f"{self.metric_name}: {self.value} ({self.date})"

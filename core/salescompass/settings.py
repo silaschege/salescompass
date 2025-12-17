@@ -78,6 +78,7 @@ else:
 # Application definition
 
 INSTALLED_APPS = [
+    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -216,6 +217,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Authentication User settings
 AUTH_USER_MODEL = 'core.User'
+LOGIN_URL = 'core:login'
+LOGIN_REDIRECT_URL = 'core:app_selection'
+LOGOUT_REDIRECT_URL = 'core:home'
 
 
 # Internationalization
@@ -277,9 +281,26 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
-# ASGI application (replace your current WSGI_APPLICATION)
-ASGI_APPLICATION = 'salescompass.routing.application'
-
+# # ASGI application (replace your current WSGI_APPLICATION)
+# ASGI_APPLICATION = 'salescompass.routing.application'
+# # Add this at the bottom of the file
+# Channels
+ASGI_APPLICATION = 'core.asgi.application'
+# Channel layer configuration
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
+# For production, you might want to use Redis:
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
+#         'CONFIG': {
+#             "hosts": [('127.0.0.1', 6379)],
+#         },
+#     },
+# }
 # Channels Configuration - Use Redis
 CHANNEL_LAYERS = {
     'default': {

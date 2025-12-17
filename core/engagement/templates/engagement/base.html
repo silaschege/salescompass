@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>{% block title %}SalesCompass{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,7 +13,8 @@
             padding: 0;
             display: flex;
             min-height: 100vh;
-            overflow-x: hidden; /* Prevent horizontal scroll during slide */
+            overflow-x: hidden;
+            /* Prevent horizontal scroll during slide */
         }
 
         /* Sidebar - Slides off-screen to the left when hidden */
@@ -27,7 +29,8 @@
             left: 0;
             overflow-y: auto;
             z-index: 1000;
-            transition: transform 0.3s ease; /* Smooth slide */
+            transition: transform 0.3s ease;
+            /* Smooth slide */
         }
 
         /* When sidebar is hidden, slide it off-screen */
@@ -93,7 +96,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         .header-bar {
@@ -101,7 +104,7 @@
             color: #fff;
             padding: 2rem 0 1rem 0;
             border-radius: 0 0 2rem 2rem;
-            box-shadow: 0 4px 24px rgba(111,66,193,0.08);
+            box-shadow: 0 4px 24px rgba(111, 66, 193, 0.08);
             margin-bottom: 2rem;
         }
 
@@ -110,7 +113,7 @@
             color: #fff;
             padding: 1rem 0;
             border-radius: 2rem 2rem 0 0;
-            box-shadow: 0 -4px 24px rgba(111,66,193,0.08);
+            box-shadow: 0 -4px 24px rgba(111, 66, 193, 0.08);
             text-align: center;
             margin-top: 2rem;
         }
@@ -139,7 +142,7 @@
 
         .card {
             border-radius: 1rem;
-            box-shadow: 0 2px 16px rgba(111,66,193,0.08);
+            box-shadow: 0 2px 16px rgba(111, 66, 193, 0.08);
         }
 
         .lead {
@@ -158,13 +161,16 @@
             .sidebar {
                 transform: translateX(-100%);
             }
+
             .sidebar.visible {
                 transform: translateX(0);
             }
+
             .main-content {
                 margin-left: 0;
                 padding: 2rem 1rem;
             }
+
             .toggle-sidebar {
                 display: flex;
             }
@@ -180,6 +186,7 @@
     {% load static %}
     {% block extra_head %}{% endblock %}
 </head>
+
 <body>
 
     <!-- Hamburger Toggle Button -->
@@ -189,10 +196,11 @@
 
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
-        <a class="navbar-brand" href="{% url 'app_selection' %}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#6f42c1" class="me-2" viewBox="0 0 16 16">
-                <circle cx="8" cy="8" r="7" stroke="#6f42c1" stroke-width="2" fill="white"/>
-                <polygon points="8,3 10,10 8,13 6,6" fill="#6f42c1"/>
+        <a class="navbar-brand" href="{% url 'core:app_selection' %}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#6f42c1" class="me-2"
+                viewBox="0 0 16 16">
+                <circle cx="8" cy="8" r="7" stroke="#6f42c1" stroke-width="2" fill="white" />
+                <polygon points="8,3 10,10 8,13 6,6" fill="#6f42c1" />
             </svg>
             SalesCompass
         </a>
@@ -200,20 +208,30 @@
 
             <a class="nav-link ms-3" href="{% url 'engagement:dashboard' %}">Dashboard</a>
             <a class="nav-link ms-3" href="{% url 'engagement:feed' %}">Feed</a>
-         
+            <a class="nav-link ms-3" href="{% url 'engagement:playbook_list' %}">Playbooks</a>
 
 
-                         <!--Next Action Dropdown -->
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse"  data-bs-target="#NextBestAction" >
-                Next Best Action 
+
+            <!-- Reports Dropdown -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Reports">
+                Reports
+            </a>
+            <div class="collapse" id="Reports">
+                <a class="nav-link ms-3" href="{% url 'engagement:disengaged_accounts' %}">Disengaged Accounts</a>
+                <a class="nav-link ms-3" href="{% url 'engagement:leaderboard' %}">Engagement Leaderboard</a>
+            </div>
+
+            <!--Next Action Dropdown -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#NextBestAction">
+                Next Best Action
             </a>
             <div class="collapse" id="NextBestAction">
                 <a class="nav-link ms-3" href="{% url 'engagement:next_best_action' %}">List</a>
-                <a class="nav-link ms-3" href="{% url 'engagement:next_best_action_create' %}">Create<a>
-                
+                <a class="nav-link ms-3" href="{% url 'engagement:next_best_action_create' %}">Create</a>
+
             </div>
-        
-        
+
+
         </nav>
     </div>
 
@@ -249,4 +267,5 @@
         });
     </script>
 </body>
+
 </html>

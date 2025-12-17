@@ -32,4 +32,28 @@ urlpatterns = [
     
     # Module Configuration
     path('admin/module/<int:provision_id>/config/', views.ModuleConfigurationView.as_view(), name='module_configuration'),
+
+    # Resource Monitoring & Dashboard
+    path('dashboard/', views.ResourceMonitoringDashboardView.as_view(), name='dashboard'),
+    path('realtime/', views.RealTimeMonitoringView.as_view(), name='real_time_monitoring'),
+    
+    # Resource Lists
+    path('resources/', views.ResourceMonitoringListView.as_view(), name='resource_monitoring_list'),
+    path('alerts/', views.ResourceAlertListView.as_view(), name='resource_alert_list'),
+    path('quotas/', views.ResourceQuotaListView.as_view(), name='resource_quota_list'),
+    path('reports/', views.ResourceUsageReportListView.as_view(), name='resource_usage_report_list'),
+    
+    # Specific Resource Links (Mapping base.html names to Views)
+    path('resources/storage/', views.ResourceMonitoringListView.as_view(), {'resource_type': 'storage'}, name='storage_usage'),
+    path('resources/api/', views.ResourceMonitoringListView.as_view(), {'resource_type': 'api_calls'}, name='api_calls'),
+    path('resources/db/', views.ResourceMonitoringListView.as_view(), {'resource_type': 'db_connections'}, name='db_connections'),
+    path('resources/compute/', views.ResourceMonitoringListView.as_view(), {'resource_type': 'cpu'}, name='compute_usage'), # Placeholder for cpu if needed
+    
+    path('resources/tenant-usage/', views.ResourceUsageReportListView.as_view(), name='tenant_usage'),
+    path('resources/throttled/', views.ResourceQuotaListView.as_view(), {'is_over_quota': 'yes'}, name='throttled_tenants'),
+    path('system-health/', views.ModuleHealthCheckView.as_view(), name='system_health'),
+    path('performance/', views.RealTimeMonitoringView.as_view(), name='performance_metrics'),
+    path('alerts/resource/', views.ResourceAlertListView.as_view(), name='resource_alerts'),
+    path('alerts/config/', views.AlertConfigurationView.as_view(), name='alert_configuration'),
+    path('alerts/preferences/', views.NotificationPreferencesView.as_view(), name='notification_preferences'),
 ]

@@ -12,6 +12,9 @@ urlpatterns = [
     path('<int:pk>/delete/', views.ReportDeleteView.as_view(), name='delete'),
     path('report_list/', views.ReportListView.as_view(), name='report_list'),  # Additional name for navigation
     
+    # Sales Analytics
+    path('sales-analytics/', views.SalesAnalyticsDashboardView.as_view(), name='sales_analytics'),
+
     # Dashboard
     path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
     path('widget/create/', views.DashboardWidgetCreateView.as_view(), name='widget_create'),

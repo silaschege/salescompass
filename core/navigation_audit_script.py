@@ -50,40 +50,28 @@ class NavigationAuditor:
         self.test_user = None
         
     def setup_test_user(self):
-        """Create or get a test user for authenticated requests"""
+        """Login with provided superadmin credentials"""
         try:
-            # Always try to get or create the specific audit admin
-            try:
-                self.test_user = User.objects.get(email='audit_admin@example.com')
-                self.test_user.set_password('adminpass123')
-                self.test_user.is_superuser = True
-                self.test_user.is_staff = True
-                self.test_user.is_active = True
-                self.test_user.save()
-                print("✅ Found and updated existing audit superuser")
-            except User.DoesNotExist:
-                self.test_user = User.objects.create_superuser(
-                    email='audit_admin@example.com',
-                    password='adminpass123',
-                    is_active=True
-                )
-                print(f"✅ Created new audit superuser: {self.test_user.email}")
+            # Use provided superadmin credentials
+            email = 'admin@admin.com'
+            password = 'password'
             
-            # Login using force_login (backend agnostic)
+            try:
+                self.test_user = User.objects.get(email=email)
+                print(f"✅ Found superadmin: {self.test_user.email}")
+            except User.DoesNotExist:
+                print(f"❌ User {email} not found in database")
+                return
+            
+            # Login using force_login (most reliable)
             self.client.force_login(self.test_user)
             
             # Verify login worked
             try:
-                # Access a page that doesn't require permission but checks auth
-                # or just check the request user directly if possible
                 response = self.client.get('/')
                 user = getattr(response.wsgi_request, 'user', None)
                 print(f"✅ Logged in as: {user} (Is authenticated: {user.is_authenticated})")
-                
-                if not user.is_authenticated:
-                    print("❌ FORCE LOGIN FAILED - Trying manual login")
-                    is_logged_in = self.client.login(email='audit_admin@example.com', password='adminpass123')
-                    print(f"   Manual login result: {is_logged_in}")
+                print(f"   Is superuser: {user.is_superuser}, Is staff: {user.is_staff}")
             except Exception as e:
                 print(f"⚠️  Could not verify login: {e}")
         except Exception as e:
@@ -301,6 +289,19 @@ class NavigationAuditor:
         # Get all URL names that are in navigation
         navigation_url_names = set(link['url_name'] for link in self.navigation_links)
         
+        # Build a lookup of URL name -> URL name (for matching)
+        # Also build a reverse lookup: template-like name -> actual URL name
+        url_by_short_name = {}
+        for url_name in self.all_urls.keys():
+            if ':' in url_name:
+                namespace, short_name = url_name.split(':', 1)
+                # Store with namespace as key
+                key = (namespace, short_name)
+                url_by_short_name[key] = url_name
+                # Also store common variations
+                url_by_short_name[(namespace, short_name.replace('_', '-'))] = url_name
+                url_by_short_name[(namespace, short_name.replace('-', '_'))] = url_name
+        
         # Templates to exclude (fragments, includes, confirmations)
         exclude_patterns = [
             '_card.html',
@@ -334,13 +335,38 @@ class NavigationAuditor:
                 if template_name in ['list', 'index']:
                     continue
                 
-                # Generate possible URL names
-                possible_names = [
-                    f"{app_name}:{template_name}",
-                    f"{app_name}:{template_name}_list",
-                    f"{app_name}:{template_name}s",
-                    template_name,
-                ]
+                # Look up the actual URL name from registered patterns
+                actual_url = None
+                possible_names = []
+                
+                # Try exact match first
+                key = (app_name, template_name)
+                if key in url_by_short_name:
+                    actual_url = url_by_short_name[key]
+                
+                # Try with underscores/hyphens
+                if not actual_url:
+                    key = (app_name, template_name.replace('/', '_'))
+                    if key in url_by_short_name:
+                        actual_url = url_by_short_name[key]
+                
+                # Try common suffixes
+                if not actual_url:
+                    for suffix in ['', '_list', '_detail', '_create', '_update', '_delete']:
+                        base_name = template_name.replace('/', '_')
+                        key = (app_name, base_name + suffix)
+                        if key in url_by_short_name:
+                            actual_url = url_by_short_name[key]
+                            break
+                
+                # Generate possible URL names for display
+                if actual_url:
+                    possible_names = [actual_url]
+                else:
+                    possible_names = [
+                        f"{app_name}:{template_name.replace('/', '_')}",
+                        f"{app_name}:{template_name.replace('/', '_')}_list",
+                    ]
                 
                 # Check if any possible name is in navigation or all URLs
                 found = False
@@ -354,7 +380,8 @@ class NavigationAuditor:
                         'template': template,
                         'app': app_name,
                         'name': template_name,
-                        'possible_urls': possible_names
+                        'possible_urls': possible_names,
+                        'actual_url': actual_url  # Will be the matched URL if found
                     })
         
         self.orphaned_templates = orphaned

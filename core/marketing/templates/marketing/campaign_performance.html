@@ -1,0 +1,144 @@
+{% extends "logged_in/base.html" %}
+{% load humanize %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1 class="h3 mb-2">Campaign Performance & ROI</h1>
+        <p class="text-muted">Track attribution and financial return on marketing spend.</p>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-left-primary h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Revenue
+                            (Attributed)</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">${{ performance_data|length|yesno:"0,0" }}
+                        </div> <!-- Placeholder sum login in JS or View -->
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- ROI Chart -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">ROI by Campaign (%)</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-bar">
+                    <canvas id="roiChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Mix -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Revenue Attribution</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-pie">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Detailed Performance</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Campaign</th>
+                        <th>Leads Generated</th>
+                        <th>Conversions (Won Opps)</th>
+                        <th>Cost</th>
+                        <th>Attributed Revenue</th>
+                        <th>ROI</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in performance_data %}
+                    <tr>
+                        <td>{{ row.name }}</td>
+                        <td>{{ row.leads }}</td>
+                        <td>{{ row.conversions }}</td>
+                        <td>${{ row.cost|floatform:2|intcomma }}</td>
+                        <td>${{ row.revenue|floatform:2|intcomma }}</td>
+                        <td class="{% if row.roi > 0 %}text-success{% elif row.roi < 0 %}text-danger{% endif %}">
+                            {{ row.roi|floatform:1 }}%
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">No campaign data available for this period.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // ROI Chart
+    var ctxROI = document.getElementById("roiChart");
+    var roiChart = new Chart(ctxROI, {
+        type: 'bar',
+        data: {
+            labels: {{ chart_labels| safe }},
+    datasets: [{
+        label: "ROI (%)",
+        backgroundColor: "#4e73df",
+        hoverBackgroundColor: "#2e59d9",
+        borderColor: "#4e73df",
+        data: {{ chart_roi| safe }},
+            }],
+        },
+    options: {
+        responsive: true,
+            scales: {
+            y: { beginAtZero: true }
+        }
+    }
+    });
+
+    // Revenue Chart
+    var ctxRev = document.getElementById("revenueChart");
+    var revChart = new Chart(ctxRev, {
+        type: 'doughnut',
+        data: {
+            labels: {{ chart_labels| safe }},
+    datasets: [{
+        data: {{ chart_revenue| safe }},
+        backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'],
+            }],
+        },
+    options: {
+        responsive: true,
+            maintainAspectRatio: false,
+        }
+    });
+</script>
+{% endblock %}

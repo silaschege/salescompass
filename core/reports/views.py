@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.views import View
 from django.utils import timezone
+from django.contrib.auth.mixins import LoginRequiredMixin
 from core.permissions import PermissionRequiredMixin
 from .models import Report, ReportSchedule, ReportExport, EXPORT_FORMATS
 from dashboard.models import DashboardWidget
@@ -757,3 +758,48 @@ def export_all_metrics(request):
     json.dump(all_metrics, response, indent=2)
     
     return response
+
+
+class SalesAnalyticsDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'reports/sales_analytics.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Default to last 30 days
+        end_date = timezone.now().date()
+        start_date = end_date - timedelta(days=30)
+        
+        # Current Metrics
+        metrics = calculate_sales_metrics(start_date, end_date)
+        context['metrics'] = metrics
+        
+        # Historical Trend (Last 6 months simplified)
+        trend_labels = []
+        revenue_data = []
+        win_rate_data = []
+        
+        for i in range(5, -1, -1):
+            date_point = end_date - timedelta(days=i*30)
+            # Find closest snapshot
+            snapshot_rev = SalesPerformanceMetric.objects.filter(
+                metric_name='revenue', 
+                dimension='organization',
+                date__lte=date_point
+            ).order_by('-date').first()
+            
+            snapshot_win = SalesPerformanceMetric.objects.filter(
+                metric_name='win_rate', 
+                dimension='organization',
+                date__lte=date_point
+            ).order_by('-date').first()
+            
+            trend_labels.append(date_point.strftime('%b %Y'))
+            revenue_data.append(float(snapshot_rev.value) if snapshot_rev else 0)
+            win_rate_data.append(float(snapshot_win.value) if snapshot_win else 0)
+            
+        context['trend_labels'] = trend_labels
+        context['revenue_trend'] = revenue_data
+        context['win_rate_trend'] = win_rate_data
+        
+        return context

@@ -112,9 +112,9 @@
                     <div class="mt-2">
                         <small class="text-danger">
                             {% if overdue_actions > 0 %}
-                                <i class="bi bi-exclamation-circle"></i> {{ overdue_actions }} overdue
+                            <i class="bi bi-exclamation-circle"></i> {{ overdue_actions }} overdue
                             {% else %}
-                                <i class="bi bi-check-circle"></i> All on track
+                            <i class="bi bi-check-circle"></i> All on track
                             {% endif %}
                         </small>
                     </div>
@@ -147,6 +147,31 @@
         </div>
     </div>
 
+    <!-- Row 3: Heatmap & ROI -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Activity by Hour</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="heatmapChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Engagement vs Win Rate</h5>
+                    <small class="text-muted">Correlation Analysis</small>
+                </div>
+                <div class="card-body">
+                    <canvas id="roiChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Content Row -->
     <div class="row">
         <!-- Recent Events -->
@@ -158,56 +183,59 @@
                 </div>
                 <div class="card-body p-0">
                     {% if recent_events %}
-                        <div class="table-responsive">
-                            <table class="table mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Account</th>
-                                        <th>Event</th>
-                                        <th>Type</th>
-                                        <th>Score</th>
-                                        <th>When</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for event in recent_events %}
-                                    <tr class="{% if event.is_important %}table-warning{% endif %}">
-                                        <td>
-                                            <a href="{% url 'accounts:detail' event.account.pk %}" class="text-decoration-none">
-                                                {{ event.account.name|truncatechars:20 }}
-                                            </a>
-                                        </td>
-                                        <td>{{ event.title|default:event.description|truncatechars:30 }}</td>
-                                        <td>
-                                            <span class="badge bg-{% if event.priority == 'critical' %}danger{% elif event.priority == 'high' %}warning{% elif event.priority == 'medium' %}info{% else %}secondary{% endif %}">
-                                                {{ event.get_event_type_display }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div class="progress" style="height: 6px; width: 60px;">
-                                                <div class="progress-bar bg-{% if event.engagement_score > 70 %}success{% elif event.engagement_score > 40 %}warning{% else %}danger{% endif %}" 
-                                                     style="width: {{ event.engagement_score|floatformat:0 }}%;">
-                                                </div>
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Account</th>
+                                    <th>Event</th>
+                                    <th>Type</th>
+                                    <th>Score</th>
+                                    <th>When</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for event in recent_events %}
+                                <tr class="{% if event.is_important %}table-warning{% endif %}">
+                                    <td>
+                                        <a href="{% url 'accounts:detail' event.account.pk %}"
+                                            class="text-decoration-none">
+                                            {{ event.account.name|truncatechars:20 }}
+                                        </a>
+                                    </td>
+                                    <td>{{ event.title|default:event.description|truncatechars:30 }}</td>
+                                    <td>
+                                        <span
+                                            class="badge bg-{% if event.priority == 'critical' %}danger{% elif event.priority == 'high' %}warning{% elif event.priority == 'medium' %}info{% else %}secondary{% endif %}">
+                                            {{ event.get_event_type_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 6px; width: 60px;">
+                                            <div class="progress-bar bg-{% if event.engagement_score > 70 %}success{% elif event.engagement_score > 40 %}warning{% else %}danger{% endif %}"
+                                                style="width: {{ event.engagement_score|floatformat:0 }}%;">
                                             </div>
-                                        </td>
-                                        <td>{{ event.created_at|timesince }} ago</td>
-                                        <td>
-                    
-                                            <a href="{% url 'engagement:event_detail' event.pk %}" class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ event.created_at|timesince }} ago</td>
+                                    <td>
+
+                                        <a href="{% url 'engagement:event_detail' event.pk %}"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                     {% else %}
-                        <div class="text-center p-4">
-                            <i class="bi bi-activity display-4 text-muted"></i>
-                            <p class="text-muted mt-2">No recent events found.</p>
-                        </div>
+                    <div class="text-center p-4">
+                        <i class="bi bi-activity display-4 text-muted"></i>
+                        <p class="text-muted mt-2">No recent events found.</p>
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -218,52 +246,53 @@
             <div class="card border-0 shadow-sm">
                 <div class="card-header border-0 bg-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Next Best Actions</h5>
-                    <a href="{% url 'engagement:next_best_action' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                    <a href="{% url 'engagement:next_best_action' %}" class="btn btn-sm btn-outline-primary">View
+                        All</a>
                 </div>
                 <div class="card-body p-0">
                     {% if pending_actions %}
-                        <div class="list-group list-group-flush">
-                            {% for action in pending_actions|slice:":5" %}
-                            <div class="list-group-item border-0">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div class="flex-grow-1">
-                                        <h6 class="mb-1">
-                                            <span class="badge bg-{% if action.priority == 'critical' %}danger{% elif action.priority == 'high' %}warning{% elif action.priority == 'medium' %}info{% else %}secondary{% endif %} me-2">
-                                                {{ action.get_priority_display|slice:":1" }}
-                                            </span>
-                                            {{ action.description|truncatechars:40 }}
-                                        </h6>
-                                        <small class="text-muted d-block">
-                                            Due: {{ action.due_date|date:"M d, Y" }}
-                                        </small>
-                                        {% if action.account %}
-                                            <small class="text-muted">
-                                                Account: {{ action.account.name|truncatechars:20 }}
-                                            </small>
-                                        {% endif %}
-                                    </div>
-                                    <div class="ms-2">
-                                        {% if action.due_date < now %}
-                                            <span class="badge bg-danger">Overdue</span>
-                                        {% endif %}
-                                    </div>
+                    <div class="list-group list-group-flush">
+                        {% for action in pending_actions|slice:":5" %}
+                        <div class="list-group-item border-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">
+                                        <span
+                                            class="badge bg-{% if action.priority == 'critical' %}danger{% elif action.priority == 'high' %}warning{% elif action.priority == 'medium' %}info{% else %}secondary{% endif %} me-2">
+                                            {{ action.get_priority_display|slice:":1" }}
+                                        </span>
+                                        {{ action.description|truncatechars:40 }}
+                                    </h6>
+                                    <small class="text-muted d-block">
+                                        Due: {{ action.due_date|date:"M d, Y" }}
+                                    </small>
+                                    {% if action.account %}
+                                    <small class="text-muted">
+                                        Account: {{ action.account.name|truncatechars:20 }}
+                                    </small>
+                                    {% endif %}
                                 </div>
-                                <div class="mt-2">
-                                    <button class="btn btn-sm btn-primary complete-action" data-action-id="{{ action.id }}">
-                                        <i class="bi bi-check-circle"></i> Complete
-                                    </button>
+                                <div class="ms-2">
+                                    {% if action.due_date < now %} <span class="badge bg-danger">Overdue</span>
+                                        {% endif %}
                                 </div>
                             </div>
-                            {% endfor %}
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-primary complete-action" data-action-id="{{ action.id }}">
+                                    <i class="bi bi-check-circle"></i> Complete
+                                </button>
+                            </div>
                         </div>
+                        {% endfor %}
+                    </div>
                     {% else %}
-                        <div class="text-center p-4">
-                            <i class="bi bi-lightning display-4 text-muted"></i>
-                            <p class="text-muted mt-2">No pending actions.</p>
-                            <a href="{% url 'engagement:next_best_action_create' %}" class="btn btn-sm btn-primary mt-2">
-                                <i class="bi bi-plus"></i> Create Action
-                            </a>
-                        </div>
+                    <div class="text-center p-4">
+                        <i class="bi bi-lightning display-4 text-muted"></i>
+                        <p class="text-muted mt-2">No pending actions.</p>
+                        <a href="{% url 'engagement:next_best_action_create' %}" class="btn btn-sm btn-primary mt-2">
+                            <i class="bi bi-plus"></i> Create Action
+                        </a>
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -275,147 +304,204 @@
 
 {% block extra_head %}
 <style>
-.card {
-    border: none;
-    border-radius: 1rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
+    .card {
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
 
-.card-header {
-    border-bottom: 1px solid #e9ecef;
-    padding: 1rem 1.25rem;
-}
+    .card-header {
+        border-bottom: 1px solid #e9ecef;
+        padding: 1rem 1.25rem;
+    }
 
-.icon {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+    .icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-.table thead th {
-    font-weight: 600;
-    color: #495057;
-}
+    .table thead th {
+        font-weight: 600;
+        color: #495057;
+    }
 
-.list-group-item {
-    padding: 1rem 1.25rem;
-}
+    .list-group-item {
+        padding: 1rem 1.25rem;
+    }
 
-.btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-}
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
 
-.badge {
-    font-size: 0.75rem;
-    padding: 0.3em 0.6em;
-}
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.3em 0.6em;
+    }
 
-.btn-group .btn {
-    border-radius: 0.375rem !important;
-}
+    .btn-group .btn {
+        border-radius: 0.375rem !important;
+    }
 
-.btn-group .btn.active {
-    background-color: #6f42c1;
-    border-color: #6f42c1;
-    color: white;
-}
+    .btn-group .btn.active {
+        background-color: #6f42c1;
+        border-color: #6f42c1;
+        color: white;
+    }
 </style>
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Date range buttons
-    document.querySelectorAll('[data-range]').forEach(button => {
-        button.addEventListener('click', function() {
-            document.querySelectorAll('[data-range]').forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-            const days = this.dataset.range;
-            // In a real app, this would trigger an AJAX call to update the dashboard
-            console.log(`Switching to ${days} day range`);
+    document.addEventListener('DOMContentLoaded', function () {
+        // Date range buttons
+        document.querySelectorAll('[data-range]').forEach(button => {
+            button.addEventListener('click', function () {
+                document.querySelectorAll('[data-range]').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                const days = this.dataset.range;
+                // In a real app, this would trigger an AJAX call to update the dashboard
+                console.log(`Switching to ${days} day range`);
+            });
         });
-    });
 
-    // Complete action buttons
-    document.querySelectorAll('.complete-action').forEach(button => {
-        button.addEventListener('click', function() {
-            const actionId = this.dataset.actionId;
-            if (confirm('Mark this action as completed?')) {
-                completeNextBestAction(actionId);
-            }
+        // Complete action buttons
+        document.querySelectorAll('.complete-action').forEach(button => {
+            button.addEventListener('click', function () {
+                const actionId = this.dataset.actionId;
+                if (confirm('Mark this action as completed?')) {
+                    completeNextBestAction(actionId);
+                }
+            });
         });
-    });
 
-    // Engagement Chart
-    const engagementCtx = document.getElementById('engagementChart').getContext('2d');
-    const engagementChart = new Chart(engagementCtx, {
-        type: 'line',
+        // Engagement Chart
+        const engagementCtx = document.getElementById('engagementChart').getContext('2d');
+        new Chart(engagementCtx, {
+            type: 'line',
+            data: {
+                labels: {{ chart_labels| safe }},
+        datasets: [{
+            label: 'Engagement Events',
+            data: {{ chart_data| safe }},
+        borderColor: '#6f42c1',
+        backgroundColor: 'rgba(111, 66, 193, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.3
+                }]
+            },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: { beginAtZero: true },
+            x: { grid: { display: false } }
+        },
+        plugins: { legend: { display: false } }
+    }
+        });
+
+    // Event Type Chart
+    const eventTypeCtx = document.getElementById('eventTypeChart').getContext('2d');
+    new Chart(eventTypeCtx, {
+        type: 'doughnut',
         data: {
-            labels: {{ chart_labels|safe }},
+            labels: {{ event_type_labels| safe }},
+        datasets: [{
+            data: {{ event_type_data| safe }},
+        backgroundColor: ['#6f42c1', '#007bff', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6c757d'],
+        borderWidth: 0
+                }]
+            },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { padding: 15, usePointStyle: true }
+            }
+        }
+    }
+        });
+
+    // Heatmap Chart (Activity by Hour)
+    const heatmapCanvas = document.getElementById('heatmapChart');
+    if (heatmapCanvas) {
+        new Chart(heatmapCanvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: Array.from({ length: 24 }, (_, i) => `${i}:00`),
+                datasets: [{
+                    label: 'Events Logged',
+                    data: {{ heatmap_data| safe }
+        },
+            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+                    }]
+                },
+    options: {
+        responsive: true,
+            maintainAspectRatio: false,
+                scales: {
+            y: { beginAtZero: true },
+            x: { grid: { display: false } }
+        },
+        plugins: { legend: { display: false } }
+    }
+            });
+        }
+
+    // ROI Chart (Engagement vs Win Rate)
+    const roiCanvas = document.getElementById('roiChart');
+    if (roiCanvas) {
+        const roiData = {{ roi_data| safe
+    }};
+    new Chart(roiCanvas.getContext('2d'), {
+        type: 'scatter',
+        data: {
             datasets: [{
-                label: 'Engagement Events',
-                data: {{ chart_data|safe }},
-                borderColor: '#6f42c1',
-                backgroundColor: 'rgba(111, 66, 193, 0.1)',
-                borderWidth: 2,
-                fill: true,
-                tension: 0.3
+                label: 'Accounts',
+                data: roiData,
+                backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                pointRadius: 6,
+                pointHoverRadius: 8
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        drawBorder: false
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            let point = context.raw;
+                            return `${point.name}: Score ${point.x}, Win Rate ${point.y}%`;
+                        }
                     }
                 },
-                x: {
-                    grid: {
-                        display: false
-                    }
-                }
+                legend: { display: false }
             },
-            plugins: {
-                legend: {
-                    display: false
+            scales: {
+                x: {
+                    type: 'linear',
+                    position: 'bottom',
+                    title: { display: true, text: 'Engagement Score' }
+                },
+                y: {
+                    title: { display: true, text: 'Win Rate (%)' },
+                    beginAtZero: true,
+                    max: 100
                 }
             }
         }
     });
-
-    // Event Type Chart
-    const eventTypeCtx = document.getElementById('eventTypeChart').getContext('2d');
-    const eventTypeChart = new Chart(eventTypeCtx, {
-        type: 'doughnut',
-        data: {
-            labels: {{ event_type_labels|safe }},
-            datasets: [{
-                data: {{ event_type_data|safe }},
-                backgroundColor: [
-                    '#6f42c1', '#007bff', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6c757d'
-                ],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        padding: 15,
-                        usePointStyle: true
-                    }
-                }
-            }
         }
     });
 
@@ -429,19 +515,18 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify({ action_id: actionId })
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Failed to complete action: ' + (data.error || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            alert('Network error: ' + error);
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Failed to complete action: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                alert('Network error: ' + error);
+            });
     }
-});
 </script>
 {% endblock %}
 {% endblock %}

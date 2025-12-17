@@ -13,8 +13,9 @@ class CommissionPlanAdmin(admin.ModelAdmin):
 
 @admin.register(UserCommissionPlan)
 class UserCommissionPlanAdmin(admin.ModelAdmin):
-    list_display = ('user', 'user_commission_plan', 'start_date', 'end_date')
-    list_filter = ('user_commission_plan', 'start_date')
+    list_display = ('user', 'assigned_plan', 'start_date', 'end_date')
+    list_filter = ('assigned_plan', 'start_date')
+    search_fields = ('user__username', 'assigned_plan__commission_plan_name')
 
 @admin.register(Quota)
 class QuotaAdmin(admin.ModelAdmin):

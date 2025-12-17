@@ -9,7 +9,7 @@ def lead_post_save(sender, instance, created, **kwargs):
         'lead_id': instance.id,
         'lead_score': instance.lead_score,
         'status': instance.status,
-        'source': instance.source_ref.name if instance.source_ref else instance.lead_source,
+        'source': instance.source_ref.source_name if instance.source_ref else instance.lead_source,
         'tenant_id': instance.tenant_id,
     }
     emit_event(trigger_type, payload)
@@ -20,7 +20,7 @@ def opportunity_post_save(sender, instance, created, **kwargs):
     payload = {
         'opportunity_id': instance.id,
         'amount': float(instance.amount) if instance.amount else 0.0,
-        'stage': instance.stage.name if instance.stage else None,
+        'stage': instance.stage.opportunity_stage_name if instance.stage else None,
         'tenant_id': instance.tenant_id,
     }
     emit_event(trigger_type, payload)

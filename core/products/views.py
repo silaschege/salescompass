@@ -1,14 +1,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
+from django.urls import reverse_lazy
 from core.permissions import ObjectPermissionRequiredMixin
 from .models import Product, ProductBundle, CompetitorProduct, ProductComparison
 from .forms import ProductForm, CompetitorProductForm
 from .utils import generate_sku
 
+
 class ProductListView(ObjectPermissionRequiredMixin, ListView):
     model = Product
-    template_name = 'products/list.html'
+class ProductListView(ObjectPermissionRequiredMixin, ListView):
+    model = Product
+    template_name = 'products/product_list.html'
     context_object_name = 'products'
     paginate_by = 20
 
@@ -22,7 +26,7 @@ class ProductListView(ObjectPermissionRequiredMixin, ListView):
 
 class ProductDetailView(ObjectPermissionRequiredMixin, DetailView):
     model = Product
-    template_name = 'products/detail.html'
+    template_name = 'products/product_detail.html'
     context_object_name = 'product'
 
     def get_context_data(self, **kwargs):
@@ -54,8 +58,8 @@ class ProductDetailView(ObjectPermissionRequiredMixin, DetailView):
 class ProductCreateView(ObjectPermissionRequiredMixin, CreateView):
     model = Product
     form_class = ProductForm
-    template_name = 'products/form.html'
-    success_url = '/products/'
+    template_name = 'products/product_form.html'
+    success_url = reverse_lazy('products:product_list')
 
     def get_initial(self):
         initial = super().get_initial()
@@ -75,14 +79,14 @@ class ProductCreateView(ObjectPermissionRequiredMixin, CreateView):
 class ProductUpdateView(ObjectPermissionRequiredMixin, UpdateView):
     model = Product
     form_class = ProductForm
-    template_name = 'products/form.html'
-    success_url = '/products/'
+    template_name = 'products/product_form.html'
+    success_url = reverse_lazy('products:product_list')
 
 
 class ProductDeleteView(ObjectPermissionRequiredMixin, DeleteView):
     model = Product
-    template_name = 'products/confirm_delete.html'
-    success_url = '/products/'
+    template_name = 'products/product_confirm_delete.html'
+    success_url = reverse_lazy('products:product_list')
 
     def delete(self, request, *args, **kwargs):
         product = self.get_object()

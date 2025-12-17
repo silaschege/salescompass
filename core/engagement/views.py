@@ -120,28 +120,49 @@ class EngagementDashboardView(PermissionRequiredMixin, TemplateView):
         context['important_events_trend'] = self.calculate_trend(context['important_events'], prev_important)
         context['engagement_score_trend'] = self.calculate_trend(context['engagement_score'], prev_avg_score)
         
-        # Chart data (last 7 days)
+        # Chart data (Dynamic based on selected days)
         chart_labels = []
         chart_data = []
         event_type_data = []
         event_type_labels = []
         
-        for i in range(6, -1, -1):
+        # Calculate daily counts
+        for i in range(days - 1, -1, -1):
             date = now - timedelta(days=i)
             date_str = date.strftime('%m/%d')
-            count = EngagementEvent.objects.filter(
-                tenant_id=tenant_id,
-                created_at__date=date.date()
-            ).count()
+            count = events.filter(created_at__date=date.date()).count()
             chart_labels.append(date_str)
             chart_data.append(count)
         
         # Event type distribution
         event_types = events.values('event_type').annotate(count=Count('event_type')).order_by('-count')[:7]
         for et in event_types:
-            event_type_labels.append(dict(EngagementEvent.EVENT_TYPES)[et['event_type']])
+            event_type_labels.append(dict(EngagementEvent.EVENT_TYPES).get(et['event_type'], et['event_type']))
             event_type_data.append(et['count'])
+
+        # Heatmap Data: Activity by Hour of Day
+        heatmap_data_qs = (
+            EngagementEvent.objects.filter(tenant_id=tenant_id, created_at__gte=start_date)
+            .annotate(hour=ExtractHour('created_at'))
+            .values('hour')
+            .annotate(count=Count('id'))
+            .order_by('hour')
+        )
         
+        # Initialize 24 hours with 0
+        hourly_counts = [0] * 24
+        for entry in heatmap_data_qs:
+            if entry['hour'] is not None:
+                hourly_counts[entry['hour']] = entry['count']
+            
+        context['heatmap_data'] = hourly_counts
+        
+        # ROI Analytics Data
+        from .analytics import calculate_engagement_roi
+        # Pass tenant_id if multi-tenant context is available (assuming view accounts for it)
+        # For now, simplistic call
+        context['roi_data'] = calculate_engagement_roi()
+
         context['chart_labels'] = chart_labels
         context['chart_data'] = chart_data
         context['event_type_labels'] = event_type_labels
@@ -327,6 +348,17 @@ class NextBestActionListView(PermissionRequiredMixin, ListView):
         context['accounts'] = Account.objects.filter(
             tenant_id=tenant_id
         ).order_by('name')[:100]  # Limit to 100 accounts
+        
+        # Smart Insight (Best Time to Engage)
+        if context['current_account']:
+            try:
+                from accounts.models import Account
+                from .utils import get_best_engagement_time
+                selected_account = Account.objects.get(id=context['current_account'])
+                context['selected_account'] = selected_account
+                context['best_time_to_engage'] = get_best_engagement_time(selected_account)
+            except (Account.DoesNotExist, ValueError):
+                pass
         
         return context
 
@@ -718,3 +750,171 @@ def complete_next_best_action_with_note_view(request, pk):
         action.save(update_fields=['completed', 'completed_at', 'status', 'description'])
         messages.success(request, f"Action '{action.get_action_type_display()}' completed with note!")
         return redirect('engagement:next_best_action_detail', pk=pk)
+
+
+class DisengagedAccountsView(PermissionRequiredMixin, ListView):
+    """
+    Report view for accounts with low engagement or inactivity.
+    """
+    model = EngagementStatus
+    template_name = 'engagement/disengaged_accounts.html'
+    context_object_name = 'statuses'
+    paginate_by = 50
+    required_permission = 'engagement:read'
+    
+    def get_queryset(self):
+        # Default thresholds
+        score_threshold = float(self.request.GET.get('score_threshold', 30.0))
+        days_inactive = int(self.request.GET.get('days_inactive', 14))
+        
+        inactive_date = timezone.now() - timedelta(days=days_inactive)
+        
+        # Base Query
+        qs = EngagementStatus.objects.select_related('account').filter(
+            account__tenant_id=getattr(self.request.user, 'tenant_id', None)
+        )
+        
+        # Filter Logic: Either Low Score OR Inactive
+        # User can toggle mode via GET param 'mode' (optional, defaulting to combined logic)
+        
+        qs = qs.filter(
+            Q(engagement_score__lt=score_threshold) |
+            Q(last_engaged_at__lt=inactive_date) | 
+            Q(last_engaged_at__isnull=True)
+        ).order_by('engagement_score', 'last_engaged_at')
+        
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['score_threshold'] = self.request.GET.get('score_threshold', 30)
+        context['days_inactive'] = self.request.GET.get('days_inactive', 14)
+        return context
+
+
+# Playbook Views
+
+from .models import EngagementPlaybook, PlaybookStep
+from .forms import EngagementPlaybookForm, PlaybookStepForm  # Need to create these forms
+
+class EngagementPlaybookListView(PermissionRequiredMixin, ListView):
+    model = EngagementPlaybook
+    template_name = 'engagement/playbook_list.html'
+    context_object_name = 'playbooks'
+    required_permission = 'engagement:read'
+
+    def get_queryset(self):
+        return EngagementPlaybook.objects.filter(
+            tenant_id=getattr(self.request.user, 'tenant_id', None)
+        ).order_by('name')
+
+
+class EngagementPlaybookDetailView(PermissionRequiredMixin, DetailView):
+    model = EngagementPlaybook
+    template_name = 'engagement/playbook_detail.html'
+    context_object_name = 'playbook'
+    required_permission = 'engagement:read'
+
+    def get_queryset(self):
+        return EngagementPlaybook.objects.filter(
+            tenant_id=getattr(self.request.user, 'tenant_id', None)
+        )
+
+
+class EngagementPlaybookCreateView(PermissionRequiredMixin, CreateView):
+    model = EngagementPlaybook
+    form_class = EngagementPlaybookForm
+    template_name = 'engagement/playbook_form.html'
+    permission_required = 'engagement.add_engagementplaybook'
+    raise_exception = True
+    success_url = reverse_lazy('engagement:playbook_list')
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        form.instance.tenant_id = getattr(self.request.user, 'tenant_id', None)
+        messages.success(self.request, f"Playbook '{form.instance.name}' created successfully!")
+        return super().form_valid(form)
+
+
+class EngagementPlaybookUpdateView(PermissionRequiredMixin, UpdateView):
+    model = EngagementPlaybook
+    form_class = EngagementPlaybookForm
+    template_name = 'engagement/playbook_form.html'
+    permission_required = 'engagement.change_engagementplaybook'
+    raise_exception = True
+    success_url = reverse_lazy('engagement:playbook_list')
+
+    def get_queryset(self):
+        return EngagementPlaybook.objects.filter(
+            tenant_id=getattr(self.request.user, 'tenant_id', None)
+        )
+
+    def form_valid(self, form):
+        messages.success(self.request, f"Playbook '{form.instance.name}' updated successfully!")
+        return super().form_valid(form)
+
+
+class PlaybookStepCreateView(PermissionRequiredMixin, CreateView):
+    model = PlaybookStep
+    form_class = PlaybookStepForm
+    template_name = 'engagement/playbook_step_form.html'
+    permission_required = 'engagement.add_playbookstep'
+    raise_exception = True
+
+    def dispatch(self, request, *args, **kwargs):
+        self.playbook = get_object_or_404(
+            EngagementPlaybook, 
+            pk=kwargs['playbook_id'],
+            tenant_id=getattr(self.request.user, 'tenant_id', None)
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['playbook'] = self.playbook
+        return context
+
+    def form_valid(self, form):
+        form.instance.playbook = self.playbook
+        form.instance.tenant_id = getattr(self.request.user, 'tenant_id', None)
+        messages.success(self.request, "Step added successfully!")
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('engagement:playbook_detail', kwargs={'pk': self.playbook.pk})
+
+
+class PlaybookStepUpdateView(PermissionRequiredMixin, UpdateView):
+    model = PlaybookStep
+    form_class = PlaybookStepForm
+    template_name = 'engagement/playbook_step_form.html'
+    permission_required = 'engagement.change_playbookstep'
+    raise_exception = True
+
+    def get_queryset(self):
+        return PlaybookStep.objects.filter(
+            tenant_id=getattr(self.request.user, 'tenant_id', None)
+        )
+
+    def get_success_url(self):
+        return reverse_lazy('engagement:playbook_detail', kwargs={'pk': self.object.playbook.pk})
+    
+    def form_valid(self, form):
+        messages.success(self.request, "Step updated successfully!")
+        return super().form_valid(form)
+
+
+class PlaybookStepDeleteView(PermissionRequiredMixin, DeleteView):
+    model = PlaybookStep
+    template_name = 'engagement/playbook_step_confirm_delete.html'
+    permission_required = 'engagement.delete_playbookstep'
+    raise_exception = True
+
+    def get_queryset(self):
+        return PlaybookStep.objects.filter(
+            tenant_id=getattr(self.request.user, 'tenant_id', None)
+        )
+
+    def get_success_url(self):
+        messages.success(self.request, "Step deleted successfully!")
+        return reverse_lazy('engagement:playbook_detail', kwargs={'pk': self.object.playbook.pk})

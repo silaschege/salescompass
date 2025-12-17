@@ -19,7 +19,7 @@
                 <div class="card-body p-4">
                     <form method="post">
                         {% csrf_token %}
-                        
+
                         <!-- Account (Required) -->
                         <div class="mb-3">
                             <label for="{{ form.account.id_for_label }}" class="form-label fw-bold">
@@ -27,7 +27,7 @@
                             </label>
                             {{ form.account }}
                             {% if form.account.errors %}
-                                <div class="text-danger mt-1">{{ form.account.errors }}</div>
+                            <div class="text-danger mt-1">{{ form.account.errors }}</div>
                             {% endif %}
                         </div>
 
@@ -38,7 +38,7 @@
                             </label>
                             {{ form.title }}
                             {% if form.title.errors %}
-                                <div class="text-danger mt-1">{{ form.title.errors }}</div>
+                            <div class="text-danger mt-1">{{ form.title.errors }}</div>
                             {% endif %}
                         </div>
 
@@ -49,7 +49,7 @@
                             </label>
                             {{ form.event_type }}
                             {% if form.event_type.errors %}
-                                <div class="text-danger mt-1">{{ form.event_type.errors }}</div>
+                            <div class="text-danger mt-1">{{ form.event_type.errors }}</div>
                             {% endif %}
                         </div>
 
@@ -60,7 +60,18 @@
                             </label>
                             {{ form.description }}
                             {% if form.description.errors %}
-                                <div class="text-danger mt-1">{{ form.description.errors }}</div>
+                            <div class="text-danger mt-1">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Internal Notes -->
+                        <div class="mb-3">
+                            <label for="{{ form.internal_notes.id_for_label }}" class="form-label fw-bold">
+                                Internal Notes <i class="bi bi-lock-fill text-muted"></i>
+                            </label>
+                            {{ form.internal_notes }}
+                            {% if form.internal_notes.errors %}
+                            <div class="text-danger mt-1">{{ form.internal_notes.errors }}</div>
                             {% endif %}
                         </div>
 
@@ -73,7 +84,7 @@
                                     </label>
                                     {{ form.opportunity }}
                                     {% if form.opportunity.errors %}
-                                        <div class="text-danger mt-1">{{ form.opportunity.errors }}</div>
+                                    <div class="text-danger mt-1">{{ form.opportunity.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -84,7 +95,7 @@
                                     </label>
                                     {{ form.case }}
                                     {% if form.case.errors %}
-                                        <div class="text-danger mt-1">{{ form.case.errors }}</div>
+                                    <div class="text-danger mt-1">{{ form.case.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -98,7 +109,7 @@
                                     </label>
                                     {{ form.nps_response }}
                                     {% if form.nps_response.errors %}
-                                        <div class="text-danger mt-1">{{ form.nps_response.errors }}</div>
+                                    <div class="text-danger mt-1">{{ form.nps_response.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -109,7 +120,7 @@
                                     </label>
                                     {{ form.contact }}
                                     {% if form.contact.errors %}
-                                        <div class="text-danger mt-1">{{ form.contact.errors }}</div>
+                                    <div class="text-danger mt-1">{{ form.contact.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -122,7 +133,7 @@
                             </label>
                             {{ form.contact_email }}
                             {% if form.contact_email.errors %}
-                                <div class="text-danger mt-1">{{ form.contact_email.errors }}</div>
+                            <div class="text-danger mt-1">{{ form.contact_email.errors }}</div>
                             {% endif %}
                         </div>
 
@@ -135,10 +146,10 @@
                                     </label>
                                     {{ form.engagement_score }}
                                     {% if form.engagement_score.help_text %}
-                                        <div class="form-text">{{ form.engagement_score.help_text }}</div>
+                                    <div class="form-text">{{ form.engagement_score.help_text }}</div>
                                     {% endif %}
                                     {% if form.engagement_score.errors %}
-                                        <div class="text-danger mt-1">{{ form.engagement_score.errors }}</div>
+                                    <div class="text-danger mt-1">{{ form.engagement_score.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -149,7 +160,7 @@
                                     </label>
                                     {{ form.priority }}
                                     {% if form.priority.errors %}
-                                        <div class="text-danger mt-1">{{ form.priority.errors }}</div>
+                                    <div class="text-danger mt-1">{{ form.priority.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -162,12 +173,13 @@
                                 Mark as Important
                             </label>
                             {% if form.is_important.errors %}
-                                <div class="text-danger mt-1">{{ form.is_important.errors }}</div>
+                            <div class="text-danger mt-1">{{ form.is_important.errors }}</div>
                             {% endif %}
                         </div>
 
                         <!-- Action Buttons -->
-                        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-4 pt-3 border-top">
+                        <div
+                            class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-4 pt-3 border-top">
                             <div>
                                 <a href="{% url 'engagement:event_detail' event.pk %}" class="btn btn-outline-primary">
                                     <i class="bi bi-eye me-1"></i>View Event
@@ -190,40 +202,42 @@
 
 {% block extra_head %}
 <style>
-/* Reuse your existing form styles from leads/lead_form.html */
-.form-label {
-    font-size: 0.95rem;
-    margin-bottom: 0.5rem;
-}
+    /* Reuse your existing form styles from leads/lead_form.html */
+    .form-label {
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+    }
 
-.form-control, .form-select {
-    border: 1px solid #e3e6f3;
-    border-radius: 0.5rem;
-    padding: 0.75rem 1rem;
-    font-size: 0.95rem;
-    transition: all 0.2s ease;
-}
+    .form-control,
+    .form-select {
+        border: 1px solid #e3e6f3;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
 
-.form-control:focus, .form-select:focus {
-    border-color: #6f42c1;
-    box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
-}
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #6f42c1;
+        box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+    }
 
-.text-danger {
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-}
+    .text-danger {
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
 
-.form-text {
-    font-size: 0.8125rem;
-    margin-top: 0.25rem;
-}
+    .form-text {
+        font-size: 0.8125rem;
+        margin-top: 0.25rem;
+    }
 
-.btn {
-    padding: 0.5rem 1.25rem;
-    font-weight: 600;
-    border-radius: 0.5rem;
-    transition: all 0.2s ease;
-}
+    .btn {
+        padding: 0.5rem 1.25rem;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
+    }
 </style>
 {% endblock %}

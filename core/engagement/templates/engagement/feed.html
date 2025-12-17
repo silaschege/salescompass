@@ -17,9 +17,9 @@
             <select name="event_type" class="form-select" id="event-type-filter">
                 <option value="">All Event Types</option>
                 {% for value, label in event_types %}
-                    <option value="{{ value }}" {% if request.GET.event_type == value %}selected{% endif %}>
-                        {{ label }}
-                    </option>
+                <option value="{{ value }}" {% if request.GET.event_type==value %}selected{% endif %}>
+                    {{ label }}
+                </option>
                 {% endfor %}
             </select>
         </div>
@@ -39,98 +39,108 @@
 
     <!-- Events List -->
     {% if events %}
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Account</th>
-                        <th>Event</th>
-                        <th>Type</th>
-                        <th>Score</th>
-                        <th>When</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="events-table">
-                    {% for event in events %}
-                    <tr class="{% if event.is_important %}table-warning{% endif %}">
-                        <td>
-                            <a href="{% url 'accounts:detail' event.account.pk %}">
-                                {{ event.account.name }}
-                            </a>
-                        </td>
-                        <td>{{ event.title|default:event.description|truncatechars:50 }}</td>
-                        <td>
-                            <span class="badge bg-{% if event.priority == 'critical' %}danger{% elif event.priority == 'high' %}warning{% elif event.priority == 'medium' %}info{% else %}secondary{% endif %}">
-                                {{ event.get_event_type_display }}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="progress" style="height: 10px; width: 80px;">
-                                <div class="progress-bar bg-{% if event.engagement_score > 70 %}success{% elif event.engagement_score > 40 %}warning{% else %}danger{% endif %}" 
-                                     style="width: {{ event.engagement_score|floatformat:0 }}%;">
-                                </div>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Account</th>
+                    <th>Event</th>
+                    <th class="d-none d-md-table-cell">Type</th>
+                    <th class="d-none d-sm-table-cell">Score</th>
+                    <th>When</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="events-table">
+                {% for event in events %}
+                <tr class="{% if event.is_important %}table-warning{% endif %}">
+                    <td>
+                        <a href="{% url 'accounts:detail' event.account.pk %}">
+                            {{ event.account.name }}
+                        </a>
+                    </td>
+                    <td>{{ event.title|default:event.description|truncatechars:50 }}</td>
+                    <td class="d-none d-md-table-cell">
+                        <span
+                            class="badge bg-{% if event.priority == 'critical' %}danger{% elif event.priority == 'high' %}warning{% elif event.priority == 'medium' %}info{% else %}secondary{% endif %}">
+                            {{ event.get_event_type_display }}
+                        </span>
+                    </td>
+                    <td class="d-none d-sm-table-cell">
+                        <div class="progress" style="height: 10px; width: 80px;">
+                            <div class="progress-bar bg-{% if event.engagement_score > 70 %}success{% elif event.engagement_score > 40 %}warning{% else %}danger{% endif %}"
+                                style="width: {{ event.engagement_score|floatformat:0 }}%;">
                             </div>
-                        </td>
-                        <td>{{ event.created_at|date:"M d, Y H:i" }}</td>
-                        <td>
-                            <a href="{% url 'engagement:event_detail' event.pk %}" class="btn btn-sm btn-outline-primary">View</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                        </div>
+                    </td>
+                    <td>{{ event.created_at|date:"M d, Y H:i" }}</td>
+                    <td>
+                        <a href="{% url 'engagement:event_detail' event.pk %}"
+                            class="btn btn-sm btn-outline-primary">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-        <!-- Pagination -->
-        {% if is_paginated %}
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center">
-                    {% if page_obj.has_previous %}
-                        <li class="page-item"><a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}">First</a></li>
-                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}">Previous</a></li>
-                    {% endif %}
-                    <li class="page-item active"><span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
-                    {% if page_obj.has_next %}
-                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}">Next</a></li>
-                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}">Last</a></li>
-                    {% endif %}
-                </ul>
-            </nav>
-        {% endif %}
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link"
+                    href="?page=1{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}">First</a></li>
+            <li class="page-item"><a class="page-link"
+                    href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}">Previous</a>
+            </li>
+            {% endif %}
+            <li class="page-item active"><span class="page-link">{{ page_obj.number }} of {{
+                    page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link"
+                    href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}">Next</a>
+            </li>
+            <li class="page-item"><a class="page-link"
+                    href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}">Last</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
     {% else %}
-        <div class="alert alert-info">
-            <strong>No engagement events found.</strong>
-            Events will appear here as customers interact with your communications.
-        </div>
+    <div class="alert alert-info">
+        <strong>No engagement events found.</strong>
+        Events will appear here as customers interact with your communications.
+    </div>
     {% endif %}
 </div>
 
 
 
 <script>
-// WebSocket connection for real-time updates
-document.addEventListener('DOMContentLoaded', function() {
-    const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
-    const wsUrl = `${wsScheme}://${window.location.host}/ws/engagement/feed/`;
-    const socket = new WebSocket(wsUrl);
+    // WebSocket connection for real-time updates
+    document.addEventListener('DOMContentLoaded', function () {
+        const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+        const wsUrl = `${wsScheme}://${window.location.host}/ws/engagement/feed/`;
+        const socket = new WebSocket(wsUrl);
 
-    socket.onopen = function(event) {
-        console.log('WebSocket connected for engagement feed');
-    };
+        socket.onopen = function (event) {
+            console.log('WebSocket connected for engagement feed');
+        };
 
-    socket.onmessage = function(event) {
-        const data = JSON.parse(event.data);
-        const msg = `${data.account_name}: ${data.title}`;
-        document.getElementById('live-event').textContent = msg;
-        document.getElementById('live-feed').style.display = 'block';
-        
-        // Add to top of table
-        const table = document.getElementById('events-table');
-        if (table) {
-            const newRow = table.insertRow(0);
-            newRow.className = data.is_important ? 'table-warning' : '';
-            newRow.innerHTML = `
+        socket.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            const msg = `${data.account_name}: ${data.title}`;
+            document.getElementById('live-event').textContent = msg;
+            document.getElementById('live-feed').style.display = 'block';
+
+            // Add to top of table
+            const table = document.getElementById('events-table');
+            if (table) {
+                const newRow = table.insertRow(0);
+                newRow.className = data.is_important ? 'table-warning' : '';
+                newRow.innerHTML = `
                 <td><a href="/accounts/${data.account_id}/">${data.account_name}</a></td>
                 <td>${data.title || 'Engagement event'}</td>
                 <td><span class="badge bg-${data.priority === 'critical' ? 'danger' : data.priority === 'high' ? 'warning' : data.priority === 'medium' ? 'info' : 'secondary'}">${data.event_type}</span></td>
@@ -143,35 +153,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>Just now</td>
                 <td><a href="#" class="btn btn-sm btn-outline-primary">View</a></td>
             `;
-        }
-        
-        // Auto-hide after 5 seconds
-        setTimeout(() => {
-            document.getElementById('live-feed').style.display = 'none';
-        }, 5000);
-    };
-
-    socket.onerror = function(error) {
-        console.error('WebSocket error:', error);
-    };
-
-    socket.onclose = function(event) {
-        console.log('WebSocket disconnected');
-    };
-
-    // Filter handling
-    const eventTypeFilter = document.getElementById('event-type-filter');
-    if (eventTypeFilter) {
-        eventTypeFilter.addEventListener('change', function() {
-            const url = new URL(window.location);
-            if (this.value) {
-                url.searchParams.set('event_type', this.value);
-            } else {
-                url.searchParams.delete('event_type');
             }
-            window.location.href = url.toString();
-        });
-    }
-});
+
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                document.getElementById('live-feed').style.display = 'none';
+            }, 5000);
+        };
+
+        socket.onerror = function (error) {
+            console.error('WebSocket error:', error);
+        };
+
+        socket.onclose = function (event) {
+            console.log('WebSocket disconnected');
+        };
+
+        // Filter handling
+        const eventTypeFilter = document.getElementById('event-type-filter');
+        if (eventTypeFilter) {
+            eventTypeFilter.addEventListener('change', function () {
+                const url = new URL(window.location);
+                if (this.value) {
+                    url.searchParams.set('event_type', this.value);
+                } else {
+                    url.searchParams.delete('event_type');
+                }
+                window.location.href = url.toString();
+            });
+        }
+    });
 </script>
 {% endblock %}

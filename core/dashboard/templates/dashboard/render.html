@@ -4,18 +4,29 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4" id="dashboard-header">
         <div>
             <h1 class="h3 mb-0">{{ dashboard.name }}</h1>
             <p class="text-muted mb-0">{{ dashboard.description }}</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 align-items-center">
+            <!-- Live Data Toggle -->
+            <div class="form-check form-switch me-2">
+                <input class="form-check-input" type="checkbox" id="liveDataToggle" checked>
+                <label class="form-check-label small" for="liveDataToggle">Live Data</label>
+            </div>
+
+            <!-- TV Mode Button -->
+            <button class="btn btn-outline-dark" id="tvModeBtn" title="TV Mode (Fullscreen)">
+                <i class="bi bi-display"></i> TV Mode
+            </button>
+
             <a href="{% url 'dashboard:builder' %}?dashboard={{ dashboard.id }}" class="btn btn-outline-primary">
-                <i class="bi bi-pencil me-1"></i> Edit Dashboard
+                <i class="bi bi-pencil me-1"></i> Edit
             </a>
             {% if not dashboard.is_default %}
             <button class="btn btn-outline-secondary" disabled title="Set as default in builder">
-                <i class="bi bi-star me-1"></i> Set Default
+                <i class="bi bi-star me-1"></i>
             </button>
             {% else %}
             <span class="badge bg-warning text-dark d-flex align-items-center">
@@ -31,14 +42,14 @@
             {% for widget in row %}
             <div class="col-md-{{ widget.span }}">
                 {% if widget.template %}
-                    {% include widget.template with widget=widget %}
+                {% include widget.template with widget=widget %}
                 {% else %}
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <i class="bi bi-exclamation-triangle text-warning"></i>
-                            <p class="mt-2">Widget template not configured</p>
-                        </div>
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-exclamation-triangle text-warning"></i>
+                        <p class="mt-2">Widget template not configured</p>
                     </div>
+                </div>
                 {% endif %}
             </div>
             {% endfor %}
@@ -57,4 +68,92 @@
         {% endfor %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- TV Mode ---
+        const tvBtn = document.getElementById('tvModeBtn');
+        const header = document.getElementById('dashboard-header');
+        // Select sidebar and topbar more robustly
+        const sidebar = document.querySelector('nav.sidebar') || document.querySelector('.sidebar');
+        const topbar = document.querySelector('nav.navbar') || document.querySelector('.topbar');
+        const mainContent = document.querySelector('main') || document.querySelector('.main-content');
+
+        if (tvBtn) {
+            tvBtn.addEventListener('click', function () {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.error(`Error enabling full-screen mode: ${err.message}`);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+        }
+
+        document.addEventListener('fullscreenchange', (event) => {
+            if (document.fullscreenElement) {
+                // Hide UI elements
+                if (sidebar) sidebar.style.display = 'none';
+                if (topbar) topbar.style.display = 'none';
+                if (header) header.classList.add('d-none');
+                document.body.classList.add('tv-mode-active');
+                if (mainContent) mainContent.classList.add('p-0');
+                if (tvBtn) tvBtn.innerHTML = '<i class="bi bi-fullscreen-exit"></i> Exit';
+            } else {
+                // Show UI elements
+                if (sidebar) sidebar.style.display = '';
+                if (topbar) topbar.style.display = '';
+                if (header) header.classList.remove('d-none');
+                document.body.classList.remove('tv-mode-active');
+                if (mainContent) mainContent.classList.remove('p-0');
+                if (tvBtn) tvBtn.innerHTML = '<i class="bi bi-display"></i> TV Mode';
+            }
+        });
+
+        // --- Live Data Simulation ---
+        const liveToggle = document.getElementById('liveDataToggle');
+        let refreshInterval;
+
+        function startLiveUpdate() {
+            refreshInterval = setInterval(() => {
+                console.log('Fetching live data...');
+                // In future: fetch new data via AJAX/Websocket
+
+                // Visual feedback
+                const badge = document.createElement('div');
+                badge.className = 'position-fixed bottom-0 end-0 m-3 badge bg-success fade-out';
+                badge.innerText = 'Data Updated';
+                badge.style.transition = 'opacity 1s';
+                document.body.appendChild(badge);
+                setTimeout(() => { badge.style.opacity = 0; setTimeout(() => badge.remove(), 1000); }, 2000);
+
+            }, 30000); // 30s
+        }
+
+        if (liveToggle) {
+            liveToggle.addEventListener('change', function () {
+                if (this.checked) {
+                    startLiveUpdate();
+                } else {
+                    clearInterval(refreshInterval);
+                }
+            });
+            // Start by default
+            if (liveToggle.checked) startLiveUpdate();
+        }
+    });
+</script>
+
+<style>
+    .tv-mode-active {
+        background-color: #f8f9fc;
+        padding: 20px;
+        overflow-y: auto;
+        height: 100vh;
+        width: 100vw;
+    }
+</style>
 {% endblock %}

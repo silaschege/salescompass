@@ -1,11 +1,17 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Sum
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from django.urls import reverse_lazy
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView, TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.urls import reverse_lazy, reverse
 from django.contrib.messages.views import SuccessMessageMixin
+from core.apps_registry import SUPERUSER_ONLY_CATEGORIES, AVAILABLE_APPS
+from accounts.models import RoleAppPermission
 from core.models import (
-    User, ModuleLabel, ModuleChoice, ModelChoice, FieldType, AssignmentRuleType
+    User, ModuleLabel, ModuleChoice, ModelChoice, FieldType, AssignmentRuleType,
+    SystemConfigType, SystemConfigCategory, SystemEventType, SystemEventSeverity,
+    HealthCheckType, HealthCheckStatus, MaintenanceStatus, MaintenanceType,
+    PerformanceMetricType, PerformanceEnvironment, NotificationType, NotificationPriority
 )
 from core.forms import (
     ModuleLabelForm, ModuleChoiceForm, ModelChoiceForm, FieldTypeForm, AssignmentRuleTypeForm
@@ -13,6 +19,91 @@ from core.forms import (
 from tenants.models import Tenant as TenantModel
 from leads.models import Lead
 from opportunities.models import Opportunity
+
+
+
+
+
+class TenantAwareViewMixin:
+    """
+    Mixin to filter querysets by the current user's tenant.
+    This ensures data isolation in multi-tenant environments.
+    """
+    def get_queryset(self):
+        # Allow views to define a base queryset
+        if hasattr(super(), 'get_queryset'):
+            queryset = super().get_queryset()
+        elif hasattr(self, 'model') and self.model:
+            queryset = self.model.objects.all()
+        else:
+             # Fallback or error, but let's assume usage in generic views
+             return None 
+             
+        if hasattr(self.request.user, 'tenant_id') and self.request.user.tenant_id:
+            return queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+    def get_form_kwargs(self):
+        """
+        Inject tenant into form kwargs if available.
+        This allows forms to filter dynamic choices by tenant.
+        """
+        kwargs = super().get_form_kwargs()
+        if hasattr(self.request.user, 'tenant_id'):
+            # Fetch the actual Tenant object if needed by the form, or just pass the ID
+            # Based on LeadsForm, it expects 'tenant' object (or at least something with .id)
+            # For efficiency we might just pass the user.tenant object if available
+            # Assuming user.tenant is available via relation
+            if hasattr(self.request.user, 'tenant'):
+                 kwargs['tenant'] = self.request.user.tenant
+        return kwargs
+
+
+# --- Standardized Base Views ---
+
+class SalesCompassListView(LoginRequiredMixin, TenantAwareViewMixin, ListView):
+    """
+    Standard List View for SalesCompass apps.
+    Enforces Login and Tenant Scoping.
+    """
+    pass
+
+
+class SalesCompassDetailView(LoginRequiredMixin, TenantAwareViewMixin, DetailView):
+    """
+    Standard Detail View for SalesCompass apps.
+    Enforces Login and Tenant Scoping.
+    """
+    pass
+
+
+class SalesCompassCreateView(LoginRequiredMixin, SuccessMessageMixin, TenantAwareViewMixin, CreateView):
+    """
+    Standard Create View for SalesCompass apps.
+    Enforces Login, Tenant Scoping, and automatic Tenant assignment.
+    """
+    def form_valid(self, form):
+        if hasattr(self.request.user, 'tenant_id'):
+             # Handle both direct field assignment and object assignment if needed
+             if hasattr(form.instance, 'tenant_id'):
+                form.instance.tenant_id = self.request.user.tenant_id
+        return super().form_valid(form)
+
+
+class SalesCompassUpdateView(LoginRequiredMixin, SuccessMessageMixin, TenantAwareViewMixin, UpdateView):
+    """
+    Standard Update View for SalesCompass apps.
+    Enforces Login and Tenant Scoping.
+    """
+    pass
+
+
+class SalesCompassDeleteView(LoginRequiredMixin, TenantAwareViewMixin, DeleteView):
+    """
+    Standard Delete View for SalesCompass apps.
+    Enforces Login and Tenant Scoping.
+    """
+    pass
 
 
 
@@ -75,7 +166,85 @@ from django.views.generic import TemplateView
 
 
 
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+# class AppSelectionView(LoginRequiredMixin, TemplateView):
+#     template_name = 'logged_in/app_selection.html'
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         user = self.request.user
+        
+#         # Initialize groups
+#         # Note: Keys match the 'category' strings in AVAILABLE_APPS
+#         grouped_apps = {
+#             'core': [],
+#             'feature': [], # Changed from 'features' to match registry value 'feature'
+#             'control': []
+#         }
+        
+#         has_any_apps = False
+        
+#         # 1. Determine Hidden Apps based on User Role (Standard Users)
+#         hidden_apps_ids = set()
+#         if user.role and not user.is_superuser:
+#             permissions = RoleAppPermission.objects.filter(role=user.role)
+#             for perm in permissions:
+#                 if not perm.is_visible:
+#                     hidden_apps_ids.add(perm.app_identifier)
+
+#         for app in AVAILABLE_APPS:
+#             app_id = app['id']
+#             app_category = app['category']
+
+#             # --- CHECK 1: Role based visibility (Database) ---
+#             if app_id in hidden_apps_ids:
+#                 continue
+
+#             # --- CHECK 2: Superuser Only Restrictions ---
+#             # Check if this specific App ID or its Category is in the restricted list
+#             is_restricted = (app_category in SUPERUSER_ONLY_CATEGORIES) or (app_id in SUPERUSER_ONLY_CATEGORIES)
+            
+#             # If the app is restricted AND the user is NOT a superuser, hide it.
+#             if is_restricted and not user.is_superuser:
+#                 continue
+                
+#             # --- CHECK 3: Add to group if URL resolves ---
+#             try:
+#                 # Resolve URL
+#                 url = reverse(app['url_name'])
+                
+#                 app_data = {
+#                     'name': app['name'],
+#                     'icon': app['icon'],
+#                     'url': url,
+#                     'id': app_id,
+#                     'description': app.get('description', '')
+#                 }
+                
+#                 # Ensure the category key exists in grouped_apps
+#                 if app_category in grouped_apps:
+#                     grouped_apps[app_category].append(app_data)
+#                     has_any_apps = True
+                    
+#             except Exception:
+#                 # Skip if URL reversal fails (e.g. app not installed/configured yet)
+#                 pass
+
+#         context['grouped_apps'] = grouped_apps
+#         context['has_any_apps'] = has_any_apps
+#         context['user_info'] = {
+#             'name': user.get_full_name() or user.email,
+#             'company': user.tenant.name if getattr(user, 'tenant', None) else 'SalesCompass Internal',
+#             'role': 'Superuser' if user.is_superuser else (user.role.name if user.role else 'Standard User')
+#         }
+            
+#         return context
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView
+from django.urls import reverse
+from core.apps_registry import AVAILABLE_APPS
+from accounts.models import RoleAppPermission
 
 class AppSelectionView(LoginRequiredMixin, TemplateView):
     template_name = 'logged_in/app_selection.html'
@@ -84,67 +253,71 @@ class AppSelectionView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         
-        from django.urls import reverse
-        from core.apps_registry import AVAILABLE_APPS
-        from accounts.models import RoleAppPermission
-        
-        # Initialize groups
+        # 1. Define which CATEGORIES are strictly for Superusers
+        # Based on your registry, 'control' contains infrastructure, audit logs, etc.
+        # Add 'core' here only if you want to hide Home/Dashboard from standard users.
+        RESTRICTED_CATEGORIES = ['control'] 
+
+        # Initialize groups to match your AVAILABLE_APPS 'category' keys
         grouped_apps = {
-            'customer': [],
-            'work': [],
-            'analytics': [],
-            'admin': [],
+            'core': [],
+            'feature': [],
             'control': []
         }
         
         has_any_apps = False
         
-        # Fetch permissions if user has a role
-        hidden_apps = set()
+        # 2. Get permissions for Standard Users
+        hidden_apps_ids = set()
         if user.role and not user.is_superuser:
             permissions = RoleAppPermission.objects.filter(role=user.role)
             for perm in permissions:
                 if not perm.is_visible:
-                    hidden_apps.add(perm.app_identifier)
+                    hidden_apps_ids.add(perm.app_identifier)
 
         for app in AVAILABLE_APPS:
-            # Check visibility
-            if app['id'] in hidden_apps:
+            app_id = app['id']
+            app_category = app['category']
+
+            # --- CHECK 1: Database/Role Permissions (Standard Users) ---
+            if app_id in hidden_apps_ids:
+                continue
+
+            # --- CHECK 2: Restricted Categories (Superuser Only) ---
+            # We strictly call the category here. 
+            # If the app belongs to a restricted category and user is NOT superuser -> Skip.
+            if app_category in RESTRICTED_CATEGORIES and not user.is_superuser:
                 continue
                 
-            # Role/Permission logic (on top of DB permissions)
-            # Superuser sees 'control' apps
-            if app['category'] == 'control' and not user.is_superuser:
-                continue
-                
-            # Add to group
+            # --- CHECK 3: Add to group if URL resolves ---
             try:
-                # Resolve URL
                 url = reverse(app['url_name'])
                 
                 app_data = {
                     'name': app['name'],
                     'icon': app['icon'],
                     'url': url,
-                    'id': app['id'] # Added ID for potential frontend use
+                    'id': app_id,
+                    'description': app.get('description', '')
                 }
                 
-                grouped_apps[app['category']].append(app_data)
-                has_any_apps = True
+                if app_category in grouped_apps:
+                    grouped_apps[app_category].append(app_data)
+                    has_any_apps = True
+                    
             except Exception:
-                # Skip if URL reversal fails (e.g. app not installed/configured yet)
+                # Skip if URL reversal fails
                 pass
 
         context['grouped_apps'] = grouped_apps
         context['has_any_apps'] = has_any_apps
         context['user_info'] = {
             'name': user.get_full_name() or user.email,
-            'company': user.tenant.name if user.tenant else 'SalesCompass Internal',
+            'company': getattr(user.tenant, 'name', 'SalesCompass Internal') if hasattr(user, 'tenant') else 'SalesCompass Internal',
             'role': 'Superuser' if user.is_superuser else (user.role.name if user.role else 'Standard User')
         }
             
         return context
-
 
 class AppSettingsView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     template_name = 'logged_in/app_settings.html'
@@ -158,10 +331,8 @@ class AppSettingsView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         from accounts.models import Role, RoleAppPermission
         
         roles = Role.objects.all()
-        # Exclude control apps from configuration if desired, or keep them. 
-        # Typically superuser stuff isn't toggled for other roles anyway because of logic in AppSelectionView.
-        # Let's filter out 'control' category apps from being assigned to roles to avoid confusion.
-        configurable_apps = [app for app in AVAILABLE_APPS if app['category'] != 'control']
+        # Include ALL apps for configuration, including control apps
+        configurable_apps = AVAILABLE_APPS
         
         # Build a matrix of role -> app -> is_visible
         permission_matrix = {}
@@ -177,6 +348,8 @@ class AppSettingsView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                 role_perms.append({
                     'app_id': app['id'],
                     'app_name': app['name'],
+                    'category': app['category'],  # Pass category for grouping in template
+                    'icon': app['icon'],          # Pass icon for UI
                     'is_visible': is_visible
                 })
             permission_matrix[role] = role_perms
@@ -190,13 +363,10 @@ class AppSettingsView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         
         # Process form submission
         # Expected format: perm_{role_id}_{app_id} = 'on' (if checked)
-        # Any missing checked items means False? No, HTML checkboxes only send if checked.
-        # But we need to handle "unchecking". 
-        
-        # Strategy: Iterate through all roles and apps, check if present in POST.
         
         from core.apps_registry import AVAILABLE_APPS
-        configurable_apps = [app for app in AVAILABLE_APPS if app['category'] != 'control']
+        # Use ALL apps
+        configurable_apps = AVAILABLE_APPS
         roles = Role.objects.all()
         
         for role in roles:

@@ -12,6 +12,7 @@ class ModelType(Enum):
     CONVERSION_PREDICTION = "conversion_prediction"
     DEAL_SIZE_PREDICTION = "deal_size_prediction"
     TIME_TO_CLOSE_PREDICTION = "time_to_close_prediction"
+    REVENUE_FORECAST = "revenue_forecast"
     CUSTOM = "custom"
 
 

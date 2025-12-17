@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'logged_in/base.html' %}
 {% load static %}
 
 {% block title %}Security Dashboard{% endblock %}
@@ -72,7 +72,7 @@
                                 <tr>
                                     <td>{{ event.timestamp|date:"M d, Y H:i" }}</td>
                                     <td>{{ event.user_email|default:"System" }}</td>
-                                    <td>{{ event.action_type }}</td>
+                                    <td>{{ event.action }}</td>
                                     <td>
                                         <span class="badge 
                                             {% if event.severity == 'critical' %}bg-danger

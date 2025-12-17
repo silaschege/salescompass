@@ -1,10 +1,11 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 app_name = 'automation'
 
 urlpatterns = [
     # CRUD operations
+    path('', include('automation.urls_rules')), # Business Rules
     path('', views.AutomationListView.as_view(), name='list'),
     path('create/', views.AutomationCreateView.as_view(), name='create'),
     path('<int:pk>/', views.AutomationDetailView.as_view(), name='detail'),
