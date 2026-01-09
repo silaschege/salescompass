@@ -1,0 +1,160 @@
+{% extends "proposals/base.html" %}
+
+{% block title %}Manage Approval Templates - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="block-title fw-bold mb-0">Manage Approval Templates</h1>
+        <div>
+            <a href="{% url 'proposals:approval_template_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create Template
+            </a>
+            <a href="{% url 'proposals:approval_template_list' %}" class="btn btn-secondary ms-2">
+                <i class="bi bi-list"></i> View All Templates
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5>Total Templates</h5>
+                    <h2>{{ templates.count }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5>Active Templates</h5>
+                    <h2>{{ templates|length }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5>Approval Steps</h5>
+                    <h2>{{ steps.count }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5>Used Templates</h5>
+                    <h2>{{ templates|length }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Templates -->
+    {% if templates %}
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Available Approval Templates</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Template Name</th>
+                            <th>Description</th>
+                            <th>Steps</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for template in templates %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'proposals:approval_template_detail' template.pk %}" class="fw-bold text-decoration-none">
+                                    {{ template.name }}
+                                </a>
+                            </td>
+                            <td>{{ template.description|default:"No description"|truncatechars:50 }}</td>
+                            <td>{{ template.approvaltemplatetemplates.count }} steps</td>
+                            <td>
+                                {% if template.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'proposals:approval_template_detail' template.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                <a href="{% url 'proposals:approval_template_edit' template.pk %}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card mb-4">
+        <div class="card-body text-center">
+            <i class="bi bi-folder-plus text-muted fs-1 mb-3"></i>
+            <h4>No Approval Templates Found</h4>
+            <p class="text-muted">Get started by creating your first approval template.</p>
+            <a href="{% url 'proposals:approval_template_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create Template
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Approval Steps -->
+    {% if steps %}
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Approval Steps</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Step Name</th>
+                            <th>Description</th>
+                            <th>Approver</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for step in steps %}
+                        <tr>
+                            <td>{{ step.name }}</td>
+                            <td>{{ step.description|default:"No description"|truncatechars:50 }}</td>
+                            <td>{{ step.approved_by.get_full_name|default:step.approved_by.username }}</td>
+                            <td>
+                                {% if step.is_required %}
+                                    <span class="badge bg-primary">Required</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Optional</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -6,7 +6,7 @@ from django.template.loader import render_to_string
 import logging
 
 logger = logging.getLogger(__name__)
-
+ 
 @shared_task
 def process_drip_enrollments():
     """

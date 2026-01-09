@@ -25,7 +25,7 @@ class SuperuserRequiredMixin(UserPassesTestMixin):
 
 
 class ResourceMonitoringDashboardView(LoginRequiredMixin, SuperuserRequiredMixin, TemplateView):
-    template_name = 'infrastructure/resource_monitoring_dashboard.html'
+    template_name = 'infrastructure/dashboard.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -58,7 +58,7 @@ class ResourceMonitoringDashboardView(LoginRequiredMixin, SuperuserRequiredMixin
 
 class ResourceMonitoringListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
     model = ResourceMonitoring
-    template_name = 'infrastructure/resource_monitoring_list.html'
+    template_name = 'infrastructure/api_calls.html'
     context_object_name = 'resources'
     paginate_by = 25
     
@@ -204,7 +204,7 @@ class ResourceQuotaUpdateView(LoginRequiredMixin, SuperuserRequiredMixin, Update
 
 class ResourceUsageReportListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
     model = ResourceUsageReport
-    template_name = 'infrastructure/resource_usage_report_list.html'
+    template_name = 'infrastructure/tenant_usage_list.html'
     context_object_name = 'reports'
     paginate_by = 25
     

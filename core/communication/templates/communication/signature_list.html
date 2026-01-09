@@ -1,0 +1,64 @@
+{% extends "communication/base.html" %}
+{% load static %}
+
+{% block title %}Email Signatures - Communication{% endblock %}
+
+{% block comm_title %}✍️ Email Signatures{% endblock %}
+{% block comm_subtitle %}Manage your personal signatures for outgoing emails{% endblock %}
+
+{% block comm_actions %}
+<a href="{% url 'communication:signature_create' %}" class="btn btn-comm fw-bold px-4 shadow-sm">
+    <i class="bi bi-plus-circle me-1"></i> New Signature
+</a>
+{% endblock %}
+
+{% block comm_content %}
+<div class="row g-4">
+    {% for signature in signatures %}
+    <div class="col-md-6">
+        <div class="comm-card h-100 d-flex flex-column">
+            <div class="card-header bg-transparent border-bottom p-3 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0">
+                    {{ signature.name }}
+                    {% if signature.is_default %}
+                    <span class="badge bg-success border ms-2">DEFAULT</span>
+                    {% endif %}
+                </h6>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                        <li><a class="dropdown-item" href="{% url 'communication:signature_edit' signature.pk %}"><i
+                                    class="bi bi-pencil me-2"></i> Edit</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item text-danger"
+                                href="{% url 'communication:signature_delete' signature.pk %}"><i
+                                    class="bi bi-trash me-2"></i> Delete</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body bg-light p-4 flex-grow-1 overflow-auto" style="max-height: 250px;">
+                <div class="bg-white p-3 rounded shadow-sm border small">
+                    {{ signature.content_html|safe }}
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-top p-3 text-end">
+                <small class="text-muted">Last updated: {{ signature.updated_at|date:"M d, Y" }}</small>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+        <div class="text-muted">
+            <i class="bi bi-pen display-4 mb-3 d-block"></i>
+            <h5>No signatures found</h5>
+            <p>Create your first signature to use in outgoing emails.</p>
+            <a href="{% url 'communication:signature_create' %}" class="btn btn-comm btn-sm">Create Signature</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -5,54 +5,56 @@ from .models import EngagementStatus, NextBestAction, EngagementEvent
 def evaluate_auto_nba_rules(account):
     """
     Evaluate rules for a specific account and create NBAs if necessary.
+    Now uses dynamic AutoNBARule definitions.
     """
-    status, _ = EngagementStatus.objects.get_or_create(account=account)
+    from .models import AutoNBARule, NextBestAction
     
-    # Rule 1: Low Engagement Score -> Check In
-    if status.engagement_score < 30:
-        # Check if an open NBA of this type already exists to avoid spam
-        exists = NextBestAction.objects.filter(
-            account=account,
-            action_type='check_in',
-            completed=False
-        ).exists()
+    tenant_id = getattr(account, 'tenant_id', None)
+    rules = AutoNBARule.objects.filter(tenant_id=tenant_id, auto_nba_is_active=True)
+    
+    for rule in rules:
+        should_trigger = False
         
-        if not exists:
-            NextBestAction.objects.create(
+        if rule.trigger_event == 'low_engagement_score':
+            status, _ = EngagementStatus.objects.get_or_create(account=account)
+            if status.engagement_score < 30: # Threshold could be moved to rule metadata later
+                should_trigger = True
+        
+        elif rule.trigger_event == 'no_engagement_7_days':
+            week_ago = timezone.now() - timedelta(days=7)
+            recent_events = EngagementEvent.objects.filter(
                 account=account,
-                action_type='check_in',
-                next_best_action_description="Engagement score is critically low. Personal check-in required.",
-                due_date=timezone.now() + timedelta(days=2),
-                priority='high',
-                source='Auto-Rule: Low Engagement',
-                status='open',
-                # Assign to account owner or default admin
-                assigned_to=account.owner if hasattr(account, 'owner') and account.owner else account, 
-                tenant_id=account.tenant_id if hasattr(account, 'tenant_id') else None
+                tenant_id=tenant_id,
+                created_at__gte=week_ago
             )
-
-    # Rule 2: Inactivity > 30 days -> Send Email (Re-engagement)
-    if status.last_engaged_at:
-        days_inactive = (timezone.now() - status.last_engaged_at).days
-        if days_inactive > 30:
+            if not recent_events.exists():
+                should_trigger = True
+                
+        # Only process periodic rules here, event-triggered ones are in utils.py
+        if should_trigger:
+            # Check for existing open NBA of same type/source to avoid duplicates
             exists = NextBestAction.objects.filter(
                 account=account,
-                action_type='send_email',
-                source__contains='Inactivity', # Simple tag check
+                action_type=rule.action_type,
+                source=f'Auto NBA Rule: {rule.rule_name}',
                 completed=False
             ).exists()
             
             if not exists:
                 NextBestAction.objects.create(
                     account=account,
-                    action_type='send_email',
-                    next_best_action_description="Account has been inactive for over 30 days. Send re-engagement email.",
-                    due_date=timezone.now() + timedelta(days=3),
-                    priority='medium',
-                    source='Auto-Rule: Inactivity',
+                    tenant_id=tenant_id,
+                    action_type=rule.action_type,
+                    next_best_action_description=rule.description_template.format(
+                        account_name=account.name,
+                        engagement_score=getattr(account, 'engagement_status', None).engagement_score if hasattr(account, 'engagement_status') else 0,
+                        event_type='Periodic Check'
+                    ),
+                    due_date=timezone.now() + timedelta(days=rule.due_in_days),
+                    priority=rule.priority,
+                    source=f'Auto NBA Rule: {rule.rule_name}',
                     status='open',
-                    assigned_to=account.owner if hasattr(account, 'owner') and account.owner else account,
-                    tenant_id=account.tenant_id if hasattr(account, 'tenant_id') else None
+                    assigned_to=account.owner if hasattr(account, 'owner') and account.owner else account
                 )
 
 def run_auto_nba_check():
@@ -60,7 +62,8 @@ def run_auto_nba_check():
     Batch process to evaluate rules for all accounts.
     """
     for status in EngagementStatus.objects.all():
-        evaluate_auto_nba_rules(status.account)
+        if status.account:
+            evaluate_auto_nba_rules(status.account)
 
 
 def check_churn_risk(account):

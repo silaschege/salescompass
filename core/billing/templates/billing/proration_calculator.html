@@ -9,6 +9,12 @@
         </div>
     </div>
 
+    {% if error %}
+    <div class="alert alert-danger">
+        {{ error }}
+    </div>
+    {% endif %}
+
     <div class="card">
         <div class="card-header">
             <h5 class="mb-0">Calculate Plan Change Cost</h5>
@@ -22,9 +28,8 @@
                             <select name="subscription_id" id="subscription_id" class="form-select" required>
                                 <option value="">-- Select Subscription --</option>
                                 {% for sub in subscriptions %}
-                                <option value="{{ sub.id }}" {% if request.GET.subscription_id==sub.id|stringformat:"s"
-                                    %}selected{% endif %}>
-                                    {{ sub.tenant_id }} - {{ sub.plan.name }} (${{ sub.plan.price_monthly }}/mo)
+                                <option value="{{ sub.id }}" {% if request.GET.subscription_id == sub.id|stringformat:"s"%}selected{% endif %}>
+                                    {% if user.is_superuser %}Tenant: {{ sub.tenant_id }} - {% endif %}{{ sub.user.email }} - {{ sub.subscription_plan.name }} (${{ sub.subscription_plan.price|floatformat:2 }}/mo)
                                 </option>
                                 {% endfor %}
                             </select>
@@ -36,9 +41,8 @@
                             <select name="new_plan_id" id="new_plan_id" class="form-select" required>
                                 <option value="">-- Select New Plan --</option>
                                 {% for plan in plans %}
-                                <option value="{{ plan.id }}" {% if request.GET.new_plan_id==plan.id|stringformat:"s"
-                                    %}selected{% endif %}>
-                                    {{ plan.name }} (${{ plan.price_monthly }}/mo)
+                                <option value="{{ plan.id }}" {% if request.GET.new_plan_id == plan.id|stringformat:"s"%}selected{% endif %}>
+                                    {{ plan.name }} (${{ plan.price|floatformat:2 }}/mo)
                                 </option>
                                 {% endfor %}
                             </select>
@@ -53,7 +57,7 @@
                 </div>
             </form>
 
-            {% if request.GET.subscription_id and request.GET.new_plan_id %}
+            {% if subscription and new_plan %}
             <hr>
 
             <div class="alert alert-info">
@@ -61,13 +65,13 @@
                 <div class="row mt-3">
                     <div class="col-md-4">
                         <small class="text-muted">Current Plan</small>
-                        <p class="mb-0"><strong>{{ subscription.plan.name }}</strong></p>
-                        <small>${{ subscription.plan.price_monthly }}/month</small>
+                        <p class="mb-0"><strong>{{ subscription.subscription_plan.name }}</strong></p>
+                        <small>${{ subscription.subscription_plan.price|floatformat:2 }}/month</small>
                     </div>
                     <div class="col-md-4">
                         <small class="text-muted">New Plan</small>
                         <p class="mb-0"><strong>{{ new_plan.name }}</strong></p>
-                        <small>${{ new_plan.price_monthly }}/month</small>
+                        <small>${{ new_plan.price|floatformat:2 }}/month</small>
                     </div>
                     <div class="col-md-4">
                         <small class="text-muted">Proration Amount</small>

@@ -1,4 +1,5 @@
-from .models import PricingTier, ProductBundle
+from .models import PricingTier, ProductBundle,Product, BundleItem, ProductDependency, CompetitorProduct, ProductComparison
+from django.db import models
 
 def get_product_price(product_id: int, quantity: int = 1) -> dict:
     """Get price for a product based on quantity."""
@@ -114,3 +115,74 @@ def generate_sku(product_name: str, category: str = None) -> str:
         next_num = 1
     
     return f"{cat_prefix}-{prod_slug}-{next_num:03d}"
+
+def validate_bundle_items(bundle_id):
+    """Validate that all items in a bundle are active and available"""
+    bundle = ProductBundle.objects.get(id=bundle_id)
+    inactive_items = BundleItem.objects.filter(
+        bundle=bundle,
+        product__product_is_active=False
+    ).count()
+    return inactive_items == 0
+
+def calculate_bundle_savings(bundle_id):
+    """Calculate savings from buying bundle vs individual items"""
+    bundle = ProductBundle.objects.get(id=bundle_id)
+    if bundle.bundle_price:
+        individual_total = sum(
+            item.product.base_price * item.quantity 
+            for item in bundle.bundleitem_set.all()
+        )
+        savings = individual_total - bundle.bundle_price
+        return {
+            'individual_total': individual_total,
+            'bundle_price': bundle.bundle_price,
+            'savings': savings,
+            'savings_percentage': (savings / individual_total) * 100 if individual_total > 0 else 0
+        }
+    return None
+
+def analyze_competitive_position(product_id):
+    """Analyze competitive position of a product"""
+    try:
+        product = Product.objects.get(id=product_id)
+        competitors = CompetitorProduct.objects.filter(our_product=product)
+        
+        if competitors.exists():
+            avg_price_diff = competitors.aggregate(
+                avg_diff=models.Avg('price_difference_percent')
+            )['avg_diff'] or 0
+            
+            # Count direct vs indirect competitors
+            direct_competitors = competitors.filter(is_direct_competitor=True).count()
+            indirect_competitors = competitors.filter(is_direct_competitor=False).count()
+            
+            return {
+                'product': product,
+                'competitor_count': competitors.count(),
+                'direct_competitors': direct_competitors,
+                'indirect_competitors': indirect_competitors,
+                'average_price_difference': avg_price_diff,
+                'position': (
+                    'more_expensive' if avg_price_diff > 0 
+                    else 'cheaper' if avg_price_diff < 0 
+                    else 'equal'
+                ),
+                'message': (
+                    f'This product is {abs(avg_price_diff):.2f}% more expensive than competitors' 
+                    if avg_price_diff > 0
+                    else f'This product is {abs(avg_price_diff):.2f}% cheaper than competitors' 
+                    if avg_price_diff < 0
+                    else 'This product is priced equally to competitors'
+                )
+            }
+        else:
+            return {
+                'product': product,
+                'competitor_count': 0,
+                'message': 'No competitors mapped for this product'
+            }
+    except Product.DoesNotExist:
+        return {
+            'error': 'Product does not exist'
+        }

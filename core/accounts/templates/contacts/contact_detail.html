@@ -1,4 +1,5 @@
 {% extends "accounts/base.html" %}
+{% load task_tags %}
 
 {% block title %}{{ contact.first_name }} {{ contact.last_name }} - SalesCompass{% endblock %}
 
@@ -7,7 +8,7 @@
     <div class="container">
         <h1 class="block-title">{{ contact.first_name }} {{ contact.last_name }}</h1>
         <p class="text-center lead">
-            Contact is linked to the account  {{ contact.account.name }}
+            Contact is linked to the account {{ contact.account.account_name }}
         </p>
     </div>
 </div>
@@ -30,25 +31,27 @@
                         </div>
                         <div class="col-md-6">
                             <p><strong>Role:</strong> {{ contact.role|default:"—" }}</p>
-                            <p><strong>Account:</strong> 
+                            <p><strong>Account:</strong>
                                 <a href="{% url 'accounts:detail' contact.account.pk %}">
-                                    {{ contact.account.name }}
+                                    {{ contact.account.account_name }}
                                 </a>
                             </p>
-                            <p><strong>Communication Preference:</strong> {{ contact.get_communication_preference_display }}</p>
-                            <p><strong>ESG Influence:</strong> 
-                                <span class="badge bg-{% if contact.esg_influence == 'high' %}success{% elif contact.esg_influence == 'medium' %}warning{% else %}secondary{% endif %}">
+                            <p><strong>Communication Preference:</strong> {{
+                                contact.get_communication_preference_display }}</p>
+                            <p><strong>ESG Influence:</strong>
+                                <span
+                                    class="badge bg-{% if contact.esg_influence == 'high' %}success{% elif contact.esg_influence == 'medium' %}warning{% else %}secondary{% endif %}">
                                     {{ contact.get_esg_influence_display }}
                                 </span>
                             </p>
                         </div>
                     </div>
                     <p>
-                        <strong>Primary Contact:</strong> 
+                        <strong>Primary Contact:</strong>
                         {% if contact.is_primary %}
-                            <span class="badge bg-success">Yes</span>
+                        <span class="badge bg-success">Yes</span>
                         {% else %}
-                            <span class="badge bg-secondary">No</span>
+                        <span class="badge bg-secondary">No</span>
                         {% endif %}
                     </p>
                 </div>
@@ -58,7 +61,7 @@
             {% if account_contacts %}
             <div class="card">
                 <div class="card-header">
-                    <h5>Other Contacts at {{ contact.account.name }}</h5>
+                    <h5>Other Contacts at {{ contact.account.account_name }}</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -71,7 +74,7 @@
                                             {{ related_contact.first_name }} {{ related_contact.last_name }}
                                         </a>
                                         {% if related_contact.is_primary %}
-                                            <span class="badge bg-primary ms-1">Primary</span>
+                                        <span class="badge bg-primary ms-1">Primary</span>
                                         {% endif %}
                                     </td>
                                     <td>{{ related_contact.role|default:"—" }}</td>
@@ -87,6 +90,11 @@
         </div>
 
         <div class="col-md-4">
+            <!-- Tasks Widget -->
+            <div class="mb-4">
+                {% render_object_tasks contact %}
+            </div>
+
             <!-- Actions -->
             <div class="card mb-4">
                 <div class="card-header">
@@ -94,24 +102,43 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
+                        {% if contact.phone %}
+                        <a href="{% url 'communication:whatsapp_conversation' %}?phone={{ contact.phone }}"
+                            class="btn btn-outline-success">
+                            <i class="bi bi-whatsapp me-1"></i> WhatsApp
+                        </a>
+                        {% else %}
+                        <a href="{% url 'communication:whatsapp_send' %}?contact_id={{ contact.pk }}"
+                            class="btn btn-outline-success">
+                            <i class="bi bi-whatsapp me-1"></i> WhatsApp
+                        </a>
+                        {% endif %}
                         <a href="{% url 'accounts:contact_update' contact.pk %}" class="btn btn-outline-primary">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil me-1" viewBox="0 0 16 16">
-                                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5z"/>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                class="bi bi-pencil me-1" viewBox="0 0 16 16">
+                                <path
+                                    d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5z" />
                             </svg>
                             Edit Contact
                         </a>
                         <a href="{% url 'accounts:contact_list' %}" class="btn btn-outline-secondary">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
-                                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
                             </svg>
                             Back to Contacts
                         </a>
-                        <form method="post" action="{% url 'accounts:contact_delete' contact.pk %}" onsubmit="return confirm('Are you sure you want to delete this contact?')">
+                        <form method="post" action="{% url 'accounts:contact_delete' contact.pk %}"
+                            onsubmit="return confirm('Are you sure you want to delete this contact?')">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-outline-danger">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash me-1" viewBox="0 0 16 16">
-                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                    class="bi bi-trash me-1" viewBox="0 0 16 16">
+                                    <path
+                                        d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                                    <path fill-rule="evenodd"
+                                        d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" />
                                 </svg>
                                 Delete Contact
                             </button>
@@ -126,11 +153,12 @@
                     <h5>Account Information</h5>
                 </div>
                 <div class="card-body">
-                    <p><strong>Account:</strong> {{ contact.account.name }}</p>
+                    <p><strong>Account:</strong> {{ contact.account.account_name }}</p>
                     <p><strong>Industry:</strong> {{ contact.account.industry|default:"—" }}</p>
                     <p><strong>Tier:</strong> {{ contact.account.get_tier_display|default:"—" }}</p>
                     <p><strong>Health Score:</strong> {{ contact.account.health_score|default:"—" }}</p>
-                    <a href="{% url 'accounts:detail' contact.account.pk %}" class="btn btn-sm btn-outline-primary">View Account</a>
+                    <a href="{% url 'accounts:detail' contact.account.pk %}" class="btn btn-sm btn-outline-primary">View
+                        Account</a>
                 </div>
             </div>
         </div>

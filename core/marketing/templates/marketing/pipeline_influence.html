@@ -1,0 +1,51 @@
+{% extends "marketing/base.html" %}
+{% load static %}
+
+{% block title %}Pipeline Influence Report - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Pipeline Influence Report</h4>
+                    <p class="card-category">Marketing campaign influence across the sales pipeline</p>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Campaign</th>
+                                    <th>Leads Generated</th>
+                                    <th>Opportunities Created</th>
+                                    <th>Deals Closed</th>
+                                    <th>Pipeline Value</th>
+                                    <th>Influence Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in pipeline_data %}
+                                <tr>
+                                    <td>{{ data.campaign_name }}</td>
+                                    <td>{{ data.leads }}</td>
+                                    <td>{{ data.opportunities }}</td>
+                                    <td>{{ data.closed_won }}</td>
+                                    <td>${{ data.pipeline_value|floatformat:2 }}</td>
+                                    <td>{{ data.influence_rate|floatformat:2 }}%</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

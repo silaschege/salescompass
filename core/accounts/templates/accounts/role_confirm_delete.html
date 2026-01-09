@@ -1,0 +1,22 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Delete Role? - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="card p-4 mb-4 shadow-lg border-0" style="border-radius: 1rem;">
+    <div class="block-title fw-bold mb-0 text-danger" style="border-radius: 0.75rem;">
+        <h1 class="block-title fw-bold mb-0">Delete Role</h1>
+    </div>
+    <div class="card-body bg-white">
+        <p>Are you sure you want to delete the role <strong>{{ object.label }}</strong>? This action cannot be undone.
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                <a href="{% url 'accounts:role_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

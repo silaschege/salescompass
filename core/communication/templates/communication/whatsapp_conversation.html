@@ -1,0 +1,162 @@
+{% extends "communication/base.html" %}
+
+{% block title %}WhatsApp Conversation - Communication{% endblock %}
+
+{% block comm_title %}💬 WhatsApp Conversation{% endblock %}
+{% block comm_subtitle %}View and reply to WhatsApp messages{% endblock %}
+
+{% block comm_actions %}
+<a href="{% url 'communication:whatsapp_send' %}" class="btn btn-success me-2 shadow-sm">
+    <i class="bi bi-whatsapp me-1"></i> New Message
+</a>
+<a href="{% url 'communication:unified_inbox' %}" class="btn btn-light fw-bold px-4 shadow-sm">
+    <i class="bi bi-arrow-left me-1"></i> Back to Inbox
+</a>
+{% endblock %}
+
+{% block comm_content %}
+<div class="row">
+    <!-- Conversation Panel -->
+    <div class="col-lg-8">
+        <div class="comm-card p-0">
+            <!-- Contact/Lead Header -->
+            <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-2 me-3">
+                        <i class="bi bi-whatsapp text-success fs-4"></i>
+                    </div>
+                    <div>
+                        {% if contact %}
+                        <h6 class="mb-0">{{ contact.first_name }} {{ contact.last_name }}</h6>
+                        <small class="text-muted">{{ phone_number }}</small>
+                        {% elif lead %}
+                        <h6 class="mb-0">{{ lead.first_name }} {{ lead.last_name }}</h6>
+                        <small class="text-muted">{{ phone_number }} • Lead</small>
+                        {% else %}
+                        <h6 class="mb-0">{{ phone_number|default:"All Messages" }}</h6>
+                        <small class="text-muted">Unknown contact</small>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if contact %}
+                <a href="{% url 'accounts:contact_detail' contact.pk %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-person me-1"></i> View Contact
+                </a>
+                {% elif lead %}
+                <a href="{% url 'leads:lead_detail' lead.pk %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-person me-1"></i> View Lead
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Messages List -->
+            <div class="p-3" style="max-height: 500px; overflow-y: auto;" id="messageContainer">
+                {% for msg in messages %}
+                <div class="d-flex mb-3 {% if msg.direction == 'outbound' %}justify-content-end{% endif %}">
+                    <div class="p-3 rounded-3 {% if msg.direction == 'outbound' %}bg-success text-white{% else %}bg-light{% endif %}"
+                        style="max-width: 75%;">
+                        <p class="mb-1">{{ msg.body }}</p>
+                        <div class="d-flex align-items-center justify-content-end">
+                            <small
+                                class="{% if msg.direction == 'outbound' %}text-white-50{% else %}text-muted{% endif %}">
+                                {{ msg.created_at|date:"M d, H:i" }}
+                                {% if msg.direction == 'outbound' %}
+                                {% if msg.status == 'read' %}
+                                <i class="bi bi-check2-all ms-1" title="Read"></i>
+                                {% elif msg.status == 'delivered' %}
+                                <i class="bi bi-check2-all ms-1" title="Delivered"></i>
+                                {% elif msg.status == 'sent' %}
+                                <i class="bi bi-check2 ms-1" title="Sent"></i>
+                                {% elif msg.status == 'failed' %}
+                                <i class="bi bi-x-circle ms-1 text-danger" title="Failed"></i>
+                                {% endif %}
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-chat-square-dots fs-1 mb-3 d-block"></i>
+                    <p>No messages yet</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Reply Form -->
+            {% if phone_number %}
+            <div class="border-top p-3">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <select name="from_number" class="form-select" style="max-width: 180px;">
+                            {% for number in wa_numbers %}
+                            <option value="{{ number }}">{{ number }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="hidden" name="to_number" value="{{ phone_number }}">
+                        <input type="text" name="message" class="form-control" placeholder="Type a message..." required>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-send"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sidebar Info -->
+    <div class="col-lg-4">
+        {% if contact %}
+        <div class="comm-card p-3 mb-3">
+            <h6 class="mb-3"><i class="bi bi-person me-2"></i>Contact Info</h6>
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Name</dt>
+                <dd class="col-sm-8">{{ contact.first_name }} {{ contact.last_name }}</dd>
+                <dt class="col-sm-4">Email</dt>
+                <dd class="col-sm-8">{{ contact.email|default:"-" }}</dd>
+                <dt class="col-sm-4">Account</dt>
+                <dd class="col-sm-8">{{ contact.account.account_name|default:"-" }}</dd>
+            </dl>
+        </div>
+        {% elif lead %}
+        <div class="comm-card p-3 mb-3">
+            <h6 class="mb-3"><i class="bi bi-person me-2"></i>Lead Info</h6>
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Name</dt>
+                <dd class="col-sm-8">{{ lead.first_name }} {{ lead.last_name }}</dd>
+                <dt class="col-sm-4">Email</dt>
+                <dd class="col-sm-8">{{ lead.email|default:"-" }}</dd>
+                <dt class="col-sm-4">Status</dt>
+                <dd class="col-sm-8">{{ lead.status|default:"-" }}</dd>
+            </dl>
+        </div>
+        {% endif %}
+
+        <div class="comm-card p-3">
+            <h6 class="mb-3"><i class="bi bi-info-circle me-2"></i>Quick Stats</h6>
+            <ul class="list-unstyled mb-0">
+                <li class="d-flex justify-content-between mb-2">
+                    <span>Total Messages</span>
+                    <strong>{{ messages|length }}</strong>
+                </li>
+                <li class="d-flex justify-content-between mb-2">
+                    <span>Inbound</span>
+                    <strong>{{ messages|dictsort:"direction"|length }}</strong>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Scroll to bottom of messages on load
+    document.addEventListener('DOMContentLoaded', function () {
+        var container = document.getElementById('messageContainer');
+        if (container) {
+            container.scrollTop = container.scrollHeight;
+        }
+    });
+</script>
+{% endblock %}

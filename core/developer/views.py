@@ -18,29 +18,30 @@ def dashboard(request):
     }
     return render(request, 'developer/dashboard.html', context)
 
+
 @login_required
 def portal(request):
     """
     Comprehensive developer portal with API key management, usage stats, and tools.
     """
-    from settings_app.models import APIKey, Webhook
+    from .models import APIToken as APIKey, Webhook  # Both from developer app
     
-    # Get user's API keys
+    # Get user's API keys (actually APIToken objects)
     api_keys = APIKey.objects.filter(
-        created_by=request.user,
-        tenant_id=request.user.tenant_id
+        user=request.user,
+        tenant=request.user.tenant
     ).order_by('-created_at')
     
     # Get webhooks
     webhooks = Webhook.objects.filter(
-        tenant_id=request.user.tenant_id
+        tenant=request.user.tenant
     ).order_by('-created_at')
     
     # Calculate usage statistics
-    total_api_calls = sum(key.last_used is not None for key in api_keys)
+    total_api_calls = sum(1 for key in api_keys if key.last_used_at is not None)
     total_webhooks = webhooks.count()
-    successful_webhooks = sum(w.success_count for w in webhooks)
-    failed_webhooks = sum(w.failure_count for w in webhooks)
+    successful_webhooks = sum(getattr(w, 'success_count', 0) for w in webhooks)
+    failed_webhooks = sum(getattr(w, 'failure_count', 0) for w in webhooks)
     
     context = {
         'page_title': 'Developer Portal',
@@ -63,51 +64,53 @@ def generate_api_key(request):
     """
     Generate a new API key for the user.
     """
-    from settings_app.models import APIKey
+    from .models import APIToken as APIKey  # From developer app
     
     name = request.POST.get('name', 'API Key')
     scopes = request.POST.getlist('scopes', ['read'])
     
     # Generate the key
-    key = APIKey.generate_key()
+    import secrets
+    token = f"sk_live_{secrets.token_urlsafe(32)}"
     
-    # Create the API key object
+    # Create the API key object (actually APIToken)
     api_key = APIKey.objects.create(
         name=name,
-        scopes=scopes,
-        created_by=request.user,
-        tenant_id=request.user.tenant_id
+        token=token,
+        user=request.user,
+        tenant=request.user.tenant,
+        scopes=scopes
     )
-    api_key.set_key(key)
-    api_key.save()
     
-    messages.success(request, f'API key "{name}" created successfully! Save this key: {key}')
+    messages.success(request, f'API key "{name}" created successfully! Save this token: {token}')
     return redirect('developer:portal')
+
+
 
 @login_required
 def usage_analytics(request):
     """
     Display usage analytics for API keys and webhooks.
     """
-    from settings_app.models import APIKey, Webhook
+    from .models import APIToken as APIKey, Webhook  # Both from developer app
     from django.db.models import Count, Sum
     
     # Get API key usage
     api_keys = APIKey.objects.filter(
-        created_by=request.user,
-        tenant_id=request.user.tenant_id
-    ).order_by('-last_used')
+        user=request.user,
+        tenant=request.user.tenant
+    ).order_by('-last_used_at')
     
     # Get webhook statistics
     webhooks = Webhook.objects.filter(
-        tenant_id=request.user.tenant_id
+        tenant=request.user.tenant
     )
     
     webhook_stats = {
         'total': webhooks.count(),
         'active': webhooks.filter(is_active=True).count(),
-        'total_success': sum(w.success_count for w in webhooks),
-        'total_failures': sum(w.failure_count for w in webhooks),
+        'total_success': sum(getattr(w, 'success_count', 0) for w in webhooks),
+        'total_failures': sum(getattr(w, 'failure_count', 0) for w in webhooks),
     }
     
     context = {
@@ -118,14 +121,17 @@ def usage_analytics(request):
     }
     return render(request, 'developer/analytics.html', context)
 
+
+
+
 @login_required
 @require_POST
 def test_webhook(request):
     """
     Test a webhook by sending a sample payload.
     """
-    from settings_app.models import Webhook
-    from settings_app.tasks import deliver_webhook
+    from .models import Webhook  # From developer app
+    from .task import deliver_webhook  # Use developer app's task
     
     webhook_id = request.POST.get('webhook_id')
     event_type = request.POST.get('event_type', 'test.event')
@@ -139,7 +145,7 @@ def test_webhook(request):
     
     # Check if webhook exists
     try:
-        webhook = Webhook.objects.get(id=int(webhook_id), tenant_id=request.user.tenant_id)
+        webhook = Webhook.objects.get(id=int(webhook_id), tenant=request.user.tenant)
     except (Webhook.DoesNotExist, ValueError):
         return JsonResponse({
             'success': False,
@@ -166,16 +172,18 @@ def test_webhook(request):
             'error': str(e)
         }, status=400)
 
+
+
 @login_required
 def api_keys(request):
     """
     View for managing API keys.
     """
-    from settings_app.models import APIKey
+    from .models import APIToken as APIKey  # From developer app
     
     api_keys = APIKey.objects.filter(
-        created_by=request.user,
-        tenant_id=request.user.tenant_id
+        user=request.user,
+        tenant=request.user.tenant
     ).order_by('-created_at')
     
     context = {
@@ -189,10 +197,10 @@ def webhooks(request):
     """
     View for managing webhooks.
     """
-    from settings_app.models import Webhook
+    from .models import Webhook  # From developer app
     
     webhooks = Webhook.objects.filter(
-        tenant_id=request.user.tenant_id
+        tenant=request.user.tenant
     ).order_by('-created_at')
     
     context = {
@@ -200,3 +208,180 @@ def webhooks(request):
         'webhooks': webhooks,
     }
     return render(request, 'developer/webhooks.html', context)
+
+
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.utils import timezone
+from django.db.models import Sum, Count, Q
+from .models import APIToken, Webhook
+import calendar
+from collections import defaultdict
+
+@login_required
+def monitoring_dashboard(request):
+    """
+    Main monitoring dashboard showing API usage, error rates, latency, and quotas.
+    """
+    tenant = request.user.tenant
+    
+    # Get time range for analysis (last 7 days)
+    end_date = timezone.now()
+    start_date = end_date - timezone.timedelta(days=7)
+    
+    # API Usage analytics
+    api_tokens = APIToken.objects.filter(tenant=tenant)
+    total_requests = sum(token.daily_request_count for token in api_tokens)
+    
+    # Webhook statistics
+    webhooks = Webhook.objects.filter(tenant=tenant)
+    total_webhooks = webhooks.count()
+    successful_webhooks = sum(w.success_count for w in webhooks)
+    failed_webhooks = sum(w.failure_count for w in webhooks)
+    total_deliveries = successful_webhooks + failed_webhooks
+    
+    # Calculate error rate
+    error_rate = (failed_webhooks / total_deliveries * 100) if total_deliveries else 0
+    
+    # Latency statistics
+    avg_latency = sum(w.avg_delivery_time_ms for w in webhooks) / total_webhooks if total_webhooks else 0
+    
+    # Quota usage
+    quota_usage = [(token.name, token.daily_request_count, token.rate_limit) for token in api_tokens]
+    
+    context = {
+        'page_title': 'Monitoring Dashboard',
+        'api_usage': {
+            'total_requests': total_requests,
+            'daily_avg': total_requests / 7,  # Assuming weekly data
+            'active_tokens': api_tokens.filter(is_active=True).count(),
+        },
+        'error_rate': error_rate,
+        'latency': {
+            'avg': avg_latency,
+            'p95': sum(w.p95_delivery_time_ms for w in webhooks) / total_webhooks if total_webhooks else 0,
+            'p99': sum(w.p99_delivery_time_ms for w in webhooks) / total_webhooks if total_webhooks else 0,
+        },
+        'quota_usage': quota_usage,
+        'time_range': f"{start_date.strftime('%b %d')} - {end_date.strftime('%b %d')}"
+    }
+    
+    return render(request, 'developer/monitoring_dashboard.html', context)
+
+
+@login_required
+def api_usage_chart(request):
+    """
+    API usage chart data for the dashboard.
+    Returns JSON data for the past 7 days.
+    """
+    tenant = request.user.tenant
+    end_date = timezone.now()
+    
+    # Get daily request counts for the past 7 days
+    daily_counts = []
+    for i in range(7):
+        date = end_date - timezone.timedelta(days=i)
+        next_date = date + timezone.timedelta(days=1)
+        
+        count = APIToken.objects.filter(tenant=tenant).aggregate(
+            total=Sum('daily_request_count')
+        )['total'] or 0
+        
+        daily_counts.append({
+            'date': date.strftime('%Y-%m-%d'),
+            'requests': count
+        })
+    
+    # Reverse to have oldest first
+    daily_counts.reverse()
+    
+    return JsonResponse(daily_counts, safe=False)
+
+
+@login_required
+def webhook_stats_chart(request):
+    """
+    Webhook statistics chart data for the dashboard.
+    Returns JSON data for the past 7 days.
+    """
+    tenant = request.user.tenant
+    end_date = timezone.now()
+    
+    # Get daily webhook stats for the past 7 days
+    daily_stats = []
+    for i in range(7):
+        date = end_date - timezone.timedelta(days=i)
+        next_date = date + timezone.timedelta(days=1)
+        
+        successes = Webhook.objects.filter(tenant=tenant).aggregate(
+            total=Sum('success_count')
+        )['total'] or 0
+        
+        failures = Webhook.objects.filter(tenant=tenant).aggregate(
+            total=Sum('failure_count')
+        )['total'] or 0
+        
+        daily_stats.append({
+            'date': date.strftime('%Y-%m-%d'),
+            'successes': successes,
+            'failures': failures
+        })
+    
+    # Reverse to have oldest first
+    daily_stats.reverse()
+    
+    return JsonResponse(daily_stats, safe=False)
+
+
+@login_required
+def quota_alerts(request):
+    """
+    View for managing quota alerts.
+    """
+    tenant = request.user.tenant
+    
+    # Get API tokens that are close to their quota
+    threshold = 0.8  # 80% threshold
+    high_usage_tokens = []
+    
+    for token in APIToken.objects.filter(tenant=tenant, is_active=True):
+        if token.daily_request_count > token.rate_limit * threshold:
+            high_usage_tokens.append({
+                'token': token,
+                'usage_percent': (token.daily_request_count / token.rate_limit) * 100
+            })
+    
+    context = {
+        'page_title': 'Quota Alerts',
+        'high_usage_tokens': high_usage_tokens,
+        'threshold': threshold * 100
+    }
+    
+    return render(request, 'developer/quota_alerts.html', context)
+
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+
+
+
+@login_required
+def documentation(request):
+    """
+    View for API documentation
+    """
+    context = {
+        'page_title': 'API Documentation',
+    }
+    return render(request, 'developer/documentation.html', context)
+
+@login_required
+def api_explorer(request):
+    """
+    View for API request/response examples
+    """
+    context = {
+        'page_title': 'API Explorer',
+    }
+    return render(request, 'developer/api_explorer.html', context)

@@ -4,17 +4,73 @@
 <div class="container-fluid">
     <div class="row mb-4">
         <div class="col">
-            <h2>Plan Limits TEMPLATE_TITLE Features</h2>
-            <p class="text-muted">Manage Plan Limits TEMPLATE_DESCRIPTION Features</p>
+            <h2><i class="bi bi-gear me-2"></i>Plan Limits Configuration</h2>
+            <p class="text-muted">Manage limits and restrictions for subscription plans</p>
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">Plan Limits TEMPLATE_TITLE Features</h5>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Current Plan Limits</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Plan Name</th>
+                                    <th>Max Users</th>
+                                    <th>Storage (GB)</th>
+                                    <th>API Calls</th>
+                                    <th>Features</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for plan in plans %}
+                                <tr>
+                                    <td>{{ plan.name }}</td>
+                                    <td>{{ plan.max_users }}</td>
+                                    <td>{{ plan.storage_limit }}</td>
+                                    <td>{{ plan.api_calls_limit }}</td>
+                                    <td>
+                                        {% if plan.has_reports %}<span class="badge bg-success me-1">Reports</span>{% endif %}
+                                        {% if plan.has_custom_fields %}<span class="badge bg-success me-1">Custom Fields</span>{% endif %}
+                                        {% if plan.has_integrations %}<span class="badge bg-success me-1">Integrations</span>{% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'billing:plan_update' plan_id=plan.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <p>View content will be displayed here.</p>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Plan Limits Info</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Limit Descriptions:</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>Max Users:</strong> Maximum number of user accounts per tenant</li>
+                        <li><strong>Storage:</strong> Maximum storage space in GB per tenant</li>
+                        <li><strong>API Calls:</strong> Maximum API calls per month per tenant</li>
+                        <li><strong>Features:</strong> Additional features available based on plan tier</li>
+                    </ul>
+                    <hr>
+                    <a href="{% url 'billing:plan_create' %}" class="btn btn-primary w-100">
+                        <i class="bi bi-plus-circle me-2"></i>Create New Plan
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>

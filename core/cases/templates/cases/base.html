@@ -3,11 +3,155 @@
 {% block extra_css %}{% endblock %}
 
 {% block module_nav %}
-<a class="nav-link ms-3" href="{% url 'cases:sla_dashboard' %}">SLA Dashboard</a>
-<a class="nav-link ms-3" href="{% url 'cases:case_list' %}">Cases List</a>
-<a class="nav-link ms-3" href="{% url 'cases:case_create' %}">Create Case</a>
-<a class="nav-link ms-3" href="{% url 'cases:detractor_kanban' %}">Detractor Kanban</a>
-<a class="nav-link ms-3" href="{% url 'cases:case_kanban' %}">Kanban Board</a>
-<a class="nav-link ms-3" href="{% url 'cases:knowledge_base' %}">Knowledge Base</a>
-<a class="nav-link ms-3" href="{% url 'cases:csat_survey' %}">CSAT Survey (Test)</a>
-{% endblock %}
+<!-- Cases Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#casesMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-card-list nav-icon"></i>
+        <span>Cases</span>
+    </div>
+</a>
+<div class="collapse" id="casesMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'case_list' %}active{% endif %}" 
+       href="{% url 'cases:case_list' %}">
+        Case List
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'case_create' %}active{% endif %}" 
+       href="{% url 'cases:case_create' %}">
+        Create Case
+    </a>
+</div>
+
+<!-- Kanban Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#kanbanMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-kanban nav-icon"></i>
+        <span>Kanban</span>
+    </div>
+</a>
+<div class="collapse" id="kanbanMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'case_kanban' %}active{% endif %}" 
+       href="{% url 'cases:case_kanban' %}">
+        Kanban Board
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'detractor_kanban' %}active{% endif %}" 
+       href="{% url 'cases:detractor_kanban' %}">
+        Detractor Kanban
+    </a>
+</div>
+
+<!-- Knowledge Base Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#knowledgeBaseMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-journal-bookmark nav-icon"></i>
+        <span>Knowledge Base</span>
+    </div>
+</a>
+<div class="collapse" id="knowledgeBaseMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'knowledge_base' %}active{% endif %}" 
+       href="{% url 'cases:knowledge_base' %}">
+        Knowledge Base
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'knowledge_base_article_list' %}active{% endif %}" 
+       href="{% url 'cases:knowledge_base_article_list' %}">
+        KB Articles
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'knowledge_base_article_create' %}active{% endif %}" 
+       href="{% url 'cases:knowledge_base_article_create' %}">
+        Create KB Article
+    </a>
+</div>
+
+<!-- CSAT Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#csatMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-star nav-icon"></i>
+        <span>CSAT</span>
+    </div>
+</a>
+<div class="collapse" id="csatMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'csat_survey' %}active{% endif %}" 
+       href="{% url 'cases:csat_survey' %}">
+        CSAT Survey (Test)
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'csat_response_list' %}active{% endif %}" 
+       href="{% url 'cases:csat_response_list' %}">
+        CSAT Responses
+    </a>
+</div>
+
+<!-- Comments Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#commentsMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-chat nav-icon"></i>
+        <span>Comments</span>
+    </div>
+</a>
+<div class="collapse" id="commentsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'case_comment_list' %}active{% endif %}" 
+       href="{% url 'cases:case_comment_list' %}">
+        Case Comments
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'case_comment_create' %}active{% endif %}" 
+       href="{% url 'cases:case_comment_create' %}">
+        Create Comment
+    </a>
+</div>
+
+<!-- Attachments Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#attachmentsMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-paperclip nav-icon"></i>
+        <span>Attachments</span>
+    </div>
+</a>
+<div class="collapse" id="attachmentsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'case_attachment_list' %}active{% endif %}" 
+       href="{% url 'cases:case_attachment_list' %}">
+        Case Attachments
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'case_attachment_create' %}active{% endif %}" 
+       href="{% url 'cases:case_attachment_create' %}">
+        Add Attachment
+    </a>
+</div>
+
+<!-- Assignment Rules Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#assignmentRulesMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-gear nav-icon"></i>
+        <span>Assignment Rules</span>
+    </div>
+</a>
+<div class="collapse" id="assignmentRulesMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'assignment_rule_list' %}active{% endif %}" 
+       href="{% url 'cases:assignment_rule_list' %}">
+        Assignment Rules
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'assignment_rule_create' %}active{% endif %}" 
+       href="{% url 'cases:assignment_rule_create' %}">
+        Create Assignment Rule
+    </a>
+</div>
+
+<!-- SLA Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#slaMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-speedometer nav-icon"></i>
+        <span>SLA</span>
+    </div>
+</a>
+<div class="collapse" id="slaMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'sla_dashboard' %}active{% endif %}" 
+       href="{% url 'cases:sla_dashboard' %}">
+        SLA Dashboard
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'sla_policy_list' %}active{% endif %}" 
+       href="{% url 'cases:sla_policy_list' %}">
+        SLA Policies
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'sla_policy_create' %}active{% endif %}" 
+       href="{% url 'cases:sla_policy_create' %}">
+        Create SLA Policy
+    </a>
+</div>
+{% endblock %} 

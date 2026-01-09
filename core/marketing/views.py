@@ -1,17 +1,39 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, View
 from django.urls import reverse_lazy
-from django.db.models import Avg, Sum, Count
-from .models import Campaign, EmailTemplate, LandingPageBlock, MessageTemplate, EmailCampaign, CampaignStatus, EmailProvider, BlockType, EmailCategory, MessageType, MessageCategory, EmailIntegration
-from .forms import CampaignForm, EmailTemplateForm, LandingPageBlockForm, MessageTemplateForm, EmailCampaignForm, CampaignStatusForm, EmailProviderForm, BlockTypeForm, EmailCategoryForm, MessageTypeForm, MessageCategoryForm, EmailIntegrationForm
+from django.db.models import Avg, Sum, Count, F
+from django.utils import timezone
+from datetime import timedelta
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
+import logging
+
+from .models import (Campaign, EmailTemplate, LandingPageBlock, MessageTemplate, EmailCampaign, 
+                     CampaignStatus, EmailProvider, BlockType, EmailCategory, MessageType, 
+                     MessageCategory, EmailIntegration, ABTest, ABTestVariant, ABAutomatedTest,
+                     Segment, SegmentMember, NurtureCampaign, NurtureStep, NurtureCampaignEnrollment,
+                     DripCampaign, DripStep, DripEnrollment)
+# Add Attribution model import
+from .models_attribution import CampaignAttribution
+
+from .forms import (CampaignForm, EmailTemplateForm, LandingPageBlockForm, MessageTemplateForm, 
+                   EmailCampaignForm, CampaignStatusForm, EmailProviderForm, BlockTypeForm, 
+                   EmailCategoryForm, MessageTypeForm, MessageCategoryForm, EmailIntegrationForm,
+                   ABTestForm, ABTestVariantForm, ABAutomatedTestForm, ABTestVariantCreateFormSet,
+                   ABTestVariantUpdateFormSet)
 from tenants.models import Tenant as TenantModel
 from core.models import User
 from leads.models import Lead
 from opportunities.models import Opportunity
+
+# Import engagement tracking
+from engagement.utils import log_engagement_event
+
+logger = logging.getLogger(__name__)
 
 
 class CampaignStatusListView(ListView):
@@ -332,8 +354,30 @@ class CampaignCreateView(CreateView):
         # Set tenant automatically
         if hasattr(self.request.user, 'tenant_id'):
             form.instance.tenant_id = self.request.user.tenant_id
+        
+        response = super().form_valid(form)
+        
+        # Log engagement event for campaign created
+        try:
+            log_engagement_event(
+                tenant_id=self.request.user.tenant_id,
+                event_type='campaign_created',
+                description=f"Marketing campaign created: {self.object.campaign_name}",
+                title="Campaign Created",
+                metadata={
+                    'campaign_id': self.object.id,
+                    'campaign_name': self.object.campaign_name,
+                    'status': self.object.status,
+                    'budget': float(self.object.budget) if self.object.budget else 0
+                },
+                engagement_score=3,
+                created_by=self.request.user
+            )
+        except Exception as e:
+            logger.warning(f"Failed to log engagement event: {e}")
+        
         messages.success(self.request, 'Campaign created successfully.')
-        return super().form_valid(form)
+        return response
 
 
 class CampaignUpdateView(UpdateView):
@@ -350,8 +394,28 @@ class CampaignUpdateView(UpdateView):
         return kwargs
     
     def form_valid(self, form):
+        response = super().form_valid(form)
+        
+        # Log engagement event for campaign updated
+        try:
+            log_engagement_event(
+                tenant_id=self.request.user.tenant_id,
+                event_type='campaign_updated',
+                description=f"Marketing campaign updated: {self.object.campaign_name}",
+                title="Campaign Updated",
+                metadata={
+                    'campaign_id': self.object.id,
+                    'campaign_name': self.object.campaign_name,
+                    'status': self.object.status
+                },
+                engagement_score=2,
+                created_by=self.request.user
+            )
+        except Exception as e:
+            logger.warning(f"Failed to log engagement event: {e}")
+        
         messages.success(self.request, 'Campaign updated successfully.')
-        return super().form_valid(form)
+        return response
 
 
 class CampaignDeleteView(DeleteView):
@@ -362,6 +426,36 @@ class CampaignDeleteView(DeleteView):
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Campaign deleted successfully.')
         return super().delete(request, *args, **kwargs)
+
+
+@login_required
+def clone_campaign(request, pk):
+    """
+    View to clone an existing marketing campaign.
+    """
+    original_campaign = get_object_or_404(Campaign, pk=pk)
+    if request.method == 'POST':
+        # Create a copy with '(Clone)' suffix
+        cloned_campaign = Campaign()
+        cloned_campaign.campaign_name = f"{original_campaign.campaign_name} (Clone)"
+        cloned_campaign.campaign_description = original_campaign.campaign_description
+        cloned_campaign.status = 'draft'
+        cloned_campaign.status_ref = original_campaign.status_ref
+        cloned_campaign.start_date = original_campaign.start_date
+        cloned_campaign.end_date = original_campaign.end_date
+        cloned_campaign.budget = original_campaign.budget
+        cloned_campaign.actual_cost = original_campaign.actual_cost
+        cloned_campaign.target_audience_size = original_campaign.target_audience_size
+        cloned_campaign.actual_reach = original_campaign.actual_reach
+        cloned_campaign.owner = original_campaign.owner
+        cloned_campaign.campaign_is_active = False # Deactivate clone by default
+        cloned_campaign.tenant_id = request.user.tenant_id
+        cloned_campaign.save()
+        
+        messages.success(request, f"Campaign '{original_campaign.campaign_name}' cloned successfully.")
+        return redirect('marketing:campaign_update', pk=cloned_campaign.pk)
+    
+    return render(request, 'marketing/campaign_confirm_clone.html', {'campaign': original_campaign})
 
 
 class EmailTemplateListView(ListView):
@@ -580,8 +674,29 @@ class EmailCampaignCreateView(CreateView):
         # Set tenant automatically
         if hasattr(self.request.user, 'tenant_id'):
             form.instance.tenant_id = self.request.user.tenant_id
+        
+        response = super().form_valid(form)
+        
+        # Log engagement event for email campaign created
+        try:
+            log_engagement_event(
+                tenant_id=self.request.user.tenant_id,
+                event_type='email_campaign_created',
+                description=f"Email campaign created: {self.object.subject if hasattr(self.object, 'subject') else 'New Campaign'}",
+                title="Email Campaign Created",
+                metadata={
+                    'email_campaign_id': self.object.id,
+                    'campaign_id': self.object.campaign_id if hasattr(self.object, 'campaign_id') else None,
+                    'subject': getattr(self.object, 'subject', 'N/A')
+                },
+                engagement_score=3,
+                created_by=self.request.user
+            )
+        except Exception as e:
+            logger.warning(f"Failed to log engagement event: {e}")
+        
         messages.success(self.request, 'Email campaign created successfully.')
-        return super().form_valid(form)
+        return response
 
 
 class EmailCampaignUpdateView(UpdateView):
@@ -776,3 +891,535 @@ class EmailIntegrationDeleteView(DeleteView):
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Email integration deleted successfully.')
         return super().delete(request, *args, **kwargs)
+
+@login_required
+def get_marketing_dynamic_choices(request, model_name):
+    # Dynamic choices logic
+    return JsonResponse({'choices': []})
+
+
+class SegmentListView(LoginRequiredMixin, ListView):
+    model = Segment
+    template_name = 'marketing/segment_list.html'
+    context_object_name = 'segments'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class SegmentCreateView(LoginRequiredMixin, CreateView):
+    model = Segment
+    fields = ['name', 'description', 'segment_type', 'criteria', 'is_active']
+    template_name = 'marketing/segment_form.html'
+    success_url = reverse_lazy('marketing:segment_list')
+    
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Segment created successfully.')
+        return super().form_valid(form)
+
+
+class SegmentUpdateView(LoginRequiredMixin, UpdateView):
+    model = Segment
+    fields = ['name', 'description', 'segment_type', 'criteria', 'is_active']
+    template_name = 'marketing/segment_form.html'
+    success_url = reverse_lazy('marketing:segment_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Segment updated successfully.')
+        return super().form_valid(form)
+
+
+class SegmentDeleteView(LoginRequiredMixin, DeleteView):
+    model = Segment
+    template_name = 'marketing/segment_confirm_delete.html'
+    success_url = reverse_lazy('marketing:segment_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Segment deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+class NurtureCampaignListView(LoginRequiredMixin, ListView):
+    model = NurtureCampaign
+    template_name = 'marketing/nurture_campaign_list.html'
+    context_object_name = 'nurture_campaigns'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class NurtureCampaignCreateView(LoginRequiredMixin, CreateView):
+    model = NurtureCampaign
+    fields = ['name', 'description', 'target_segment', 'trigger_event', 'is_active']
+    template_name = 'marketing/nurture_campaign_form.html'
+    
+    def get_form(self):
+        form = super().get_form()
+        if hasattr(self.request.user, 'tenant_id'):
+            form.fields['target_segment'].queryset = Segment.objects.filter(
+                tenant_id=self.request.user.tenant_id
+            )
+        return form
+    
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Nurture campaign created successfully.')
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy('marketing:nurture_campaign_update', kwargs={'pk': self.object.pk})
+
+
+class NurtureCampaignUpdateView(LoginRequiredMixin, UpdateView):
+    model = NurtureCampaign
+    fields = ['name', 'description', 'target_segment', 'trigger_event', 'is_active']
+    template_name = 'marketing/nurture_campaign_form.html'
+    
+    def get_form(self):
+        form = super().get_form()
+        if hasattr(self.request.user, 'tenant_id'):
+            form.fields['target_segment'].queryset = Segment.objects.filter(
+                tenant_id=self.request.user.tenant_id
+            )
+        return form
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Nurture campaign updated successfully.')
+        return super().form_valid(form)
+
+
+class NurtureCampaignDeleteView(LoginRequiredMixin, DeleteView):
+    model = NurtureCampaign
+    template_name = 'marketing/nurture_campaign_confirm_delete.html'
+    success_url = reverse_lazy('marketing:nurture_campaign_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Nurture campaign deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+    
+    def get_success_url(self):
+        return reverse_lazy('marketing:nurture_campaign_list')
+
+
+@login_required
+def segment_members(request, pk):
+    segment = get_object_or_404(Segment, pk=pk)
+    members = SegmentMember.objects.filter(segment=segment, is_active=True).select_related('contact')
+    leads = Lead.objects.filter(tenant_id=request.user.tenant_id)
+    return render(request, 'marketing/segment_members.html', {'segment': segment, 'members': members, 'leads': leads})
+
+
+@login_required
+def add_segment_member(request, segment_pk):
+    if request.method == 'POST':
+        segment = get_object_or_404(Segment, pk=segment_pk)
+        lead_id = request.POST.get('lead_id')
+        lead = get_object_or_404(Lead, pk=lead_id, tenant_id=request.user.tenant_id)
+        member, created = SegmentMember.objects.get_or_create(segment=segment, contact=lead, defaults={'tenant_id': request.user.tenant_id, 'is_active': True})
+        if not created and not member.is_active:
+            member.is_active = True
+            member.save()
+        segment.update_member_count()
+        messages.success(request, f'{lead} added to {segment.name}')
+        return redirect('marketing:segment_members', pk=segment_pk)
+    return redirect('marketing:segment_list')
+
+
+@login_required
+def remove_segment_member(request, segment_pk, member_pk):
+    if request.method == 'POST':
+        segment = get_object_or_404(Segment, pk=segment_pk)
+        member = get_object_or_404(SegmentMember, pk=member_pk, segment=segment)
+        member.is_active = False
+        member.save()
+        segment.update_member_count()
+        messages.success(request, f'{member.contact} removed from {segment.name}')
+        return redirect('marketing:segment_members', pk=segment_pk)
+    return redirect('marketing:segment_list')
+
+
+class ABTestListView(ListView):
+    model = ABTest
+    template_name = 'marketing/ab_test_list.html'
+    context_object_name = 'ab_tests'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class ABTestCreateView(LoginRequiredMixin, CreateView):
+    model = ABTest
+    form_class = ABTestForm
+    template_name = 'marketing/ab_test_form.html'
+    success_url = reverse_lazy('marketing:ab_test_list')
+    
+    def get_context_data(self, **kwargs):
+        data = super().get_context_data(**kwargs)
+        if self.request.POST:
+            data['variants'] = ABTestVariantCreateFormSet(self.request.POST)
+        else:
+            data['variants'] = ABTestVariantCreateFormSet()
+        return data
+        
+    def form_valid(self, form):
+        context = self.get_context_data()
+        variants = context['variants']
+        if variants.is_valid():
+            form.instance.tenant_id = self.request.user.tenant_id
+            form.instance.created_by = self.request.user
+            self.object = form.save()
+            variants.instance = self.object
+            variants.save()
+            messages.success(self.request, 'A/B Test created successfully.')
+            return super().form_valid(form)
+        else:
+            return self.render_to_response(self.get_context_data(form=form))
+
+
+class ABTestUpdateView(LoginRequiredMixin, UpdateView):
+    model = ABTest
+    form_class = ABTestForm
+    template_name = 'marketing/ab_test_form.html'
+    success_url = reverse_lazy('marketing:ab_test_list')
+    
+    def get_context_data(self, **kwargs):
+        data = super().get_context_data(**kwargs)
+        if self.request.POST:
+            data['variants'] = ABTestVariantUpdateFormSet(self.request.POST, instance=self.object)
+        else:
+            data['variants'] = ABTestVariantUpdateFormSet(instance=self.object)
+        return data
+        
+    def form_valid(self, form):
+        context = self.get_context_data()
+        variants = context['variants']
+        if variants.is_valid():
+            self.object = form.save()
+            variants.instance = self.object
+            variants.save()
+            messages.success(self.request, 'A/B Test updated successfully.')
+            return super().form_valid(form)
+        else:
+            return self.render_to_response(self.get_context_data(form=form))
+
+
+class ABTestDeleteView(DeleteView):
+    model = ABTest
+    template_name = 'marketing/ab_test_confirm_delete.html'
+    success_url = reverse_lazy('marketing:ab_test_list')
+
+
+@login_required
+def activate_ab_test(request, pk):
+    test = get_object_or_404(ABTest, pk=pk)
+    test.is_active = True
+    test.save()
+    messages.success(request, 'A/B Test activated.')
+    return redirect('marketing:ab_test_list')
+
+
+@login_required
+def deactivate_ab_test(request, pk):
+    test = get_object_or_404(ABTest, pk=pk)
+    test.is_active = False
+    test.save()
+    messages.success(request, 'A/B Test deactivated.')
+    return redirect('marketing:ab_test_list')
+
+
+@login_required
+def ab_test_results(request, pk):
+    test = get_object_or_404(ABTest, pk=pk)
+    variants = test.variants.all()
+    return render(request, 'marketing/ab_test_results.html', {'test': test, 'variants': variants})
+
+
+@login_required
+def declare_ab_test_winner(request, pk):
+    test = get_object_or_404(ABTest, pk=pk)
+    variant_id = request.POST.get('variant_id')
+    winner = get_object_or_404(ABTestVariant, pk=variant_id, ab_test=test)
+    test.winner = winner
+    test.status = 'completed'
+    test.is_active = False
+    test.save()
+    messages.success(request, f'Variant {winner} declared as winner.')
+    return redirect('marketing:ab_test_results', pk=pk)
+
+
+class ABAutomatedTestListView(ListView):
+    model = ABAutomatedTest
+    template_name = 'marketing/ab_automated_test_list.html'
+    context_object_name = 'ab_automated_tests'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class ABAutomatedTestCreateView(CreateView):
+    model = ABAutomatedTest
+    form_class = ABAutomatedTestForm
+    template_name = 'marketing/ab_automated_test_form.html'
+    success_url = reverse_lazy('marketing:ab_automated_test_list')
+    
+    def form_valid(self, form):
+        form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Automated A/B Test created successfully.')
+        return super().form_valid(form)
+
+
+class ABAutomatedTestUpdateView(UpdateView):
+    model = ABAutomatedTest
+    form_class = ABAutomatedTestForm
+    template_name = 'marketing/ab_automated_test_form.html'
+    success_url = reverse_lazy('marketing:ab_automated_test_list')
+
+
+class ABAutomatedTestDeleteView(DeleteView):
+    model = ABAutomatedTest
+    template_name = 'marketing/ab_automated_test_confirm_delete.html'
+    success_url = reverse_lazy('marketing:ab_automated_test_list')
+
+
+@login_required
+def track_ab_test_open(request, variant_id, recipient_email):
+    # Log engagement event for AB test email open
+    try:
+        variant = get_object_or_404(ABTestVariant, pk=variant_id)
+        log_engagement_event(
+            tenant_id=request.user.tenant_id,
+            event_type='ab_test_email_opened',
+            description=f"A/B Test Email opened: {variant.subject} ({recipient_email})",
+            title="A/B Test Email Opened",
+            metadata={
+                'variant_id': variant_id,
+                'ab_test_id': variant.ab_test_id,
+                'recipient_email': recipient_email,
+                'subject': variant.subject
+            },
+            engagement_score=1,
+            created_by=request.user
+        )
+    except Exception as e:
+        logger.warning(f"Failed to log engagement event: {e}")
+        
+    return JsonResponse({'status': 'tracked'})
+
+
+@login_required
+def track_ab_test_click(request, variant_id, recipient_email):
+    # Log engagement event for AB test link click
+    try:
+        variant = get_object_or_404(ABTestVariant, pk=variant_id)
+        log_engagement_event(
+            tenant_id=request.user.tenant_id,
+            event_type='ab_test_link_clicked',
+            description=f"A/B Test Link clicked: {variant.subject} ({recipient_email})",
+            title="A/B Test Link Clicked",
+            metadata={
+                'variant_id': variant_id,
+                'ab_test_id': variant.ab_test_id,
+                'recipient_email': recipient_email,
+                'subject': variant.subject
+            },
+            engagement_score=2,
+            created_by=request.user
+        )
+    except Exception as e:
+        logger.warning(f"Failed to log engagement event: {e}")
+        
+    return JsonResponse({'status': 'tracked'})
+
+
+class CampaignPerformanceView(LoginRequiredMixin, TemplateView):
+    template_name = 'marketing/campaign_performance.html'
+
+
+class BudgetVsActualView(LoginRequiredMixin, TemplateView):
+    template_name = 'marketing/budget_vs_actual.html'
+
+
+class PipelineInfluenceView(LoginRequiredMixin, TemplateView):
+    template_name = 'marketing/pipeline_influence.html'
+
+
+class ROICalculatorView(LoginRequiredMixin, TemplateView):
+    template_name = 'marketing/roi_calculator.html'
+
+
+class ROICalculatorAPIView(LoginRequiredMixin, View):
+    def post(self, request):
+        return JsonResponse({'roi': 0.0})
+
+
+class DeliverabilityReportView(LoginRequiredMixin, TemplateView):
+    template_name = 'marketing/deliverability_report.html'
+
+
+@login_required
+def campaign_calendar_view(request):
+    campaigns = Campaign.objects.all()
+    if hasattr(request.user, 'tenant_id'):
+        campaigns = campaigns.filter(tenant_id=request.user.tenant_id)
+    
+    events = []
+    for campaign in campaigns:
+        events.append({
+            'title': campaign.campaign_name,
+            'start': campaign.start_date.isoformat() if campaign.start_date else None,
+            'end': campaign.end_date.isoformat() if campaign.end_date else None,
+            'url': reverse_lazy('marketing:campaign_update', kwargs={'pk': campaign.pk}),
+            'extendedProps': {
+                'status': campaign.status
+            }
+        })
+    
+    import json
+    return render(request, 'marketing/campaign_calendar.html', {
+        'events_json': json.dumps(events)
+    })
+
+
+class DripCampaignListView(LoginRequiredMixin, ListView):
+    model = DripCampaign
+    template_name = 'marketing/drip_campaign_list.html'
+    context_object_name = 'drip_campaigns'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class DripCampaignCreateView(LoginRequiredMixin, CreateView):
+    model = DripCampaign
+    fields = ['name', 'description', 'status', 'is_active']
+    template_name = 'marketing/drip_campaign_form.html'
+    
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Drip campaign created successfully.')
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy('marketing:drip_campaign_update', kwargs={'pk': self.object.pk})
+
+
+class DripCampaignUpdateView(LoginRequiredMixin, UpdateView):
+    model = DripCampaign
+    fields = ['name', 'description', 'status', 'is_active']
+    template_name = 'marketing/drip_campaign_form.html'
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Drip campaign updated successfully.')
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy('marketing:drip_campaign_list')
+
+
+class DripCampaignDeleteView(LoginRequiredMixin, DeleteView):
+    model = DripCampaign
+    template_name = 'marketing/drip_campaign_confirm_delete.html'
+    success_url = reverse_lazy('marketing:drip_campaign_list')
+
+
+class DripStepCreateView(LoginRequiredMixin, CreateView):
+    model = DripStep
+    fields = ['step_type', 'email_template', 'wait_days', 'wait_hours', 'order']
+    template_name = 'marketing/drip_step_form.html'
+
+    def form_valid(self, form):
+        form.instance.drip_campaign_id = self.kwargs['campaign_pk']
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Drip step added successfully.')
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('marketing:drip_campaign_update', kwargs={'pk': self.kwargs['campaign_pk']})
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['campaign'] = get_object_or_404(DripCampaign, pk=self.kwargs['campaign_pk'])
+        return context
+
+
+class DripStepUpdateView(LoginRequiredMixin, UpdateView):
+    model = DripStep
+    fields = ['step_type', 'email_template', 'wait_days', 'wait_hours', 'order']
+    template_name = 'marketing/drip_step_form.html'
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Drip step updated successfully.')
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('marketing:drip_campaign_update', kwargs={'pk': self.object.drip_campaign.pk})
+
+
+class DripStepDeleteView(LoginRequiredMixin, DeleteView):
+    model = DripStep
+    template_name = 'marketing/drip_step_confirm_delete.html'
+
+    def get_success_url(self):
+        return reverse_lazy('marketing:drip_campaign_update', kwargs={'pk': self.object.drip_campaign.pk})
+
+
+@login_required
+def enroll_in_drip(request, drip_pk):
+    if request.method == 'POST':
+        drip = get_object_or_404(DripCampaign, pk=drip_pk)
+        email = request.POST.get('email')
+        lead_id = request.POST.get('lead_id')
+        account_id = request.POST.get('account_id')
+        enrollment, created = DripEnrollment.objects.get_or_create(drip_campaign=drip, email=email, defaults={'tenant_id': request.user.tenant_id, 'status': 'active'})
+        if lead_id: enrollment.lead_id = lead_id
+        if account_id: enrollment.account_id = account_id
+        if not created and enrollment.status != 'active':
+            enrollment.status = 'active'
+            enrollment.current_step = None 
+        enrollment.save()
+        
+        # Log engagement event for Drip Campaign Enrollment
+        try:
+            log_engagement_event(
+                tenant_id=request.user.tenant_id,
+                event_type='drip_campaign_enrolled',
+                description=f"Enrolled in Drip Campaign: {drip.name} ({email})",
+                title="Drip Campaign Enrolled",
+                metadata={
+                    'drip_campaign_id': drip.id,
+                    'email': email,
+                    'lead_id': lead_id,
+                    'account_id': account_id
+                },
+                engagement_score=3,
+                created_by=request.user
+            )
+        except Exception as e:
+            logger.warning(f"Failed to log engagement event: {e}")
+            
+        messages.success(request, f'Successfully enrolled {email} in {drip.name}')
+        return redirect('marketing:drip_campaign_list')
+    return redirect('marketing:drip_campaign_list')

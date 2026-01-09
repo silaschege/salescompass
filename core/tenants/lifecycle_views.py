@@ -8,12 +8,10 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
-from .models import Tenant
-from .data_preservation import TenantDataPreservation, TenantDataRestoration, TenantDataPreservationStrategy, TenantDataPreservationSchedule
-from .automated_lifecycle import AutomatedTenantLifecycleRule, AutomatedTenantLifecycleEvent, TenantLifecycleWorkflow, TenantLifecycleWorkflowExecution, TenantSuspensionWorkflow, TenantTerminationWorkflow
+from .models import Tenant, TenantDataPreservation, TenantDataRestoration, TenantDataPreservationStrategy, TenantDataPreservationSchedule, AutomatedTenantLifecycleRule, AutomatedTenantLifecycleEvent, TenantLifecycleWorkflow, TenantLifecycleWorkflowExecution, TenantSuspensionWorkflow, TenantTerminationWorkflow
 from core.models import User
-
-
+ 
+ 
 class TenantLifecycleDashboardView(LoginRequiredMixin, TemplateView):
     """Dashboard view for tenant lifecycle management"""
     template_name = 'tenants/lifecycle_dashboard.html'

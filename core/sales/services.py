@@ -3,7 +3,7 @@ from django.utils import timezone
 from .models import Sale, SalesPerformanceMetric
 from opportunities.models import Opportunity
 from core.models import User
-from settings_app.models import Territory
+from tenants.models import TenantTerritory
 
 def calculate_sales_metrics(start_date, end_date, user_id=None, tenant_id=None):
     """

@@ -1,7 +1,10 @@
 from django.db import models
 from core.models import TimeStampedModel
-from tenants.models import TenantAwareModel as TenantModel
+from tenants.models import TenantAwareModel 
 from core.models import User
+from django.utils import timezone
+from django.db.models import JSONField
+
 
 # Legacy choices - kept for backward compatibility during migration
 CAMPAIGN_STATUS_CHOICES = [
@@ -58,13 +61,16 @@ MESSAGE_CATEGORY_CHOICES = [
     ('other', 'Other'),
 ]
 
+
 VARIANT_CHOICES = [
     ('A', 'Variant A'),
     ('B', 'Variant B'),
+    ('C', 'Variant C'),
+    ('D', 'Variant D'),
 ]
 
 
-class CampaignStatus(TenantModel):
+class CampaignStatus(TenantAwareModel, TimeStampedModel):
     """
     Dynamic campaign status values - allows tenant-specific status tracking.
     """
@@ -83,7 +89,7 @@ class CampaignStatus(TenantModel):
         return self.label
 
 
-class EmailProvider(TenantModel):
+class EmailProvider(TenantAwareModel, TimeStampedModel):
     """
     Dynamic email provider values - allows tenant-specific provider tracking.
     """
@@ -102,7 +108,57 @@ class EmailProvider(TenantModel):
         return self.label
 
 
-class BlockType(TenantModel):
+class Segment(TenantAwareModel, TimeStampedModel):
+    """
+    Model for defining audience segments for targeted email campaigns.
+    Segments can be based on various criteria like demographics, behavior, etc.
+    """
+    SEGMENT_TYPES = [
+        ('static', 'Static'),
+        ('dynamic', 'Dynamic'),
+    ]
+    
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    segment_type = models.CharField(max_length=20, choices=SEGMENT_TYPES, default='static')
+    criteria = JSONField(default=dict, blank=True, help_text="Criteria for dynamic segments")
+    member_count = models.IntegerField(default=0, help_text="Number of contacts in this segment")
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['name']
+        
+    def __str__(self):
+        return self.name
+    
+    def update_member_count(self):
+        """Update the member count based on current segment members"""
+        self.member_count = self.segment_members.filter(is_active=True).count()
+        self.save()
+
+
+class SegmentMember(TenantAwareModel, TimeStampedModel):
+    """
+    Model for storing members (contacts) in segments.
+    For static segments, members are manually added.
+    For dynamic segments, members are automatically added based on criteria.
+    """
+    segment = models.ForeignKey(Segment, on_delete=models.CASCADE, related_name='segment_members')
+    # Assuming there's a Contact model in the leads app
+    contact = models.ForeignKey('leads.Lead', on_delete=models.CASCADE)
+    is_active = models.BooleanField(default=True)
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_removed = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        unique_together = ['segment', 'contact']
+        
+    def __str__(self):
+        return f"{self.contact} in {self.segment}"
+
+
+class BlockType(TenantAwareModel, TimeStampedModel):
     """
     Dynamic block type values - allows tenant-specific block type tracking.
     """
@@ -121,7 +177,7 @@ class BlockType(TenantModel):
         return self.label
 
 
-class EmailCategory(TenantModel):
+class EmailCategory(TenantAwareModel, TimeStampedModel):
     """
     Dynamic email category values - allows tenant-specific category tracking.
     """
@@ -140,7 +196,7 @@ class EmailCategory(TenantModel):
         return self.label
 
 
-class MessageType(TenantModel):
+class MessageType(TenantAwareModel, TimeStampedModel):
     """
     Dynamic message type values - allows tenant-specific message type tracking.
     """
@@ -159,7 +215,7 @@ class MessageType(TenantModel):
         return self.label
 
 
-class MessageCategory(TenantModel):
+class MessageCategory(TenantAwareModel, TimeStampedModel):
     """
     Dynamic message category values - allows tenant-specific category tracking.
     """
@@ -178,7 +234,7 @@ class MessageCategory(TenantModel):
         return self.label
 
 
-class Campaign(TenantModel):
+class Campaign(TenantAwareModel, TimeStampedModel):
     campaign_name = models.CharField(max_length=255, help_text="Name of the campaign")  # Renamed from 'name' to avoid conflict
     campaign_description = models.TextField(blank=True, help_text="Description of the campaign")  # Renamed from 'description' to avoid conflict
     status = models.CharField(max_length=20, choices=CAMPAIGN_STATUS_CHOICES, default='draft')
@@ -199,8 +255,7 @@ class Campaign(TenantModel):
     actual_reach = models.IntegerField(default=0)
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='owned_campaigns')
     campaign_is_active = models.BooleanField(default=True)  # Renamed from 'is_active' to avoid conflict with base class
-    campaign_created_at = models.DateTimeField(auto_now_add=True)  # Renamed from 'created_at' to avoid conflict with base class
-    campaign_updated_at = models.DateTimeField(auto_now=True)  # Renamed from 'updated_at' to avoid conflict with base class
+    # Remove the created_at and updated_at fields since they're inherited
 
     def calculate_total_marketing_spend(self, start_date=None, end_date=None, tenant_id=None):
         """
@@ -237,6 +292,12 @@ class Campaign(TenantModel):
         
         # Use actual cost if available, otherwise use budget
         return actual_cost if actual_cost > 0 else budget_cost
+
+    # ... rest of the methods remain the same ...
+
+    def __str__(self):
+        return self.campaign_name
+
 
     def calculate_cac_comprehensive(self, start_date=None, end_date=None, tenant_id=None):
         """
@@ -440,7 +501,7 @@ class Campaign(TenantModel):
         return self.campaign_name
 
 
-class EmailTemplate(TenantModel):
+class EmailTemplate(TenantAwareModel, TimeStampedModel):
     template_name = models.CharField(max_length=255, help_text="Name of the email template")  # Renamed from 'name' to avoid conflict
     subject = models.CharField(max_length=255)
     content = models.TextField(help_text="HTML content of the email")
@@ -457,28 +518,26 @@ class EmailTemplate(TenantModel):
     )
     template_is_active = models.BooleanField(default=True)  # Renamed from 'is_active' to avoid conflict with base class
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='email_templates_created')
-    template_created_at = models.DateTimeField(auto_now_add=True)  # Renamed from 'created_at' to avoid conflict with base class
-    template_updated_at = models.DateTimeField(auto_now=True)  # Renamed from 'updated_at' to avoid conflict with base class
+    # Remove the created_at and updated_at fields since they're inherited
 
     def __str__(self):
         return self.template_name
 
 
-class LandingPage(TenantModel):
+class LandingPage(TenantAwareModel, TimeStampedModel):
     page_name = models.CharField(max_length=255, help_text="Name of the landing page")  # Renamed from 'name' to avoid conflict
     page_slug = models.SlugField(unique=True, help_text="URL slug for the landing page")  # Renamed from 'slug' to avoid conflict with base class
     title = models.CharField(max_length=255, help_text="Page title for SEO")
     meta_description = models.TextField(blank=True, help_text="Meta description for SEO")
     page_is_active = models.BooleanField(default=True)  # Renamed from 'is_active' to avoid conflict with base class
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='landing_pages_created')
-    page_created_at = models.DateTimeField(auto_now_add=True)  # Renamed from 'created_at' to avoid conflict with base class
-    page_updated_at = models.DateTimeField(auto_now=True)  # Renamed from 'updated_at' to avoid conflict with base class
+    # Remove the created_at and updated_at fields since they're inherited
 
     def __str__(self):
         return self.page_name
 
 
-class LandingPageBlock(TenantModel):
+class LandingPageBlock(TenantAwareModel, TimeStampedModel):
     landing_page = models.ForeignKey(LandingPage, on_delete=models.CASCADE, related_name='blocks')
     block_type = models.CharField(max_length=20, choices=BLOCK_TYPES)
     # New dynamic field
@@ -493,14 +552,14 @@ class LandingPageBlock(TenantModel):
     content = models.JSONField(default=dict, blank=True)  # Block-specific content
     order = models.IntegerField(default=0, help_text="Order of the block on the page")
     block_is_active = models.BooleanField(default=True)  # Renamed from 'is_active' to avoid conflict with base class
-    block_created_at = models.DateTimeField(auto_now_add=True)  # Renamed from 'created_at' to avoid conflict with base class
-    block_updated_at = models.DateTimeField(auto_now=True)  # Renamed from 'updated_at' to avoid conflict with base class
+    # Remove the created_at and updated_at fields since they're inherited
 
     def __str__(self):
-        return f"{self.block_type} block on {self.landing_page.name}"
+        return f"{self.block_type} block on {self.landing_page.page_name}"
 
 
-class MessageTemplate(TenantModel):
+
+class MessageTemplate(TenantAwareModel, TimeStampedModel):
     template_name = models.CharField(max_length=255, help_text="Name of the message template")  # Renamed from 'name' to avoid conflict
     message_template_description = models.TextField(blank=True)
     content = models.TextField(help_text="Message content with merge tag support")
@@ -526,14 +585,12 @@ class MessageTemplate(TenantModel):
     )
     template_is_active = models.BooleanField(default=True)  # Renamed from 'is_active' to avoid conflict with base class
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='message_templates_created')
-    template_created_at = models.DateTimeField(auto_now_add=True)  # Renamed from 'created_at' to avoid conflict with base class
-    template_updated_at = models.DateTimeField(auto_now=True)  # Renamed from 'updated_at' to avoid conflict with base class
+    # Remove the created_at and updated_at fields since they're inherited
 
     def __str__(self):
         return self.template_name
-
-
-class EmailCampaign(TenantModel):
+    
+class EmailCampaign(TenantAwareModel, TimeStampedModel):
     campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name='email_campaigns')
     campaign_name = models.CharField(max_length=255, help_text="Name of the email campaign")  # Renamed from 'name' to avoid conflict
     subject = models.CharField(max_length=255)
@@ -560,19 +617,42 @@ class EmailCampaign(TenantModel):
         help_text="Dynamic email provider (replaces email_provider field)"
     )
     tracking_enabled = models.BooleanField(default=True)
-    open_count = models.IntegerField(default=0)
-    click_count = models.IntegerField(default=0)
-    bounce_count = models.IntegerField(default=0)
-    complaint_count = models.IntegerField(default=0)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='email_campaigns_created')
-    campaign_created_at = models.DateTimeField(auto_now_add=True)  # Renamed from 'created_at' to avoid conflict with base class
-    campaign_updated_at = models.DateTimeField(auto_now=True)  # Renamed from 'updated_at' to avoid conflict with base class
+    # Remove the created_at and updated_at fields since they're inherited
 
     def __str__(self):
         return self.campaign_name
+    
+    def get_deliverability_stats(self):
+        """
+        Calculate deliverability statistics for this email campaign.
+        """
+        total_sent = self.email_events.filter(event_type='sent').count()
+        delivered = self.email_events.filter(event_type='delivered').count()
+        opened = self.email_events.filter(event_type='opened').count()
+        clicked = self.email_events.filter(event_type='clicked').count()
+        bounced = self.email_events.filter(event_type='bounced').count()
+        spam = self.email_events.filter(event_type='spam').count()
+        
+        stats = {
+            'total_sent': total_sent,
+            'delivered': delivered,
+            'opened': opened,
+            'clicked': clicked,
+            'bounced': bounced,
+            'spam': spam,
+            'delivery_rate': (delivered / total_sent * 100) if total_sent > 0 else 0,
+            'open_rate': (opened / delivered * 100) if delivered > 0 else 0,
+            'click_rate': (clicked / delivered * 100) if delivered > 0 else 0,
+            'bounce_rate': (bounced / total_sent * 100) if total_sent > 0 else 0,
+            'spam_rate': (spam / delivered * 100) if delivered > 0 else 0,
+        }
+        
+        return stats
 
 
-class CampaignRecipient(TenantModel):
+
+class CampaignRecipient(TenantAwareModel, TimeStampedModel):
     email_campaign = models.ForeignKey(
         EmailCampaign, 
         on_delete=models.CASCADE, 
@@ -593,13 +673,12 @@ class CampaignRecipient(TenantModel):
     sent_at = models.DateTimeField(null=True, blank=True)
     opened_at = models.DateTimeField(null=True, blank=True)
     clicked_at = models.DateTimeField(null=True, blank=True)
-    recipient_created_at = models.DateTimeField(auto_now_add=True)  # Renamed from 'created_at' to avoid conflict with base class
+    # Remove the created_at and updated_at fields since they're inherited
 
     def __str__(self):
-        return f"{self.email} - {self.email_campaign.name}"
+        return f"{self.email} - {self.email_campaign.campaign_name}"
 
-
-class ABAutomatedTest(TenantModel):
+class ABAutomatedTest(TenantAwareModel, TimeStampedModel):
     test_name = models.CharField(max_length=255, help_text="Name of the A/B test")  # Renamed from 'name' to avoid conflict
     test_description = models.TextField(blank=True)
     campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name='ab_tests')
@@ -624,27 +703,29 @@ class ABAutomatedTest(TenantModel):
         return self.test_name
 
 
-class EmailIntegration(TenantModel):
+class EmailIntegration(TenantAwareModel, TimeStampedModel):
     PROVIDER_CHOICES = [
         ('gmail', 'Gmail'),
         ('outlook', 'Outlook/Office 365'),
     ]
 
+    # ADD THIS FIELD TO OVERRIDE THE ONE IN TenantAwareModel:
     tenant = models.ForeignKey(
-        "tenants.Tenant", 
-        on_delete=models.CASCADE, 
-        related_name="marketing_email_integrations_tenant"
+        'tenants.Tenant', # Ensure this matches your actual Tenant model path
+        on_delete=models.CASCADE,
+        related_name='marketing_email_integrations' # This must be unique
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='marketing_email_integrations')
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='marketing_email_integrations_user')
     provider = models.CharField(max_length=20, choices=PROVIDER_CHOICES)
+    
     # New dynamic field
     provider_ref = models.ForeignKey(
         EmailProvider,
         on_delete=models.PROTECT,
         null=True,
         blank=True,
-        # Use a distinct related_name to avoiding clashing with settings_app
-        related_name='marketing_email_integrations',
+        related_name='marketing_email_integrations_ref', # Made this unique too
         help_text="Dynamic provider (replaces provider field)"
     )
     email_address = models.EmailField()
@@ -657,4 +738,345 @@ class EmailIntegration(TenantModel):
         return f"{self.email_address} ({self.provider})"
 
 
-from .models_attribution import *
+
+class ABTest(TenantAwareModel, TimeStampedModel):
+    """
+    Model representing an A/B test for marketing campaigns.
+    """
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    campaign = models.ForeignKey('Campaign', on_delete=models.CASCADE, related_name='ab_new_tests')
+    is_active = models.BooleanField(default=False)
+    auto_winner = models.BooleanField(default=False, help_text="Automatically declare winner")
+    winner_variant = models.CharField(max_length=1, choices=VARIANT_CHOICES, blank=True, null=True)
+    is_winner_declared = models.BooleanField(default=False)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # Metrics tracking fields
+    start_date = models.DateTimeField(null=True, blank=True, help_text="When the test started")
+    end_date = models.DateTimeField(null=True, blank=True, help_text="When the test ended")
+    confidence_level = models.FloatField(default=95.0, help_text="Confidence level for statistical significance (%)")
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def total_responses(self):
+        # Calculate total responses across all variants
+        return sum(variant.responses.count() if hasattr(variant, 'responses') else 0 for variant in self.variants.all())
+    
+    @property
+    def duration(self):
+        """Return the duration of the test in days"""
+        if self.start_date and self.end_date:
+            return (self.end_date - self.start_date).days
+        return None
+    
+    def get_variant_stats(self):
+        """Get statistics for each variant"""
+        stats = []
+        for variant in self.variants.all():
+            total_responses = variant.responses.count()
+            opens = variant.responses.filter(opened_at__isnull=False).count()
+            clicks = variant.responses.filter(clicked_at__isnull=False).count()
+            
+            open_rate = (opens / total_responses * 100) if total_responses > 0 else 0
+            click_rate = (clicks / total_responses * 100) if total_responses > 0 else 0
+            ctr = (clicks / opens * 100) if opens > 0 else 0
+            
+            stats.append({
+                'variant': variant,
+                'total_responses': total_responses,
+                'opens': opens,
+                'clicks': clicks,
+                'open_rate': open_rate,
+                'click_rate': click_rate,
+                'ctr': ctr,
+            })
+        return stats
+    
+    def declare_winner(self):
+        """Declare the winning variant based on highest click-through rate"""
+        if self.is_winner_declared:
+            return
+        
+        stats = self.get_variant_stats()
+        if not stats:
+            return
+            
+        # Find variant with highest CTR
+        winner = max(stats, key=lambda x: x['ctr'])
+        self.winner_variant = winner['variant'].variant
+        self.is_winner_declared = True
+        self.end_date = timezone.now()
+        self.save()
+        
+        return winner['variant']
+
+
+class ABTestVariant(TenantAwareModel, TimeStampedModel):
+    """
+    Model representing a variant in an A/B test.
+    """
+    ab_test = models.ForeignKey('ABTest', on_delete=models.CASCADE, related_name='variants')
+    variant = models.CharField(max_length=1, choices=VARIANT_CHOICES)
+    assignment_rate = models.FloatField(default=0.5, help_text="Proportion of recipients (0.0-1.0)")
+    email_template = models.ForeignKey('EmailTemplate', on_delete=models.CASCADE, null=True, blank=True)
+    landing_page = models.ForeignKey('LandingPage', on_delete=models.CASCADE, null=True, blank=True)
+    question_text = models.TextField(blank=True, help_text="Question for survey-based tests")
+    follow_up_question = models.TextField(blank=True, help_text="Follow-up question if needed")
+    delivery_delay_hours = models.IntegerField(default=0, help_text="Delay in hours before sending")
+    
+    # Metrics tracking fields
+    sent_count = models.IntegerField(default=0, help_text="Number of emails sent")
+    open_count = models.IntegerField(default=0, help_text="Number of emails opened")
+    click_count = models.IntegerField(default=0, help_text="Number of links clicked")
+    conversion_count = models.IntegerField(default=0, help_text="Number of conversions")
+    
+    def __str__(self):
+        return f"Variant {self.get_variant_display()}"
+
+    def get_variant_display(self):
+        return dict(VARIANT_CHOICES).get(self.variant, self.variant)
+    
+    @property
+    def open_rate(self):
+        """Calculate open rate"""
+        if self.sent_count > 0:
+            return (self.open_count / self.sent_count) * 100
+        return 0
+    
+    @property
+    def click_rate(self):
+        """Calculate click rate"""
+        if self.sent_count > 0:
+            return (self.click_count / self.sent_count) * 100
+        return 0
+    
+    @property
+    def ctr(self):
+        """Calculate click-through rate (clicks per open)"""
+        if self.open_count > 0:
+            return (self.click_count / self.open_count) * 100
+        return 0
+    
+    @property
+    def conversion_rate(self):
+        """Calculate conversion rate"""
+        if self.sent_count > 0:
+            return (self.conversion_count / self.sent_count) * 100
+        return 0
+
+
+class ABTestResponse(TenantAwareModel, TimeStampedModel):
+    """
+    Model representing a response to an A/B test variant.
+    """
+    ab_test_variant = models.ForeignKey(ABTestVariant, on_delete=models.CASCADE, related_name='responses')
+    email = models.EmailField()
+    opened_at = models.DateTimeField(null=True, blank=True)
+    clicked_at = models.DateTimeField(null=True, blank=True)
+    
+    # Additional tracking fields
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    conversion_at = models.DateTimeField(null=True, blank=True, help_text="When a conversion event occurred")
+    conversion_value = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Value of conversion")
+    
+    def __str__(self):
+        return f"Response to {self.ab_test_variant} from {self.email}"
+    
+    @property
+    def is_opened(self):
+        return self.opened_at is not None
+    
+    @property
+    def is_clicked(self):
+        return self.clicked_at is not None
+    
+    @property
+    def is_converted(self):
+        return self.conversion_at is not None
+
+
+class NurtureCampaign(TenantAwareModel, TimeStampedModel):
+    """
+    Model for automated nurture campaigns that send a sequence of emails
+    to leads over time based on their behavior and stage in the funnel.
+    """
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('active', 'Active'),
+        ('paused', 'Paused'),
+        ('completed', 'Completed'),
+    ]
+    
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    target_segment = models.ForeignKey(Segment, on_delete=models.CASCADE, related_name='nurture_campaigns')
+    trigger_event = models.CharField(
+        max_length=100, 
+        help_text="Event that starts the nurture (e.g., form submission, page visit)"
+    )
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        ordering = ['name']
+        
+    def __str__(self):
+        return self.name
+
+
+class NurtureStep(TenantAwareModel, TimeStampedModel):
+    """
+    Individual steps in a nurture campaign sequence.
+    Each step defines an email to be sent after a certain delay.
+    """
+    nurture_campaign = models.ForeignKey(NurtureCampaign, on_delete=models.CASCADE, related_name='steps')
+    step_number = models.PositiveIntegerField(help_text="Order of the step in the sequence")
+    email_template = models.ForeignKey('EmailTemplate', on_delete=models.CASCADE)
+    delay_days = models.PositiveIntegerField(
+        default=0, 
+        help_text="Days to wait after trigger or previous step before sending"
+    )
+    delay_hours = models.PositiveIntegerField(
+        default=0, 
+        help_text="Additional hours to wait (added to delay_days)"
+    )
+    
+    class Meta:
+        ordering = ['step_number']
+        unique_together = ['nurture_campaign', 'step_number']
+        
+    def __str__(self):
+        return f"Step {self.step_number} of {self.nurture_campaign.name}"
+
+
+class NurtureCampaignEnrollment(TenantAwareModel, TimeStampedModel):
+    """
+    Tracks which leads are enrolled in which nurture campaigns.
+    """
+    enrollment_status_choices = [
+        ('active', 'Active'),
+        ('completed', 'Completed'),
+        ('unsubscribed', 'Unsubscribed'),
+        ('bounced', 'Bounced'),
+    ]
+    
+    nurture_campaign = models.ForeignKey(NurtureCampaign, on_delete=models.CASCADE)
+    lead = models.ForeignKey('leads.Lead', on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=enrollment_status_choices, default='active')
+    date_enrolled = models.DateTimeField(auto_now_add=True)
+    date_completed = models.DateTimeField(null=True, blank=True)
+    current_step = models.ForeignKey(NurtureStep, on_delete=models.SET_NULL, null=True, blank=True)
+    last_activity_date = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        unique_together = ['nurture_campaign', 'lead']
+        
+    def __str__(self):
+        return f"{self.lead} in {self.nurture_campaign}"
+
+
+class DripCampaign(TenantAwareModel, TimeStampedModel):
+    """
+    Model for broad, scheduled drip campaigns (e.g., welcoming new users).
+    """
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('active', 'Active'),
+        ('paused', 'Paused'),
+        ('completed', 'Completed'),
+    ]
+    
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['name']
+        
+    def __str__(self):
+        return self.name
+
+
+class DripStep(TenantAwareModel, TimeStampedModel):
+    """
+    Individual steps in a drip campaign sequence.
+    """
+    STEP_TYPES = [
+        ('email', 'Send Email'),
+        ('wait', 'Wait'),
+    ]
+    
+    drip_campaign = models.ForeignKey(DripCampaign, on_delete=models.CASCADE, related_name='steps')
+    step_type = models.CharField(max_length=20, choices=STEP_TYPES, default='email')
+    email_template = models.ForeignKey('EmailTemplate', on_delete=models.SET_NULL, null=True, blank=True)
+    wait_days = models.PositiveIntegerField(default=0)
+    wait_hours = models.PositiveIntegerField(default=0)
+    order = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        ordering = ['order']
+        
+    def __str__(self):
+        return f"Step {self.order}: {self.get_step_type_display()} in {self.drip_campaign.name}"
+
+
+class DripEnrollment(TenantAwareModel, TimeStampedModel):
+    """
+    Tracks which accounts/leads are enrolled in which drip campaigns.
+    """
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('paused', 'Paused'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    drip_campaign = models.ForeignKey(DripCampaign, on_delete=models.CASCADE, related_name='enrollments')
+    account = models.ForeignKey('accounts.Account', on_delete=models.CASCADE, null=True, blank=True)
+    lead = models.ForeignKey('leads.Lead', on_delete=models.CASCADE, null=True, blank=True)
+    email = models.EmailField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    current_step = models.ForeignKey(DripStep, on_delete=models.SET_NULL, null=True, blank=True)
+    next_execution_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        unique_together = ['drip_campaign', 'email']
+        
+    def __str__(self):
+        return f"{self.email} in {self.drip_campaign}"
+
+
+class EmailEvent(TenantAwareModel, TimeStampedModel):
+    """
+    Model for tracking email events for deliverability monitoring.
+    """
+    EVENT_TYPES = [
+        ('sent', 'Sent'),
+        ('delivered', 'Delivered'),
+        ('opened', 'Opened'),
+        ('clicked', 'Clicked'),
+        ('bounced', 'Bounced'),
+        ('spam', 'Marked as Spam'),
+        ('unsubscribed', 'Unsubscribed'),
+    ]
+    
+    email_campaign = models.ForeignKey('EmailCampaign', on_delete=models.CASCADE, related_name='email_events')
+    recipient = models.ForeignKey('CampaignRecipient', on_delete=models.CASCADE)
+    event_type = models.CharField(max_length=20, choices=EVENT_TYPES)
+    timestamp = models.DateTimeField(default=timezone.now)
+    details = JSONField(default=dict, blank=True, help_text="Additional details about the event")
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-timestamp']
+        
+    def __str__(self):
+        return f"{self.event_type} for {self.recipient.email}"
+

@@ -1,0 +1,91 @@
+{% extends "communication/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ template.pk|yesno:"Edit,Create" }} Template - Communication{% endblock %}
+
+{% block comm_title %}{{ template.pk|yesno:"✏️ Edit Template,➕ Create Template" }}{% endblock %}
+{% block comm_subtitle %}{{ template.pk|yesno:"Update existing notification template,Design a new message template for
+your communications" }}{% endblock %}
+
+{% block comm_actions %}
+<a href="{% url 'communication:template_list' %}" class="btn btn-light fw-bold px-4 shadow-sm">
+    <i class="bi bi-arrow-left me-1"></i> Back to Templates
+</a>
+{% endblock %}
+
+{% block comm_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="comm-card p-4 p-md-5">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.name|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.category|as_crispy_field }}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.notification_type|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.channel|as_crispy_field }}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    {{ form.subject|as_crispy_field }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.body|as_crispy_field }}
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="form-check form-switch mt-2">
+                            {{ form.is_active|as_crispy_field }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check form-switch mt-2">
+                            {{ form.is_default|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    {{ form.tags|as_crispy_field }}
+                </div>
+
+                <div class="mb-4">
+                    {{ form.notes|as_crispy_field }}
+                </div>
+
+                <hr class="my-4">
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <button type="submit" class="btn btn-comm px-5 py-2">
+                        <i class="bi bi-check-circle me-1"></i> Save Template
+                    </button>
+                    <a href="{% url 'communication:template_list' %}"
+                        class="btn btn-link text-muted text-decoration-none">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="mt-4 p-4 rounded-3 bg-light border">
+            <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2"></i> Placeholder Help</h6>
+            <p class="small text-muted mb-0">
+                You can use placeholders like <code>{contact_name}</code>, <code>{company_name}</code>, or
+                <code>{ticket_id}</code> in your subject and body.
+                These will be automatically replaced with real data when sending.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

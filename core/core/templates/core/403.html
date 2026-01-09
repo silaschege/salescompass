@@ -1,0 +1,29 @@
+{% extends 'logged_in/base.html' %}
+
+{% block title %}Access Denied{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Access Denied</h4>
+                </div>
+                <div class="card-body text-center">
+                    <div class="alert alert-danger" role="alert">
+                        <h4 class="alert-heading">Permission Required</h4>
+                        <p>You do not have rights to access this page.</p>
+                        {% if contact_admin %}
+                        <hr>
+                        <p class="mb-0">Please contact your system administrator for assistance.</p>
+                        {% endif %}
+                    </div>
+                    
+                    <a href="{% url 'dashboard:home' %}" class="btn btn-primary">Return to Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

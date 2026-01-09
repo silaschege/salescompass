@@ -1,0 +1,70 @@
+NEW_FILE_CODE
+{% extends "developer/base.html" %}
+{% load static %}
+{% block title %}Quota Alerts - Developer Portal{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Quota Alerts</h1>
+        <div class="text-muted">Threshold: {{ page.threshold }}%</div>
+    </div>
+
+    {% if page.high_usage_tokens %}
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i> 
+            The following API tokens are exceeding the {{ page.threshold }}% quota threshold:
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Token Name</th>
+                                <th>Usage</th>
+                                <th>Daily Requests</th>
+                                <th>Rate Limit</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in page.high_usage_tokens %}
+                                <tr>
+                                    <td>{{ item.token.name }}</td>
+                                    <td>{{ item.usage_percent|floatformat:2 }}%</td>
+                                    <td>{{ item.token.daily_request_count }}</td>
+                                    <td>{{ item.token.rate_limit }}</td>
+                                    <td>
+                                        {% if item.usage_percent > 90 %}
+                                            <span class="badge badge-danger">Critical</span>
+                                        {% elif item.usage_percent > 70 %}
+                                            <span class="badge badge-warning">Warning</span>
+                                        {% else %}
+                                            <span class="badge badge-success">Normal</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'developer:api_keys' %}" class="btn btn-sm btn-outline-primary">Manage</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-check-circle text-success mb-3" style="font-size: 3rem;"></i>
+                <h4 class="text-success">All systems operational</h4>
+                <p class="text-muted">No API tokens are currently exceeding the quota threshold.</p>
+                <a href="{% url 'developer:monitoring_dashboard' %}" class="btn btn-primary">Back to Dashboard</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

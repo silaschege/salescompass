@@ -1,0 +1,196 @@
+{% extends "proposals/base.html" %}
+{% load static %}
+
+{% block title %}{{ proposal.title }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h1 class="mb-0">{{ proposal.title }}</h1>
+                    <small>Proposal for {{ proposal.opportunity.account.name }}</small>
+                </div>
+                <div class="card-body">
+                    <div class="proposal-content">
+                        {{ proposal.content|safe }}
+                    </div>
+                    
+                    {% if proposal.esg_section_content %}
+                    <div class="esg-section mt-4" id="esg-section">
+                        <div class="esg-box p-4 border-start border-success border-4 bg-light">
+                            <h3 class="text-success">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-tree" viewBox="0 0 16 16">
+                                    <path d="M8 1a7 7 0 0 0-7 7 7 7 0 0 0 7 7 7 7 0 0 0 7-7 7 7 0 0 0-7-7zM8 15a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6z"/>
+                                    <path d="M8 4a.5.5 0 0 1 .5.5v.545a3.5 3.5 0 0 1 0 6.91v.545a.5.5 0 0 1-1 0v-.545a3.5 3.5 0 0 1 0-6.91V4.5A.5.5 0 0 1 8 4z"/>
+                                    <path d="M9 7.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                                </svg>
+                                Environmental & Social Governance
+                            </h3>
+                            <div class="esg-content">
+                                {{ proposal.esg_section_content|safe }}
+                            </div>
+                            
+                            {% if proposal.opportunity and proposal.opportunity.esg_tagged %}
+                                <div class="mt-3 p-2 bg-success bg-opacity-10 border border-success rounded">
+                                    <small class="text-success">
+                                        <strong>Note:</strong> This solution is optimized to reduce your carbon footprint and support CSRD compliance.
+                                    </small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div}
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <button id="accept-btn" class="btn btn-success">Accept Proposal</button}
+                            <button id="reject-btn" class="btn btn-danger">Reject Proposal</button>
+                        </div}
+                        <div>
+                            <button id="download-btn" class="btn btn-outline-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+                                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                                </svg>
+                                Download PDF
+                            </button>
+                        </div}
+                    </div}
+                </div>
+            </div}
+        </div}
+    </div}
+    
+    <!-- Hidden CSRF token for AJAX requests -->
+    <input type="hidden" id="csrf-token" value="{% csrf_token %}">
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get CSRF token from cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // Track ESG section view
+    const esgSection = document.getElementById('esg-section');
+    if (esgSection) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Send POST request to track ESG view
+                    fetch(`{% url 'proposals:track_esg_view' proposal.pk %}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrftoken,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({})
+                    }).then(response => {
+                        if (response.ok) {
+                            console.log('ESG section view tracked');
+                        }
+                    });
+                    // Stop observing after first intersection
+                    observer.unobserve(esgSection);
+                }
+            });
+        }, { threshold: 0.5 }); // Trigger when 50% of the element is visible
+        
+        observer.observe(esgSection);
+    }
+    
+    // Accept button functionality
+    document.getElementById('accept-btn').addEventListener('click', function() {
+        if (confirm('Are you sure you want to accept this proposal?')) {
+            // Send POST request to update proposal status
+            fetch(`{% url 'proposals:update_status' proposal.pk %}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: 'accepted' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the button style and text
+                    const acceptBtn = document.getElementById('accept-btn');
+                    acceptBtn.classList.remove('btn-success');
+                    acceptBtn.classList.add('btn-success', 'disabled');
+                    acceptBtn.textContent = '✓ Accepted';
+                    
+                    // Disable both buttons after acceptance
+                    document.getElementById('reject-btn').disabled = true;
+                    
+                    alert('Proposal accepted! Our team will contact you shortly.');
+                } else {
+                    alert('Failed to update proposal status. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the proposal status.');
+            });
+        }
+    });
+    
+    // Reject button functionality
+    document.getElementById('reject-btn').addEventListener('click', function() {
+        if (confirm('Are you sure you want to reject this proposal?')) {
+            // Send POST request to update proposal status
+            fetch(`{% url 'proposals:update_status' proposal.pk %}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: 'rejected' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the button style and text
+                    const rejectBtn = document.getElementById('reject-btn');
+                    rejectBtn.classList.remove('btn-danger');
+                    rejectBtn.classList.add('btn-danger', 'disabled');
+                    rejectBtn.textContent = '✓ Rejected';
+                    
+                    // Disable both buttons after rejection
+                    document.getElementById('accept-btn').disabled = true;
+                    
+                    alert('Proposal rejected. Our team will follow up to understand your concerns.');
+                } else {
+                    alert('Failed to update proposal status. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the proposal status.');
+            });
+        }
+    });
+    
+    // Download button
+    document.getElementById('download-btn').addEventListener('click', function() {
+        window.location.href = `{% url 'proposals:generate_pdf' proposal.pk %}`;
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <h1 class="h3 mb-3 fw-normal">Create your account</h1>
+                    <p class="text-muted">Start your journey with SalesCompass</p>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">Get Started</button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-4">
+                    <p class="small text-muted">
+                        Already have an account? <a href="{% url 'login' %}">Sign in</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

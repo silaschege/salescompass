@@ -1,0 +1,128 @@
+{% extends 'tenants/base.html' %}
+
+{% block title %}{% if action == 'create' %}Create{% else %}Update{% endif %} Feature Entitlement - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col">
+      <h2><i class="bi bi-key me-2"></i>{{ title }}</h2>
+      <p class="text-muted">{{ subtitle }}</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">{% if action == 'create' %}Create{% else %}Update{% endif %} Feature Entitlement</h5>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+              <label for="{{ form.feature_key.id_for_label }}" class="form-label">Feature Key</label>
+              {{ form.feature_key }}
+              <div class="form-text">{{ form.feature_key.help_text|default:"Unique identifier for the feature (e.g., advanced_reporting)" }}</div>
+              {% if form.feature_key.errors %}
+              <div class="text-danger">{{ form.feature_key.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-3">
+              <label for="{{ form.feature_name.id_for_label }}" class="form-label">Feature Name</label>
+              {{ form.feature_name }}
+              <div class="form-text">{{ form.feature_name.help_text|default:"Display name for the feature" }}</div>
+              {% if form.feature_name.errors %}
+              <div class="text-danger">{{ form.feature_name.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-3">
+              <label for="{{ form.is_enabled.id_for_label }}" class="form-label">Status</label>
+              <div class="form-check">
+                {{ form.is_enabled }}
+                <label class="form-check-label" for="{{ form.is_enabled.id_for_label }}">
+                  {{ form.is_enabled.label }}
+                </label>
+              </div>
+              <div class="form-text">{{ form.is_enabled.help_text|default:"Whether the feature is enabled for this tenant" }}</div>
+              {% if form.is_enabled.errors %}
+              <div class="text-danger">{{ form.is_enabled.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-3">
+              <label for="{{ form.entitlement_type.id_for_label }}" class="form-label">Entitlement Type</label>
+              {{ form.entitlement_type }}
+              <div class="form-text">{{ form.entitlement_type.help_text|default:"Type of entitlement for this feature" }}</div>
+              {% if form.entitlement_type.errors %}
+              <div class="text-danger">{{ form.entitlement_type.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="{{ form.trial_start_date.id_for_label }}" class="form-label">Trial Start Date</label>
+                  {{ form.trial_start_date }}
+                  <div class="form-text">{{ form.trial_start_date.help_text|default:"Start date for trial period (if applicable)" }}</div>
+                  {% if form.trial_start_date.errors %}
+                  <div class="text-danger">{{ form.trial_start_date.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="{{ form.trial_end_date.id_for_label }}" class="form-label">Trial End Date</label>
+                  {{ form.trial_end_date }}
+                  <div class="form-text">{{ form.trial_end_date.help_text|default:"End date for trial period (if applicable)" }}</div>
+                  {% if form.trial_end_date.errors %}
+                  <div class="text-danger">{{ form.trial_end_date.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+              {{ form.notes }}
+              <div class="form-text">{{ form.notes.help_text|default:"Additional notes about the feature entitlement" }}</div>
+              {% if form.notes.errors %}
+              <div class="text-danger">{{ form.notes.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save me-1"></i>{% if action == 'create' %}Create{% else %}Update{% endif %} Feature Entitlement
+            </button>
+            <a href="{% url 'tenants:feature_entitlements' %}" class="btn btn-secondary">Cancel</a>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Feature Entitlement Help</h5>
+        </div>
+        <div class="card-body">
+          <h6>Entitlement Types:</h6>
+          <ul>
+            <li><strong>Always Enabled</strong>: Feature is always available</li>
+            <li><strong>Plan Based</strong>: Feature availability depends on plan</li>
+            <li><strong>Trial</strong>: Feature available for a limited time</li>
+            <li><strong>Premium</strong>: Feature requires premium access</li>
+            <li><strong>Custom</strong>: Custom access rules</li>
+          </ul>
+          
+          <h6 class="mt-3">Feature Key Format:</h6>
+          <p>Use lowercase with underscores (e.g., <code>advanced_reporting</code>, <code>custom_fields</code>)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

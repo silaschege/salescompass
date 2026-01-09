@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'leads/base.html' %}
 
 {% block title %}Lead Pipeline{% endblock %}
 
@@ -20,18 +20,21 @@
                 </div>
                 <div class="card-body">
                     <div class="kanban-board">
-                        <!-- Pipeline stages would go here -->
-                        <div class="row">
+                        <div class="row g-3"> <!-- Added g-3 for gutter spacing -->
+                            
+                            <!-- Column 1: New Leads -->
                             <div class="col-md-3">
-                                <div class="pipeline-stage">
-                                    <h5>New Leads</h5>
-                                    <div class="lead-cards">
+                                <div class="pipeline-stage bg-light p-3 rounded h-100">
+                                    <h5 class="text-center border-bottom pb-2">New Leads</h5>
+                                    <div class="lead-cards mt-3">
                                         {% for lead in leads %}
                                             {% if lead.status == 'new' %}
-                                                <div class="card mb-2">
-                                                    <div class="card-body">
-                                                        <h6 class="card-title">{{ lead.first_name }} {{ lead.last_name }}</h6>
-                                                        <p class="card-text">{{ lead.email }}</p>
+                                                <div class="card shadow-sm mb-2">
+                                                    <div class="card-body p-3">
+                                                        <h6 class="card-title font-weight-bold text-primary mb-1">
+                                                            {{ lead.first_name }} {{ lead.last_name }}
+                                                        </h6>
+                                                        <p class="card-text small mb-1">{{ lead.email }}</p>
                                                         <small class="text-muted">{{ lead.company }}</small>
                                                     </div>
                                                 </div>
@@ -39,16 +42,21 @@
                                         {% endfor %}
                                     </div>
                                 </div>
+                            </div> <!-- Closing div added here -->
+
+                            <!-- Column 2: Contacted -->
                             <div class="col-md-3">
-                                <div class="pipeline-stage">
-                                    <h5>Contacted</h5>
-                                    <div class="lead-cards">
+                                <div class="pipeline-stage bg-light p-3 rounded h-100">
+                                    <h5 class="text-center border-bottom pb-2">Contacted</h5>
+                                    <div class="lead-cards mt-3">
                                         {% for lead in leads %}
                                             {% if lead.status == 'contacted' %}
-                                                <div class="card mb-2">
-                                                    <div class="card-body">
-                                                        <h6 class="card-title">{{ lead.first_name }} {{ lead.last_name }}</h6>
-                                                        <p class="card-text">{{ lead.email }}</p>
+                                                <div class="card shadow-sm mb-2 border-left-warning">
+                                                    <div class="card-body p-3">
+                                                        <h6 class="card-title font-weight-bold text-primary mb-1">
+                                                            {{ lead.first_name }} {{ lead.last_name }}
+                                                        </h6>
+                                                        <p class="card-text small mb-1">{{ lead.email }}</p>
                                                         <small class="text-muted">{{ lead.company }}</small>
                                                     </div>
                                                 </div>
@@ -56,16 +64,21 @@
                                         {% endfor %}
                                     </div>
                                 </div>
+                            </div> <!-- Closing div added here -->
+
+                            <!-- Column 3: Qualified -->
                             <div class="col-md-3">
-                                <div class="pipeline-stage">
-                                    <h5>Qualified</h5>
-                                    <div class="lead-cards">
+                                <div class="pipeline-stage bg-light p-3 rounded h-100">
+                                    <h5 class="text-center border-bottom pb-2">Qualified</h5>
+                                    <div class="lead-cards mt-3">
                                         {% for lead in leads %}
                                             {% if lead.status == 'qualified' %}
-                                                <div class="card mb-2">
-                                                    <div class="card-body">
-                                                        <h6 class="card-title">{{ lead.first_name }} {{ lead.last_name }}</h6>
-                                                        <p class="card-text">{{ lead.email }}</p>
+                                                <div class="card shadow-sm mb-2 border-left-info">
+                                                    <div class="card-body p-3">
+                                                        <h6 class="card-title font-weight-bold text-primary mb-1">
+                                                            {{ lead.first_name }} {{ lead.last_name }}
+                                                        </h6>
+                                                        <p class="card-text small mb-1">{{ lead.email }}</p>
                                                         <small class="text-muted">{{ lead.company }}</small>
                                                     </div>
                                                 </div>
@@ -73,16 +86,21 @@
                                         {% endfor %}
                                     </div>
                                 </div>
+                            </div> <!-- Closing div added here -->
+
+                            <!-- Column 4: Converted -->
                             <div class="col-md-3">
-                                <div class="pipeline-stage">
-                                    <h5>Converted</h5>
-                                    <div class="lead-cards">
+                                <div class="pipeline-stage bg-light p-3 rounded h-100">
+                                    <h5 class="text-center border-bottom pb-2 text-success">Converted</h5>
+                                    <div class="lead-cards mt-3">
                                         {% for lead in leads %}
                                             {% if lead.status == 'converted' %}
-                                                <div class="card mb-2">
-                                                    <div class="card-body">
-                                                        <h6 class="card-title">{{ lead.first_name }} {{ lead.last_name }}</h6>
-                                                        <p class="card-text">{{ lead.email }}</p>
+                                                <div class="card shadow-sm mb-2 border-left-success">
+                                                    <div class="card-body p-3">
+                                                        <h6 class="card-title font-weight-bold text-success mb-1">
+                                                            {{ lead.first_name }} {{ lead.last_name }}
+                                                        </h6>
+                                                        <p class="card-text small mb-1">{{ lead.email }}</p>
                                                         <small class="text-muted">{{ lead.company }}</small>
                                                     </div>
                                                 </div>
@@ -90,8 +108,9 @@
                                         {% endfor %}
                                     </div>
                                 </div>
-                            </div>
-                        </div>
+                            </div> <!-- Closing div added here -->
+
+                        </div> <!-- Closing Row -->
                     </div>
                 </div>
             </div>

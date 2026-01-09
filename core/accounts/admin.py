@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import  Contact, Role
+from .models import Contact, Role
 
 @admin.register(Role)
 class RoleAdmin(admin.ModelAdmin):
@@ -7,7 +7,7 @@ class RoleAdmin(admin.ModelAdmin):
     readonly_fields = ['permission_count']
 
     def permission_count(self, obj):
-        return len(obj.permissions)
+        return obj.permissions.count()
     permission_count.short_description = 'Permissions'
 
 

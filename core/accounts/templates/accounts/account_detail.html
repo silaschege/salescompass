@@ -1,19 +1,25 @@
 {% extends "accounts/base.html" %}
-{% load auth_extras %}
+{% load auth_extras task_tags %}
 
-{% block title %}{{ account.name }} - SalesCompass{% endblock %}
+{% block title %}{{ account.account_name }} - SalesCompass{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-start mb-3">
     <div>
-        <h1 class="block-title fw-bold mb-0">{{ account.name }}</h1>
+        <h1 class="block-title fw-bold mb-0">{{ account.account_name }}</h1>
         <span class="badge bg-primary">{{ account.get_tier_display }}</span>
         <span class="badge bg-secondary">{{ account.get_industry_display }}</span>
     </div>
     <div>
-        {% if request.user.is_authenticated and request.user|has_perm:"accounts:write" %}
-        <a href="{% url 'accounts:update' account.pk %}" class="btn btn-outline-secondary">Edit</a>
-        <a href="{% url 'accounts:delete' account.pk %}" class="btn btn-outline-danger">Delete</a>
+        {% if request.user.is_authenticated and request.user|has_perm:"accounts.change_account" %}
+        <a href="{% url 'communication:whatsapp_send' %}?account_id={{ account.pk }}" class="btn btn-success me-1">
+            <i class="bi bi-whatsapp"></i> WhatsApp
+        </a>
+        <a href="{% url 'communication:whatsapp_send' %}?account_id={{ account.pk }}" class="btn btn-success me-1">
+            <i class="bi bi-whatsapp"></i> WhatsApp
+        </a>
+        <a href="{% url 'accounts:account_update' account.pk %}" class="btn btn-outline-secondary">Edit</a>
+        <a href="{% url 'accounts:account_delete' account.pk %}" class="btn btn-outline-danger">Delete</a>
         {% endif %}
     </div>
 </div>
@@ -33,7 +39,7 @@
                     </tr>
                     <tr>
                         <th>Country</th>
-                        <td>{{ account.country }}</td>
+                        <td>{{ account.country|default:"—" }}</td>
                     </tr>
                     <tr>
                         <th>Address</th>
@@ -42,14 +48,19 @@
                     <tr>
                         <th>Renewal Date</th>
                         <td>{{ account.renewal_date|default:"Not set" }}</td>
-                    </tr>
+
                     <tr>
                         <th>Owner</th>
-                        <td>{{ account.owner.email|default:"Unassigned" }}</td>
+                        <td>
+                            {% if account.owner %}
+                            {{ account.owner.email }}
+                            {% else %}
+                            Unassigned
+                            {% endif %}
+                        </td>
                     </tr>
-                    <tr>
-                        <th>Status</th>
-                        <td>{{ account.get_status_display }}</td>
+
+                    <td>{{ account.get_status_display }}</td>
                     </tr>
                 </table>
             </div>
@@ -76,10 +87,14 @@
             </div>
         </div>
 
-
     </div>
 
     <div class="col-md-4">
+        <!-- Tasks Widget -->
+        <div class="mb-4">
+            {% render_object_tasks account %}
+        </div>
+
         <!-- Intelligence Widgets -->
         {% include "includes/account_health.html" with health=account.health_score %}
 
@@ -100,7 +115,7 @@
                 <span class="badge bg-info">Upsell/Cross-sell</span>
             </div>
             <div class="card-body">
-                <p>Create new leads for additional business opportunities with {{ account.name }}.</p>
+                <p>Create new leads for additional business opportunities with {{ account.account_name }}.</p>
                 <div class="d-grid gap-2">
 
                     <button class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#quick-lead-form">

@@ -1,5 +1,5 @@
 {% extends "marketing/base.html" %}
-{% load auth_extras math filters_extras%}
+{% load auth_extras math filters_extras %}
 {% block title %}A/B Tests - SalesCompass{% endblock %}
 
 {% block content %}
@@ -17,7 +17,7 @@
             <a href="{% url 'marketing:ab_test_create' %}" class="btn btn-primary">+ New A/B Test</a>
         </div>
         <div class="col-md-6 text-end">
-            <a href="{% url 'marketing:list' %}" class="btn btn-outline-secondary">← Back to Campaigns</a>
+            <a href="{% url 'marketing:campaign_list' %}" class="btn btn-outline-secondary">← Back to Campaigns</a>
         </div>
     </div>
 
@@ -54,8 +54,8 @@
                         </td>
                         <td>
                             {% if ab_test.campaign %}
-                                <a href="{% url 'marketing:detail' ab_test.campaign.pk %}">
-                                    {{ ab_test.campaign.name }}
+                                <a href="{% url 'marketing:campaign_update' ab_test.campaign.pk %}">
+                                    {{ ab_test.campaign.campaign_name }}
                                 </a>
                             {% else %}
                                 <span class="text-muted">Unassigned</span>
@@ -111,9 +111,9 @@
                                         <button type="submit" class="btn btn-sm btn-success">Activate</button>
                                     </form>
                                 {% endif %}
-                                <a href="#" class="btn btn-sm btn-outline-secondary view-results" data-test-id="{{ ab_test.id }}">
+                                <button class="btn btn-sm btn-outline-secondary view-results" data-test-id="{{ ab_test.id }}">
                                     Results
-                                </a>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -121,45 +121,6 @@
                 </tbody>
             </table>
         </div>
-
-        <!-- Pagination -->
-        {% if is_paginated %}
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center">
-                    {% if page_obj.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page=1" aria-label="First">
-                                <span aria-hidden="true">&laquo;&laquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
-                            </a>
-                        </li>
-                    {% endif %}
-
-                    <li class="page-item active">
-                        <span class="page-link">
-                            {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-                        </span>
-                    </li>
-
-                    {% if page_obj.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
-                                <span aria-hidden="true">&raquo;&raquo;</span>
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </nav>
-        {% endif %}
     {% else %}
         <div class="text-center">
             <div class="mb-4">
@@ -182,6 +143,11 @@
             </div>
             <div class="modal-body" id="resultsContent">
                 <!-- Results content will be loaded here -->
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -195,25 +161,36 @@
         <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
     </div>
 </div>
-{%endblock%}
+{% endblock %}
+
+{% block extra_js %}
 <script>
 // View A/B test results
 document.querySelectorAll('.view-results').forEach(button => {
     button.addEventListener('click', function(e) {
         e.preventDefault();
         const testId = this.dataset.testId;
+        // Show modal with loading indicator
+        const modal = new bootstrap.Modal(document.getElementById('resultsModal'));
+        modal.show();
+        
+        // Fetch results
         fetch(`/marketing/ab-tests/${testId}/results/`)
             .then(response => response.text())
             .then(html => {
                 document.getElementById('resultsContent').innerHTML = html;
-                new bootstrap.Modal(document.getElementById('resultsModal')).show();
             })
             .catch(error => {
-                alert('Error loading results: ' + error);
+                document.getElementById('resultsContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        Error loading results: ${error}
+                    </div>
+                `;
             });
     });
 });
 </script>
+{% endblock %}
 
 {% block extra_head %}
 <style>

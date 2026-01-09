@@ -1,0 +1,159 @@
+{% extends "learn/base.html" %}
+{% load static filters_extras task_tags %}
+
+{% block title %}{{ course.title }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'learn:course_list' %}"
+                                class="text-white">Courses</a></li>
+                        <li class="breadcrumb-item active text-white" aria-current="page">{{
+                            course.category.category_name }}</li>
+                    </ol>
+                </nav>
+                <h1 class="display-4">{{ course.title }}</h1>
+                <p class="lead">{{ course.description }}</p>
+                <div class="d-flex align-items-center mt-3">
+                    <span class="badge bg-light text-dark me-3">{{ lessons|length }} Lessons</span>
+                    {% if course.estimated_duration %}
+                    <span class="me-3"><i class="far fa-clock"></i> {{ course.estimated_duration }}</span>
+                    {% endif %}
+                    <span><i class="far fa-user"></i> {{ course.author.get_full_name|default:course.author.email
+                        }}</span>
+                </div>
+                {% if perms.learn.change_course %}
+                <div class="mt-4">
+                    <a href="{% url 'learn:course_update' course.slug %}" class="btn btn-outline-light me-2">
+                        <i class="fas fa-edit me-1"></i> Edit Course
+                    </a>
+                    <a href="{% url 'learn:lesson_create' course.slug %}" class="btn btn-light me-2">
+                        <i class="fas fa-plus me-1"></i> Add Lesson
+                    </a>
+                    <a href="{% url 'learn:course_delete' course.slug %}" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-trash me-1"></i> Delete
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-md-4 text-center">
+                {% if course.thumbnail %}
+                <img src="{{ course.thumbnail.url }}" class="img-fluid rounded shadow" alt="{{ course.title }}">
+                {% else %}
+                <div class="bg-light rounded d-flex align-items-center justify-content-center shadow"
+                    style="height: 200px;">
+                    <i class="fas fa-book fa-5x text-muted"></i>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <h3 class="mb-4">Course Content</h3>
+            <div class="list-group mb-5">
+                {% for lesson in lessons %}
+                <div
+                    class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="lesson-number me-3">{{ forloop.counter }}</div>
+                        <div>
+                            <h5 class="mb-1">{{ lesson.title }}</h5>
+                            <small class="text-muted">
+                                <i
+                                    class="{% if lesson.lesson_type == 'video' %}fas fa-play-circle{% elif lesson.lesson_type == 'quiz' %}fas fa-question-circle{% else %}far fa-file-alt{% endif %}"></i>
+                                {{ lesson.get_lesson_type_display }}
+                                {% if lesson.duration %} | {{ lesson.duration }}{% endif %}
+                            </small>
+                        </div>
+                    </div>
+                    <div>
+                        {% with progress=user_progress|get:lesson.id %}
+                        {% if progress.completion_status == 'completed' %}
+                        <span class="text-success"><i class="fas fa-check-circle fa-lg"></i></span>
+                        {% elif progress.completion_status == 'in_progress' %}
+                        <span class="text-primary"><i class="fas fa-play-circle fa-lg"></i></span>
+                        {% endif %}
+                        {% endwith %}
+                        <a href="{% url 'learn:lesson_detail' lesson.slug %}" class="btn btn-outline-primary ms-3">
+                            {% if forloop.first %}Start{% else %}Continue{% endif %}
+                        </a>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted">No lessons added to this course yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Generic Task List Widget -->
+            <div class="mb-4">
+                {% render_object_tasks course %}
+            </div>
+            <div class="card mb-4 shadow-sm border-0">
+                <div class="card-body">
+                    <h5>Your Progress</h5>
+                    <div class="progress mb-2" style="height: 10px;">
+                        <div class="progress-bar" role="progressbar" style="width: {{ progress_percentage }}%;"
+                            aria-valuenow="{{ progress_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <p class="text-center mb-0">{{ progress_percentage|floatformat:0 }}% Complete</p>
+                    {% if progress_percentage == 100 and certificate %}
+                    <div class="mt-3 text-center">
+                        <a href="{% url 'learn:certificate_download' certificate.id %}"
+                            class="btn btn-gold btn-sm w-100">
+                            <i class="fas fa-certificate me-2"></i> Download Certificate
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Prerequisites</h5>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-0">No prerequisites required for this course.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .header-bar {
+        background: linear-gradient(135deg, #6f42c1 0%, #007bff 100%);
+        color: white;
+    }
+
+    .lesson-number {
+        width: 30px;
+        height: 30px;
+        background-color: #f8f9fa;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: #6f42c1;
+    }
+
+    .list-group-item {
+        border-left: none;
+        border-right: none;
+    }
+
+    .list-group-item:first-child {
+        border-top: none;
+    }
+</style>
+{% endblock %}

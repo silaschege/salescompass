@@ -1,160 +1,169 @@
 {% extends "public/base.html" %}
+{% load static %}
 
-{% block title %}Integrations - SalesCompass{% endblock %}
+{% block title %}Integrations - Connect Your Stack | SalesCompass{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="bg-light py-5">
-    <div class="container py-5">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
-                <h1 class="display-4 fw-bold mb-4">Powerful Integrations</h1>
-                <p class="lead text-muted mb-4">
-                    Connect SalesCompass with your favorite tools and platforms. Streamline your workflow with seamless
-                    integrations.
-                </p>
-            </div>
-            <div class="col-lg-6">
-                <i class="bi bi-plugin display-1 text-accent"></i>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Integration Categories -->
-<section class="py-5">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="fw-bold">Integration Categories</h2>
-            <p class="text-muted">Explore our extensive integration ecosystem</p>
-        </div>
-
-        <div class="row g-4">
-            <!-- Communication -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <i class="bi bi-chat-dots fs-1 text-accent me-3"></i>
-                            <h4 class="mb-0">Communication</h4>
-                        </div>
-                        <p class="text-muted mb-3">Connect your communication channels</p>
-                        <ul class="list-unstyled">
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Email (SMTP/IMAP)</li>
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Mailcow</li>
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Twilio SMS</li>
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Slack</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Voice & Telephony -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <i class="bi bi-telephone fs-1 text-accent me-3"></i>
-                            <h4 class="mb-0">Voice & Telephony</h4>
-                        </div>
-                        <p class="text-muted mb-3">Integrate your phone systems</p>
-                        <ul class="list-unstyled">
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Wazo VoIP</li>
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Asterisk</li>
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>FreePBX</li>
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>SIP Trunking</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Calendar & Scheduling -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <i class="bi bi-calendar-event fs-1 text-accent me-3"></i>
-                            <h4 class="mb-0">Calendar</h4>
-                        </div>
-                        <p class="text-muted mb-3">Sync your calendars and meetings</p>
-                        <ul class="list-unstyled">
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Google Calendar</li>
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Microsoft Outlook</li>
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>CalDAV</li>
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>iCal</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Payment Processing -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <i class="bi bi-credit-card fs-1 text-accent me-3"></i>
-                            <h4 class="mb-0">Payments</h4>
-                        </div>
-                        <p class="text-muted mb-3">Process payments seamlessly</p>
-                        <ul class="list-unstyled">
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Stripe</li>
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>PayPal</li>
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Square</li>
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Authorize.net</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Marketing -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <i class="bi bi-megaphone fs-1 text-accent me-3"></i>
-                            <h4 class="mb-0">Marketing</h4>
-                        </div>
-                        <p class="text-muted mb-3">Amplify your marketing efforts</p>
-                        <ul class="list-unstyled">
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Mailchimp</li>
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>HubSpot</li>
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Google Analytics</li>
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Facebook Ads</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Storage & Files -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <i class="bi bi-cloud-upload fs-1 text-accent me-3"></i>
-                            <h4 class="mb-0">Storage</h4>
-                        </div>
-                        <p class="text-muted mb-3">Store and share files easily</p>
-                        <ul class="list-unstyled">
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Google Drive</li>
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Dropbox</li>
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>OneDrive</li>
-                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Box</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Custom Integration CTA -->
-<section class="bg-accent text-white py-5">
-    <div class="container text-center py-5">
-        <h2 class="fw-bold mb-4">Need a Custom Integration?</h2>
-        <p class="lead mb-4">
-            Our API makes it easy to build custom integrations tailored to your specific needs.
+<!-- Integrations Hero -->
+<section class="section-large text-center position-relative overflow-hidden">
+    <div class="container position-relative z-1">
+        <h1 class="display-3 fw-extrabold mb-4">Connect your entire <br><span class="highlight-handwritten">revenue
+                stack.</span></h1>
+        <p class="lead text-muted mb-6 mx-auto" style="max-width: 600px;">
+            SalesCompass integrates with over 200+ tools to sync your data bi-directionally in real-time.
+            Eliminate silos and automate your workflow.
         </p>
-        <a href="{% url 'core:api_docs' %}" class="btn btn-light btn-lg px-5 rounded-pill">Explore Our API</a>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="#directory" class="btn btn-primary px-5">Browse Directory</a>
+            <a href="{% url 'core:api_docs' %}" class="btn btn-outline-primary px-5">API Documentation</a>
+        </div>
+    </div>
+</section>
+
+<!-- Integrations Directory -->
+<section id="directory" class="section bg-light border-top border-light">
+    <div class="container">
+
+        <!-- Communication -->
+        <div class="mb-12">
+            <h3 class="fw-extrabold mb-5">Communication</h3>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 d-flex align-items-center gap-4 bg-white">
+                        <div class="rounded-3 bg-light p-3 fs-2"><i class="bi bi-slack"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Slack</h6>
+                            <p class="extra-small text-muted mb-0">Real-time alerts & commands</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 d-flex align-items-center gap-4 bg-white">
+                        <div class="rounded-3 bg-light p-3 fs-2"><i class="bi bi-envelope-fill text-primary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Outlook / Gmail</h6>
+                            <p class="extra-small text-muted mb-0">Full inbox synchronization</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 d-flex align-items-center gap-4 bg-white">
+                        <div class="rounded-3 bg-light p-3 fs-2"><i class="bi bi-telephone-fill text-success"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Zoom / Teams</h6>
+                            <p class="extra-small text-muted mb-0">Meeting recording & transcription</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Marketing -->
+        <div class="mb-12">
+            <h3 class="fw-extrabold mb-5">Marketing</h3>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 d-flex align-items-center gap-4 bg-white">
+                        <div class="rounded-3 bg-light p-3 fs-2"><i class="bi bi-megaphone-fill text-warning"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Mailchimp</h6>
+                            <p class="extra-small text-muted mb-0">Campaign sync & ROI tracking</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 d-flex align-items-center gap-4 bg-white">
+                        <div class="rounded-3 bg-light p-3 fs-2"><i class="bi bi-share-fill text-primary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">HubSpot</h6>
+                            <p class="extra-small text-muted mb-0">Bi-directional CRM sync</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 d-flex align-items-center gap-4 bg-white">
+                        <div class="rounded-3 bg-light p-3 fs-2"><i class="bi bi-graph-up-arrow text-secondary"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Google Ads</h6>
+                            <p class="extra-small text-muted mb-0">Advanced lead attribution</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Finance -->
+        <div>
+            <h3 class="fw-extrabold mb-5">Payments & Finance</h3>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 d-flex align-items-center gap-4 bg-white">
+                        <div class="rounded-3 bg-light p-3 fs-2"><i class="bi bi-stripe text-primary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Stripe</h6>
+                            <p class="extra-small text-muted mb-0">Subscription & invoice sync</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 d-flex align-items-center gap-4 bg-white">
+                        <div class="rounded-3 bg-light p-3 fs-2"><i class="bi bi-file-text-fill text-secondary"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">QuickBooks</h6>
+                            <p class="extra-small text-muted mb-0">Automated financial reporting</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 d-flex align-items-center gap-4 bg-white">
+                        <div class="rounded-3 bg-light p-3 fs-2"><i class="bi bi-paypal text-primary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">PayPal</h6>
+                            <p class="extra-small text-muted mb-0">Flexible payment processing</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Request -->
+        <div class="mt-12 text-center">
+            <p class="text-muted">Don't see your tool? <a href="{% url 'core:support' %}"
+                    class="text-primary fw-bold">Request an Integration &rarr;</a></p>
+        </div>
+    </div>
+</section>
+
+<!-- Developer Section -->
+<section class="section bg-gray-900 ">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <h2 class="display-5 fw-extrabold mb-4 ">Build your own flow.</h2>
+                <p class="50 mb-6">
+                    Use our enterprise-grade REST API and Webhook engine to build custom
+                    integrations tailored to your unique sales motion.
+                </p>
+                <a href="{% url 'core:api_docs' %}" class="btn btn-primary px-5 rounded-pill fw-bold">Read Developer
+                    Docs</a>
+            </div>
+            <div class="col-lg-6">
+                <div
+                    class="p-5 bg-black bg-opacity-50 rounded-4 font-monospace border border-white border-opacity-10 shadow-xl">
+                    <div class="text-primary-light mb-2">// Fetch lead details with ML score</div>
+                    <div class="50">GET <span class="">/api/v1/leads/{id}</span></div>
+                    <div class="50 mt-3 text-break">
+                        {<br>
+                        &nbsp;&nbsp;"id": "lead_9921",<br>
+                        &nbsp;&nbsp;"score": 0.94,<br>
+                        &nbsp;&nbsp;"status": "hot"<br>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 {% endblock %}

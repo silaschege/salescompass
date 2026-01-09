@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from settings_app.models import APIKey, Webhook
+from developer.models import APIToken, Webhook
 import ast
 import json
 
@@ -165,7 +165,7 @@ class APIKeyAuthenticationTests(TestCase):
     
     def test_api_key_generation(self):
         """Test that API keys can be generated."""
-        key = APIKey.generate_key()
+        key = APIToken.generate_key()
         
         # Verify format (should start with 'sk_')
         self.assertTrue(key.startswith('sk_'))
@@ -184,7 +184,7 @@ class APIKeyAuthenticationTests(TestCase):
         self.assertEqual(response.status_code, 302)
         
         # Verify key was created
-        api_key = APIKey.objects.filter(
+        api_key = APIToken.objects.filter(
             created_by=self.user,
             name='Test API Key'
         ).first()
@@ -195,8 +195,8 @@ class APIKeyAuthenticationTests(TestCase):
     def test_api_key_validation(self):
         """Test that API key validation works correctly."""
         # Generate and store a key
-        key = APIKey.generate_key()
-        api_key = APIKey.objects.create(
+        key = APIToken.generate_key()
+        api_key = APIToken.objects.create(
             name='Test Key',
             created_by=self.user,
             tenant_id='test_tenant',
@@ -224,13 +224,13 @@ class APIKeyAuthenticationTests(TestCase):
     def test_api_key_list_in_portal(self):
         """Test that API keys are listed in the portal."""
         # Create some API keys
-        APIKey.objects.create(
+        APIToken.objects.create(
             name='Key 1',
             created_by=self.user,
             tenant_id='test_tenant',
             scopes=['read']
         )
-        APIKey.objects.create(
+        APIToken.objects.create(
             name='Key 2',
             created_by=self.user,
             tenant_id='test_tenant',
@@ -323,7 +323,7 @@ class UsageAnalyticsTests(TestCase):
     def test_analytics_shows_statistics(self):
         """Test that analytics view shows statistics."""
         # Create some test data
-        APIKey.objects.create(
+        APIToken.objects.create(
             name='Key 1',
             created_by=self.user,
             tenant_id='test_tenant',

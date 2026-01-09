@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Workflow Approvals - SalesCompass CRM{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Workflow Approvals</h1>
+            <p class="text-muted">Manage workflows waiting for your approval</p>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Pending Approvals</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="approvalsTable">
+                    <thead>
+                        <tr>
+                            <th>Workflow</th>
+                            <th>Action Point</th>
+                            <th>Triggered At</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for approval in approvals %}
+                        <tr>
+                            <td>
+                                <div class="font-weight-bold">{{ approval.workflow_execution.workflow.workflow_name }}
+                                </div>
+                                <small class="text-muted">ID: {{ approval.workflow_execution.id }}</small>
+                            </td>
+                            <td>{{ approval.workflow_action.workflow_action_name }}</td>
+                            <td>{{ approval.approval_created_at|date:"M d, Y H:i" }}</td>
+                            <td>
+                                <span class="badge badge-warning">Pending</span>
+                            </td>
+                            <td>
+                                <a href="{% url 'automation:approval_respond' approval.id %}"
+                                    class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i> Review
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-check-circle fa-3x text-success"></i>
+                                </div>
+                                <h5>No pending approvals</h5>
+                                <p class="text-muted">You're all caught up!</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

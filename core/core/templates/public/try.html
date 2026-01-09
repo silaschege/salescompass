@@ -1,280 +1,117 @@
 {% extends "public/base.html" %}
 {% load static %}
 
-{% block title %}Start Free Trial - No Credit Card Required | SalesCompass{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'core/css/public-design-system.css' %}">
-<style>
-  .trial-container {
-    min-height: 80vh;
-    display: flex;
-    align-items: center;
-  }
-
-  .form-label-clean {
-    font-size: var(--text-sm);
-    font-weight: var(--font-semibold);
-    color: var(--gray-700);
-    margin-bottom: var(--space-2);
-    display: block;
-  }
-
-  .form-input-clean {
-    width: 100%;
-    padding: var(--space-4);
-    font-size: var(--text-base);
-    border: 1px solid var(--gray-300);
-    border-radius: var(--radius-md);
-    transition: all var(--transition-fast);
-  }
-
-  .form-input-clean:focus {
-    outline: none;
-    border-color: var(--color-purple);
-    box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.1);
-  }
-
-  .benefit-check {
-    display: flex;
-    align-items: start;
-    margin-bottom: var(--space-4);
-  }
-
-  .benefit-check i {
-    color: var(--color-purple);
-    margin-right: var(--space-3);
-    margin-top: 2px;
-    font-size: 18px;
-  }
-</style>
-{% endblock %}
+{% block title %}Start Free Trial - Enterprise Intelligence | SalesCompass{% endblock %}
 
 {% block content %}
-<section class="trial-container">
-  <div class="container">
-    <div class="row align-items-center">
-      <!-- Left: Value Proposition -->
-      <div class="col-lg-5 mb-5 mb-lg-0">
-        <h1 class="mb-4">Get your time back.</h1>
-        <p class="text-large text-gray mb-8">
-          Join 10,000+ sales teams using SalesCompass to sell more with less work.
-        </p>
+<section class="section-large position-relative overflow-hidden" style="min-height: 100vh;">
+  <!-- Background Glow -->
+  <div class="hero-glow" style="transform: translate(-30%, -30%); opacity: 0.4;"></div>
 
-        <!-- Benefits -->
-        <div class="mb-8">
-          <div class="benefit-check">
-            <i class="bi bi-check-circle-fill"></i>
-            <div>
-              <strong>14-day free trial</strong><br>
-              <span class="text-gray">Full access. No credit card required.</span>
+  <div class="container position-relative z-1 pt-8 pb-5">
+    <div class="row align-items-center g-5">
+
+      <!-- Left Column: Benefits & Social Proof -->
+      <div class="col-lg-6 pe-lg-6">
+        <div
+          class="d-inline-flex align-items-center gap-2 mb-4 bg-white border border-light py-1 px-3 rounded-pill shadow-sm">
+          <span class="badge bg-success rounded-pill">Free</span>
+          <span class="small fw-extrabold text-secondary">14-Day Full Access Trial</span>
+        </div>
+        <h1 class="display-3 fw-extrabold mb-5">Modernize your <br><span class="highlight-handwritten">entire sales
+            stack.</span></h1>
+        <p class="lead text-muted mb-8">Join 10,000+ teams using SalesCompass to automate the mundane and close the
+          complex.</p>
+
+        <div class="space-y-4 mb-10">
+          <div class="d-flex align-items-center gap-3">
+            <div
+              class="rounded-circle bg-success-subtle text-success p-1 d-flex align-items-center justify-content-center"
+              style="width: 28px; height: 28px;">
+              <i class="bi bi-check2"></i>
             </div>
+            <span class="fw-bold text-dark">AI Win Probability & Forecasting</span>
           </div>
-          <div class="benefit-check">
-            <i class="bi bi-check-circle-fill"></i>
-            <div>
-              <strong>2-minute setup</strong><br>
-              <span class="text-gray">Start calling and emailing immediately.</span>
+          <div class="d-flex align-items-center gap-3">
+            <div
+              class="rounded-circle bg-success-subtle text-success p-1 d-flex align-items-center justify-content-center"
+              style="width: 28px; height: 28px;">
+              <i class="bi bi-check2"></i>
             </div>
+            <span class="fw-bold text-dark">Native Voice & Call Intelligence</span>
           </div>
-          <div class="benefit-check">
-            <i class="bi bi-check-circle-fill"></i>
-            <div>
-              <strong>Cancel anytime</strong><br>
-              <span class="text-gray">No contracts. No hidden fees.</span>
+          <div class="d-flex align-items-center gap-3">
+            <div
+              class="rounded-circle bg-success-subtle text-success p-1 d-flex align-items-center justify-content-center"
+              style="width: 28px; height: 28px;">
+              <i class="bi bi-check2"></i>
             </div>
+            <span class="fw-bold text-dark">Enterprise-Grade API & SDKs</span>
           </div>
         </div>
 
-        <!-- Social Proof -->
-        <div class="p-4 bg-gray" style="border-radius: var(--radius-lg);">
-          <div class="mb-2" style="color: var(--color-purple);">
-            <i class="bi bi-star-fill"></i>
-            <i class="bi bi-star-fill"></i>
-            <i class="bi bi-star-fill"></i>
-            <i class="bi bi-star-fill"></i>
-            <i class="bi bi-star-fill"></i>
-          </div>
-          <p class="mb-2">"We switched from Salesforce and saved 10 hours per week. The team actually enjoys using it."
-          </p>
-          <div class="text-gray" style="font-size: var(--text-sm);">
-            <strong>Mark S.</strong>, Sales Director
+        <div class="pt-8 border-top border-light">
+          <p class="small text-muted fw-bold text-uppercase tracking-widest mb-4">Trusted by industry leaders</p>
+          <div class="d-flex gap-5 grayscale opacity-50">
+            <h5 class="fw-bold mb-0">GLOBEX</h5>
+            <h5 class="fw-bold mb-0">ACME</h5>
+            <h5 class="fw-bold mb-0">SOYLENT</h5>
           </div>
         </div>
       </div>
 
-      <!-- Right: Form -->
-      <div class="col-lg-6 offset-lg-1">
-        <div class="card" style="padding: var(--space-12);">
-          <h2 class="mb-2">Start your free trial</h2>
-          <p class="text-gray mb-8">No credit card required. Cancel anytime.</p>
+      <!-- Right Column: Form -->
+      <div class="col-lg-6 px-lg-5">
+        <div class="glass-card p-6 p-lg-10 shadow-3xl bg-white border border-light">
+          <div class="text-center mb-8">
+            <h3 class="fw-extrabold mb-2">Create your account</h3>
+            <p class="text-muted small">No credit card required. Cancel anytime.</p>
+          </div>
 
           <form method="post">
             {% csrf_token %}
-
-            <div class="mb-6">
-              <label class="form-label-clean">Full name</label>
-              <input type="text" name="name" class="form-input-clean" placeholder="John Smith" required>
+            <div class="mb-5">
+              <label class="form-label extra-small fw-bold text-uppercase text-muted tracking-widest mb-3">Full
+                Name</label>
+              <div class="position-relative">
+                <i class="bi bi-person position-absolute top-50 start-0 translate-middle-y ms-4 text-muted"></i>
+                <input type="text" name="name" class="form-control py-3 ps-5 border-light bg-light bg-opacity-50"
+                  placeholder="Jane Doe" required>
+              </div>
             </div>
 
-            <div class="mb-6">
-              <label class="form-label-clean">Work email</label>
-              <input type="email" name="email" class="form-input-clean" placeholder="john@company.com" required>
+            <div class="mb-5">
+              <label class="form-label extra-small fw-bold text-uppercase text-muted tracking-widest mb-3">Work
+                Email</label>
+              <div class="position-relative">
+                <i class="bi bi-envelope position-absolute top-50 start-0 translate-middle-y ms-4 text-muted"></i>
+                <input type="email" name="email" class="form-control py-3 ps-5 border-light bg-light bg-opacity-50"
+                  placeholder="jane@company.com" required>
+              </div>
             </div>
 
-            <div class="mb-6">
-              <label class="form-label-clean">Company name</label>
-              <input type="text" name="company" class="form-input-clean" placeholder="Acme Inc" required>
+            <div class="mb-8">
+              <label class="form-label extra-small fw-bold text-uppercase text-muted tracking-widest mb-3">Company
+                Name</label>
+              <div class="position-relative">
+                <i class="bi bi-building position-absolute top-50 start-0 translate-middle-y ms-4 text-muted"></i>
+                <input type="text" name="company" class="form-control py-3 ps-5 border-light bg-light bg-opacity-50"
+                  placeholder="Acme Inc." required>
+              </div>
             </div>
 
-            <div class="mb-6">
-              <label class="form-label-clean">Phone (optional)</label>
-              <input type="tel" name="phone" class="form-input-clean" placeholder="+1 (555) 123-4567">
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-large w-100 mb-4">
-              Start free trial
+            <button type="submit" class="btn btn-primary btn-lg w-100 py-3 fw-bold mb-5 shadow-lg">
+              Start Free Trial <i class="bi bi-arrow-right ms-2"></i>
             </button>
 
-            <p class="text-center text-gray" style="font-size: var(--text-xs);">
-              By signing up, you agree to our <a href="#" class="text-purple" style="text-decoration: none;">Terms</a>
-              and <a href="#" class="text-purple" style="text-decoration: none;">Privacy Policy</a>.
+            <p class="text-center extra-small text-muted mb-0">By signing up, you agree to our <a href="#"
+                class="text-primary fw-bold">Terms</a> and <a href="#" class="text-primary fw-bold">Privacy Policy</a>.
             </p>
           </form>
         </div>
-
-        <!-- Trust Badges -->
-        <div class="mt-6 text-center">
-          <div
-            style="display: flex; justify-content: center; gap: var(--space-8); flex-wrap: wrap; color: var(--gray-500); font-size: var(--text-sm);">
-            <div><i class="bi bi-shield-check me-2"></i>SOC 2 Certified</div>
-            <div><i class="bi bi-lock me-2"></i>256-bit SSL</div>
-            <div><i class="bi bi-globe me-2"></i>GDPR Compliant</div>
-          </div>
-        </div>
       </div>
+
     </div>
-  </div>
-</section>
-
-<!-- What You Get Section -->
-<section class="section bg-gray">
-  <div class="container">
-    <div class="text-center mb-12">
-      <h2 class="mb-4">Everything included in your trial</h2>
-      <p class="text-large text-gray">Full platform access. No limitations.</p>
-    </div>
-
-    <div class="grid grid-3">
-      <div class="text-center">
-        <div
-          style="width: 56px; height: 56px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
-          <i class="bi bi-people" style="font-size: 28px; color: var(--color-purple);"></i>
-        </div>
-        <h4 class="mb-2">Full CRM Access</h4>
-        <p class="text-gray">Unlimited contacts, deals, and pipeline stages.</p>
-      </div>
-
-      <div class="text-center">
-        <div
-          style="width: 56px; height: 56px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
-          <i class="bi bi-telephone" style="font-size: 28px; color: var(--color-purple);"></i>
-        </div>
-        <h4 class="mb-2">Cloud Calling</h4>
-        <p class="text-gray">Make calls from browser. Auto-logged and recorded.</p>
-      </div>
-
-      <div class="text-center">
-        <div
-          style="width: 56px; height: 56px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
-          <i class="bi bi-envelope" style="font-size: 28px; color: var(--color-purple);"></i>
-        </div>
-        <h4 class="mb-2">Email Automation</h4>
-        <p class="text-gray">Sequences, tracking, and templates included.</p>
-      </div>
-
-      <div class="text-center">
-        <div
-          style="width: 56px; height: 56px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
-          <i class="bi bi-graph-up" style="font-size: 28px; color: var(--color-purple);"></i>
-        </div>
-        <h4 class="mb-2">Reporting</h4>
-        <p class="text-gray">Real-time dashboards and forecasting.</p>
-      </div>
-
-      <div class="text-center">
-        <div
-          style="width: 56px; height: 56px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
-          <i class="bi bi-headset" style="font-size: 28px; color: var(--color-purple);"></i>
-        </div>
-        <h4 class="mb-2">Support</h4>
-        <p class="text-gray">Email and chat support during trial.</p>
-      </div>
-
-      <div class="text-center">
-        <div
-          style="width: 56px; height: 56px; background-color: var(--color-purple-light); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
-          <i class="bi bi-lightning" style="font-size: 28px; color: var(--color-purple);"></i>
-        </div>
-        <h4 class="mb-2">Automation</h4>
-        <p class="text-gray">Workflows, triggers, and smart assignments.</p>
-      </div>
-    </div>
-
-    <div class="text-center mt-8">
-      <p class="text-large text-gray">Plus reporting, integrations, mobile apps, and more.</p>
-    </div>
-  </div>
-</section>
-
-<!-- Timeline Section -->
-<section class="section">
-  <div class="container">
-    <div class="text-center mb-12">
-      <h2 class="mb-4">What happens after you sign up?</h2>
-    </div>
-
-    <div style="max-width: 800px; margin: 0 auto;">
-      <div class="grid grid-3 text-center">
-        <div>
-          <div
-            style="width: 48px; height: 48px; background-color: var(--color-purple); color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: var(--font-bold); font-size: var(--text-xl); margin-bottom: var(--space-4);">
-            1</div>
-          <h4 class="mb-2">Sign up</h4>
-          <p class="text-gray">Create your account in 2 minutes.</p>
-        </div>
-
-        <div>
-          <div
-            style="width: 48px; height: 48px; background-color: var(--color-purple); color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: var(--font-bold); font-size: var(--text-xl); margin-bottom: var(--space-4);">
-            2</div>
-          <h4 class="mb-2">Import data</h4>
-          <p class="text-gray">Upload contacts or connect your existing tools.</p>
-        </div>
-
-        <div>
-          <div
-            style="width: 48px; height: 48px; background-color: var(--color-purple); color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: var(--font-bold); font-size: var(--text-xl); margin-bottom: var(--space-4);">
-            3</div>
-          <h4 class="mb-2">Start selling</h4>
-          <p class="text-gray">Make calls, send emails, close deals.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Final CTA -->
-<section class="section bg-purple text-center" style="color: white;">
-  <div class="container">
-    <h2 class="mb-4" style="color: white;">Still have questions?</h2>
-    <p class="text-large mb-6" style="color: rgba(255,255,255,0.9);">
-      Talk to our sales team to see if SalesCompass is right for you.
-    </p>
-    <a href="{% url 'core:support' %}" class="btn btn-large"
-      style="background-color: white; color: var(--color-primary);">
-      Schedule a demo
-    </a>
   </div>
 </section>
 {% endblock %}

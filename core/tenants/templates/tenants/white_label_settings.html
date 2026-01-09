@@ -1,0 +1,263 @@
+{% extends 'tenants/base.html' %}
+
+{% block title %}{{ title }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col">
+      <h2><i class="bi bi-palette me-2"></i>{{ title }}</h2>
+      <p class="text-muted">{{ subtitle }}</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Branding Configuration</h5>
+        </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="{{ form.brand_name.id_for_label }}" class="form-label">Brand Name</label>
+                  {{ form.brand_name }}
+                  <div class="form-text">{{ form.brand_name.help_text }}</div>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="{{ form.tagline.id_for_label }}" class="form-label">Tagline</label>
+                  {{ form.tagline }}
+                  <div class="form-text">{{ form.tagline.help_text }}</div>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="{{ form.copyright_text.id_for_label }}" class="form-label">Copyright Text</label>
+                  {{ form.copyright_text }}
+                  <div class="form-text">{{ form.copyright_text.help_text }}</div>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="{{ form.custom_domain.id_for_label }}" class="form-label">Custom Domain</label>
+                  {{ form.custom_domain }}
+                  <div class="form-text">{{ form.custom_domain.help_text }}</div>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="{{ form.subdomain.id_for_label }}" class="form-label">Subdomain</label>
+                  {{ form.subdomain }}
+                  <div class="form-text">{{ form.subdomain.help_text }}</div>
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="{{ form.primary_color.id_for_label }}" class="form-label">Primary Color</label>
+                  {{ form.primary_color }}
+                  <div class="form-text">{{ form.primary_color.help_text }}</div>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="{{ form.secondary_color.id_for_label }}" class="form-label">Secondary Color</label>
+                  {{ form.secondary_color }}
+                  <div class="form-text">{{ form.secondary_color.help_text }}</div>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="{{ form.accent_color.id_for_label }}" class="form-label">Accent Color</label>
+                  {{ form.accent_color }}
+                  <div class="form-text">{{ form.accent_color.help_text }}</div>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="{{ form.background_color.id_for_label }}" class="form-label">Background Color</label>
+                  {{ form.background_color }}
+                  <div class="form-text">{{ form.background_color.help_text }}</div>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="{{ form.login_background_color.id_for_label }}" class="form-label">Login Background Color</label>
+                  {{ form.login_background_color }}
+                  <div class="form-text">{{ form.login_background_color.help_text }}</div>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="{{ form.login_text_color.id_for_label }}" class="form-label">Login Text Color</label>
+                  {{ form.login_text_color }}
+                  <div class="form-text">{{ form.login_text_color.help_text }}</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6">
+                <h6>Logo & Images</h6>
+                
+                <div class="mb-3">
+                  <label for="{{ form.logo.id_for_label }}" class="form-label">Main Logo</label>
+                  {{ form.logo }}
+                  <div class="form-text">{{ form.logo.help_text }}</div>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="{{ form.logo_small.id_for_label }}" class="form-label">Small Logo</label>
+                  {{ form.logo_small }}
+                  <div class="form-text">{{ form.logo_small.help_text }}</div>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="{{ form.favicon.id_for_label }}" class="form-label">Favicon</label>
+                  {{ form.favicon }}
+                  <div class="form-text">{{ form.favicon.help_text }}</div>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="{{ form.brand_image.id_for_label }}" class="form-label">Brand Image</label>
+                  {{ form.brand_image }}
+                  <div class="form-text">{{ form.brand_image.help_text }}</div>
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <h6>Display Options</h6>
+                
+                <div class="mb-3 form-check">
+                  {{ form.show_brand_name }}
+                  <label class="form-check-label" for="{{ form.show_brand_name.id_for_label }}">
+                    {{ form.show_brand_name.label }}
+                  </label>
+                  <div class="form-text">{{ form.show_brand_name.help_text }}</div>
+                </div>
+                
+                <div class="mb-3 form-check">
+                  {{ form.show_logo }}
+                  <label class="form-check-label" for="{{ form.show_logo.id_for_label }}">
+                    {{ form.show_logo.label }}
+                  </label>
+                  <div class="form-text">{{ form.show_logo.help_text }}</div>
+                </div>
+                
+                <div class="mb-3 form-check">
+                  {{ form.show_tagline }}
+                  <label class="form-check-label" for="{{ form.show_tagline.id_for_label }}">
+                    {{ form.show_tagline.label }}
+                  </label>
+                  <div class="form-text">{{ form.show_tagline.help_text }}</div>
+                </div>
+                
+                <div class="mb-3 form-check">
+                  {{ form.is_active }}
+                  <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                    {{ form.is_active.label }}
+                  </label>
+                  <div class="form-text">{{ form.is_active.help_text }}</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-12">
+                <h6>Legal & Support Links</h6>
+                
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="mb-3">
+                      <label for="{{ form.privacy_policy_url.id_for_label }}" class="form-label">Privacy Policy URL</label>
+                      {{ form.privacy_policy_url }}
+                      <div class="form-text">{{ form.privacy_policy_url.help_text }}</div>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-4">
+                    <div class="mb-3">
+                      <label for="{{ form.terms_of_service_url.id_for_label }}" class="form-label">Terms of Service URL</label>
+                      {{ form.terms_of_service_url }}
+                      <div class="form-text">{{ form.terms_of_service_url.help_text }}</div>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-4">
+                    <div class="mb-3">
+                      <label for="{{ form.support_url.id_for_label }}" class="form-label">Support URL</label>
+                      {{ form.support_url }}
+                      <div class="form-text">{{ form.support_url.help_text }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save me-1"></i>Save Branding Settings
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Preview</h5>
+        </div>
+        <div class="card-body">
+          <div class="text-center mb-3">
+            {% if object.logo %}
+              <img src="{{ object.logo.url }}" alt="Logo" class="img-fluid mb-2" style="max-height: 100px;">
+            {% else %}
+              <div class="bg-light border rounded p-3 mb-2">
+                <i class="bi bi-image" style="font-size: 3rem;"></i>
+                <p class="text-muted">No logo uploaded</p>
+              </div>
+            {% endif %}
+            
+            <h5>{{ object.brand_name|default:"Your Brand Name" }}</h5>
+            <p class="text-muted">{{ object.tagline|default:"Your tagline here" }}</p>
+          </div>
+          
+          <div class="mb-3">
+            <h6>Color Scheme</h6>
+            <div class="d-flex flex-wrap">
+              <div class="color-box me-2 mb-2" style="background-color: {{ object.primary_color }}; width: 30px; height: 30px; border-radius: 4px;"></div>
+              <div class="color-box me-2 mb-2" style="background-color: {{ object.secondary_color }}; width: 30px; height: 30px; border-radius: 4px;"></div>
+              <div class="color-box me-2 mb-2" style="background-color: {{ object.accent_color }}; width: 30px; height: 30px; border-radius: 4px;"></div>
+              <div class="color-box me-2 mb-2" style="background-color: {{ object.background_color }}; width: 30px; height: 30px; border-radius: 4px; border: 1px solid #ccc;"></div>
+            </div>
+          </div>
+          
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle me-1"></i>
+            Changes to branding will be applied immediately across your tenant.
+          </div>
+        </div>
+      </div>
+      
+      <div class="card mt-4">
+        <div class="card-header">
+          <h5 class="mb-0">Branding Guidelines</h5>
+        </div>
+        <div class="card-body">
+          <ul>
+            <li>Upload logos in PNG, JPG, or SVG format</li>
+            <li>Recommended logo size: 200x80px for main logo</li>
+            <li>Use high-contrast colors for better visibility</li>
+            <li>Test your branding on different devices</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.color-box {
+  display: inline-block;
+}
+</style>
+{% endblock %}

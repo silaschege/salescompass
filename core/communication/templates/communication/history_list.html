@@ -1,0 +1,144 @@
+{% extends "communication/base.html" %}
+
+{% block title %}Communication History - Communication{% endblock %}
+
+{% block comm_title %}📜 Interaction History{% endblock %}
+{% block comm_subtitle %}Detailed log of all emails, SMS, and calls{% endblock %}
+
+{% block comm_actions %}
+<div class="dropdown">
+    <button class="btn btn-gold fw-bold px-4 shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+        Launch New...
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+        <li><a class="dropdown-item" href="{% url 'communication:email_compose' %}"><i class="bi bi-envelope me-2"></i>
+                Compose Email</a></li>
+        <li><a class="dropdown-item" href="{% url 'communication:sms_send' %}"><i class="bi bi-chat-dots me-2"></i> Send
+                SMS</a></li>
+        <li>
+            <hr class="dropdown-divider">
+        </li>
+        <li><a class="dropdown-item" href="{% url 'communication:call_log_create' %}"><i
+                    class="bi bi-telephone-plus me-2"></i> Log Phone Call</a></li>
+    </ul>
+</div>
+<a href="{% url 'communication:dashboard' %}" class="btn btn-light fw-bold px-4 shadow-sm">
+    <i class="bi bi-arrow-left me-1"></i> Dashboard
+</a>
+{% endblock %}
+
+{% block comm_content %}
+<div class="comm-card">
+    <div class="card-header bg-transparent border-bottom p-4">
+        <form class="row g-3" method="GET">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control border-start-0 bg-light" name="search"
+                        placeholder="Search recipient or subject..." value="{{ request.GET.search }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="type" class="form-select bg-light">
+                    <option value="">All Channel Types</option>
+                    <option value="email" {% if request.GET.type=='email' %}selected{% endif %}>Email</option>
+                    <option value="sms" {% if request.GET.type=='sms' %}selected{% endif %}>SMS</option>
+                    <option value="call" {% if request.GET.type=='call' %}selected{% endif %}>Call</option>
+                    <option value="meeting" {% if request.GET.type=='meeting' %}selected{% endif %}>Meeting</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select bg-light">
+                    <option value="">All Statuses</option>
+                    <option value="sent" {% if request.GET.status=='sent' %}selected{% endif %}>Sent / Completed
+                    </option>
+                    <option value="failed" {% if request.GET.status=='failed' %}selected{% endif %}>Failed</option>
+                    <option value="pending" {% if request.GET.status=='pending' %}selected{% endif %}>Pending</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-comm w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 table-comm">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Channel</th>
+                        <th>Recipient</th>
+                        <th>Subject / Summary</th>
+                        <th>Status</th>
+                        <th>Sent Date</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in history %}
+                    <tr>
+                        <td class="ps-4">
+                            <span class="badge bg-light text-dark border">
+                                {% if h.communication_type == 'email' %}
+                                <i class="bi bi-envelope text-primary me-1"></i> EMAIL
+                                {% elif h.communication_type == 'sms' %}
+                                <i class="bi bi-chat-dots text-info me-1"></i> SMS
+                                {% elif h.communication_type == 'call' %}
+                                <i class="bi bi-telephone text-success me-1"></i> CALL
+                                {% else %}
+                                <i class="bi bi-chat-left-text text-secondary me-1"></i> {{ h.communication_type|upper
+                                }}
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="fw-bold">{{ h.recipient }}</div>
+                            <div class="text-muted small">{{ h.direction|title }}</div>
+                        </td>
+                        <td>
+                            <div class="text-truncate" style="max-width: 300px;">
+                                {{ h.subject|default:"(No Subject)"|truncatechars:100 }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if h.status == 'sent' or h.status == 'completed' or h.status == 'delivered' %}
+                            <span
+                                class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">Success</span>
+                            {% elif h.status == 'failed' or h.status == 'bounced' %}
+                            <span
+                                class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">Failed</span>
+                            {% else %}
+                            <span
+                                class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill">{{
+                                h.status|title }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div>{{ h.created_at|date:"M d, Y" }}</div>
+                            <div class="text-muted small">{{ h.created_at|date:"H:i" }}</div>
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="{% url 'communication:history_detail' h.id %}" class="btn btn-sm btn-outline-comm">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-journal-text display-4 d-block mb-3"></i>
+                            No interaction history found for the selected filters.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% if is_paginated %}
+    <div class="card-footer bg-transparent border-top p-4">
+        {% include "communication/includes/pagination.html" %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

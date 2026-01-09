@@ -1,24 +1,28 @@
-import json
+
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView,FormView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView, FormView
 from django.http import JsonResponse
-# Make sure this import is at the top
 from core.object_permissions import AccountObjectPolicy, OBJECT_POLICIES
 from core.permissions import ObjectPermissionRequiredMixin
-from .models import Contact, OrganizationMember, TeamRole, Territory,RoleAppPermission
-from .forms import AccountForm, ContactForm, BulkImportUploadForm, OrganizationMemberForm, TeamRoleForm, TerritoryForm
+from .models import Contact, RoleAppPermission
+from .forms import AccountForm, ContactForm, BulkImportUploadForm
 from django.contrib.auth.views import LoginView
 from django.shortcuts import get_object_or_404, redirect, render
 from django.db import transaction, models
-from .utils import parse_accounts_csv
+
+from .utils import parse_accounts_csv, get_account_kpi_data, get_accounts_summary, get_top_performing_accounts, calculate_account_health, calculate_account_engagement_score, analyze_account_revenue, get_account_health_history, get_quarter_date_range, calculate_revenue_trend, calculate_win_rate, get_account_analytics_data
+
 from leads.models import Lead
 from opportunities.models import Opportunity
-from django.db.models import Q
+from cases.models import Case
+from engagement.models import EngagementEvent
+from django.db.models import Count, Q, Sum
+from django.utils import timezone
+from datetime import timedelta
+import json
 from core.models import User
-
-
-
+from .models import *
 class CustomLoginView(LoginView):
     template_name = 'public/login.html'
     redirect_authenticated_user = True
@@ -28,36 +32,42 @@ class CustomLoginView(LoginView):
         
         # Superuser -> Admin Dashboard
         if user.is_superuser:
-            return reverse_lazy('dashboard:admin_dashboard')
+            return reverse_lazy('core:app_selection')
             
         # Role-based redirection
         if user.role:
             role_name = user.role.name.lower()
             if role_name in ['manager', 'tenant admin', 'admin']:
-                return reverse_lazy('dashboard:manager_dashboard')
+                return reverse_lazy('core:app_selection')
             elif role_name == 'support':
-                return reverse_lazy('dashboard:support_dashboard')
+                return reverse_lazy('core:app_selection')
         
         # Default -> Cockpit
-        return reverse_lazy('dashboard:cockpit')
-
+        return reverse_lazy('core:app_selection')
 
 
 
 class AccountListView(ObjectPermissionRequiredMixin, ListView):
-    model = User
+    model = Account
     template_name = 'accounts/account_list.html'
     context_object_name = 'accounts'
     paginate_by = 20
 
     def get_queryset(self):
-        return super().get_queryset().select_related('team_member')
+        return super().get_queryset().select_related('owner', 'tenant').order_by('-created_at')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['industry_choices'] = Account.INDUSTRY_CHOICES
+        context['status_choices'] = Account.STATUS_CHOICES
+        context['tier_choices'] = Account.TIER_CHOICES
+        context['esg_choices'] = Account.ESG_CHOICES
+        return context
 
 
 
 class AccountDetailView(ObjectPermissionRequiredMixin, DetailView):
-    model = User
+    model = Account
     template_name = 'accounts/account_detail.html'
     context_object_name = 'account'
     permission_action = 'view'
@@ -79,70 +89,49 @@ class AccountDetailView(ObjectPermissionRequiredMixin, DetailView):
         # Get related opportunities  
         context['account_opportunities'] = Opportunity.objects.filter(account=account)
         
+        # Add account statistics
+        context['total_contacts'] = account.contacts.count()
+        context['total_leads'] = Lead.objects.filter(account=account).count()
+        context['total_opportunities'] = Opportunity.objects.filter(account=account).count()
+        context['total_cases'] = Case.objects.filter(account=account).count()
+        
         return context
 
     def get_timeline_events(self, account):
-        """Get all timeline events for an account."""
+        """Get timeline events for the account"""
         events = []
         
-        # Account creation event
-        events.append({
-            'event_type': 'account_created',
-            'title': f'Account Created: {account.name}',
-            'description': f'Account created by {account.owner.email if account.owner else "System"}',
-            'created_at': account.created_at,
-            'account_id': account.id
-        })
+        # Get recent events from various models
+        events.extend(self._get_model_events(Lead, account, 'created_at', 'Lead Created'))
+        events.extend(self._get_model_events(Opportunity, account, 'created_at', 'Opportunity Created'))
+        events.extend(self._get_model_events(Case, account, 'created_at', 'Case Created'))
+        events.extend(self._get_model_events(EngagementEvent, account, 'created_at', 'Engagement'))
         
-        # Lead events (both pre-conversion and post-account leads)
-        leads = Lead.objects.filter(
-            Q(converted_to_account=account) | Q(account=account)
-        ).order_by('-created_at')
-        
-        for lead in leads: 
-            if lead.converted_to_account == account:
-                # This lead was converted TO this account
-                events.append({
-                    'event_type': 'lead_converted',
-                    'title': f'Lead Converted: {lead.first_name} {lead.last_name}',
-                    'description': f'New business lead converted to account with status: {lead.get_status_display()}',
-                    'created_at': lead.updated_at,
-                    'lead_id': lead.id,
-                    'lead_status': lead.status,
-                    'account_id': account.id
-                })
-            elif lead.account == account:
-            # This lead is associated WITH this account (existing customer)
-                source_display = lead.get_lead_source_display()
-                events.append({
-                    'event_type': 'lead_created',
-                    'title': f'{source_display} Lead: {lead.first_name} {lead.last_name}',
-                    'description': f'{source_display.lower()} opportunity for existing customer {lead.company}',
-                    'created_at': lead.created_at,
-                    'lead_id': lead.id,
-                    'lead_status': lead.status,
-                    'account_id': account.id
-                })
-        
-        # Opportunity events
-        opportunities = Opportunity.objects.filter(account=account).order_by('-created_at')
-        for opp in opportunities:
-            events.append({
-                'event_type': 'opportunity_created',
-                'title': f'Opportunity: {opp.name}',
-                'description': f'Opportunity worth ${opp.amount} with stage: {opp.stage.name}',
-                'created_at': opp.created_at,
-                'opportunity_id': opp.id,
-                'account_id': account.id
-            })
-        
-        # Sort all events by date (newest first)
-        events.sort(key=lambda x: x['created_at'], reverse=True)
+        # Sort by date
+        events.sort(key=lambda x: x['date'], reverse=True)
         return events
+
+    def _get_model_events(self, model, account, date_field, event_type):
+        """Helper method to get events from a model"""
+        from engagement.models import EngagementEvent
+        
+        if model == EngagementEvent:
+            items = model.objects.filter(account_company=account)
+        else:
+            items = model.objects.filter(account=account)
+            
+        return [{
+            'date': getattr(item, date_field),
+            'type': event_type,
+            'description': str(item)
+        } for item in items]
+
+
+
 
 
 class AccountCreateView(ObjectPermissionRequiredMixin, CreateView):
-    model = User
+    model = Account
     form_class = AccountForm
     template_name = 'accounts/account_form.html'
     success_url = reverse_lazy('accounts:account_list')
@@ -154,12 +143,12 @@ class AccountCreateView(ObjectPermissionRequiredMixin, CreateView):
         return kwargs
 
     def form_valid(self, form):
-        messages.success(self.request, f"Account '{form.instance.name}' created successfully!")
+        messages.success(self.request, f"Account '{form.instance.account_name}' created successfully!")
         return super().form_valid(form)
 
 
 class AccountUpdateView(ObjectPermissionRequiredMixin, UpdateView):
-    model = User
+    model = Account
     form_class = AccountForm
     template_name = 'accounts/account_form.html'
     success_url = reverse_lazy('accounts:account_list')
@@ -171,20 +160,75 @@ class AccountUpdateView(ObjectPermissionRequiredMixin, UpdateView):
         return kwargs
 
     def form_valid(self, form):
-        messages.success(self.request, f"Account '{form.instance.name}' updated successfully!")
+        messages.success(self.request, f"Account '{form.instance.account_name}' updated successfully!")
         return super().form_valid(form)
 
 
+
 class AccountDeleteView(ObjectPermissionRequiredMixin, DeleteView):
-    model = User
+    model = Account
     template_name = 'accounts/confirm_delete.html'
     success_url = reverse_lazy('accounts:account_list')
     permission_action = 'delete'
 
     def delete(self, request, *args, **kwargs):
         account = self.get_object()
-        messages.success(request, f"Account '{account.name}' deleted.")
+        messages.success(request, f"Account '{account.account_name}' deleted.")
         return super().delete(request, *args, **kwargs)
+
+
+
+class AccountAnalyticsView(ObjectPermissionRequiredMixin, TemplateView):
+    """
+    View for displaying account analytics and KPIs.
+    """
+    template_name = 'accounts/account_analytics.html'
+    permission_action = 'view'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        account = get_object_or_404(Account, pk=kwargs['account_pk'])
+        
+        # Get account analytics data
+        analytics_data = get_account_analytics_data(account)
+        
+        context['account'] = account
+        context['analytics_data'] = analytics_data
+        
+        return context
+
+
+
+
+
+class AccountsDashboardView(ObjectPermissionRequiredMixin, TemplateView):
+    """
+    View for displaying overall accounts dashboard.
+    """
+    template_name = 'accounts/accounts_dashboard.html'
+    permission_action = 'view'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get accounts summary
+        if self.request.user.tenant_id:
+            accounts_summary = get_accounts_summary(tenant_id=self.request.user.tenant_id)
+        else:
+            accounts_summary = get_accounts_summary()
+            
+        # Get top performing accounts
+        top_accounts = get_top_performing_accounts(limit=5)
+        
+        context['accounts_summary'] = accounts_summary
+        context['top_accounts'] = top_accounts
+        context['industry_choices'] = Account.INDUSTRY_CHOICES
+        context['esg_choices'] = Account.ESG_CHOICES
+        
+        return context
+
+
+
 
 
 # === Bulk Import Views ===
@@ -192,7 +236,7 @@ class BulkImportUploadView(ObjectPermissionRequiredMixin, FormView):
     template_name = 'bulk_imports/upload.html'
     form_class = BulkImportUploadForm
     permission_action = 'change'
-    success_url = reverse_lazy('accounts:bulk_import_map')  # You can also use reverse_lazy
+    success_url = reverse_lazy('accounts:bulk_import_map')
 
     def form_valid(self, form):
         csv_file = form.cleaned_data['csv_file']
@@ -209,7 +253,6 @@ class BulkImportUploadView(ObjectPermissionRequiredMixin, FormView):
 
         self.request.session['bulk_import_data'] = rows
         self.request.session['bulk_import_filename'] = csv_file.name
-        # return redirect('accounts:bulk_import_map')
         return super().form_valid(form) 
 
 
@@ -265,7 +308,7 @@ class BulkImportPreviewView(ObjectPermissionRequiredMixin, FormView):
                         row['owner_id'] = request.user.id
                         if hasattr(request.user, 'tenant_id'):
                             row['tenant_id'] = request.user.tenant_id
-                        User.objects.create(**row)
+                        Account.objects.create(**row)
                         success_count += 1
                     except Exception as e:
                         error_count += 1
@@ -286,29 +329,30 @@ class BulkImportPreviewView(ObjectPermissionRequiredMixin, FormView):
         else:
             messages.success(request, f"Successfully imported {success_count} accounts!")
 
-        # return redirect('accounts:list')
         return super().form_valid(request) 
 
 
 
 
 # === Kanban View ===
+
+
 class AccountKanbanView(ObjectPermissionRequiredMixin, TemplateView):
     template_name = 'accounts/account_kanban.html'
     permission_action = 'view'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        accounts = self.get_queryset().select_related('owner')
+        accounts = self.get_queryset()
         context['accounts'] = accounts
         return context
 
     def get_queryset(self):
         from core.object_permissions import AccountObjectPolicy
-        return AccountObjectPolicy.get_viewable_queryset(self.request.user, User.objects.all())
-
+        return AccountObjectPolicy.get_viewable_queryset(self.request.user, Account.objects.all())
 
 # === AJAX Update Status ===
+
 def update_account_status(request):
     """Update account status via drag-and-drop."""
     if request.method != 'POST' or not request.user.is_authenticated:
@@ -319,11 +363,11 @@ def update_account_status(request):
         account_id = data.get('account_id')
         new_status = data.get('status')
 
-        if new_status not in dict(User.STATUS_CHOICES):
+        if new_status not in dict(Account.STATUS_CHOICES):
             return JsonResponse({'error': 'Invalid status'}, status=400)
 
         # Enforce object-level permission
-        account = get_object_or_404(User, id=account_id)
+        account = get_object_or_404(Account, id=account_id)
         from core.object_permissions import AccountObjectPolicy
         if not AccountObjectPolicy.can_change(request.user, account):
             return JsonResponse({'error': 'Permission denied'}, status=403)
@@ -377,10 +421,11 @@ class ContactListView(ObjectPermissionRequiredMixin, ListView):
         
         return queryset.order_by('last_name', 'first_name')
 
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['esg_influence_choices'] = Contact._meta.get_field('esg_influence').choices
-        context['comm_pref_choices'] = Contact.COMM_PREF_CHOICES
+        context['comm_pref_choices'] = Contact._meta.get_field('communication_preference').choices
         context['search_term'] = self.request.GET.get('search', '')
         context['selected_account'] = self.request.GET.get('account_id', '')
         
@@ -389,12 +434,13 @@ class ContactListView(ObjectPermissionRequiredMixin, ListView):
             from core.object_permissions import AccountObjectPolicy
             context['filter_accounts'] = AccountObjectPolicy.get_viewable_queryset(
                 self.request.user, 
-                User.objects.all()
-            ).order_by('name')
+                Account.objects.all()  # Fixed: was User.objects.all()
+            ).order_by('account_name')  # Fixed: was 'name'
         else:
-            context['filter_accounts'] = User.objects.none()
+            context['filter_accounts'] = Account.objects.none()
             
         return context
+
 
 
 class ContactDetailView(ObjectPermissionRequiredMixin, DetailView):
@@ -481,6 +527,7 @@ class ContactDeleteView(ObjectPermissionRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
+
 class AccountContactListView(ContactListView):
     """
     List contacts for a specific account.
@@ -488,143 +535,138 @@ class AccountContactListView(ContactListView):
     template_name = 'contacts/account_contact_list.html'
 
     def get_queryset(self):
-        account = get_object_or_404(User, pk=self.kwargs['account_pk'])
+        account = get_object_or_404(Account, pk=self.kwargs['account_pk'])
         return Contact.objects.filter(account=account).select_related('account')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['account'] = get_object_or_404(User, pk=self.kwargs['account_pk'])
+        context['account'] = get_object_or_404(Account, pk=self.kwargs['account_pk'])
         return context
 
 
 
-# === Organization Member Views ===
-class OrganizationMemberListView(ObjectPermissionRequiredMixin, ListView):
-    model = OrganizationMember
-    template_name = 'accounts/member_list.html'
-    context_object_name = 'team_members'
-    permission_action = 'view'
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        if hasattr(self.request.user, 'tenant'):
-             return qs.filter(tenant=self.request.user.tenant)
-        return qs.none()
-
-class OrganizationMemberCreateView(ObjectPermissionRequiredMixin, CreateView):
-    model = OrganizationMember
-    form_class = OrganizationMemberForm
-    template_name = 'accounts/member_form.html'
-    success_url = reverse_lazy('accounts:member_list')
-    permission_action = 'change'
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        if hasattr(self.request.user, 'tenant'):
-            kwargs['tenant'] = self.request.user.tenant
-        return kwargs
-
-    def form_valid(self, form):
-        form.instance.tenant = self.request.user.tenant
-        return super().form_valid(form)
-
-class OrganizationMemberDetailView(ObjectPermissionRequiredMixin, DetailView):
-    model = OrganizationMember
-    template_name = 'accounts/member_detail.html'
-    context_object_name = 'member'
-    permission_action = 'view'
-
-class OrganizationMemberUpdateView(ObjectPermissionRequiredMixin, UpdateView):
-    model = OrganizationMember
-    form_class = OrganizationMemberForm
-    template_name = 'accounts/member_form.html'
-    success_url = reverse_lazy('accounts:member_list')
-    permission_action = 'change'
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        if hasattr(self.request.user, 'tenant'):
-            kwargs['tenant'] = self.request.user.tenant
-        return kwargs
-
-class OrganizationMemberDeleteView(ObjectPermissionRequiredMixin, DeleteView):
-    model = OrganizationMember
-    template_name = 'accounts/member_confirm_delete.html'
-    success_url = reverse_lazy('accounts:member_list')
-    permission_action = 'delete'
+def check_account_health(request, account_id):
+    """API endpoint to check account health score"""
+    try:
+        account = Account.objects.get(id=account_id)
+        return JsonResponse({
+            'account_id': account_id,
+            'health_score': getattr(account, 'health_score', 0),
+            'status': account.status,
+            'last_updated': getattr(account, 'updated_at', None).isoformat() if hasattr(account, 'updated_at') and account.updated_at else None,
+            'health_history': get_account_health_history(account)
+        })
+    except Account.DoesNotExist:
+        return JsonResponse({'error': 'Account not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
-# === Team Role Views ===
-class TeamRoleListView(ObjectPermissionRequiredMixin, ListView):
-    model = TeamRole
-    template_name = 'accounts/role_list.html'
-    context_object_name = 'roles'
-    permission_action = 'view'
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        if hasattr(self.request.user, 'tenant'):
-             return qs.filter(tenant=self.request.user.tenant)
-        return qs.none()
-
-class TeamRoleCreateView(ObjectPermissionRequiredMixin, CreateView):
-    model = TeamRole
-    form_class = TeamRoleForm
-    template_name = 'accounts/role_form.html'
-    success_url = reverse_lazy('accounts:role_list')
-    permission_action = 'change'
-
-    def form_valid(self, form):
-        form.instance.tenant = self.request.user.tenant
-        return super().form_valid(form)
-
-class TeamRoleUpdateView(ObjectPermissionRequiredMixin, UpdateView):
-    model = TeamRole
-    form_class = TeamRoleForm
-    template_name = 'accounts/role_form.html'
-    success_url = reverse_lazy('accounts:role_list')
-    permission_action = 'change'
-
-class TeamRoleDeleteView(ObjectPermissionRequiredMixin, DeleteView):
-    model = TeamRole
-    template_name = 'accounts/role_confirm_delete.html'
-    success_url = reverse_lazy('accounts:role_list')
-    permission_action = 'delete'
+def trigger_account_health_update(request):
+    """API endpoint to trigger account health update"""
+    try:
+        account_ids = request.POST.getlist('account_ids')
+        if not account_ids:
+            return JsonResponse({'error': 'No account IDs provided'}, status=400)
+        
+        # Use Celery task to update account health asynchronously
+        for account_id in account_ids:
+            update_account_health.delay(int(account_id))
+        
+        return JsonResponse({
+            'status': 'queued',
+            'accounts_queued': len(account_ids)
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
-# === Territory Views ===
-class TerritoryListView(ObjectPermissionRequiredMixin, ListView):
-    model = Territory
-    template_name = 'accounts/territory_list.html'
-    context_object_name = 'territories'
-    permission_action = 'view'
 
-    def get_queryset(self):
-        qs = super().get_queryset()
-        if hasattr(self.request.user, 'tenant'):
-             return qs.filter(tenant=self.request.user.tenant)
-        return qs.none()
+def get_engagement_trend(request, account_id):
+    """API endpoint to get engagement trend data"""
+    try:
+        account = Account.objects.get(id=account_id)
+        days = int(request.GET.get('days', 30))
+        
+        trend_data = []
+        for i in range(days):
+            date = timezone.now().date() - timedelta(days=i)
+            count = EngagementEvent.objects.filter(
+                account=account,
+                created_at__date=date
+            ).count()
+            
+            trend_data.append({
+                'date': date.isoformat(),
+                'engagement_count': count
+            })
+        
+        trend_data.reverse()
+        
+        return JsonResponse({
+            'account_id': account_id,
+            'engagement_trend': trend_data
+        })
+    except Account.DoesNotExist:
+        return JsonResponse({'error': 'Account not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
-class TerritoryCreateView(ObjectPermissionRequiredMixin, CreateView):
-    model = Territory
-    form_class = TerritoryForm
-    template_name = 'accounts/territory_form.html'
-    success_url = reverse_lazy('accounts:territory_list')
-    permission_action = 'change'
 
-    def form_valid(self, form):
-        form.instance.tenant = self.request.user.tenant
-        return super().form_valid(form)
 
-class TerritoryUpdateView(ObjectPermissionRequiredMixin, UpdateView):
-    model = Territory
-    form_class = TerritoryForm
-    template_name = 'accounts/territory_form.html'
-    success_url = reverse_lazy('accounts:territory_list')
-    permission_action = 'change'
+def get_revenue_analysis(request, account_id):
+    """API endpoint to get revenue analysis data"""
+    try:
+        account = Account.objects.get(id=account_id)
+        revenue_data = analyze_account_revenue(account)
+        
+        # Format dates for JSON
+        formatted_historical = []
+        for item in revenue_data['historical_revenue']:
+            formatted_historical.append({
+                'quarter': item['quarter'],
+                'start_date': item['start_date'].isoformat(),
+                'end_date': item['end_date'].isoformat(),
+                'value': float(item['value']),
+                'deal_count': item['deal_count']
+            })
+        
+        return JsonResponse({
+            'account_id': account_id,
+            'total_pipeline_value': float(revenue_data['total_pipeline_value']),
+            'total_closed_value': float(revenue_data['total_closed_value']),
+            'win_rate': revenue_data['win_rate'],
+            'historical_revenue': formatted_historical,
+            'revenue_trend': revenue_data['revenue_trend']
+        })
+    except Account.DoesNotExist:
+        return JsonResponse({'error': 'Account not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
-class TerritoryDeleteView(ObjectPermissionRequiredMixin, DeleteView):
-    model = Territory
-    template_name = 'accounts/territory_confirm_delete.html'
-    success_url = reverse_lazy('accounts:territory_list')
-    permission_action = 'delete'
+
+def get_health_history(request, account_id):
+    """API endpoint to get account health history"""
+    try:
+        account = Account.objects.get(id=account_id)
+        days = int(request.GET.get('days', 90))
+        
+        health_history = get_account_health_history(account, days=days)
+        
+        # Convert dates to ISO format
+        formatted_history = []
+        for item in health_history:
+            formatted_history.append({
+                'date': item['date'].isoformat(),
+                'score': item['score'],
+                'engagement': item['engagement']
+            })
+        
+        return JsonResponse({
+            'account_id': account_id,
+            'health_history': formatted_history
+        })
+    except Account.DoesNotExist:
+        return JsonResponse({'error': 'Account not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

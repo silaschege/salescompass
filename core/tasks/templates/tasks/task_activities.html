@@ -1,0 +1,73 @@
+{% extends "tasks/base.html" %}
+{% block title %}Task Activities - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title text-center">Task Activities</h1>
+        <p class="text-center lead">View task activity history</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <a href="{% url 'tasks:detail' task.pk %}" class="btn btn-outline-primary">← Back to Task</a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Task Activity History</h5>
+                </div>
+                <div class="card-body">
+                    {% if activities %}
+                        <div class="timeline">
+                            {% for activity in activities %}
+                            <div class="timeline-item mb-3">
+                                <div class="timeline-header d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">{{ activity.get_action_display }}</span>
+                                    <span class="text-muted">{{ activity.created_at|date:"M d, Y H:i" }}</span>
+                                </div>
+                                <div class="timeline-body mt-1">
+                                    <p class="mb-1">By: <strong>{{ activity.user.email }}</strong></p>
+                                    {% if activity.description %}
+                                        <p class="mb-1">Description: {{ activity.description }}</p>
+                                    {% endif %}
+                                    {% if activity.changes %}
+                                        <p class="mb-0">Changes:</p>
+                                        <ul>
+                                            {% for field, change in activity.changes.items %}
+                                            <li>
+                                                <strong>{{ field }}</strong>: 
+                                                {% if change.0 %}<del>{{ change.0 }}</del>{% endif %}
+                                                {% if change.1 %}→ {{ change.1 }}{% endif %}
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center">
+                            <i class="bi bi-clock-history display-1 text-muted"></i>
+                            <h4 class="text-muted mt-3">No activity recorded</h4>
+                            <p class="text-muted">This task has no activity history yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}

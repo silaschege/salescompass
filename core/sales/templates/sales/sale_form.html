@@ -15,8 +15,7 @@
                 <label class="form-label">Customer</label>
                 <select name="customer" class="form-select" required>
                     {% for customer in customers %}
-                    <option value="{{ customer.pk }}" {% if sale and sale.customer_id==customer.pk %}selected{% endif
-                        %}>
+                    <option value="{{ customer.pk }}" {% if sale and sale.customer_id == customer.pk %}selected{% endif %}>
                         {{ customer.name }} ({{ customer.location.location_name }})
                     </option>
                     {% endfor %}
@@ -26,7 +25,7 @@
                 <label class="form-label">Sale Type</label>
                 <select name="sale_type" class="form-select" required>
                     {% for key, label in sale_types %}
-                    <option value="{{ key }}" {% if sale and sale.sale_type==key %}selected{% endif %}>
+                    <option value="{{ key }}" {% if sale and sale.sale_type == key %}selected{% endif %}>
                         {{ label }}
                     </option>
                     {% endfor %}
@@ -36,7 +35,7 @@
                 <label class="form-label">Product Name</label>
                 <select name="product" class="form-select" required>
                     {% for product in products %}
-                    <option value="{{ product.pk }}" {% if sale and sale.product_id==product.pk %}selected{% endif %}>
+                    <option value="{{ product.pk }}" {% if sale and sale.product_id == product.pk %}selected{% endif %}>
                         {{ product.name }} ({{ product.price}})
                     </option>
                     {% endfor %}
@@ -52,8 +51,7 @@
                 <select name="converted_from_reachout" class="form-select">
                     <option value="">-- Select --</option>
                     {% for log in reachouts %}
-                    <option value="{{ log.pk }}" {% if sale and sale.converted_from_reachout_id==log.pk %}selected{%
-                        endif %}>
+                    <option value="{{ log.pk }}" {% if sale and sale.converted_from_reachout_id == log.pk %}selected{%endif %}>
                         {{ log.customer.name }} - {{ log.channel|title }} on {{ log.reachout_date|date:"M d" }}
                     </option>
                     {% endfor %}

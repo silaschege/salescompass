@@ -1,88 +1,377 @@
 {% extends "opportunities/base.html" %}
-{% load auth_extras  number_filters %} 
+{% load auth_extras number_filters %}
 
 {% block title %}Opportunities - SalesCompass{% endblock %}
 
-{% block content %}
-<h1 class="block-title fw-bold mb-0">Opportunities</h1>
+{% block extra_css %}
+<style>
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        --accent-color: #6366f1;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+    }
 
-<div class="d-flex justify-content-between mb-3">
-    <div class="d-flex gap-2">
-        <h2 class="block-title fw-bold mb-0">Pipeline</h2>
-        {% if request.user.is_authenticated and request.user|has_perm:"opportunities:write" %}
-            <a href="{% url 'opportunities:create' %}" class="btn btn-primary">+ New Opportunity</a>
+    body {
+        background-color: #f8fafc;
+        color: var(--text-main);
+        font-family: 'Inter', -apple-system, sans-serif;
+    }
+
+    /* Modern Header */
+    .opportunity-header {
+        background: var(--primary-gradient);
+        border-radius: 1.25rem;
+        padding: 2.5rem 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        border: none;
+    }
+
+    .opportunity-header::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    /* Stat Cards */
+    .stat-card {
+        background: white;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--card-shadow);
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        font-size: 1.25rem;
+    }
+
+    /* Action Buttons */
+    .btn-modern {
+        border-radius: 0.75rem;
+        padding: 0.6rem 1.2rem;
+        font-weight: 600;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-create {
+        background: white;
+        color: var(--accent-color);
+        border: none;
+    }
+
+    .btn-create:hover {
+        background: #f1f5f9;
+        transform: scale(1.02);
+    }
+
+    /* Table Styling */
+    .table-container {
+        background: white;
+        border-radius: 1.25rem;
+        border: 1px solid #e2e8f0;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    .table thead th {
+        background: #f8fafc;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        padding: 1rem 1.5rem;
+        border-top: none;
+    }
+
+    .table tbody tr {
+        transition: background-color 0.2s;
+    }
+
+    .table tbody td {
+        padding: 1.25rem 1.5rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8fafc;
+    }
+
+    /* Badges & Chips */
+    .badge-soft {
+        padding: 0.4em 0.8em;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    .badge-esg {
+        background: #ecfdf5;
+        color: #059669;
+        border: 1px solid #10b98133;
+    }
+
+    /* Custom Scrollbar for Table */
+    .table-responsive::-webkit-scrollbar {
+        height: 8px;
+    }
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+
+    /* Search Bar */
+    .search-wrapper {
+        position: relative;
+    }
+    .search-wrapper .form-control {
+        border-radius: 0.75rem;
+        padding-left: 2.5rem;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+    }
+    .search-wrapper i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Modern Header -->
+    <div class="opportunity-header d-md-flex align-items-center justify-content-between">
+        <div class="text-center">
+            <h1 class="display-6 fw-bold mb-1">Pipeline</h1>
+            <p class="mb-0 opacity-75">Tracking {{ opportunities|length }} active deals in your sales cycle</p>
+        </div>
+        <div class="mt-4 mt-md-0">
+            {% if request.user.is_authenticated and request.user|has_perm:"opportunities:write" %}
+                <a href="{% url 'opportunities:opportunity_create' %}" class="btn btn-modern btn-create shadow-sm">
+                    <i class="bi bi-plus-lg"></i> New Opportunity
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Toolset -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 d-flex flex-wrap gap-2">
+            <a href="{% url 'opportunities:pipeline_kanban' %}" class="btn btn-modern btn-white border shadow-sm bg-white">
+                <i class="bi bi-kanban text-primary"></i> Kanban
+            </a>
+            <a href="{% url 'opportunities:forecast_dashboard' %}" class="btn btn-modern btn-white border shadow-sm bg-white">
+                <i class="bi bi-graph-up-arrow text-success"></i> Forecast
+            </a>
+            <a href="{% url 'opportunities:win_loss_analysis' %}" class="btn btn-modern btn-white border shadow-sm bg-white">
+                <i class="bi bi-pie-chart text-warning"></i> Win/Loss
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary-subtle text-primary">
+                    <i class="bi bi-briefcase"></i>
+                </div>
+                <div>
+                    <div class="stat-label text-muted small fw-bold text-uppercase">Total Deals</div>
+                    <div class="h4 mb-0 fw-bold">{{ opportunities|length }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-success-subtle text-success">
+                    <i class="bi bi-currency-dollar"></i>
+                </div>
+                <div>
+                    <div class="stat-label text-muted small fw-bold text-uppercase">Total Value</div>
+                    <div class="h4 mb-0 fw-bold text-success">$0</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-info-subtle text-info">
+                    <i class="bi bi-bullseye"></i>
+                </div>
+                <div>
+                    <div class="stat-label text-muted small fw-bold text-uppercase">Weighted</div>
+                    <div class="h4 mb-0 fw-bold text-info">$0</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-warning-subtle text-warning">
+                    <i class="bi bi-lightning-charge"></i>
+                </div>
+                <div>
+                    <div class="stat-label text-muted small fw-bold text-uppercase">Win Rate</div>
+                    <div class="h4 mb-0 fw-bold text-warning">0%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Section -->
+    <div class="table-container">
+        <div class="p-4 d-md-flex justify-content-between align-items-center bg-white border-bottom">
+            <h5 class="fw-bold mb-0">Active Opportunities</h5>
+            <div class="search-wrapper mt-3 mt-md-0" style="min-width: 300px;">
+                <i class="bi bi-search"></i>
+                <input type="text" class="form-control" placeholder="Search by name or account...">
+            </div>
+        </div>
+
+        {% if opportunities %}
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Deal Name</th>
+                        <th>Account</th>
+                        <th>Stage</th>
+                        <th class="text-end">Value</th>
+                        <th class="text-end">Weighted</th>
+                        <th>Expected Close</th>
+                        <th>Tags</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for opp in opportunities %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'opportunities:opportunity_detail' opp.pk %}" class="text-decoration-none fw-bold text-dark">
+                                {{ opp.name }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="text-muted"><i class="bi bi-building me-1"></i> {{ opp.account.name|default:"—" }}</span>
+                        </td>
+                        <td>
+                            {% if opp.stage %}
+                                <span class="badge-soft" style="background-color: {{ opp.stage.color }}22; color: {{ opp.stage.color }}">
+                                    ● {{ opp.stage.name }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end fw-bold">${{ opp.amount|intcomma }}</td>
+                        <td class="text-end text-muted">${{ opp.weighted_value|intcomma }}</td>
+                        <td>
+                            {% if opp.close_date %}
+                                <span class="{% if opp.close_date < today %}text-danger fw-bold{% endif %}">
+                                    {{ opp.close_date|date:"M d, Y" }}
+                                    {% if opp.close_date < today %}<i class="bi bi-exclamation-circle ms-1"></i>{% endif %}
+                                </span>
+                            {% else %}
+                                <span class="text-muted small">Not set</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if opp.esg_tagged %}
+                                <span class="badge badge-soft badge-esg">
+                                    <i class="bi bi-leaf-fill me-1"></i> ESG
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <div class="dropdown">
+                                <button class="btn btn-link text-muted p-0" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical fs-5"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0">
+                                    <li><a class="dropdown-item" href="{% url 'opportunities:opportunity_detail' opp.pk %}"><i class="bi bi-eye me-2"></i> View Detail</a></li>
+                                    {% if request.user.is_authenticated and request.user|has_perm:"opportunities:write" %}
+                                    <li><a class="dropdown-item" href="{% url 'opportunities:opportunity_update' opp.pk %}"><i class="bi bi-pencil me-2"></i> Edit Deal</a></li>
+                                    {% endif %}
+                                    {% if request.user.is_authenticated and request.user|has_perm:"opportunities:delete" %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="{% url 'opportunities:opportunity_delete' opp.pk %}"><i class="bi bi-trash me-2"></i> Archive</a></li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Modern Pagination -->
+        {% if is_paginated %}
+        <div class="p-4 border-top bg-light-subtle">
+            <nav class="d-flex justify-content-center">
+                <ul class="pagination pagination-sm mb-0">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link border-0 shadow-sm mx-1 rounded-3" href="?page={{ page_obj.previous_page_number }}"><i class="bi bi-chevron-left"></i></a></li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link border-0 shadow-sm mx-1 rounded-3 bg-primary">{{ num }}</span></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item"><a class="page-link border-0 shadow-sm mx-1 rounded-3" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link border-0 shadow-sm mx-1 rounded-3" href="?page={{ page_obj.next_page_number }}"><i class="bi bi-chevron-right"></i></a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-5">
+            <div class="mb-3">
+                <i class="bi bi-search-heart display-1 text-muted opacity-25"></i>
+            </div>
+            <h4 class="fw-bold">No deals found</h4>
+            <p class="text-muted">Adjust your filters or start a new pipeline track.</p>
+            {% if request.user.is_authenticated and request.user|has_perm:"opportunities:write" %}
+                <a href="{% url 'opportunities:opportunity_create' %}" class="btn btn-primary btn-modern shadow-sm mt-2">
+                    Create your first Deal
+                </a>
+            {% endif %}
+        </div>
         {% endif %}
     </div>
-    <div class="d-flex gap-2">
-        <a href="{% url 'opportunities:kanban' %}" class="btn btn-outline-secondary">Kanban</a>
-        <a href="{% url 'opportunities:forecast_dashboard' %}" class="btn btn-outline-secondary">Forecast</a>
-        <a href="{% url 'opportunities:win_loss_analysis' %}" class="btn btn-outline-secondary">Win/Loss</a>
-    </div>
 </div>
-
-{% if opportunities %}
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Account</th>
-                    <th>Stage</th>
-                    <th>Amount</th>
-                    <th>Weighted</th>
-                    <th>Close Date</th>
-                    <th>ESG</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for opp in opportunities %}
-                <tr>
-                    <td>
-                        <a href="{% url 'opportunities:detail' opp.pk %}">{{ opp.name }}</a>
-                    </td>
-                    <td>{{ opp.account.name }}</td>
-                    <td>{{ opp.get_stage_display }}</td>
-                    <td>${{ opp.amount|intcomma }}</td>
-                    <td>${{ opp.weighted_value|intcomma }}</td>
-                    <td>{{ opp.close_date }}</td>
-                    <td>
-                        {% if opp.esg_tagged %}
-                            <span class="badge bg-success">🌱 ESG</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a href="{% url 'opportunities:detail' opp.pk %}" class="btn btn-sm btn-outline-primary">View</a>
-                        {% if request.user.is_authenticated and request.user|has_perm:"opportunities:write" %}
-                            <a href="{% url 'opportunities:update' opp.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Pagination -->
-    {% if is_paginated %}
-        <nav aria-label="Page navigation">
-            <ul class="pagination">
-                {% if page_obj.has_previous %}
-                    <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
-                {% endif %}
-                <li class="page-item active"><span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
-                {% if page_obj.has_next %}
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a></li>
-                {% endif %}
-            </ul>
-        </nav>
-    {% endif %}
-{% else %}
-    <p>No opportunities found.</p>
-    {% if request.user.is_authenticated and request.user|has_perm:"opportunities:write" %}
-        <a href="{% url 'opportunities:create' %}" class="btn btn-primary">Create your first opportunity</a>
-    {% endif %}
-{% endif %}
 {% endblock %}

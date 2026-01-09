@@ -2,7 +2,7 @@ from django.test import TestCase, override_settings
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from unittest.mock import patch, MagicMock
-from .models import Webhook
+from developer.models import Webhook
 from leads.models import Lead, LeadSource
 from opportunities.models import Opportunity, OpportunityStage
 from accounts.models import Account

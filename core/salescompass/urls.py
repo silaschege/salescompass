@@ -42,13 +42,18 @@ urlpatterns = [
     path('billing/', include('billing.urls')),
     path('tasks/', include('tasks.urls')),
     path('commissions/', include('commissions.urls')),
+    path('communication/', include('communication.urls')),
     path('developer/', include('developer.urls')),
+    # path('api/v1/ml/', include('ml_models.infrastructure.api.urls')), # Decoupled to standalone service
     
     # Control Plane Apps
     path('infrastructure/', include('infrastructure.urls')),
     path('audit-logs/', include('audit_logs.urls')),
     path('feature-flags/', include('feature_flags.urls')),
     path('global-alerts/', include('global_alerts.urls')),
+    
+    # Telephony Integration
+    path('wazo/', include('wazo.urls')),
     
     # API Documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

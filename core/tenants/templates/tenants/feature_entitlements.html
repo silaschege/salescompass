@@ -1,0 +1,119 @@
+{% extends 'tenants/base.html' %}
+
+{% block title %}{{ title }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col">
+      <h2><i class="bi bi-key me-2"></i>{{ title }}</h2>
+      <p class="text-muted">{{ subtitle }}</p>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="d-flex justify-content-between">
+        <a href="{% url 'tenants:feature_entitlement_create' %}" class="btn btn-primary">
+          <i class="bi bi-plus-circle me-1"></i>New Feature Entitlement
+        </a>
+        <a href="{% url 'tenants:bulk_feature_entitlement' %}" class="btn btn-outline-secondary">
+          <i class="bi bi-collection me-1"></i>Bulk Management
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Feature Entitlements</h5>
+        </div>
+        <div class="card-body">
+          {% if feature_entitlements %}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Feature Name</th>
+                  <th>Feature Key</th>
+                  <th>Status</th>
+                  <th>Entitlement Type</th>
+                  <th>Trial Period</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for entitlement in feature_entitlements %}
+                <tr>
+                  <td>{{ entitlement.feature_name }}</td>
+                  <td><code>{{ entitlement.feature_key }}</code></td>
+                  <td>
+                    {% if entitlement.is_enabled %}
+                    <span class="badge bg-success">Enabled</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Disabled</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge bg-{{ entitlement.get_entitlement_type_display|lower|truncatechars:10|slice:":-1" }}">{{ entitlement.get_entitlement_type_display }}</span>
+                  </td>
+                  <td>
+                    {% if entitlement.entitlement_type == 'trial' %}
+                      {% if entitlement.trial_start_date and entitlement.trial_end_date %}
+                        {{ entitlement.trial_start_date|date:"M d, Y" }} - {{ entitlement.trial_end_date|date:"M d, Y" }}
+                      {% else %}
+                        <span class="text-muted">Not set</span>
+                      {% endif %}
+                    {% else %}
+                      <span class="text-muted">N/A</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ entitlement.created_at|date:"M d, Y" }}</td>
+                  <td>
+                    <a href="{% url 'tenants:feature_entitlement_update' entitlement.pk %}" class="btn btn-sm btn-outline-primary">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="{% url 'tenants:feature_entitlement_delete' entitlement.pk %}" class="btn btn-sm btn-outline-danger">
+                      <i class="bi bi-trash"></i>
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          
+          {% if is_paginated %}
+          <nav aria-label="Feature entitlements pagination">
+            <ul class="pagination justify-content-center">
+              {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+              </li>
+              {% endif %}
+
+              <li class="page-item disabled">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+              </li>
+
+              {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+              </li>
+              {% endif %}
+            </ul>
+          </nav>
+          {% endif %}
+          
+          {% else %}
+          <p class="text-muted">No feature entitlements found. <a href="{% url 'tenants:feature_entitlement_create' %}">Create your first feature entitlement</a>.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

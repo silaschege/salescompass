@@ -1,5 +1,5 @@
 {% extends "cases/base.html" %}
-{% load core_extras %}
+{% load core_extras task_tags %}
 
 {% block title %}{{ case.subject }} - SalesCompass{% endblock %}
 
@@ -75,6 +75,15 @@
         </div>
 
         <div class="col-md-4">
+            <!-- Tasks Widget -->
+            <div class="mb-4">
+                {% render_object_tasks case %}
+            </div>
+            <!-- Tasks Widget -->
+            <div class="mb-4">
+                {% render_object_tasks case %}
+            </div>
+
             <div class="card mb-3">
                 <div class="card-header">
                     <h5>Case Information</h5>

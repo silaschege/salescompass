@@ -1,4 +1,5 @@
 {% extends "opportunities/base.html" %}
+{% load task_tags %}
 {% load auth_extras %}
 
 {% block title %}{{ opportunity.name }} - SalesCompass{% endblock %}
@@ -90,6 +91,11 @@ is_won=opportunity.stage.is_won is_lost=opportunity.stage.is_lost %}
     </div>
 
     <div class="col-md-4">
+        <!-- Tasks Widget -->
+        <div class="mb-4">
+            {% render_object_tasks opportunity %}
+        </div>
+
         <div class="card mb-3">
             <div class="card-header">Forecast Impact</div>
             <div class="card-body">

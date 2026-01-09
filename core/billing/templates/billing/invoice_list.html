@@ -20,20 +20,28 @@
     <div class="card mb-3">
         <div class="card-body">
             <form method="get" class="row g-3">
-                {{ search_form.tenant_id.label_tag }}
-                {{ search_form.tenant_id }}
-
-                {{ search_form.status.label_tag }}
-                {{ search_form.status }}
-
-                {{ search_form.date_from.label_tag }}
-                {{ search_form.date_from }}
-
-                {{ search_form.date_to.label_tag }}
-                {{ search_form.date_to }}
-
-                <div class="col-auto">
-                    <button type="submit" class="btn btn-primary">Search</button>
+                <div class="col-md-3">
+                    <label for="{{ search_form.tenant_id.id_for_label }}" class="form-label">Tenant</label>
+                    {{ search_form.tenant_id }}
+                </div>
+                <div class="col-md-2">
+                    <label for="{{ search_form.status.id_for_label }}" class="form-label">Status</label>
+                    {{ search_form.status }}
+                </div>
+                <div class="col-md-2">
+                    <label for="{{ search_form.date_from.id_for_label }}" class="form-label">From Date</label>
+                    {{ search_form.date_from }}
+                </div>
+                <div class="col-md-2">
+                    <label for="{{ search_form.date_to.id_for_label }}" class="form-label">To Date</label>
+                    {{ search_form.date_to }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div>
+                        <button type="submit" class="btn btn-primary">Search</button>
+                        <a href="{% url 'billing:invoice_list' %}" class="btn btn-outline-secondary">Clear</a>
+                    </div>
                 </div>
             </form>
         </div>
@@ -50,9 +58,9 @@
                     <thead>
                         <tr>
                             <th>Invoice #</th>
-                            <th>Tenant</th>
+                            <th>Subscription</th>
                             <th>Due Date</th>
-                            <th>Total</th>
+                            <th>Amount</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -61,14 +69,20 @@
                         {% for invoice in invoices %}
                         <tr>
                             <td><code>{{ invoice.invoice_number }}</code></td>
-                            <td>{{ invoice.tenant_id }}</td>
+                            <td>{{ invoice.subscription.user.email }}</td>
                             <td>{{ invoice.due_date }}</td>
-                            <td>${{ invoice.total }}</td>
+                            <td>${{ invoice.amount }}</td>
                             <td>
                                 {% if invoice.status == 'paid' %}
                                 <span class="badge bg-success">Paid</span>
                                 {% elif invoice.status == 'overdue' %}
                                 <span class="badge bg-danger">Overdue</span>
+                                {% elif invoice.status == 'open' %}
+                                <span class="badge bg-warning">Open</span>
+                                {% elif invoice.status == 'draft' %}
+                                <span class="badge bg-info">Draft</span>
+                                {% elif invoice.status == 'void' %}
+                                <span class="badge bg-dark">Void</span>
                                 {% else %}
                                 <span class="badge bg-secondary">{{ invoice.status|title }}</span>
                                 {% endif %}

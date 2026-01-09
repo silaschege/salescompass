@@ -1,93 +1,47 @@
 from celery import shared_task
 from django.utils import timezone
-from .utils import apply_decay_to_all_accounts
-from .automation_rules import run_auto_nba_check
+from datetime import timedelta
+from .models import EngagementEvent
+from .services import DuplicateDetectionService, EventMergingService
 
 @shared_task
-def update_engagement_scores():
+def cleanup_old_engagement_events(days_older_than=365):
     """
-    Nightly task to update engagement scores, apply decay, and generate auto-NBAs.
+    Deletes engagement events older than a certain number of days,
+    unless they are marked as important.
     """
-    print(f"[{timezone.now()}] Starting daily engagement score update...")
-    apply_decay_to_all_accounts()
-    
-    print(f"[{timezone.now()}] Running Auto-NBA rules...")
-    run_auto_nba_check()
-    
-    print(f"[{timezone.now()}] Running Churn Risk Detection...")
-    from .models import EngagementStatus
-    from .automation_rules import check_churn_risk
-    
-    # Iterate over all accounts with engagement status
-    for status in EngagementStatus.objects.all():
-        if status.account:
-            check_churn_risk(status.account)
-    
-    print(f"[{timezone.now()}] Engagement update complete.")
+    cutoff_date = timezone.now() - timedelta(days=days_older_than)
+    deleted_count, _ = EngagementEvent.objects.filter(
+        created_at__lt=cutoff_date,
+        is_important=False
+    ).delete()
+    return f"Deleted {deleted_count} old engagement events."
 
-
-@shared_task(bind=True, max_retries=5, default_retry_delay=60)
-def send_engagement_webhook(self, webhook_id, event_id):
+@shared_task
+def auto_deduplicate_events():
     """
-    Send webhook with retry logic and detailed delivery logging.
+    Identifies and merges duplicate events across the entire system.
+    This is intended to be run as a periodic background job.
     """
-    import requests
-    from .models import EngagementWebhook, EngagementEvent, WebhookDeliveryLog
-    
-    try:
-        webhook = EngagementWebhook.objects.get(id=webhook_id)
-        event = EngagementEvent.objects.get(id=event_id)
-    except (EngagementWebhook.DoesNotExist, EngagementEvent.DoesNotExist):
-        return "Webhook or Event not found"
-
-    # Prepare payload based on event data
-    payload = {
-        'event_id': event.id,
-        'event_type': event.event_type,
-        'title': event.title,
-        'description': event.description,
-        'score': float(event.engagement_score),
-        'account_id': event.account_id,
-        'timestamp': event.created_at.isoformat(),
-        'priority': event.priority,
-    }
-
-    # Create Delivery Log (Initial)
-    log = WebhookDeliveryLog.objects.create(
-        webhook=webhook,
-        event=event,
-        payload=payload,
-        attempt_number=self.request.retries + 1,
-        tenant_id=webhook.tenant_id
+    # Simply find events from the last 24 hours and check for duplicates
+    recent_events = EngagementEvent.objects.filter(
+        created_at__gte=timezone.now() - timedelta(days=1)
     )
-
-    try:
-        response = requests.post(
-            webhook.url, 
-            json=payload, 
-            headers={'Content-Type': 'application/json', 'X-SalesCompass-Event': event.event_type},
-            timeout=10
-        )
+    
+    merged_total = 0
+    processed_ids = set()
+    
+    for event in recent_events:
+        if event.pk in processed_ids:
+            continue
+            
+        duplicates = DuplicateDetectionService.find_duplicates(event)
+        if duplicates.exists():
+            EventMergingService.merge_events(event, duplicates)
+            merged_total += duplicates.count()
+            for d in duplicates:
+                processed_ids.add(d.pk)
         
-        # Update Log with Response
-        log.status_code = response.status_code
-        log.response_body = response.text[:1000]  # Truncate if too long
-        log.success = 200 <= response.status_code < 300
-        log.save()
-
-        # Raise for retry if failed
-        if not log.success:
-            log.error_message = f"HTTP {response.status_code}"
-            log.save()
-            raise Exception(f"Webhook failed with status {response.status_code}")
-
-        return f"Webhook sent successfully: HTTP {response.status_code}"
-
-    except Exception as exc:
-        # Update Log with Error
-        log.success = False
-        log.error_message = str(exc)
-        log.save()
+        processed_ids.add(event.pk)
         
-        # Retry
-        raise self.retry(exc=exc)
+    return f"Auto-deduplication complete. Merged {merged_total} events."

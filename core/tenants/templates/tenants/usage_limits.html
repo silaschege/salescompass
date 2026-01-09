@@ -9,6 +9,93 @@
         </div>
     </div>
 
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <a href="{% url 'tenants:data_export' %}" class="btn btn-outline-primary w-100">
+                <i class="bi bi-download me-1"></i>Export Data
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{% url 'tenants:data_import' %}" class="btn btn-outline-primary w-100">
+                <i class="bi bi-upload me-1"></i>Import Data
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{% url 'tenants:clone_tenant' %}" class="btn btn-outline-primary w-100">
+                <i class="bi bi-people me-1"></i>Clone Tenant
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{% url 'tenants:white_label_settings' %}" class="btn btn-outline-primary w-100">
+                <i class="bi bi-palette me-1"></i>White-Label Branding
+            </a>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <a href="{% url 'tenants:usage_metrics' %}" class="btn btn-outline-success w-100">
+                <i class="bi bi-graph-up me-1"></i>Usage Metrics
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{% url 'tenants:usage_report' %}" class="btn btn-outline-success w-100">
+                <i class="bi bi-file-earmark-bar-graph me-1"></i>Usage Report
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{% url 'tenants:usage_alerts' %}" class="btn btn-outline-warning w-100">
+                <i class="bi bi-bell me-1"></i>Usage Alerts
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{% url 'tenants:feature_entitlements' %}" class="btn btn-outline-info w-100">
+                <i class="bi bi-key me-1"></i>Feature Entitlements
+            </a>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <a href="{% url 'tenants:feature_access_check' %}" class="btn btn-outline-info w-100">
+                <i class="bi bi-shield-check me-1"></i>Check Feature Access
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{% url 'tenants:bulk_feature_entitlement' %}" class="btn btn-outline-info w-100">
+                <i class="bi bi-collection me-1"></i>Bulk Feature Management
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{% url 'tenants:overage_alerts' %}" class="btn btn-outline-danger w-100">
+                <i class="bi bi-exclamation-triangle me-1"></i>Overage Alerts
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{% url 'tenants:alert_thresholds' %}" class="btn btn-outline-warning w-100">
+                <i class="bi bi-bar-chart me-1"></i>Alert Thresholds
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <a href="{% url 'tenants:notifications' %}" class="btn btn-outline-secondary w-100">
+                <i class="bi bi-bell me-1"></i>Notifications
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{% url 'tenants:data_isolation_audits' %}" class="btn btn-outline-primary w-100">
+                <i class="bi bi-shield-lock me-1"></i>Data Isolation Audits
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{% url 'tenants:data_isolation_violations' %}" class="btn btn-outline-danger w-100">
+                <i class="bi bi-exclamation-triangle me-1"></i>Violations
+            </a>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-header">
             <h5 class="mb-0">Tenant Usage Limits</h5>
@@ -31,10 +118,10 @@
                         {% for tenant in tenants %}
                         <tr>
                             <td>{{ tenant.name }}</td>
-                            <td>{{ tenant.plan.name|default:"No Plan" }}</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td>-</td>
+                            <td>{{ tenant.plan.plan_name|default:"No Plan" }}</td>
+                            <td>{{ tenant.user_limit }}</td>
+                            <td>{{ tenant.storage_limit_mb }} MB</td>
+                            <td>{{ tenant.api_call_limit }}</td>
                             <td>
                                 {% if tenant.is_active %}
                                 <span class="badge bg-success">Active</span>

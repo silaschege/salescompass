@@ -1,274 +1,175 @@
 {% extends "public/base.html" %}
+{% load static %}
 
 {% block title %}API Documentation - SalesCompass{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="bg-light py-5">
-    <div class="container py-5">
+<!-- API Hero -->
+<section class="section-large bg-gray-900 text-white position-relative overflow-hidden">
+    <div class="container position-relative z-1">
         <div class="row align-items-center">
             <div class="col-lg-8">
-                <h1 class="display-4 fw-bold mb-4">SalesCompass API</h1>
-                <p class="lead text-muted mb-4">
-                    Build powerful integrations with our RESTful API. Access all your CRM data programmatically with
-                    comprehensive documentation and SDKs.
+                <div
+                    class="d-inline-flex align-items-center gap-3 mb-4 bg-white bg-opacity-10 rounded-pill px-3 py-1 border border-white border-opacity-10">
+                    <span class="badge bg-primary">v2.4</span>
+                    <code class="text-white-50 extra-small">api.salescompass.ai</code>
+                </div>
+                <h1 class="display-3 fw-extrabold mb-4 text-white">Developer <span
+                        class="text-gradient-purple">API</span></h1>
+                <p class="lead text-white-50 mb-0">The engine behind the world's most intelligent revenue operations.
                 </p>
-                <div class="d-flex gap-3">
-                    <a href="#getting-started" class="btn btn-primary btn-lg px-4 rounded-pill">Get Started</a>
-                    <a href="#api-reference" class="btn btn-outline-primary btn-lg px-4 rounded-pill">API Reference</a>
-                </div>
             </div>
-            <div class="col-lg-4">
-                <i class="bi bi-code-slash display-1 text-accent"></i>
+            <div class="col-lg-4 text-end d-none d-lg-block opacity-25">
+                <i class="bi bi-terminal-fill display-1"></i>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Key Features -->
-<section class="py-5">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="fw-bold">API Features</h2>
-            <p class="text-muted">Everything you need to build powerful integrations</p>
-        </div>
-
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-3">
-                <div class="text-center">
-                    <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
-                        <i class="bi bi-shield-check fs-1 text-accent"></i>
-                    </div>
-                    <h5 class="fw-bold">Secure Authentication</h5>
-                    <p class="text-muted">OAuth 2.0 and API key authentication</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="text-center">
-                    <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
-                        <i class="bi bi-lightning fs-1 text-accent"></i>
-                    </div>
-                    <h5 class="fw-bold">High Performance</h5>
-                    <p class="text-muted">Fast response times with rate limiting</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="text-center">
-                    <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
-                        <i class="bi bi-file-earmark-code fs-1 text-accent"></i>
-                    </div>
-                    <h5 class="fw-bold">RESTful Design</h5>
-                    <p class="text-muted">Clean, predictable API endpoints</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="text-center">
-                    <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
-                        <i class="bi bi-book fs-1 text-accent"></i>
-                    </div>
-                    <h5 class="fw-bold">Documentation</h5>
-                    <p class="text-muted">Comprehensive guides and examples</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Getting Started -->
-<section id="getting-started" class="py-5 bg-light">
-    <div class="container">
-        <h2 class="fw-bold mb-4">Getting Started</h2>
+<!-- Docs Layout -->
+<section class="section bg-white border-top border-light py-0">
+    <div class="container-fluid px-lg-6">
         <div class="row">
-            <div class="col-lg-8">
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-body">
-                        <h4 class="mb-3">1. Get Your API Key</h4>
-                        <p class="text-muted">Sign in to your SalesCompass account and navigate to Settings → API Keys
-                            to generate your authentication token.</p>
-                    </div>
-                </div>
 
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-body">
-                        <h4 class="mb-3">2. Make Your First Request</h4>
-                        <p class="text-muted mb-3">Use your API key to authenticate requests:</p>
-                        <pre class="bg-dark text-light p-3 rounded"><code>curl -H "Authorization: Bearer YOUR_API_KEY" \
-  https://api.salescompass.com/v1/accounts</code></pre>
-                    </div>
-                </div>
+            <!-- Sidebar Navigation -->
+            <div class="col-lg-3 border-end border-light py-8 d-none d-lg-block">
+                <div class="sticky-top" style="top: 100px;">
+                    <h6 class="text-uppercase text-muted fw-bold extra-small mb-4 tracking-widest">Introduction</h6>
+                    <nav class="nav flex-column gap-2 mb-8">
+                        <a href="#getting-started" class="nav-link p-0 small fw-medium text-dark active">Getting
+                            Started</a>
+                        <a href="#authentication" class="nav-link p-0 small text-muted hover-primary">Authentication</a>
+                        <a href="#rate-limits" class="nav-link p-0 small text-muted hover-primary">Rate Limits</a>
+                    </nav>
 
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <h4 class="mb-3">3. Explore the API</h4>
-                        <p class="text-muted">Check out our comprehensive API reference below to see all available
-                            endpoints.</p>
-                    </div>
+                    <h6 class="text-uppercase text-muted fw-bold extra-small mb-4 tracking-widest">Core Resources</h6>
+                    <nav class="nav flex-column gap-2">
+                        <a href="#leads" class="nav-link p-0 small text-muted hover-primary">Leads & Scoring</a>
+                        <a href="#deals" class="nav-link p-0 small text-muted hover-primary">Deals & Probability</a>
+                        <a href="#events" class="nav-link p-0 small text-muted hover-primary">Engagement Events</a>
+                        <a href="#webhooks" class="nav-link p-0 small text-muted hover-primary">Webhooks</a>
+                    </nav>
                 </div>
             </div>
 
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm bg-accent text-white">
-                    <div class="card-body">
-                        <h5 class="fw-bold mb-3">API Base URL</h5>
-                        <code class="text-white">https://api.salescompass.com/v1</code>
+            <!-- Documentation Content -->
+            <div class="col-lg-9 py-8 ps-lg-6">
 
-                        <h5 class="fw-bold mt-4 mb-3">Rate Limits</h5>
-                        <ul class="list-unstyled">
-                            <li class="mb-2">• Starter: 1,000 requests/hour</li>
-                            <li class="mb-2">• Professional: 5,000 requests/hour</li>
-                            <li class="mb-2">• Enterprise: Unlimited</li>
-                        </ul>
+                <!-- Getting Started -->
+                <article id="getting-started" class="mb-12">
+                    <h2 class="fw-extrabold mb-4">Getting Started</h2>
+                    <p class="text-muted mb-6">
+                        The SalesCompass API is a RESTful interface designed for developers who need to extend
+                        or automate their revenue operations. We use standard HTTP verbs, resource-oriented URLs,
+                        and return JSON-encoded responses.
+                    </p>
+                    <div class="glass-card p-5 bg-light mb-4">
+                        <h6 class="fw-bold mb-3">API Base URL</h6>
+                        <div class="bg-dark rounded-3 p-4 font-monospace">
+                            <code class="text-warning small">https://api.salescompass.ai/v1</code>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+                </article>
 
-<!-- API Reference -->
-<section id="api-reference" class="py-5">
-    <div class="container">
-        <h2 class="fw-bold mb-4">API Reference</h2>
-
-        <div class="accordion" id="apiAccordion">
-            <!-- Accounts -->
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#accounts">
-                        <strong>Accounts API</strong>
-                    </button>
-                </h2>
-                <div id="accounts" class="accordion-collapse collapse show" data-bs-parent="#apiAccordion">
-                    <div class="accordion-body">
-                        <h5>List Accounts</h5>
-                        <p><code class="bg-light p-2 rounded">GET /v1/accounts</code></p>
-                        <p class="text-muted">Retrieve a list of all accounts in your CRM.</p>
-
-                        <h5 class="mt-4">Create Account</h5>
-                        <p><code class="bg-light p-2 rounded">POST /v1/accounts</code></p>
-                        <p class="text-muted">Create a new account with the provided data.</p>
-
-                        <h5 class="mt-4">Get Account</h5>
-                        <p><code class="bg-light p-2 rounded">GET /v1/accounts/{id}</code></p>
-                        <p class="text-muted">Retrieve details of a specific account.</p>
+                <!-- Authentication -->
+                <article id="authentication" class="mb-12 pt-8 border-top border-light">
+                    <h2 class="fw-extrabold mb-4">Authentication</h2>
+                    <p class="text-muted mb-6">
+                        All requests must include a valid API token in the Authorization header.
+                        You can generate your keys in the dashboard under Settings > Developer.
+                    </p>
+                    <div class="bg-gray-900 rounded-4 p-5 mb-5 shadow-lg">
+                        <div class="d-flex justify-content-between mb-4">
+                            <span class="badge bg-white bg-opacity-10 text-white-50">Shell / cURL</span>
+                            <button
+                                class="btn btn-link btn-sm text-white-50 p-0 text-decoration-none small">Copy</button>
+                        </div>
+                        <pre class="mb-0 font-monospace"><code class="text-light">curl -X GET "https://api.salescompass.ai/v1/leads" \
+  -H "Authorization: Bearer <span class="text-warning">sk_live_51P...</span>" \
+  -H "Content-Type: application/json"</code></pre>
                     </div>
-                </div>
-            </div>
-
-            <!-- Leads -->
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#leads">
-                        <strong>Leads API</strong>
-                    </button>
-                </h2>
-                <div id="leads" class="accordion-collapse collapse" data-bs-parent="#apiAccordion">
-                    <div class="accordion-body">
-                        <h5>List Leads</h5>
-                        <p><code class="bg-light p-2 rounded">GET /v1/leads</code></p>
-                        <p class="text-muted">Retrieve all leads with optional filtering.</p>
-
-                        <h5 class="mt-4">Create Lead</h5>
-                        <p><code class="bg-light p-2 rounded">POST /v1/leads</code></p>
-                        <p class="text-muted">Add a new lead to your pipeline.</p>
+                    <div class="alert alert-warning border-0 bg-warning bg-opacity-10 d-flex align-items-center gap-3">
+                        <i class="bi bi-shield-lock-fill fs-4"></i>
+                        <div class="small">
+                            <strong>Security Best Practice:</strong> Never commit your secret keys to public
+                            repositories. Use environment variables.
+                        </div>
                     </div>
-                </div>
-            </div>
+                </article>
 
-            <!-- Opportunities -->
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#opportunities">
-                        <strong>Opportunities API</strong>
-                    </button>
-                </h2>
-                <div id="opportunities" class="accordion-collapse collapse" data-bs-parent="#apiAccordion">
-                    <div class="accordion-body">
-                        <h5>List Opportunities</h5>
-                        <p><code class="bg-light p-2 rounded">GET /v1/opportunities</code></p>
-                        <p class="text-muted">Get all sales opportunities.</p>
+                <!-- Leads Resource -->
+                <article id="leads" class="mb-12 pt-8 border-top border-light">
+                    <h2 class="fw-extrabold mb-4">Leads & Scoring</h2>
+                    <p class="text-muted mb-6">Retrieve lead intelligence data, including ML-calculated scores and
+                        propensity to buy.</p>
 
-                        <h5 class="mt-4">Update Opportunity</h5>
-                        <p><code class="bg-light p-2 rounded">PATCH /v1/opportunities/{id}</code></p>
-                        <p class="text-muted">Update opportunity stage, value, or other fields.</p>
+                    <!-- GET Leads -->
+                    <div class="glass-card border-light overflow-hidden mb-6">
+                        <div class="bg-light px-4 py-3 border-bottom d-flex align-items-center gap-3">
+                            <span class="badge bg-success">GET</span>
+                            <code class="fw-bold text-dark">/leads</code>
+                        </div>
+                        <div class="p-5">
+                            <h6 class="fw-bold small mb-3">Attributes</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-borderless align-middle mb-0">
+                                    <thead class="border-bottom border-light">
+                                        <tr>
+                                            <th class="extra-small text-muted py-2">Property</th>
+                                            <th class="extra-small text-muted py-2">Type</th>
+                                            <th class="extra-small text-muted py-2">Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code class="text-primary">limit</code></td>
+                                            <td><span class="text-muted small">integer</span></td>
+                                            <td class="small text-muted">Number of results to return (max 100).</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code class="text-primary">status</code></td>
+                                            <td><span class="text-muted small">string</span></td>
+                                            <td class="small text-muted">Filter by lead status (new, qualified,
+                                                disqualified).</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Cases -->
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#cases">
-                        <strong>Cases API</strong>
-                    </button>
-                </h2>
-                <div id="cases" class="accordion-collapse collapse" data-bs-parent="#apiAccordion">
-                    <div class="accordion-body">
-                        <h5>List Cases</h5>
-                        <p><code class="bg-light p-2 rounded">GET /v1/cases</code></p>
-                        <p class="text-muted">Retrieve support cases.</p>
-
-                        <h5 class="mt-4">Create Case</h5>
-                        <p><code class="bg-light p-2 rounded">POST /v1/cases</code></p>
-                        <p class="text-muted">Create a new support case.</p>
+                    <!-- POST Lead -->
+                    <div class="glass-card border-light overflow-hidden">
+                        <div class="bg-light px-4 py-3 border-bottom d-flex align-items-center gap-3">
+                            <span class="badge bg-primary">POST</span>
+                            <code class="fw-bold text-dark">/leads</code>
+                        </div>
+                        <div class="p-0 bg-gray-900">
+                            <pre class="m-0 p-5 font-monospace"><code class="text-light">{
+  "email": "jane@example.com",
+  "first_name": "Jane",
+  "source": "api_integration",
+  "meta": {
+    "campaign": "winter_promo"
+  }
+}</code></pre>
+                        </div>
                     </div>
-                </div>
+                </article>
+
             </div>
         </div>
     </div>
 </section>
 
-<!-- SDKs -->
-<section class="py-5 bg-light">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="fw-bold">Official SDKs</h2>
-            <p class="text-muted">Use our official libraries to integrate faster</p>
-        </div>
-
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body text-center">
-                        <i class="bi bi-filetype-py fs-1 text-accent mb-3"></i>
-                        <h5 class="fw-bold">Python</h5>
-                        <p class="text-muted">pip install salescompass</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body text-center">
-                        <i class="bi bi-filetype-js fs-1 text-accent mb-3"></i>
-                        <h5 class="fw-bold">JavaScript</h5>
-                        <p class="text-muted">npm install salescompass-sdk</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body text-center">
-                        <i class="bi bi-filetype-php fs-1 text-accent mb-3"></i>
-                        <h5 class="fw-bold">PHP</h5>
-                        <p class="text-muted">composer require salescompass/sdk</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Support -->
-<section class="py-5">
-    <div class="container text-center">
-        <h2 class="fw-bold mb-4">Need Help?</h2>
-        <p class="lead text-muted mb-4">
-            Our developer support team is here to help you succeed.
+<!-- Final CTA -->
+<section class="section-large text-center bg-gray-900">
+    <div class="container py-4">
+        <h2 class="fw-extrabold text-white mb-4">Ready to build?</h2>
+        <p class="text-white-50 mb-6 mx-auto" style="max-width: 500px;">
+            Join 5,000+ developers building on the SalesCompass platform.
         </p>
-        <a href="{% url 'core:support' %}" class="btn btn-primary btn-lg px-5 rounded-pill">Contact Support</a>
+        <a href="{% url 'core:company' %}" class="btn btn-primary px-5 btn-lg">Contact Partners Team</a>
     </div>
 </section>
 {% endblock %}

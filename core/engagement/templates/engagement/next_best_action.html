@@ -70,8 +70,7 @@
                     <select class="form-select" name="account">
                         <option value="">All Accounts</option>
                         {% for account in accounts %}
-                        <option value="{{ account.id }}" {% if current_account==account.id|stringformat:"s" %}selected{%
-                            endif %}>
+                        <option value="{{ account.id }}" {% if current_account == account.id|stringformat:"s" %}selected{%endif %}>
                             {{ account.name }}
                         </option>
                         {% endfor %}
@@ -82,7 +81,7 @@
                     <select class="form-select" name="priority">
                         <option value="">All Priorities</option>
                         {% for value, display in priority_choices %}
-                        <option value="{{ value }}" {% if current_priority==value %}selected{% endif %}>
+                        <option value="{{ value }}" {% if current_priority == value %}selected{% endif %}>
                             {{ display }}
                         </option>
                         {% endfor %}
@@ -93,7 +92,7 @@
                     <select class="form-select" name="action_type">
                         <option value="">All Types</option>
                         {% for value, display in action_types %}
-                        <option value="{{ value }}" {% if current_action_type==value %}selected{% endif %}>
+                        <option value="{{ value }}" {% if current_action_type == value %}selected{% endif %}>
                             {{ display }}
                         </option>
                         {% endfor %}
@@ -102,13 +101,11 @@
                 <div class="col-md-3">
                     <label class="form-label fw-bold d-block">&nbsp;</label>
                     <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" name="overdue" id="overdue" {% if
-                            current_overdue %}checked{% endif %}>
+                        <input class="form-check-input" type="checkbox" name="overdue" id="overdue" {% if current_overdue %}checked{% endif %}>
                         <label class="form-check-label" for="overdue">Overdue Only</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="show_completed" id="show_completed" {% if
-                            show_completed %}checked{% endif %}>
+                        <input class="form-check-input" type="checkbox" name="show_completed" id="show_completed" {% if show_completed %}checked{% endif %}>
                         <label class="form-check-label" for="show_completed">Show Completed</label>
                     </div>
                 </div>
@@ -171,8 +168,7 @@
                         class="{% if action.completed %}table-success{% elif action.due_date < now %}table-danger{% endif %}">
                         <td>
                             <div class="d-flex align-items-start">
-                                {% if "esg" in action.action_type|lower or "sustainability" in
-                                action.action_type|lower or "carbon" in action.description|lower %}
+                                {% if "esg" in action.action_type|lower or "sustainability" in action.action_type|lower or "carbon" in action.description|lower %}
                                 <i class="bi bi-leaf-fill text-success me-2 mt-1"></i>
                                 {% endif %}
                                 <div>
@@ -344,11 +340,7 @@
     </div>
 </div>
 
-<div class="footer-bar mt-5">
-    <div class="container">
-        <p class="text-white mb-0">&copy; 2025 EnterpriseOS. All rights reserved.</p>
-    </div>
-</div>
+
 
 {% endblock %}
 

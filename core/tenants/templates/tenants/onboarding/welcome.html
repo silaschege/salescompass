@@ -1,0 +1,47 @@
+{% extends 'tenants/onboarding/base.html' %}
+
+{% block step_content %}
+<div class="text-center">
+  <div class="mb-4">
+    <i class="bi bi-rocket" style="font-size: 4rem; color: #6f42c1;"></i>
+  </div>
+  <h2 class="mb-3">Welcome to SalesCompass!</h2>
+  <p class="lead">Thank you for choosing SalesCompass CRM. We're excited to help you transform your sales operations.
+  </p>
+  <p class="text-muted">This quick setup will get your account ready in just a few minutes.</p>
+
+  <div class="row mt-5">
+    <div class="col-md-4 mb-3">
+      <div class="card h-100 border-primary">
+        <div class="card-body">
+          <i class="bi bi-building text-primary" style="font-size: 2rem;"></i>
+          <h5 class="card-title">Company Info</h5>
+          <p class="card-text">Enter your organization details</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="card h-100 border-primary">
+        <div class="card-body">
+          <i class="bi bi-wallet2 text-primary" style="font-size: 2rem;"></i>
+          <h5 class="card-title">Plan Selection</h5>
+          <p class="card-text">Choose the right plan for your needs</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="card h-100 border-primary">
+        <div class="card-body">
+          <i class="bi bi-palette text-primary" style="font-size: 2rem;"></i>
+          <h5 class="card-title">Branding</h5>
+          <p class="card-text">Customize your experience</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block next_button %}
+<a href="{% url 'tenants:onboarding_admin_setup' %}" class="btn btn-primary btn-lg px-5">Start Setup →</a>
+{% endblock %}

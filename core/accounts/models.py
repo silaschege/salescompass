@@ -3,161 +3,13 @@ from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from django.core.validators import MinLengthValidator
 from django.conf import settings
-from core.models import User
+from core.models import User, TimeStampedModel
 from tenants.models import TenantAwareModel as TenantModel
 
 
 
+ 
 
-class TeamRole(TenantModel):
-    """
-    Dynamic team role values - allows tenant-specific team role tracking.
-    """
-    role_name = models.CharField(max_length=50, db_index=True, help_text="e.g., 'sales_rep', 'sales_manager'")
-    label = models.CharField(max_length=100)
-    order = models.IntegerField(default=0)
-    role_is_active = models.BooleanField(default=True, help_text="Whether this role is active")
-    is_system = models.BooleanField(default=False)
-    # Override tenant to avoid clash with settings_app.TeamRole
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='account_team_roles')
-    
-    class Meta:
-        ordering = ['order', 'role_name']
-        unique_together = [('tenant', 'role_name')]
-        verbose_name_plural = 'Team Roles'
-    
-    def __str__(self):
-        return self.label
-
-
-class Territory(TenantModel):
-    """
-    Dynamic territory values - allows tenant-specific territory tracking.
-    """
-    territory_name = models.CharField(max_length=100, db_index=True, help_text="e.g., 'north_america', 'emea'")
-    label = models.CharField(max_length=100)
-    order = models.IntegerField(default=0)
-    territory_is_active = models.BooleanField(default=True, help_text="Whether this territory is active")
-    is_system = models.BooleanField(default=False)
-    # Override tenant to avoid clash with settings_app.Territory
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='account_territories')
-    
-    class Meta:
-        ordering = ['order', 'territory_name']
-        unique_together = [('tenant', 'territory_name')]
-        verbose_name_plural = 'Territories'
-    
-    def __str__(self):
-        return self.label
-class OrganizationMember(TenantModel):
-    """
-    Represents a person in a specific tenant organization.
-    This replaces the TeamMember model from settings_app.
-    """
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='organization_membership')
-    
-    # Role using dynamic reference
-    role = models.CharField(max_length=50, choices=[
-        ('sales_rep', 'Sales Representative'),
-        ('sales_manager', 'Sales Manager'),
-        ('account_manager', 'Account Manager'),
-        ('sales_director', 'Sales Director'),
-        ('ceo', 'CEO'),
-        ('admin', 'Administrator'),
-    ])
-    
-    # New dynamic field for role
-    role_ref = models.ForeignKey(
-        TeamRole,  # Reference to the dynamic model
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-        related_name='organization_members',
-        help_text="Dynamic role (replaces role field)"
-    )
-    
-    # Territory using dynamic reference
-    territory = models.CharField(max_length=100, choices=[
-        ('north_america', 'North America'),
-        ('emea', 'EMEA'),
-        ('apac', 'APAC'),
-        ('latam', 'Latin America'),
-    ], blank=True)
-    
-    # New dynamic field for territory
-    territory_ref = models.ForeignKey(
-        Territory,  # Reference to the dynamic model
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-        related_name='organization_members',
-        help_text="Dynamic territory (replaces territory field)"
-    )
-    
-    # Manager relationship
-    manager = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='reports')
-    
-    # Status using dynamic reference
-    status = models.CharField(max_length=20, choices=[
-        ('active', 'Active'),
-        ('onboarding', 'Onboarding'),
-        ('leave', 'On Leave'),
-        ('terminated', 'Terminated'),
-    ], default='onboarding')
-    
-    # New dynamic field for status
-    status_ref = models.ForeignKey(
-        'self',  # Self reference for status
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='organization_members_by_status',
-        help_text="Dynamic status (replaces status field)"
-    )
-    
-    # Employment dates
-    hire_date = models.DateField(null=True, blank=True)
-    termination_date = models.DateField(null=True, blank=True)
-    
-    # Quota information
-    quota_amount = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
-    
-    quota_period = models.CharField(max_length=20, choices=[
-        ('monthly', 'Monthly'),
-        ('quarterly', 'Quarterly'),
-        ('yearly', 'Yearly'),
-    ], default='quarterly')
-    
-    # New dynamic field for quota period
-    quota_period_ref = models.ForeignKey(
-        'self',  # Self reference for period
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='organization_members_by_period',
-        help_text="Dynamic quota period (replaces quota_period field)"
-    )
-    
-    # Commission information
-    commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.0, 
-                                        help_text="Commission rate (e.g. 10.0 for 10%)")
-    
-    # Territory Performance Metrics
-    territory_performance_score = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, 
-                                                     help_text="Performance score within assigned territory (0-100)")
-    territory_quota_attainment = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, 
-                                                    help_text="Percentage of territory quota attained")
-    territory_conversion_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, 
-                                                   help_text="Lead to opportunity conversion rate in territory (%)")
-    territory_revenue_contribution = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, 
-                                                        help_text="Revenue contribution to assigned territory")
-
-    def __str__(self):
-        return f"{self.user.email} - {self.role}"
-    
-    class Meta:
-        verbose_name = "Organization Member"
-        verbose_name_plural = "Organization Members"
 
 class Role(models.Model):
     """Model for managing user roles and permissions"""
@@ -388,14 +240,55 @@ class RolePermissionAudit(models.Model):
         return f"{self.action} for {self.role.name} - {self.timestamp}"
 
 
-class Account(TenantModel):
+
+class Account(TenantModel, TimeStampedModel):
     """
     CRM Account model representing a business entity (Company).
     """
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('at_risk', 'At Risk'),
+        ('churned', 'Churned'),
+    ]
+
+    INDUSTRY_CHOICES = [
+        ('tech', 'Technology'),
+        ('manufacturing', 'Manufacturing'),
+        ('finance', 'Finance'),
+        ('healthcare', 'Healthcare'),
+        ('retail', 'Retail'),
+        ('energy', 'Energy'),
+        ('education', 'Education'),
+        ('other', 'Other'),
+    ]
+
+    TIER_CHOICES = [
+        ('free', 'Free'),
+        ('pro', 'Pro'),
+        ('enterprise', 'Enterprise'),
+    ]
+
+    ESG_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+    ]
+    
     account_name = models.CharField(max_length=255)
     website = models.URLField(blank=True)
     phone = models.CharField(max_length=50, blank=True)
-    industry = models.CharField(max_length=100, blank=True)
+    country = models.CharField(max_length=100, blank=True)
+    industry = models.CharField(max_length=100, choices=INDUSTRY_CHOICES, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    tier = models.CharField(max_length=20, choices=TIER_CHOICES, default='free')
+    
+    # KPIs/Health
+    health_score = models.DecimalField(max_digits=5, decimal_places=2, default=100.00)
+    esg_engagement = models.CharField(max_length=20, choices=ESG_CHOICES, default='low')
+
+    # Compliance
+    gdpr_consent = models.BooleanField(default=False)
+    ccpa_consent = models.BooleanField(default=False)
     
     # Relationships
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_accounts')
@@ -405,15 +298,36 @@ class Account(TenantModel):
         return self.account_name
 
 
-class Contact(TenantModel):
+class Contact(TenantModel, TimeStampedModel):
     """
     Contact model representing an individual contact.
     """
+    ESG_INFLUENCE_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+    ]
+    
+    COMMUNICATION_PREFERENCE_CHOICES = [
+        ('email', 'Email'),
+        ('phone', 'Phone'),
+        ('mail', 'Mail'),
+        ('text', 'Text/SMS'),
+    ]
+
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=20, blank=True)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='contacts', null=True, blank=True)
+    
+    # Additional fields that are referenced in templates but missing
+    role = models.CharField(max_length=100, blank=True, help_text="Role or job title of the contact")
+    communication_preference = models.CharField(max_length=20, choices=COMMUNICATION_PREFERENCE_CHOICES, 
+                                               default='email', help_text="Preferred method of communication")
+    is_primary = models.BooleanField(default=False, help_text="Is this the primary contact for the account?")
+    esg_influence = models.CharField(max_length=20, choices=ESG_INFLUENCE_CHOICES, default='low',
+                                     help_text="Level of influence on ESG decisions")
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
@@ -436,4 +350,4 @@ class RoleAppPermission(models.Model):
         verbose_name_plural = 'Role App Permissions'
 
     def __str__(self):
-        return f"{self.role.name} - {self.app_identifier}: {'Visible' if self.is_visible else 'Hidden'}"
+        return f"{self.role.name} - {self.app_identifier}: {'Visible' if self.is_visible else 'Hidden'}"  

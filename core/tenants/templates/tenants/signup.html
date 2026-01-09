@@ -31,17 +31,6 @@
                             {% endif %}
                         </div>
 
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name</label>
-                                {{ form.first_name }}
-                            </div>
-                            <div class="col-md-6">
-                                <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name</label>
-                                {{ form.last_name }}
-                            </div>
-                        </div>
-
                         <div class="mb-3">
                             <label for="{{ form.email.id_for_label }}" class="form-label">Work Email</label>
                             {{ form.email }}
@@ -51,10 +40,18 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
-                            {{ form.password }}
-                            {% if form.password.errors %}
-                            <div class="text-danger small">{{ form.password.errors.0 }}</div>
+                            <label for="{{ form.password1.id_for_label }}" class="form-label">Password</label>
+                            {{ form.password1 }}
+                            {% if form.password1.errors %}
+                            <div class="text-danger small">{{ form.password1.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm Password</label>
+                            {{ form.password2 }}
+                            {% if form.password2.errors %}
+                            <div class="text-danger small">{{ form.password2.errors.0 }}</div>
                             {% endif %}
                         </div>
 
@@ -64,7 +61,7 @@
                     </form>
                 </div>
                 <div class="card-footer text-center py-3">
-                    <div class="small"><a href="{% url 'login' %}">Have an account? Go to login</a></div>
+                    <div class="small"><a href="{% url 'core:login' %}">Have an account? Go to login</a></div>
                 </div>
             </div>
         </div>

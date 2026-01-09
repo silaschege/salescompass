@@ -1,0 +1,219 @@
+{% load static %}
+<div id="nps-widget" class="nps-widget">
+    <div class="nps-widget-header">
+        <span class="nps-widget-title">We Value Your Feedback</span>
+        <button id="nps-close-btn" class="nps-close-btn">&times;</button>
+    </div>
+    <div class="nps-widget-body">
+        <div id="nps-question" class="nps-question">{{ survey.question_text }}</div>
+        
+        <div class="nps-scale">
+            {% for i in '012345678910'|make_list %}
+            <div class="nps-score {% if forloop.counter0 <= 6 %}detractor{% elif forloop.counter0 >= 9 %}promoter{% endif %}" 
+                 onclick="selectNPSScore({{ forloop.counter0 }})">
+                {{ forloop.counter0 }}
+            </div>
+            {% endfor %}
+        </div>
+        
+        <input type="hidden" id="nps-selected-score" name="score" value="">
+        
+        <div id="nps-follow-up" class="nps-follow-up" style="display: none;">
+            <label>{{ survey.follow_up_question }}</label>
+            <textarea id="nps-comment" name="comment" rows="3" 
+                      placeholder="Please share your feedback..."></textarea>
+        </div>
+        
+        <button id="nps-submit-btn" class="nps-submit-btn" style="display: none;">Submit Feedback</button>
+    </div>
+</div> 
+
+<style>
+.nps-widget {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 350px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 9999;
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.nps-widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: #6f42c1;
+    color: white;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.nps-widget-title {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.nps-close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nps-widget-body {
+    padding: 20px;
+}
+
+.nps-question {
+    font-size: 16px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.nps-scale {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+}
+
+.nps-score {
+    width: 30px;
+    height: 30px;
+    border: 2px solid #6f42c1;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.nps-score:hover {
+    background-color: #6f42c1;
+    color: white;
+}
+
+.nps-score.promoter {
+    border-color: #28a745;
+}
+
+.nps-score.promoter:hover {
+    background-color: #28a745;
+}
+
+.nps-score.detractor {
+    border-color: #dc3545;
+}
+
+.nps-score.detractor:hover {
+    background-color: #dc3545;
+}
+
+.nps-follow-up {
+    margin: 20px 0;
+}
+
+.nps-follow-up label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.nps-follow-up textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.nps-submit-btn {
+    background-color: #6f42c1;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+    font-weight: bold;
+}
+
+.nps-submit-btn:hover {
+    background-color: #5a32a3;
+}
+
+.nps-submit-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+</style>
+
+<script>
+function selectNPSScore(score) {
+    document.getElementById('nps-selected-score').value = score;
+    document.querySelectorAll('.nps-score').forEach(s => s.style.borderColor = '#6f42c1');
+    document.querySelector(`.nps-score:nth-child(${score + 1})`).style.borderColor = '#000';
+    document.getElementById('nps-follow-up').style.display = 'block';
+    document.getElementById('nps-submit-btn').style.display = 'block';
+}
+
+document.getElementById('nps-close-btn').addEventListener('click', function() {
+    document.getElementById('nps-widget').style.display = 'none';
+});
+
+document.getElementById('nps-submit-btn').addEventListener('click', function() {
+    const score = document.getElementById('nps-selected-score').value;
+    const comment = document.getElementById('nps-comment').value;
+    const accountId = '{{ account.id }}';
+    const surveyId = '{{ survey.id }}';
+    
+    // Disable submit button during submission
+    this.disabled = true;
+    this.textContent = 'Submitting...';
+    
+    // Send data via AJAX
+    fetch('{% url "nps:submit_nps" survey.id %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: new URLSearchParams({
+            'account_id': accountId,
+            'survey_id': surveyId,
+            'score': score,
+            'comment': comment
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.querySelector('.nps-widget-body').innerHTML = '<p class="thank-you">Thank you for your feedback!</p>';
+        } else {
+            alert('Error submitting feedback. Please try again.');
+            this.disabled = false;
+            this.textContent = 'Submit Feedback';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error submitting feedback. Please try again.');
+        this.disabled = false;
+        this.textContent = 'Submit Feedback';
+    });
+});
+</script>

@@ -64,7 +64,7 @@ class Product(TenantModel):
 
 
     def __str__(self):
-        return f"{self.name} ({self.sku})"
+        return f"{self.product_name} ({self.sku})"
 
     def get_tags_list(self):
         return [tag.strip() for tag in self.tags.split(',') if tag.strip()]
@@ -87,7 +87,7 @@ class PricingTier(TenantModel):
         ordering = ['min_quantity']
 
     def __str__(self):
-        return f"{self.product.name} - {self.min_quantity}+ units"
+        return f"{self.product.product_name} - {self.min_quantity}+ units"
 
 
 class ProductBundle(TenantModel):
@@ -102,7 +102,7 @@ class ProductBundle(TenantModel):
 
 
     def __str__(self):
-        return self.name
+        return self.product_bundle_name
 
 
 class BundleItem(TenantModel):
@@ -114,7 +114,7 @@ class BundleItem(TenantModel):
     quantity = models.IntegerField(default=1)
 
     def __str__(self):
-        return f"{self.quantity}x {self.product.name} in {self.bundle.name}"
+        return f"{self.quantity}x {self.product.product_name} in {self.bundle.product_bundle_name}"
 
 
 class CompetitorProduct(TenantModel):
@@ -130,7 +130,7 @@ class CompetitorProduct(TenantModel):
     is_direct_competitor = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.competitor_name} - {self.name}"
+        return f"{self.competitor_name} - {self.competitor_product_name}"
 
 
 class ProductDependency(TenantModel):
@@ -149,7 +149,7 @@ class ProductDependency(TenantModel):
         unique_together = [('product', 'required_product')]
 
     def __str__(self):
-        return f"{self.product.name} requires {self.required_product.name}"
+        return f"{self.product.product_name} requires {self.required_product.product_name}"
 
 
 class ProductComparison(TenantModel):
@@ -162,4 +162,4 @@ class ProductComparison(TenantModel):
 
 
     def __str__(self):
-        return self.name
+        return self.product_comparison_name

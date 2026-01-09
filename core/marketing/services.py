@@ -94,6 +94,14 @@ class AttributionService:
             for tp in touchpoints:
                 _create_attribution(tp, opportunity, weight, value_share, 'linear', tenant_id)
                 
+        elif model == 'time_decay':
+            # More recent touches get higher weights
+            _apply_time_decay_attribution(touchpoints, opportunity, total_value, tenant_id)
+            
+        elif model == 'u_shaped':
+            # 40% first touch, 40% last touch, 20% distributed among middle touches
+            _apply_u_shaped_attribution(touchpoints, opportunity, total_value, tenant_id)
+                
         # Clear old attributions for this opp if re-calculating?
         # Ideally yes, but for now we append. In prod, use update_or_create or clear first.
 
@@ -110,3 +118,71 @@ def _create_attribution(touchpoint, opportunity, weight, revenue, model_name, te
             'attribution_model': model_name
         }
     )
+
+def _apply_time_decay_attribution(touchpoints, opportunity, total_value, tenant_id):
+    """
+    Apply time decay attribution model where more recent touchpoints get higher weights.
+    Weight = 2 ^ (days_from_first_touch / total_days)
+    """
+    if len(touchpoints) == 1:
+        # If only one touchpoint, give it 100%
+        _create_attribution(touchpoints[0], opportunity, 1.0, total_value, 'time_decay', tenant_id)
+        return
+    
+    first_touch_date = touchpoints[0]['date']
+    last_touch_date = touchpoints[-1]['date']
+    total_time_span = (last_touch_date - first_touch_date).days
+    
+    if total_time_span == 0:
+        # All touches happened on the same day, distribute equally
+        weight = 1.0 / len(touchpoints)
+        value_share = total_value / len(touchpoints)
+        for tp in touchpoints:
+            _create_attribution(tp, opportunity, weight, value_share, 'time_decay', tenant_id)
+        return
+    
+    weights = []
+    for tp in touchpoints:
+        days_from_first = (tp['date'] - first_touch_date).days
+        # Exponential decay - more recent gets higher weight
+        weight = 2 ** (days_from_first / total_time_span)
+        weights.append(weight)
+    
+    total_weight = sum(weights)
+    normalized_weights = [w / total_weight for w in weights]
+    
+    for i, tp in enumerate(touchpoints):
+        value_share = total_value * normalized_weights[i]
+        _create_attribution(tp, opportunity, normalized_weights[i], value_share, 'time_decay', tenant_id)
+
+def _apply_u_shaped_attribution(touchpoints, opportunity, total_value, tenant_id):
+    """
+    Apply U-shaped attribution model:
+    40% to first touch, 40% to last touch, 20% distributed among middle touches
+    """
+    if len(touchpoints) == 1:
+        # If only one touchpoint, give it 100%
+        _create_attribution(touchpoints[0], opportunity, 1.0, total_value, 'u_shaped', tenant_id)
+        return
+    
+    if len(touchpoints) == 2:
+        # If two touchpoints, 50% each
+        for tp in touchpoints:
+            _create_attribution(tp, opportunity, 0.5, total_value / 2, 'u_shaped', tenant_id)
+        return
+    
+    # For 3 or more touchpoints
+    first_touch = touchpoints[0]
+    last_touch = touchpoints[-1]
+    middle_touches = touchpoints[1:-1]
+    
+    # Assign 40% to first and last
+    _create_attribution(first_touch, opportunity, 0.4, total_value * 0.4, 'u_shaped', tenant_id)
+    _create_attribution(last_touch, opportunity, 0.4, total_value * 0.4, 'u_shaped', tenant_id)
+    
+    # Distribute remaining 20% among middle touches
+    if middle_touches:
+        middle_weight = 0.2 / len(middle_touches)
+        middle_value = total_value * 0.2 / len(middle_touches)
+        for tp in middle_touches:
+            _create_attribution(tp, opportunity, middle_weight, middle_value, 'u_shaped', tenant_id)

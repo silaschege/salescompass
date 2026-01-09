@@ -1,6 +1,5 @@
 from django.urls import path
 from . import views
-from . import views_pipeline
 
 app_name = 'opportunities'
 
@@ -13,19 +12,23 @@ urlpatterns = [
     path('<int:pk>/delete/', views.OpportunityDeleteView.as_view(), name='opportunity_delete'),
     
     # Pipeline
-    path('pipeline/', views_pipeline.PipelineKanbanView.as_view(), name='pipeline_kanban'),
-    path('api/update-stage/<int:opportunity_id>/', views_pipeline.update_opportunity_stage, name='update_stage'),
+    path('pipeline/', views.PipelineKanbanView.as_view(), name='pipeline_kanban'),
+    path('api/update-stage/<int:opportunity_id>/', views.update_opportunity_stage, name='update_stage'),
 
     # Sales Velocity
-    path('sales-velocity/', views.sales_velocity_dashboard, name='sales_velocity_dashboard'),
-    path('sales-velocity-analysis/', views.sales_velocity_analysis, name='sales_velocity_analysis'),
-    path('opportunity-funnel/', views.opportunity_funnel_analysis, name='opportunity_funnel_analysis'),
+    path('sales-velocity/', views.SalesVelocityDashboardView.as_view(), name='sales_velocity_dashboard'),
     
-    # Revenue Forecast
-    path('forecast/', views.RevenueForecastView.as_view(), name='revenue_forecast'),
+    # Forecast Dashboard
+    path('forecast/', views.ForecastDashboardView.as_view(), name='forecast_dashboard'),
     
-    # Add other existing URLs for opportunities
-    # (Note: The actual existing URLs would need to be added based on the original file)
+    # Opportunity Funnel Analysis
+    path('opportunity-funnel/', views.OpportunityFunnelAnalysisView.as_view(), name='opportunity_funnel_analysis'),
+    
+    # Win/Loss Analysis
+    path('win-loss/', views.WinLossAnalysisView.as_view(), name='win_loss_analysis'),
+    
+    # API endpoints
+    path('api/forecast-data/', views.get_forecast_data, name='forecast_data_api'),
 
     # Assignment Rules
     path('assignment-rules/', views.AssignmentRuleListView.as_view(), name='assignment_rule_list'),
@@ -44,6 +47,4 @@ urlpatterns = [
     path('pipeline-types/create/', views.PipelineTypeCreateView.as_view(), name='type_create'),
     path('pipeline-types/<int:pk>/edit/', views.PipelineTypeUpdateView.as_view(), name='type_update'),
     path('pipeline-types/<int:pk>/delete/', views.PipelineTypeDeleteView.as_view(), name='type_delete'),
-
-
 ]

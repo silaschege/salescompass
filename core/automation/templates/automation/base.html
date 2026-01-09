@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -180,6 +181,7 @@
     {% load static %}
     {% block extra_head %}{% endblock %}
 </head>
+
 <body>
     <!-- Hamburger Toggle Button -->
     <button class="toggle-sidebar" id="toggleSidebar">
@@ -197,29 +199,7 @@
             SalesCompass
         </a>
         <nav class="nav flex-column">
-            <!-- Dashboard -->
-            {% if perms.reports.read %}
-            <a class="nav-link" href="{% url 'reports:dashboard' %}">
-                <i class="bi bi-speedometer2"></i> Dashboard
-            </a>
-            {% endif %}
-
-            <!-- Reports Dropdown -->
-            {% if perms.reports.read or perms.reports.write %}
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#reportsMenu">
-                <i class="bi bi-file-earmark-text"></i> Reports
-            </a>
-            <div class="collapse" id="reportsMenu">
-                {% if perms.reports.read %}
-                <a class="nav-link ms-3" href="{% url 'reports:list' %}">All Reports</a>
-                {% endif %}
-                {% if perms.reports.write %}
-                <a class="nav-link ms-3" href="{% url 'reports:create' %}">Create Report</a>
-                <a class="nav-link ms-3" href="{% url 'reports:builder' %}">Report Builder</a>
-                {% endif %}
-            </div>
-            {% endif %}
-
+           
             <!-- Automation Dropdown -->
             {% if perms.automation.read %}
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#automationMenu">
@@ -230,8 +210,13 @@
                 {% if perms.automation.write %}
                 <a class="nav-link ms-3" href="{% url 'automation:create' %}">Create Automation</a>
                 {% endif %}
+                <a class="nav-link ms-3" href="{% url 'automation:rule_list' %}">Business Rules</a>
                 <a class="nav-link ms-3" href="{% url 'automation:log_list' %}">Logs</a>
+                <a class="nav-link ms-3" href="{% url 'automation:webhook_log_list' %}">Webhook Logs</a>
                 <a class="nav-link ms-3" href="{% url 'automation:system_list' %}">System</a>
+                <a class="nav-link ms-3" href="{% url 'automation:workflow_builder' %}">Workflow Builder</a>
+                <a class="nav-link ms-3" href="{% url 'automation:import' %}">Import</a>
+                <a class="nav-link ms-3" href="{% url 'automation:export' %}">Export</a>
             </div>
             {% endif %}
 
@@ -241,18 +226,34 @@
                 <i class="bi bi-diagram-3"></i> Workflow Management
             </a>
             <div class="collapse" id="workflowMenu">
+                <a class="nav-link ms-3" href="{% url 'automation:analytics_dashboard' %}">Analytics</a>
                 <a class="nav-link ms-3" href="{% url 'automation:workflow_list' %}">Workflows</a>
                 {% if perms.automation.write %}
                 <a class="nav-link ms-3" href="{% url 'automation:workflow_create' %}">Create Workflow</a>
                 {% endif %}
+                <a class="nav-link ms-3" href="{% url 'automation:approval_list' %}">Approvals</a>
                 <a class="nav-link ms-3" href="{% url 'automation:workflow_action_list' %}">Actions</a>
                 <a class="nav-link ms-3" href="{% url 'automation:workflow_execution_list' %}">Executions</a>
                 <a class="nav-link ms-3" href="{% url 'automation:workflow_trigger_list' %}">Triggers</a>
                 <a class="nav-link ms-3" href="{% url 'automation:workflow_template_list' %}">Templates</a>
-                <a class="nav-link ms-3" href="{% url 'automation:workflow_builder' %}">Builder</a>
             </div>
             {% endif %}
 
+            <!-- Custom Code -->
+            {% if perms.automation.read %}
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#customCodeMenu">
+                <i class="bi bi-code-slash"></i> Custom Code
+            </a>
+            <div class="collapse" id="customCodeMenu">
+                <a class="nav-link ms-3" href="{% url 'automation:custom_code_list' %}">Snippets</a>
+                <a class="nav-link ms-3" href="{% url 'automation:custom_code_logs' %}">Execution Logs</a>
+            </div>
+            {% endif %}
+
+            
+    
+
+        
             <!-- Back to Main App -->
             <a class="nav-link" href="{% url 'core:app_selection' %}">
                 <i class="bi bi-house-door"></i> Main App
@@ -291,4 +292,5 @@
         });
     </script>
 </body>
+
 </html>

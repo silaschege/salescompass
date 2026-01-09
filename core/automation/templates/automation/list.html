@@ -1,113 +1,278 @@
 {% extends "automation/base.html" %}
+{% load static %}
 
 {% block title %}Automations - SalesCompass{% endblock %}
 
+{% block extra_head %}
+<style>
+    .metric-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(111, 66, 193, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-bottom: 4px solid #6f42c1;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(111, 66, 193, 0.2);
+    }
+
+    .metric-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #6f42c1;
+    }
+
+    .metric-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 1rem;
+        margin-bottom: 2rem;
+        overflow: hidden;
+        box-shadow: 0 2px 16px rgba(0, 0, 0, 0.05);
+    }
+
+    .section-header {
+        background: #f8f9fa;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .table thead th {
+        background: #f8f9fa;
+        color: #495057;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        border-top: none;
+    }
+
+    .badge-active {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    .badge-inactive {
+        background-color: #f3f4f6;
+        color: #374151;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">⚙️ Automation Center</h1>
+        <p class="text-white text-center opacity-75 lead">Master your business logic and automated workflows</p>
+
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            {% if perms.automation.write %}
+            <a href="{% url 'automation:workflow_create' %}" class="btn btn-warning fw-bold px-4 shadow-sm">
+                <i class="bi bi-plus-circle me-1"></i> Create Workflow
+            </a>
+            <a href="{% url 'automation:workflow_builder' %}" class="btn btn-light fw-bold px-4 shadow-sm">
+                <i class="bi bi-diagram-3 me-1"></i> Visual Builder
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
 <div class="container">
-    <h1>Automations</h1>
-    
-    <div class="mb-3">
-        {% if perms.automation.write %}
-        <a href="{% url 'automation:create' %}" class="btn btn-primary">Create New Automation</a>
-        {% endif %}
-        {% if perms.automation.write %}
-        <a href="{% url 'automation:workflow_create' %}" class="btn btn-success">Create New Workflow</a>
-        {% endif %}
-        <a href="{% url 'automation:workflow_builder' %}" class="btn btn-info">Workflow Builder</a>
+    <!-- Metric Overview -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-value">{{ total_workflows|default:0 }}</div>
+                <div class="metric-label">Workflows</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card" style="border-bottom-color: #10b981;">
+                <div class="metric-value text-success">{{ active_workflows|default:0 }}</div>
+                <div class="metric-label">Active Workflows</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card" style="border-bottom-color: #ffd600;">
+                <div class="metric-value" style="color: #d97706;">{{ total_automations|default:0 }}</div>
+                <div class="metric-label">Legacy Rules</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card" style="border-bottom-color: #3b82f6;">
+                <div class="metric-value text-primary">{{ active_automations|default:0 }}</div>
+                <div class="metric-label">Active Rules</div>
+            </div>
+        </div>
     </div>
-    
-    {% if automations %}
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Description</th>
-                    <th>Trigger Type</th>
-                    <th>Active</th>
-                    <th>Created</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for automation in automations %}
-                <tr>
-                    <td>{{ automation.id }}</td>
-                    <td>{{ automation.automation_name }}</td>
-                    <td>{{ automation.automation_description|truncatechars:50 }}</td>
-                    <td>{{ automation.trigger_type }}</td>
-                    <td>
-                        {% if automation.automation_is_active %}
-                            <span class="badge bg-success">Active</span>
-                        {% else %}
-                            <span class="badge bg-secondary">Inactive</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ automation.automation_created_at }}</td>
-                    <td>
-                        <a href="{% url 'automation:detail' automation.id %}" class="btn btn-sm btn-info">View</a>
-                        {% if perms.automation.write %}
-                        <a href="{% url 'automation:update' automation.id %}" class="btn btn-sm btn-warning">Edit</a>
-                        <a href="{% url 'automation:delete' automation.id %}" class="btn btn-sm btn-danger">Delete</a>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+
+    <!-- Workflows Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <h5 class="mb-0"><i class="bi bi-diagram-3-fill text-primary me-2"></i> Intelligent Workflows</h5>
+            <small class="text-muted">{{ workflows.count }} Total</small>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Name & Description</th>
+                            <th>Trigger</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for workflow in workflows %}
+                        <tr>
+                            <td class="ps-4">
+                                <a href="{% url 'automation:workflow_detail' workflow.id %}"
+                                    class="text-decoration-none fw-bold text-dark">
+                                    {{ workflow.workflow_name }}
+                                </a>
+                                <div class="text-muted small">{{ workflow.workflow_description|truncatechars:60 }}</div>
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill bg-light text-dark border">
+                                    <i class="bi bi-lightning-fill text-warning me-1"></i>{{
+                                    workflow.workflow_trigger_type }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if workflow.workflow_is_active %}
+                                <span class="badge badge-active rounded-pill px-3">Active</span>
+                                {% else %}
+                                <span class="badge badge-inactive rounded-pill px-3">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ workflow.workflow_created_at|date:"M d, Y" }}</td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group shadow-sm border rounded">
+                                    <a href="{% url 'automation:workflow_detail' workflow.id %}"
+                                        class="btn btn-sm btn-white text-primary" title="Details">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if perms.automation.write %}
+                                    <a href="{% url 'automation:workflow_update' workflow.id %}"
+                                        class="btn btn-sm btn-white text-warning" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'automation:workflow_delete' workflow.id %}"
+                                        class="btn btn-sm btn-white text-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox display-4 d-block mb-3"></i>
+                                No workflows found. Start by creating one!
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-    {% else %}
-    <p>No automations found.</p>
-    {% endif %}
-    
-    <!-- Workflow section -->
-    {% if perms.automation.read %}
-    <h2 class="mt-5">Workflows</h2>
-    {% if workflows %}
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Description</th>
-                    <th>Trigger Type</th>
-                    <th>Active</th>
-                    <th>Created</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for workflow in workflows %}
-                <tr>
-                    <td>{{ workflow.id }}</td>
-                    <td>{{ workflow.workflow_name }}</td>
-                    <td>{{ workflow.workflow_description|truncatechars:50 }}</td>
-                    <td>{{ workflow.workflow_trigger_type }}</td>
-                    <td>
-                        {% if workflow.workflow_is_active %}
-                            <span class="badge bg-success">Active</span>
-                        {% else %}
-                            <span class="badge bg-secondary">Inactive</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ workflow.workflow_created_at }}</td>
-                    <td>
-                        <a href="{% url 'automation:workflow_detail' workflow.id %}" class="btn btn-sm btn-info">View</a>
-                        {% if perms.automation.write %}
-                        <a href="{% url 'automation:workflow_update' workflow.id %}" class="btn btn-sm btn-warning">Edit</a>
-                        <a href="{% url 'automation:workflow_delete' workflow.id %}" class="btn btn-sm btn-danger">Delete</a>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+
+    <!-- Legacy Automations Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <h5 class="mb-0"><i class="bi bi-gear-fill text-warning me-2"></i> Business Rules (Legacy)</h5>
+            <small class="text-muted">{{ automations.count }} Total</small>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Name</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for automation in automations %}
+                        <tr>
+                            <td class="ps-4">
+                                <a href="{% url 'automation:detail' automation.id %}"
+                                    class="text-decoration-none fw-bold text-dark">
+                                    {{ automation.automation_name }}
+                                </a>
+                                <div class="text-muted small">{{ automation.automation_description|truncatechars:60 }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill bg-light text-dark border">
+                                    {{ automation.trigger_type }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if automation.automation_is_active %}
+                                <span class="badge badge-active rounded-pill px-3">Active</span>
+                                {% else %}
+                                <span class="badge badge-inactive rounded-pill px-3">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ automation.automation_created_at|date:"M d, Y" }}</td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group shadow-sm border rounded">
+                                    <a href="{% url 'automation:detail' automation.id %}"
+                                        class="btn btn-sm btn-white text-primary" title="Details">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if perms.automation.write %}
+                                    <a href="{% url 'automation:update' automation.id %}"
+                                        class="btn btn-sm btn-white text-warning" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'automation:delete' automation.id %}"
+                                        class="btn btn-sm btn-white text-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                No legacy business rules found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-    {% else %}
-    <p>No workflows found.</p>
-    {% endif %}
-    {% endif %}
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
 </div>
 {% endblock %}

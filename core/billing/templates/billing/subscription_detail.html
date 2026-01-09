@@ -1,4 +1,5 @@
 {% extends 'billing/base.html' %}
+{% load task_tags filters_extras %}
 
 {% block content %}
 <div class="container-fluid">
@@ -39,10 +40,8 @@
                         </div>
                         <div class="col-md-6">
                             <p><strong>MRR:</strong> ${{ subscription.plan.price_monthly }}</p>
-                            <p><strong>Period Start:</strong> {{
-                                subscription.current_period_start|date:"Y-m-d"|default:"N/A" }}</p>
-                            <p><strong>Period End:</strong> {{
-                                subscription.current_period_end|date:"Y-m-d"|default:"N/A" }}</p>
+                            <p><strong>Period Start:</strong> {{subscription.current_period_start|date:"Y-m-d"|default:"N/A" }}</p>
+                            <p><strong>Period End:</strong> {{subscription.current_period_end|date:"Y-m-d"|default:"N/A" }}</p>
                         </div>
                     </div>
 
@@ -107,8 +106,7 @@
                             <tbody>
                                 {% for invoice in subscription.invoices.all|slice:":5" %}
                                 <tr>
-                                    <td><a href="{% url 'billing:invoice_detail' invoice_id=invoice.id %}">{{
-                                            invoice.invoice_number }}</a></td>
+                                    <td><a href="{% url 'billing:invoice_detail' invoice_id=invoice.id %}">{{invoice.invoice_number }}</a></td>
                                     <td>{{ invoice.due_date }}</td>
                                     <td>${{ invoice.total }}</td>
                                     <td>
@@ -135,6 +133,11 @@
         </div>
 
         <div class="col-md-4">
+            <!-- Tasks Widget -->
+            <div class="mb-4">
+                {% render_object_tasks subscription %}
+            </div>
+
             <div class="card">
                 <div class="card-header">
                     <h6 class="mb-0">Actions</h6>

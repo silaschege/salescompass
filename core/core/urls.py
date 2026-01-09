@@ -6,11 +6,11 @@ from django.views.generic import TemplateView
 
 from accounts.views import CustomLoginView
 
-from django.contrib.auth.views import LogoutView
+
 from core import dynamic_choices_views
 app_name = 'core'
 
-
+ 
 urlpatterns = [
     # Landing Page
     path('', views.home, name='home'),
@@ -26,7 +26,7 @@ urlpatterns = [
     path('integrations/', TemplateView.as_view(template_name='public/integrations.html'), name='integrations'),
     path('api-docs/', TemplateView.as_view(template_name='public/api.html'), name='api_docs'),
     path('login/', CustomLoginView.as_view(), name='login'),
-    path('logout/', LogoutView.as_view(next_page='/'), name='logout'),
+    path('logout/', views.logout_view, name='logout'),
     path('apps/', views.AppSelectionView.as_view(), name='app_selection'),
     path('apps/settings/', views.AppSettingsView.as_view(), name='app_settings'),
 

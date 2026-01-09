@@ -1,0 +1,259 @@
+{% extends "commissions/base.html" %}
+
+{% block title %}Commission Forecasting | SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Commission Forecasting</h1>
+    </div>
+
+    <!-- Forecast Summary Cards -->
+    <div class="row mb-4">
+        <!-- Projected Forecast -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Projected Forecast</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ forecast.forecast_amount|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-graph-up fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actual Earned -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Actual Earned (Current Period)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ actual_earned|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-currency-dollar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Remaining Days -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Remaining Days</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ remaining_days }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projected Pace -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Projected Pace</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                ${{ forecast.weighted_forecast_amount|floatformat:2 }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-speedometer fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monte Carlo Simulation Results -->
+    <div class="row mb-4">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Monte Carlo Simulation Forecast</h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in">
+                            <div class="dropdown-header">Confidence Levels:</div>
+                            <a class="dropdown-item" href="#" title="10% chance to achieve this or less">P10: Conservative</a>
+                            <a class="dropdown-item" href="#" title="50% chance to achieve this (median)">P50: Median</a>
+                            <a class="dropdown-item" href="#" title="90% chance to achieve this or less">P90: Optimistic</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1 text-muted">P10 (Conservative)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ monte_carlo_forecast.p10|floatformat:2 }}</div>
+                            <div class="mt-1 text-xs text-muted">10% confidence</div>
+                        </div>
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1 text-muted">P50 (Median)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ monte_carlo_forecast.p50|floatformat:2 }}</div>
+                            <div class="mt-1 text-xs text-muted">50% confidence</div>
+                        </div>
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1 text-muted">P90 (Optimistic)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ monte_carlo_forecast.p90|floatformat:2 }}</div>
+                            <div class="mt-1 text-xs text-muted">90% confidence</div>
+                        </div>
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1 text-muted">Average</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ monte_carlo_forecast.avg|floatformat:2 }}</div>
+                            <div class="mt-1 text-xs text-muted">Expected value</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historical Data -->
+    <div class="row mb-4">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Historical Commission Performance (Last 6 Months)</h6>
+                </div>
+                <div class="card-body">
+                    {% if historical_data %}
+                    <div class="chart-area">
+                        <div class="chartjs-size-monitor">
+                            <div class="chartjs-size-monitor-expand">
+                                <div class=""></div>
+                            </div>
+                            <div class="chartjs-size-monitor-shrink">
+                                <div class=""></div>
+                            </div>
+                        </div>
+                        <canvas id="commissionChart" style="display: block; width: 746px; height: 373px;" width="746" height="373" class="chartjs-render-monitor"></canvas>
+                    </div>
+                    
+                    <div class="table-responsive mt-4">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Month</th>
+                                    <th>Commission Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in historical_data %}
+                                <tr>
+                                    <td>{{ data.month }}</td>
+                                    <td>${{ data.amount|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted">No historical data available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forecast Breakdown -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Forecast Breakdown</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="font-weight-bold text-gray-800">Open Opportunities</h6>
+                            <p class="text-muted">Based on {{ forecast.opportunity_count }} open opportunities with potential value of ${{ forecast.potential_value|floatformat:2 }}</p>
+                            
+                            <h6 class="font-weight-bold text-gray-800 mt-4">Expected Win Rate</h6>
+                            <p class="text-muted">{{ forecast.estimated_win_rate|floatformat:1 }}% based on historical performance</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="font-weight-bold text-gray-800">Projected Earnings</h6>
+                            <p class="text-muted">Weighted forecast: ${{ forecast.weighted_forecast_amount|floatformat:2 }}</p>
+                            <p class="text-muted">Daily run rate: ${{ forecast.daily_run_rate|floatformat:2 }}</p>
+                            <p class="text-muted">Days remaining: {{ remaining_days }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js for historical data visualization -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if historical_data %}
+    // Prepare data for chart
+    const labels = [{% for data in historical_data %}"{{ data.month }}",{% endfor %}];
+    const data = [{% for data in historical_data %}{{ data.amount|floatformat:2 }}, {% endfor %}];
+    
+    // Get the context for the chart
+    const ctx = document.getElementById('commissionChart');
+    
+    // Create the chart
+    const commissionChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Commission Amount',
+                data: data,
+                borderColor: 'rgba(78, 115, 223, 1)',
+                backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                borderWidth: 2,
+                fill: true,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

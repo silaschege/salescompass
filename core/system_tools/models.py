@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
-from core.core.models import User
-from core.tenants.models import Tenant
+from core.models import User
+from tenants.models import Tenant
 
 
 class SystemHealthCheck(models.Model):

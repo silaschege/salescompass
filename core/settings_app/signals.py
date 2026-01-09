@@ -42,7 +42,7 @@ def opportunity_webhook_signal(sender, instance, created, **kwargs):
         'name': instance.opportunity_name,
         'amount': float(instance.amount) if instance.amount else 0.0,
         'stage': instance.stage.opportunity_stage_name if instance.stage else None,
-        'account': instance.account.email if instance.account else None,
+        'account': instance.account.account_name if instance.account else None,
         'close_date': str(instance.close_date),
         'created_at': instance.created_at.isoformat() if hasattr(instance, 'created_at') and instance.created_at else None
     }
@@ -60,7 +60,7 @@ def case_webhook_signal(sender, instance, created, **kwargs):
         'subject': instance.subject,
         'status': instance.status,
         'priority': instance.priority,
-        'account': instance.account.name if instance.account else None,
+        'account': instance.account.email if instance.account else None,
         'created_at': instance.created_at.isoformat()
     }
     

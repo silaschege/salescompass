@@ -1,0 +1,78 @@
+{% extends 'products/base.html' %}
+
+{% block title %}Product Bundles{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Product Bundles</h1>
+        <a href="{% url 'products:productbundle_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Create Bundle
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if bundles %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bundle in bundles %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'products:productbundle_detail' bundle.pk %}">{{ bundle.product_bundle_name }}</a>
+                            </td>
+                            <td>{{ bundle.product_bundle_description|truncatewords:10 }}</td>
+                            <td>
+                                {% if bundle.bundle_price %}
+                                    ${{ bundle.bundle_price }}
+                                {% else %}
+                                    <span class="text-muted">Not set</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if bundle.product_bundle_is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'products:productbundle_update' bundle.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                                <a href="{% url 'products:productbundle_delete' bundle.pk %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if is_paginated %}
+                {% include 'core/patterns/pagination.html' %}
+            {% endif %}
+            
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-collection display-5 text-muted mb-3"></i>
+                <h4>No product bundles found</h4>
+                <p class="text-muted">Create your first product bundle to get started.</p>
+                <a href="{% url 'products:productbundle_create' %}" class="btn btn-primary">Create Bundle</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

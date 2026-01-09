@@ -1,0 +1,220 @@
+{% extends "commissions/base.html" %}
+{% load filters_extras %}
+
+{% block title %}What-If Calculator | SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">What-If Calculator</h1>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Commission What-If Analysis</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <label for="salesAmount" class="form-label">Projected Sales Amount ($)</label>
+                                <input type="number" class="form-control" id="salesAmount" placeholder="Enter sales amount" value="10000">
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="productSelect" class="form-label">Product (if applicable)</label>
+                                <select class="form-select" id="productSelect">
+                                    <option value="">All Products (Use Plan Basis)</option>
+                                    <!-- Options would be populated dynamically -->
+                                </select>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="commissionPlanSelect" class="form-label">Commission Plan</label>
+                                <select class="form-select" id="commissionPlanSelect">
+                                    {% if active_plan %}
+                                    <option value="{{ active_plan.assigned_plan.id }}" selected>
+                                        {{ active_plan.assigned_plan.commission_plan_name }}
+                                    </option>
+                                    {% else %}
+                                    <option value="">No active plan found</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card bg-light p-3 mb-4">
+                                <h5 class="text-center">Projected Commission</h5>
+                                <h2 class="text-center text-primary" id="projectedCommission">$0.00</h2>
+                                <p class="text-center text-muted">Based on your inputs</p>
+                            </div>
+                            
+                            <div class="card bg-light p-3">
+                                <h5>Plan Details</h5>
+                                {% if active_plan %}
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item">
+                                        <strong>Plan Name:</strong> {{ active_plan.assigned_plan.commission_plan_name }}
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>Basis:</strong> {{ active_plan.assigned_plan.get_basis_display }}
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>Period:</strong> 
+                                        {% if active_plan.end_date %}
+                                            {{ active_plan.start_date|date:"M d, Y" }} - {{ active_plan.end_date|date:"M d, Y" }}
+                                        {% else %}
+                                            {{ active_plan.start_date|date:"M d, Y" }} - Ongoing
+                                        {% endif %}
+                                    </li>
+                                </ul>
+                                {% else %}
+                                <p>No active commission plan found. Your calculations will be based on standard rates.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <button id="calculateBtn" class="btn btn-primary btn-lg">Calculate Commission</button>
+                            <button id="resetBtn" class="btn btn-secondary btn-lg ms-2">Reset</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scenario Comparison -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Scenario Comparison</h6>
+                </div>
+                <div class="card-body">
+                    <p>Add multiple scenarios to compare potential commissions:</p>
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="scenariosTable">
+                            <thead>
+                                <tr>
+                                    <th>Scenario</th>
+                                    <th>Sales Amount</th>
+                                    <th>Projected Commission</th>
+                                    <th>Date Added</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr id="emptyScenarioRow">
+                                    <td colspan="5" class="text-center text-muted">No scenarios added yet</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button id="addScenarioBtn" class="btn btn-outline-primary mt-2" disabled>Add Current Scenario</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const salesAmountInput = document.getElementById('salesAmount');
+    const productSelect = document.getElementById('productSelect');
+    const commissionPlanSelect = document.getElementById('commissionPlanSelect');
+    const calculateBtn = document.getElementById('calculateBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const projectedCommissionEl = document.getElementById('projectedCommission');
+    const addScenarioBtn = document.getElementById('addScenarioBtn');
+    const scenariosTable = document.getElementById('scenariosTable').getElementsByTagName('tbody')[0];
+    const emptyScenarioRow = document.getElementById('emptyScenarioRow');
+    
+    let scenarios = [];
+    
+    // Calculate commission function
+    function calculateCommission() {
+        const salesAmount = parseFloat(salesAmountInput.value) || 0;
+        
+        // Simple calculation based on common commission structures
+        // In a real implementation, this would call your commission calculation logic
+        let commissionRate = 0.10; // Default 10% rate
+        
+        // This is a simplified calculation - in a real implementation, 
+        // you would need to call the actual commission calculation logic
+        // based on the selected plan and product
+        const projectedCommission = salesAmount * commissionRate;
+        
+        projectedCommissionEl.textContent = '$' + projectedCommission.toFixed(2);
+        addScenarioBtn.disabled = false;
+    }
+    
+    // Event listeners
+    calculateBtn.addEventListener('click', calculateCommission);
+    
+    resetBtn.addEventListener('click', function() {
+        salesAmountInput.value = '10000';
+        productSelect.value = '';
+        projectedCommissionEl.textContent = '$0.00';
+        addScenarioBtn.disabled = true;
+    });
+    
+    // Add scenario to table
+    addScenarioBtn.addEventListener('click', function() {
+        const salesAmount = parseFloat(salesAmountInput.value) || 0;
+        const projectedCommission = parseFloat(projectedCommissionEl.textContent.replace('$', ''));
+        
+        const scenario = {
+            id: scenarios.length + 1,
+            salesAmount: salesAmount,
+            projectedCommission: projectedCommission,
+            dateAdded: new Date().toLocaleDateString()
+        };
+        
+        scenarios.push(scenario);
+        
+        // Remove empty row if it exists
+        if (emptyScenarioRow) {
+            emptyScenarioRow.remove();
+        }
+        
+        // Add row to table
+        const newRow = scenariosTable.insertRow();
+        newRow.innerHTML = `
+            <td>Scenario ${scenario.id}</td>
+            <td>$${scenario.salesAmount.toFixed(2)}</td>
+            <td>$${scenario.projectedCommission.toFixed(2)}</td>
+            <td>${scenario.dateAdded}</td>
+            <td>
+                <button class="btn btn-sm btn-danger delete-scenario" data-id="${scenario.id}">Delete</button>
+            </td>
+        `;
+        
+        // Add event listener to delete button
+        newRow.querySelector('.delete-scenario').addEventListener('click', function() {
+            const id = parseInt(this.getAttribute('data-id'));
+            scenarios = scenarios.filter(s => s.id !== id);
+            
+            // Remove the row
+            this.closest('tr').remove();
+            
+            // Show empty row if no scenarios left
+            if (scenarios.length === 0) {
+                const emptyRow = scenariosTable.insertRow();
+                emptyRow.id = 'emptyScenarioRow';
+                emptyRow.innerHTML = '<td colspan="5" class="text-center text-muted">No scenarios added yet</td>';
+            }
+        });
+    });
+    
+    // Initialize with default calculation
+    calculateCommission();
+});
+</script>
+
+{% endblock %}

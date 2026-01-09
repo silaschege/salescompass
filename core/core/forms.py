@@ -11,7 +11,7 @@ from .models import (
 
 from .models_audit import DynamicChoiceAuditMixin
 from tenants.models import Tenant as TenantModel
-
+ 
 
 class DynamicChoiceWidget(Select):
     """Custom widget for dynamic choices that loads choices from the database"""

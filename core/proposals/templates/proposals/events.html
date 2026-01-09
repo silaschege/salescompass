@@ -1,0 +1,132 @@
+{% extends "proposals/base.html" %}
+
+{% block title %}Proposal Events - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="block-title mb-4">Proposal Events</h1>
+    
+    <!-- Stats Summary -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Event Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center p-3 bg-primary bg-opacity-10 rounded">
+                                <h3>{{ total_events }}</h3>
+                                <p class="mb-0">Total Events</p>
+                            </div>
+                        </div>
+                        {% for stat in event_stats %}
+                        <div class="col-md-2">
+                            <div class="text-center p-3 bg-info bg-opacity-10 rounded">
+                                <h3>{{ stat.count }}</h3>
+                                <p class="mb-0 text-capitalize">{{ stat.event_type }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Events Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5>Recent Events</h5>
+        </div>
+        <div class="card-body">
+            {% if events %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Event Type</th>
+                            <th>Proposal</th>
+                            <th>IP Address</th>
+                            <th>User Agent</th>
+                            <th>Duration</th>
+                            <th>Link</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in events %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-{% if event.event_type == 'opened' %}primary{% elif event.event_type == 'esg_viewed' %}success{% elif event.event_type == 'downloaded' %}info{% elif event.event_type == 'email_opened' %}warning{% elif event.event_type == 'link_clicked' %}dark{% else %}secondary{% endif %}">
+                                    {{ event.get_event_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'proposals:detail' event.proposal.pk %}">
+                                    {{ event.proposal.title|truncatechars:30 }}
+                                </a>
+                            </td>
+                            <td>{{ event.ip_address|default:"-" }}</td>
+                            <td>{{ event.user_agent|truncatechars:30|default:"-" }}</td>
+                            <td>
+                                {% if event.duration_sec > 0 %}
+                                    {{ event.duration_sec }}s
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if event.link_url %}
+                                    <a href="{{ event.link_url }}" target="_blank">Link</a>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ event.created_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1">&laquo; First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+                <p class="text-muted">No events found.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

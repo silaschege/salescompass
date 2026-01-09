@@ -1,0 +1,49 @@
+<div class="card h-100">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-tasks me-2"></i>Tasks
+            <span class="badge bg-secondary ms-1">{{ tasks.count }}</span>
+        </h5>
+        <a href="{% url 'tasks:create' %}?content_type={{ content_type_id }}&object_id={{ object_id }}"
+            class="btn btn-sm btn-primary">
+            <i class="fas fa-plus"></i> Add Task
+        </a>
+    </div>
+    <div class="card-body p-0">
+        {% if tasks %}
+        <div class="list-group list-group-flush">
+            {% for task in tasks %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <div class="form-check me-3">
+                        <input class="form-check-input" type="checkbox" {% if task.status == 'completed' %}checked{% endif%} disabled>
+                    </div>
+                    <div>
+                        <a href="{% url 'tasks:task_detail' task.pk %}"
+                            class="text-decoration-none {% if task.status == 'completed' %}text-decoration-line-through text-muted{% endif %}">
+                            {{ task.title }}
+                        </a>
+                        <div class="small text-muted">
+                            {% if task.due_date %}
+                            <i class="far fa-calendar-alt me-1"></i> {{ task.due_date|date:"M d" }}
+                            {% endif %}
+                            {% if task.assigned_to %}
+                            <span class="ms-2"><i class="far fa-user me-1"></i> {{
+                                task.assigned_to.get_full_name|default:task.assigned_to.email }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <span class="badge bg-{{ task.priority_ref.color|default:'secondary' }}">{{ task.priority_ref.label
+                    }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center p-4 text-muted">
+            <i class="fas fa-check-circle fa-2x mb-2 text-muted opacity-25"></i>
+            <p class="mb-0">No tasks linked to this item.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>

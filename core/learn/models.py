@@ -20,9 +20,11 @@
 
 
 # Create your models here.
+from datetime import timedelta
 from django.db import models
+from django.utils import timezone
 from tenants.models import TenantAwareModel as TenantModel
-from core.models import  TimeStampedModel
+from core.models import TimeStampedModel
 from core.models import User
 
 ARTICLE_TYPES = [
@@ -39,6 +41,19 @@ STATUS_CHOICES = [
     ('review', 'In Review'),
     ('published', 'Published'),
     ('archived', 'Archived'),
+]
+
+LESSON_TYPES = [
+    ('article', 'Article'),
+    ('video', 'Video'),
+    ('quiz', 'Quiz'),
+    ('assignment', 'Assignment'),
+]
+
+COMPLETION_STATUS = [
+    ('not_started', 'Not Started'),
+    ('in_progress', 'In Progress'),
+    ('completed', 'Completed'),
 ]
 
 class Category(TenantModel):
@@ -164,3 +179,85 @@ class ExportJob(TenantModel):
 
     def __str__(self):
         return f"Export {self.article.title} - {self.status}"
+
+
+class Course(TenantModel, TimeStampedModel):
+    """
+    Structured learning path.
+    """
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True)
+    description = models.TextField(blank=True)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='courses')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='authored_courses')
+    order = models.IntegerField(default=0)
+    thumbnail = models.ImageField(upload_to='course_thumbnails/', null=True, blank=True)
+    estimated_duration = models.DurationField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['order', 'created_at']
+        unique_together = [('title', 'tenant')]
+
+    def __str__(self):
+        return self.title
+
+
+class Lesson(TenantModel, TimeStampedModel):
+    """
+    Individual units of content within a course.
+    """
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='lessons')
+    content = models.TextField(blank=True)  # Markdown/HTML content
+    order_in_course = models.IntegerField(default=0)
+    lesson_type = models.CharField(max_length=20, choices=LESSON_TYPES, default='article')
+    duration = models.DurationField(null=True, blank=True)
+    prerequisite_lesson = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='next_lessons')
+    
+    # Integration with Article system
+    article = models.ForeignKey(Article, on_delete=models.SET_NULL, null=True, blank=True, related_name='lessons')
+
+    class Meta:
+        ordering = ['order_in_course']
+        unique_together = [('course', 'order_in_course', 'tenant')]
+
+    def __str__(self):
+        return f"{self.course.title} - {self.title}"
+
+
+class UserProgress(TenantModel, TimeStampedModel):
+    """
+    Tracks user progress within courses and lessons.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='learning_progress')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='user_progress')
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='user_progress')
+    completion_status = models.CharField(max_length=20, choices=COMPLETION_STATUS, default='not_started')
+    completion_date = models.DateTimeField(null=True, blank=True)
+    score = models.FloatField(null=True, blank=True)  # Used for quiz scores
+    time_spent = models.DurationField(default=timedelta(0))
+
+    class Meta:
+        unique_together = [('user', 'lesson', 'tenant')]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.lesson.title} ({self.completion_status})"
+
+
+class Certificate(TenantModel, TimeStampedModel):
+    """
+    Issued to users upon course completion.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='certificates')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='certificates')
+    issue_date = models.DateTimeField(auto_now_add=True)
+    certificate_number = models.CharField(max_length=50, unique=True)
+    pdf_file = models.FileField(upload_to='certificates/', null=True, blank=True)
+
+    class Meta:
+        unique_together = [('user', 'course', 'tenant')]
+
+    def __str__(self):
+        return f"Certificate: {self.user.email} - {self.course.title}"

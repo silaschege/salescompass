@@ -3,13 +3,12 @@ from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.urls import reverse_lazy
 from core.permissions import ObjectPermissionRequiredMixin
-from .models import Product, ProductBundle, CompetitorProduct, ProductComparison
-from .forms import ProductForm, CompetitorProductForm
-from .utils import generate_sku
+from .models import Product, ProductBundle, CompetitorProduct, ProductComparison, ProductDependency
+from .forms import ProductForm, CompetitorProductForm, ProductDependencyForm, ProductBundleForm, ProductComparisonForm
+from .utils import generate_sku, get_product_price
 
 
-class ProductListView(ObjectPermissionRequiredMixin, ListView):
-    model = Product
+
 class ProductListView(ObjectPermissionRequiredMixin, ListView):
     model = Product
     template_name = 'products/product_list.html'
@@ -21,7 +20,7 @@ class ProductListView(ObjectPermissionRequiredMixin, ListView):
         category = self.request.GET.get('category')
         if category:
             queryset = queryset.filter(category=category)
-        return queryset.filter(is_active=True)
+        return queryset.filter(product_is_active=True)
 
 
 class ProductDetailView(ObjectPermissionRequiredMixin, DetailView):
@@ -146,3 +145,119 @@ class ProductComparisonView(ObjectPermissionRequiredMixin, TemplateView):
             context['pricing_data'] = pricing_data
         
         return context
+
+class ProductBundleListView(ObjectPermissionRequiredMixin, ListView):
+    model = ProductBundle
+    template_name = 'products/productbundle_list.html'
+    context_object_name = 'bundles'
+    paginate_by = 20
+
+class ProductBundleDetailView(ObjectPermissionRequiredMixin, DetailView):
+    model = ProductBundle
+    template_name = 'products/productbundle_detail.html'
+    context_object_name = 'bundle'
+
+class ProductBundleCreateView(ObjectPermissionRequiredMixin, CreateView):
+    model = ProductBundle
+    form_class = ProductBundleForm
+    template_name = 'products/productbundle_form.html'
+    success_url = reverse_lazy('products:productbundle_list')
+
+class ProductBundleUpdateView(ObjectPermissionRequiredMixin, UpdateView):
+    model = ProductBundle
+    form_class = ProductBundleForm
+    template_name = 'products/productbundle_form.html'
+    success_url = reverse_lazy('products:productbundle_list')
+
+class ProductBundleDeleteView(ObjectPermissionRequiredMixin, DeleteView):
+    model = ProductBundle
+    template_name = 'products/productbundle_confirm_delete.html'
+    success_url = reverse_lazy('products:productbundle_list')
+
+class CompetitorProductListView(ObjectPermissionRequiredMixin, ListView):
+    model = CompetitorProduct
+    template_name = 'products/competitorproduct_list.html'
+    context_object_name = 'competitors'
+    paginate_by = 20
+
+class CompetitorProductDetailView(ObjectPermissionRequiredMixin, DetailView):
+    model = CompetitorProduct
+    template_name = 'products/competitorproduct_detail.html'
+    context_object_name = 'competitor'
+
+class CompetitorProductCreateView(ObjectPermissionRequiredMixin, CreateView):
+    model = CompetitorProduct
+    form_class = CompetitorProductForm
+    template_name = 'products/competitorproduct_form.html'
+    success_url = reverse_lazy('products:competitorproduct_list')
+
+class CompetitorProductUpdateView(ObjectPermissionRequiredMixin, UpdateView):
+    model = CompetitorProduct
+    form_class = CompetitorProductForm
+    template_name = 'products/competitorproduct_form.html'
+    success_url = reverse_lazy('products:competitorproduct_list')
+
+class CompetitorProductDeleteView(ObjectPermissionRequiredMixin, DeleteView):
+    model = CompetitorProduct
+    template_name = 'products/competitorproduct_confirm_delete.html'
+    success_url = reverse_lazy('products:competitorproduct_list')
+
+class ProductComparisonListView(ObjectPermissionRequiredMixin, ListView):
+    model = ProductComparison
+    template_name = 'products/productcomparison_list.html'
+    context_object_name = 'comparisons'
+    paginate_by = 20
+
+class ProductComparisonDetailView(ObjectPermissionRequiredMixin, DetailView):
+    model = ProductComparison
+    template_name = 'products/productcomparison_detail.html'
+    context_object_name = 'comparison'
+
+class ProductComparisonCreateView(ObjectPermissionRequiredMixin, CreateView):
+    model = ProductComparison
+    form_class = ProductComparisonForm  # Needs to be created
+    template_name = 'products/productcomparison_form.html'
+    success_url = reverse_lazy('products:productcomparison_list')
+
+class ProductComparisonUpdateView(ObjectPermissionRequiredMixin, UpdateView):
+    model = ProductComparison
+    form_class = ProductComparisonForm  # Needs to be created
+    template_name = 'products/productcomparison_form.html'
+    success_url = reverse_lazy('products:productcomparison_list')
+
+class ProductComparisonDeleteView(ObjectPermissionRequiredMixin, DeleteView):
+    model = ProductComparison
+    template_name = 'products/productcomparison_confirm_delete.html'
+    success_url = reverse_lazy('products:productcomparison_list')
+
+class ProductDependencyListView(ObjectPermissionRequiredMixin, ListView):
+    model = ProductDependency
+    template_name = 'products/productdependency_list.html'
+    context_object_name = 'dependencies'
+    paginate_by = 20
+
+class ProductDependencyCreateView(ObjectPermissionRequiredMixin, CreateView):
+    model = ProductDependency
+    form_class = ProductDependencyForm  # Needs to be created
+    template_name = 'products/productdependency_form.html'
+    success_url = reverse_lazy('products:productdependency_list')
+
+class ProductDependencyUpdateView(ObjectPermissionRequiredMixin, UpdateView):
+    model = ProductDependency
+    form_class = ProductDependencyForm  # Needs to be created
+    template_name = 'products/productdependency_form.html'
+    success_url = reverse_lazy('products:productdependency_list')
+
+class ProductDependencyDeleteView(ObjectPermissionRequiredMixin, DeleteView):
+    model = ProductDependency
+    template_name = 'products/productdependency_confirm_delete.html'
+    success_url = reverse_lazy('products:productdependency_list')
+
+
+
+
+
+
+
+
+

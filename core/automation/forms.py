@@ -1,5 +1,5 @@
 from django import forms
-from .models import Automation, AutomationCondition, AutomationAction
+from .models import Automation, AutomationCondition, AutomationAction,CustomCodeSnippet
 
 class AutomationForm(forms.ModelForm):
     """
@@ -301,3 +301,72 @@ class AutomationActionForm(forms.ModelForm):
             raise forms.ValidationError("Configuration is required.")
         
         return cleaned_data
+
+
+class CustomCodeSnippetForm(forms.ModelForm):
+    """Form for creating and updating custom code snippets with security validation."""
+    
+    from .models import CustomCodeSnippet
+    
+    class Meta:
+        model = CustomCodeSnippet
+        fields = ['name', 'description', 'code_content', 'language', 'parameters_schema', 'is_active']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Calculate Lead Score'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'code_content': forms.Textarea(attrs={
+                'class': 'form-control font-monospace', 
+                'rows': 15, 
+                'spellcheck': 'false',
+                'placeholder': '# Your Python code here\n# Available: payload, parameters, context\n# Define a result variable to return data\n\nresult = {"status": "success"}'
+            }),
+            'language': forms.Select(attrs={'class': 'form-select'}),
+            'parameters_schema': forms.Textarea(attrs={
+                'class': 'form-control font-monospace', 
+                'rows': 5,
+                'placeholder': '{"type": "object", "properties": {}}'
+            }),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+    
+    def clean_code_content(self):
+        code_content = self.cleaned_data.get('code_content')
+        if code_content:
+            # Security validation - prevent dangerous operations
+            dangerous_patterns = [
+                ('import os', 'Operating system access'),
+                ('import sys', 'System access'),
+                ('exec(', 'Dynamic code execution'),
+                ('eval(', 'Dynamic code evaluation'),
+                ('__import__', 'Dynamic imports'),
+                ('open(', 'File access'),
+                ('file(', 'File access'),
+                ('subprocess', 'Subprocess execution'),
+                ('shutil', 'File operations'),
+                ('socket', 'Network access'),
+                ('requests.', 'HTTP requests'),
+                ('urllib', 'URL access'),
+                ('pickle', 'Serialization'),
+                ('compile(', 'Code compilation'),
+                ('globals(', 'Global namespace access'),
+                ('locals(', 'Local namespace access'),
+                ('__builtins__', 'Builtin access'),
+            ]
+            
+            for pattern, description in dangerous_patterns:
+                if pattern in code_content:
+                    raise forms.ValidationError(
+                        f"Code contains restricted operation: {description} ({pattern})"
+                    )
+        return code_content
+    
+    def clean_parameters_schema(self):
+        parameters_schema = self.cleaned_data.get('parameters_schema')
+        if parameters_schema:
+            try:
+                import json
+                if isinstance(parameters_schema, str):
+                    json.loads(parameters_schema)
+            except json.JSONDecodeError as e:
+                raise forms.ValidationError(f"Invalid JSON schema: {e}")
+        return parameters_schema

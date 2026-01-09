@@ -25,9 +25,9 @@ class Command(BaseCommand):
                 'model_name': 'Lead',
                 'app_label': 'leads',
                 'mappings': [
-                    {'old_field': 'industry', 'new_field': 'industry_ref', 'choice_model': 'Industry'},
-                    {'old_field': 'lead_source', 'new_field': 'source_ref', 'choice_model': 'LeadSource'},
-                    {'old_field': 'status', 'new_field': 'status_ref', 'choice_model': 'LeadStatus'},
+                    {'old_field': 'industry', 'new_field': 'industry_ref', 'choice_model': 'Industry', 'lookup_field': 'industry_name'},
+                    {'old_field': 'lead_source', 'new_field': 'source_ref', 'choice_model': 'LeadSource', 'lookup_field': 'source_name'},
+                    {'old_field': 'status', 'new_field': 'status_ref', 'choice_model': 'LeadStatus', 'lookup_field': 'status_name'},
                 ]
             },
             
@@ -36,48 +36,8 @@ class Command(BaseCommand):
                 'model_name': 'SystemConfiguration',
                 'app_label': 'core',
                 'mappings': [
-                    {'old_field': 'data_type', 'new_field': 'data_type_ref', 'choice_model': 'SystemConfigType'},
-                    {'old_field': 'category', 'new_field': 'category_ref', 'choice_model': 'SystemConfigCategory'},
-                ]
-            },
-            {
-                'model_name': 'SystemEventLog',
-                'app_label': 'core',
-                'mappings': [
-                    {'old_field': 'event_type', 'new_field': 'event_type_ref', 'choice_model': 'SystemEventType'},
-                    {'old_field': 'severity', 'new_field': 'severity_ref', 'choice_model': 'SystemEventSeverity'},
-                ]
-            },
-            {
-                'model_name': 'SystemHealthCheck',
-                'app_label': 'core',
-                'mappings': [
-                    {'old_field': 'check_type', 'new_field': 'check_type_ref', 'choice_model': 'HealthCheckType'},
-                    {'old_field': 'status', 'new_field': 'status_ref', 'choice_model': 'HealthCheckStatus'},
-                ]
-            },
-            {
-                'model_name': 'MaintenanceWindow',
-                'app_label': 'core',
-                'mappings': [
-                    {'old_field': 'status', 'new_field': 'status_ref', 'choice_model': 'MaintenanceStatus'},
-                    {'old_field': 'maintenance_type', 'new_field': 'maintenance_type_ref', 'choice_model': 'MaintenanceType'},
-                ]
-            },
-            {
-                'model_name': 'PerformanceMetric',
-                'app_label': 'core',
-                'mappings': [
-                    {'old_field': 'metric_type', 'new_field': 'metric_type_ref', 'choice_model': 'PerformanceMetricType'},
-                    {'old_field': 'environment', 'new_field': 'environment_ref', 'choice_model': 'PerformanceEnvironment'},
-                ]
-            },
-            {
-                'model_name': 'SystemNotification',
-                'app_label': 'core',
-                'mappings': [
-                    {'old_field': 'notification_type', 'new_field': 'notification_type_ref', 'choice_model': 'NotificationType'},
-                    {'old_field': 'priority', 'new_field': 'priority_ref', 'choice_model': 'NotificationPriority'},
+                    {'old_field': 'data_type', 'new_field': 'data_type_ref', 'choice_model': 'SystemConfigType', 'lookup_field': 'name'},
+                    {'old_field': 'category', 'new_field': 'category_ref', 'choice_model': 'SystemConfigCategory', 'lookup_field': 'name'},
                 ]
             },
             
@@ -86,35 +46,35 @@ class Command(BaseCommand):
                 'model_name': 'Plan',
                 'app_label': 'billing',
                 'mappings': [
-                    {'old_field': 'tier', 'new_field': 'tier_ref', 'choice_model': 'PlanTier'},
+                    {'old_field': 'tier', 'new_field': 'tier_ref', 'choice_model': 'PlanTier', 'lookup_field': 'tier_name'},
                 ]
             },
             {
                 'model_name': 'Subscription',
                 'app_label': 'billing',
                 'mappings': [
-                    {'old_field': 'status', 'new_field': 'status_ref', 'choice_model': 'SubscriptionStatus'},
+                    {'old_field': 'status', 'new_field': 'status_ref', 'choice_model': 'SubscriptionStatus', 'lookup_field': 'status_name'},
                 ]
             },
             {
                 'model_name': 'CreditAdjustment',
                 'app_label': 'billing',
                 'mappings': [
-                    {'old_field': 'adjustment_type', 'new_field': 'adjustment_type_ref', 'choice_model': 'AdjustmentType'},
+                    {'old_field': 'adjustment_type', 'new_field': 'adjustment_type_ref', 'choice_model': 'AdjustmentType', 'lookup_field': 'type_name'},
                 ]
             },
             {
                 'model_name': 'PaymentProviderConfig',
                 'app_label': 'billing',
                 'mappings': [
-                    {'old_field': 'name', 'new_field': 'name_ref', 'choice_model': 'PaymentProvider'},
+                    {'old_field': 'name', 'new_field': 'name_ref', 'choice_model': 'PaymentProvider', 'lookup_field': 'provider_name'},
                 ]
             },
             {
                 'model_name': 'PaymentMethod',
                 'app_label': 'billing',
                 'mappings': [
-                    {'old_field': 'type', 'new_field': 'type_ref', 'choice_model': 'PaymentType'},
+                    {'old_field': 'type', 'new_field': 'type_ref', 'choice_model': 'PaymentType', 'lookup_field': 'type_name'},
                 ]
             },
             
@@ -123,8 +83,8 @@ class Command(BaseCommand):
                 'model_name': 'DashboardWidget',
                 'app_label': 'dashboard',
                 'mappings': [
-                    {'old_field': 'widget_type', 'new_field': 'widget_type_ref', 'choice_model': 'WidgetType'},
-                    {'old_field': 'category', 'new_field': 'category_ref', 'choice_model': 'WidgetCategory'},
+                    {'old_field': 'widget_type_old', 'new_field': 'widget_type_ref', 'choice_model': 'WidgetType', 'lookup_field': 'widget_name'},
+                    {'old_field': 'category_old', 'new_field': 'category_ref', 'choice_model': 'WidgetCategory', 'lookup_field': 'category_name'},
                 ]
             },
             
@@ -133,140 +93,18 @@ class Command(BaseCommand):
                 'model_name': 'Task',
                 'app_label': 'tasks',
                 'mappings': [
-                    {'old_field': 'priority', 'new_field': 'priority_ref', 'choice_model': 'TaskPriority'},
-                    {'old_field': 'status', 'new_field': 'status_ref', 'choice_model': 'TaskStatus'},
-                    {'old_field': 'task_type', 'new_field': 'task_type_ref', 'choice_model': 'TaskType'},
-                    {'old_field': 'recurrence_pattern', 'new_field': 'recurrence_pattern_ref', 'choice_model': 'RecurrencePattern'},
+                    {'old_field': 'priority', 'new_field': 'priority_ref', 'choice_model': 'TaskPriority', 'lookup_field': 'priority_name'},
+                    {'old_field': 'status', 'new_field': 'status_ref', 'choice_model': 'TaskStatus', 'lookup_field': 'status_name'},
+                    {'old_field': 'task_type', 'new_field': 'task_type_ref', 'choice_model': 'TaskType', 'lookup_field': 'type_name'},
+                    {'old_field': 'recurrence_pattern', 'new_field': 'recurrence_pattern_ref', 'choice_model': 'RecurrencePattern', 'lookup_field': 'pattern_name'},
                 ]
             },
             {
                 'model_name': 'TaskTemplate',
                 'app_label': 'tasks',
                 'mappings': [
-                    {'old_field': 'priority', 'new_field': 'priority_ref', 'choice_model': 'TaskPriority'},
-                    {'old_field': 'task_type', 'new_field': 'task_type_ref', 'choice_model': 'TaskType'},
-                ]
-            },
-            
-            # Settings app
-            {
-                'model_name': 'Setting',
-                'app_label': 'settings_app',
-                'mappings': [
-                    {'old_field': 'setting_type', 'new_field': 'setting_type_ref', 'choice_model': 'SettingType'},
-                ]
-            },
-            {
-                'model_name': 'CustomField',
-                'app_label': 'settings_app',
-                'mappings': [
-                    {'old_field': 'model_name', 'new_field': 'model_name_ref', 'choice_model': 'ModelChoice'},
-                    {'old_field': 'field_type', 'new_field': 'field_type_ref', 'choice_model': 'FieldType'},
-                ]
-            },
-            {
-                'model_name': 'ModuleLabel',
-                'app_label': 'settings_app',
-                'mappings': [
-                    {'old_field': 'module_key', 'new_field': 'module_key_ref', 'choice_model': 'ModuleChoice'},
-                ]
-            },
-            {
-                'model_name': 'TeamMember',
-                'app_label': 'settings_app',
-                'mappings': [
-                    {'old_field': 'role', 'new_field': 'role_ref', 'choice_model': 'TeamRole'},
-                    {'old_field': 'territory', 'new_field': 'territory_ref', 'choice_model': 'Territory'},
-                ]
-            },
-            {
-                'model_name': 'AssignmentRule',
-                'app_label': 'settings_app',
-                'mappings': [
-                    {'old_field': 'module', 'new_field': 'module_ref', 'choice_model': 'ModuleChoice'},
-                    {'old_field': 'rule_type', 'new_field': 'rule_type_ref', 'choice_model': 'AssignmentRuleType'},
-                ]
-            },
-            {
-                'model_name': 'PipelineStage',
-                'app_label': 'settings_app',
-                'mappings': [
-                    {'old_field': 'pipeline_type', 'new_field': 'pipeline_type_ref', 'choice_model': 'PipelineType'},
-                ]
-            },
-            {
-                'model_name': 'EmailIntegration',
-                'app_label': 'settings_app',
-                'mappings': [
-                    {'old_field': 'provider', 'new_field': 'provider_ref', 'choice_model': 'EmailProvider'},
-                ]
-            },
-            {
-                'model_name': 'BehavioralScoringRule',
-                'app_label': 'settings_app',
-                'mappings': [
-                    {'old_field': 'action_type', 'new_field': 'action_type_ref', 'choice_model': 'ActionType'},
-                ]
-            },
-            {
-                'model_name': 'DemographicScoringRule',
-                'app_label': 'settings_app',
-                'mappings': [
-                    {'old_field': 'operator', 'new_field': 'operator_ref', 'choice_model': 'OperatorType'},
-                ]
-            },
-            
-            # Reports app
-            {
-                'model_name': 'Report',
-                'app_label': 'reports',
-                'mappings': [
-                    {'old_field': 'report_type', 'new_field': 'report_type_ref', 'choice_model': 'ReportType'},
-                    {'old_field': 'schedule_frequency', 'new_field': 'schedule_frequency_ref', 'choice_model': 'ReportScheduleFrequency'},
-                ]
-            },
-            {
-                'model_name': 'ReportSchedule',
-                'app_label': 'reports',
-                'mappings': [
-                    {'old_field': 'frequency', 'new_field': 'frequency_ref', 'choice_model': 'ReportScheduleFrequency'},
-                ]
-            },
-            {
-                'model_name': 'ReportExport',
-                'app_label': 'reports',
-                'mappings': [
-                    {'old_field': 'export_format', 'new_field': 'export_format_ref', 'choice_model': 'ExportFormat'},
-                ]
-            },
-            {
-                'model_name': 'ReportTemplate',
-                'app_label': 'reports',
-                'mappings': [
-                    {'old_field': 'template_type', 'new_field': 'template_type_ref', 'choice_model': 'TemplateType'},
-                    {'old_field': 'template_format', 'new_field': 'template_format_ref', 'choice_model': 'TemplateFormat'},
-                ]
-            },
-            {
-                'model_name': 'ReportAnalytics',
-                'app_label': 'reports',
-                'mappings': [
-                    {'old_field': 'action', 'new_field': 'action_ref', 'choice_model': 'ReportAction'},
-                ]
-            },
-            {
-                'model_name': 'ReportSubscriber',
-                'app_label': 'reports',
-                'mappings': [
-                    {'old_field': 'subscription_type', 'new_field': 'subscription_type_ref', 'choice_model': 'SubscriptionType'},
-                    {'old_field': 'report_format', 'new_field': 'report_format_ref', 'choice_model': 'ReportFormat'},
-                ]
-            },
-            {
-                'model_name': 'ReportNotification',
-                'app_label': 'reports',
-                'mappings': [
-                    {'old_field': 'notification_channel', 'new_field': 'notification_channel_ref', 'choice_model': 'NotificationChannel'},
+                    {'old_field': 'priority', 'new_field': 'priority_ref', 'choice_model': 'TaskPriority', 'lookup_field': 'priority_name'},
+                    {'old_field': 'task_type', 'new_field': 'task_type_ref', 'choice_model': 'TaskType', 'lookup_field': 'type_name'},
                 ]
             },
             
@@ -275,36 +113,36 @@ class Command(BaseCommand):
                 'model_name': 'Campaign',
                 'app_label': 'marketing',
                 'mappings': [
-                    {'old_field': 'status', 'new_field': 'status_ref', 'choice_model': 'CampaignStatus'},
+                    {'old_field': 'status', 'new_field': 'status_ref', 'choice_model': 'CampaignStatus', 'lookup_field': 'status_name'},
                 ]
             },
             {
                 'model_name': 'EmailTemplate',
                 'app_label': 'marketing',
                 'mappings': [
-                    {'old_field': 'category', 'new_field': 'category_ref', 'choice_model': 'EmailCategory'},
+                    {'old_field': 'category', 'new_field': 'category_ref', 'choice_model': 'EmailCategory', 'lookup_field': 'category_name'},
                 ]
             },
             {
                 'model_name': 'LandingPageBlock',
                 'app_label': 'marketing',
                 'mappings': [
-                    {'old_field': 'block_type', 'new_field': 'block_type_ref', 'choice_model': 'BlockType'},
+                    {'old_field': 'block_type', 'new_field': 'block_type_ref', 'choice_model': 'BlockType', 'lookup_field': 'type_name'},
                 ]
             },
             {
                 'model_name': 'MessageTemplate',
                 'app_label': 'marketing',
                 'mappings': [
-                    {'old_field': 'message_type', 'new_field': 'message_type_ref', 'choice_model': 'MessageType'},
-                    {'old_field': 'category', 'new_field': 'category_ref', 'choice_model': 'MessageCategory'},
+                    {'old_field': 'message_type', 'new_field': 'message_type_ref', 'choice_model': 'MessageType', 'lookup_field': 'type_name'},
+                    {'old_field': 'category', 'new_field': 'category_ref', 'choice_model': 'MessageCategory', 'lookup_field': 'category_name'},
                 ]
             },
             {
                 'model_name': 'EmailCampaign',
                 'app_label': 'marketing',
                 'mappings': [
-                    {'old_field': 'email_provider', 'new_field': 'email_provider_ref', 'choice_model': 'EmailProvider'},
+                    {'old_field': 'email_provider', 'new_field': 'email_provider_ref', 'choice_model': 'EmailProvider', 'lookup_field': 'provider_name'},
                 ]
             },
             
@@ -313,7 +151,24 @@ class Command(BaseCommand):
                 'model_name': 'WinLossAnalysis',
                 'app_label': 'opportunities',
                 'mappings': [
-                    {'old_field': 'deal_size_category', 'new_field': 'deal_size_category_ref', 'choice_model': 'DealSizeCategory'},
+                    {'old_field': 'deal_size_category', 'new_field': 'deal_size_category_ref', 'choice_model': 'DealSizeCategory', 'lookup_field': 'category_name'},
+                ]
+            },
+            {
+                'model_name': 'OpportunityStage',
+                'app_label': 'opportunities',
+                'mappings': [
+                    {'old_field': 'pipeline_type', 'new_field': 'pipeline_type_ref', 'choice_model': 'PipelineType', 'lookup_field': 'pipeline_type_name'},
+                ]
+            },
+            
+            # Accounts app
+            {
+                'model_name': 'OrganizationMember',
+                'app_label': 'accounts',
+                'mappings': [
+                    {'old_field': 'role', 'new_field': 'role_ref', 'choice_model': 'TeamRole', 'lookup_field': 'role_name'},
+                    {'old_field': 'territory', 'new_field': 'territory_ref', 'choice_model': 'Territory', 'lookup_field': 'territory_name'},
                 ]
             },
         ]
@@ -327,8 +182,20 @@ class Command(BaseCommand):
                     # Get the model class
                     model_class = apps.get_model(mapping['app_label'], mapping['model_name'])
                     
-                    # Get all records for this tenant
-                    records = model_class.objects.filter(tenant_id=tenant.id)
+                    # Check if model has tenant field
+                    has_tenant = any(f.name in ['tenant', 'tenant_id'] for f in model_class._meta.fields)
+                    
+                    # Get records
+                    if has_tenant:
+                        records = model_class.objects.filter(tenant_id=tenant.id)
+                    else:
+                        # Only process global models once (on the first tenant iteration or similar)
+                        # Actually, to be simple, let's just process it for every tenant if it's small, 
+                        # or only once if we track it. But since this script loops tenants, 
+                        # global models will be processed multiple times. We should skip if already done.
+                        if tenant != tenants.first():
+                            continue
+                        records = model_class.objects.all()
                     
                     for record in records:
                         # Process each field mapping
@@ -344,12 +211,19 @@ class Command(BaseCommand):
                                 # Get the corresponding dynamic choice model
                                 choice_model = apps.get_model(mapping['app_label'], choice_model_name)
                                 
+                                # Check if choice model has tenant field
+                                choice_has_tenant = any(f.name in ['tenant', 'tenant_id'] for f in choice_model._meta.fields)
+                                
                                 # Find the matching dynamic choice record
                                 try:
-                                    choice_record = choice_model.objects.get(
-                                        name=old_value,
-                                        tenant_id=tenant.id
-                                    )
+                                    lookup_field = field_mapping.get('lookup_field', 'name')
+                                    filter_kwargs = {lookup_field: old_value}
+                                    
+                                    if choice_has_tenant:
+                                        filter_kwargs['tenant_id'] = tenant.id
+                                        choice_record = choice_model.objects.get(**filter_kwargs)
+                                    else:
+                                        choice_record = choice_model.objects.get(**filter_kwargs)
                                     
                                     # Set the new field to reference the dynamic choice
                                     setattr(record, new_field, choice_record)
@@ -360,9 +234,18 @@ class Command(BaseCommand):
                                 except choice_model.DoesNotExist:
                                     self.stdout.write(
                                         self.style.WARNING(
-                                            f'    Choice record not found: {choice_model_name} with name={old_value} for tenant={tenant.id}'
+                                            f'    Choice record not found: {choice_model_name} with {lookup_field}={old_value} for {"tenant=" + str(tenant.id) if choice_has_tenant else "global"}'
                                         )
                                     )
+                                except Exception as e:
+                                    self.stdout.write(
+                                        self.style.ERROR(
+                                            f'    ERROR migrating {mapping["model_name"]}.{old_field}: {str(e)}\n'
+                                            f'    Mapping: {field_mapping}\n'
+                                            f'    Filter: {filter_kwargs}'
+                                        )
+                                    )
+                                    raise e
                     
                     # Save all the updated records in a batch
                     for record in records:

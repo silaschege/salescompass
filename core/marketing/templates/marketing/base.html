@@ -213,66 +213,65 @@
             SalesCompass
         </a>
         <nav class="nav flex-column">
+
+
             <!-- Marketing Campaign Dropdown -->
             {% if perms.marketing.read or perms.marketing.write %}
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse"
                 data-bs-target="#marketingCampaignMenu">
-                Marketing Campaign
+                Campaign Management
             </a>
             <div class="collapse" id="marketingCampaignMenu">
                 {% if perms.marketing.read %}
-                <a class="nav-link ms-3" href="{% url 'marketing:list' %}">List</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:campaign_list' %}">Campaigns</a>
                 <a class="nav-link ms-3" href="{% url 'marketing:campaign_calendar' %}">Calendar</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:drip_campaign_list' %}">Drip Campaigns</a>
                 {% endif %}
                 {% if perms.marketing.write %}
-                <a class="nav-link ms-3" href="{% url 'marketing:create' %}">Create</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:campaign_create' %}">Create Campaign</a>
                 {% endif %}
             </div>
             {% endif %}
 
-            <!--Campaign Performance Dropdown -->
+            <!-- Analytics & ROI Dropdown -->
             {% if perms.marketing.read %}
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse"
-                data-bs-target="#campaignPerformanceMenu">
-                Campaign Performance
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#analyticsMenu">
+                Analytics & ROI
             </a>
-            <div class="collapse" id="campaignPerformanceMenu">
-                <a class="nav-link ms-3" href="{% url 'marketing:performance_list' %}">List</a>
-                <a class="nav-link ms-3" href="{% url 'marketing:performance_analytics' %}">Analytics</a>
-                {% if perms.marketing.write %}
-                <a class="nav-link ms-3" href="{% url 'marketing:performance_create' %}">Create</a>
+            <div class="collapse" id="analyticsMenu">
+                <a class="nav-link ms-3" href="{% url 'marketing:campaign_performance' %}">Performance</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:budget_vs_actual' %}">Budget vs Actual</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:pipeline_influence' %}">Pipeline Influence</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:roi_calculator' %}">ROI Calculator</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:deliverability_report' %}">Deliverability</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:cac_analytics' %}">CAC Analytics</a>
+            </div>
+            {% endif %}
+
+            <!-- Email Marketing Dropdown -->
+            {% if perms.marketing.read or perms.marketing.write %}
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#emailMarketingMenu">
+                Email Marketing
+            </a>
+            <div class="collapse" id="emailMarketingMenu">
+                {% if perms.marketing.read %}
+                <a class="nav-link ms-3" href="{% url 'marketing:email_campaign_list' %}">Email Campaigns</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:email_template_list' %}">Email Templates</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:segment_list' %}">Audience Segments</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:nurture_campaign_list' %}">Nurture Campaigns</a>
                 {% endif %}
             </div>
             {% endif %}
 
-            <!--Email Template Dropdown -->
+            <!-- Content Management Dropdown -->
             {% if perms.marketing.read or perms.marketing.write %}
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#emailTemplateMenu">
-                Email Template
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#contentMenu">
+                Content Management
             </a>
-            <div class="collapse" id="emailTemplateMenu">
+            <div class="collapse" id="contentMenu">
                 {% if perms.marketing.read %}
-                <a class="nav-link ms-3" href="{% url 'marketing:template_list' %}">List</a>
-                {% endif %}
-                {% if perms.marketing.write %}
-                <a class="nav-link ms-3" href="{% url 'marketing:template_create' %}">Create</a>
-                <a class="nav-link ms-3" href="{% url 'marketing:template_builder' %}">Builder</a>
-                {% endif %}
-            </div>
-            {% endif %}
-
-            <!-- Landing Page Dropdown -->
-            {% if perms.marketing.read or perms.marketing.write %}
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#landingPageMenu">
-                Landing Page
-            </a>
-            <div class="collapse" id="landingPageMenu">
-                {% if perms.marketing.read %}
-                <a class="nav-link ms-3" href="{% url 'marketing:landing_page_list' %}">List</a>
-                {% endif %}
-                {% if perms.marketing.write %}
-                <a class="nav-link ms-3" href="{% url 'marketing:landing_page_create' %}">Create</a>
-                <a class="nav-link ms-3" href="{% url 'marketing:landing_page_builder' %}">Builder</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:landing_page_block_list' %}">Landing Pages</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:message_template_list' %}">Message Templates</a>
                 {% endif %}
             </div>
             {% endif %}
@@ -280,17 +279,35 @@
             <!-- AB Testing Dropdown -->
             {% if perms.marketing.read or perms.marketing.write %}
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#abTestingMenu">
-                AB Testing
+                A/B Testing
             </a>
             <div class="collapse" id="abTestingMenu">
                 {% if perms.marketing.read %}
-                <a class="nav-link ms-3" href="{% url 'marketing:ab_test_list' %}">List</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:ab_test_list' %}">Standard Tests</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:ab_automated_test_list' %}">Automated Tests</a>
                 {% endif %}
                 {% if perms.marketing.write %}
-                <a class="nav-link ms-3" href="{% url 'marketing:ab_test_create' %}">Create</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:ab_test_create' %}">Create Test</a>
                 {% endif %}
             </div>
             {% endif %}
+
+            <!-- Configuration Dropdown -->
+            {% if perms.marketing.write %}
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#configMenu">
+                Configuration
+            </a>
+            <div class="collapse" id="configMenu">
+                <a class="nav-link ms-3" href="{% url 'marketing:email_integration_list' %}">Email Integrations</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:campaign_status_list' %}">Campaign Statuses</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:email_provider_list' %}">Email Providers</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:block_type_list' %}">Block Types</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:email_category_list' %}">Email Categories</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:message_type_list' %}">Message Types</a>
+                <a class="nav-link ms-3" href="{% url 'marketing:message_category_list' %}">Message Categories</a>
+            </div>
+            {% endif %}
+
 
         </nav>
     </div>

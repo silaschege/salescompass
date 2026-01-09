@@ -1,0 +1,94 @@
+{% extends "billing/base.html" %}
+
+{% block title %}
+    {% if form.instance.pk %}
+        Edit Credit Adjustment - SalesCompass
+    {% else %}
+        Create Credit Adjustment - SalesCompass
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="container-fluid py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            {% if form.instance.pk %}
+                                Edit Credit Adjustment
+                            {% else %}
+                                Create Credit Adjustment
+                            {% endif %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.subscription.id_for_label }}" class="form-label">Subscription</label>
+                                {{ form.subscription }}
+                                {% if form.subscription.help_text %}
+                                    <div class="form-text">{{ form.subscription.help_text }}</div>
+                                {% endif %}
+                                {% if form.subscription.errors %}
+                                    <div class="text-danger">{{ form.subscription.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.amount.id_for_label }}" class="form-label">Amount</label>
+                                {{ form.amount }}
+                                {% if form.amount.help_text %}
+                                    <div class="form-text">{{ form.amount.help_text }}</div>
+                                {% endif %}
+                                {% if form.amount.errors %}
+                                    <div class="text-danger">{{ form.amount.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.adjustment_type_ref.id_for_label }}" class="form-label">Adjustment Type</label>
+                                {{ form.adjustment_type_ref }}
+                                {% if form.adjustment_type_ref.help_text %}
+                                    <div class="form-text">{{ form.adjustment_type_ref.help_text }}</div>
+                                {% endif %}
+                                {% if form.adjustment_type_ref.errors %}
+                                    <div class="text-danger">{{ form.adjustment_type_ref.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.adjustment_description.id_for_label }}" class="form-label">Description</label>
+                                {{ form.adjustment_description }}
+                                {% if form.adjustment_description.help_text %}
+                                    <div class="form-text">{{ form.adjustment_description.help_text }}</div>
+                                {% endif %}
+                                {% if form.adjustment_description.errors %}
+                                    <div class="text-danger">{{ form.adjustment_description.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'billing:credit_adjustment_list' %}" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save"></i> 
+                                    {% if form.instance.pk %}
+                                        Update Credit Adjustment
+                                    {% else %}
+                                        Create Credit Adjustment
+                                    {% endif %}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

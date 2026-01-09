@@ -3,6 +3,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils import timezone
 from .models import Proposal, ProposalEvent, ProposalEmail, ProposalPDF
+from engagement.utils import log_engagement_event
 
 def record_proposal_view(proposal_id: int, ip: str = None, user_agent: str = None) -> None:
     """Record a proposal view and update engagement metrics."""
@@ -12,7 +13,7 @@ def record_proposal_view(proposal_id: int, ip: str = None, user_agent: str = Non
     proposal.view_count += 1
     proposal.last_viewed = timezone.now()
     proposal.save(update_fields=['view_count', 'last_viewed'])
-
+ 
     # Create event
     ProposalEvent.objects.create(
         proposal=proposal,
@@ -28,6 +29,25 @@ def record_proposal_view(proposal_id: int, ip: str = None, user_agent: str = Non
         'account_id': proposal.opportunity.account_id,
         'tenant_id': proposal.tenant_id,
     })
+    
+    # Log engagement event
+    try:
+        log_engagement_event(
+            tenant_id=proposal.tenant_id,
+            event_type='proposal_viewed',
+            description=f"Proposal '{proposal.title}' was viewed",
+            proposal=proposal,
+            account_company=proposal.opportunity.account if hasattr(proposal, 'opportunity') and proposal.opportunity else None,
+            title="Proposal Viewed",
+            engagement_score=5,
+            ip_address=ip,
+            user_agent=user_agent,
+            metadata={'view_count': proposal.view_count}
+        )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Failed to log engagement event for proposal view: {e}")
 
 
 def record_esg_view(proposal_id: int) -> None:
@@ -49,6 +69,98 @@ def record_esg_view(proposal_id: int) -> None:
             'account_id': proposal.opportunity.account_id,
             'tenant_id': proposal.tenant_id,
         })
+
+
+def record_proposal_acceptance(proposal_id: int, ip: str = None, user_agent: str = None) -> None:
+    """Record proposal acceptance by client."""
+    proposal = Proposal.objects.select_for_update().get(id=proposal_id)
+    
+    # Update proposal status
+    proposal.status = 'accepted'
+    proposal.accepted_at = timezone.now()
+    proposal.save(update_fields=['status', 'accepted_at'])
+    
+    # Create event
+    ProposalEvent.objects.create(
+        proposal=proposal,
+        event_type='accepted',
+        ip_address=ip,
+        user_agent=user_agent
+    )
+
+    # Emit event for automation
+    from automation.utils import emit_event
+    emit_event('proposal.accepted', {
+        'proposal_id': proposal.id,
+        'account_id': proposal.opportunity.account_id,
+        'tenant_id': proposal.tenant_id,
+    })
+    
+    # Log engagement event
+    try:
+        log_engagement_event(
+            tenant_id=proposal.tenant_id,
+            event_type='proposal_accepted',
+            description=f"Proposal '{proposal.title}' was accepted",
+            proposal=proposal,
+            account_company=proposal.opportunity.account if hasattr(proposal, 'opportunity') and proposal.opportunity else None,
+            title="Proposal Accepted",
+            engagement_score=10,
+            ip_address=ip,
+            user_agent=user_agent
+        )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Failed to log engagement event for proposal acceptance: {e}")
+
+
+def record_proposal_rejection(proposal_id: int, reason: str = None, ip: str = None, user_agent: str = None) -> None:
+    """Record proposal rejection by client."""
+    proposal = Proposal.objects.select_for_update().get(id=proposal_id)
+    
+    # Update proposal status
+    proposal.status = 'rejected'
+    proposal.rejected_at = timezone.now()
+    proposal.rejection_reason = reason
+    proposal.save(update_fields=['status', 'rejected_at', 'rejection_reason'])
+    
+    # Create event
+    ProposalEvent.objects.create(
+        proposal=proposal,
+        event_type='rejected',
+        metadata={'reason': reason} if reason else {},
+        ip_address=ip,
+        user_agent=user_agent
+    )
+
+    # Emit event for automation
+    from automation.utils import emit_event
+    emit_event('proposal.rejected', {
+        'proposal_id': proposal.id,
+        'account_id': proposal.opportunity.account_id,
+        'tenant_id': proposal.tenant_id,
+        'reason': reason
+    })
+    
+    # Log engagement event
+    try:
+        log_engagement_event(
+            tenant_id=proposal.tenant_id,
+            event_type='proposal_rejected',
+            description=f"Proposal '{proposal.title}' was rejected" + (f": {reason}" if reason else ""),
+            proposal=proposal,
+            account_company=proposal.opportunity.account if hasattr(proposal, 'opportunity') and proposal.opportunity else None,
+            title="Proposal Rejected",
+            engagement_score=1,
+            ip_address=ip,
+            user_agent=user_agent,
+            metadata={'reason': reason} if reason else {}
+        )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Failed to log engagement event for proposal rejection: {e}")
 
 
 def send_proposal_email(proposal_id: int, recipient_email: str, user=None) -> ProposalEmail:
@@ -90,10 +202,29 @@ def send_proposal_email(proposal_id: int, recipient_email: str, user=None) -> Pr
     # Update proposal status
     proposal.status = 'sent'
     proposal.sent_by = user
-    proposal.save(update_fields=['status', 'sent_by'])
+    proposal.sent_at = timezone.now()
+    proposal.save(update_fields=['status', 'sent_by', 'sent_at'])
     
     email_record.sent_at = timezone.now()
     email_record.save(update_fields=['sent_at'])
+    
+    # Log engagement event
+    try:
+        log_engagement_event(
+            tenant_id=proposal.tenant_id,
+            event_type='proposal_sent',
+            description=f"Proposal '{proposal.title}' was sent to {recipient_email}",
+            proposal=proposal,
+            account_company=proposal.opportunity.account if hasattr(proposal, 'opportunity') and proposal.opportunity else None,
+            title="Proposal Sent",
+            engagement_score=5,
+            created_by=user,
+            metadata={'recipient_email': recipient_email}
+        )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Failed to log engagement event for proposal sent: {e}")
     
     return email_record
 

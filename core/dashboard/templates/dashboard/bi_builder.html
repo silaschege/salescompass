@@ -1,4 +1,4 @@
-{% extends "core/base_module.html" %}
+{% extends "dashboard/base.html" %}
 
 {% block title %}BI Dashboard Builder - SalesCompass{% endblock %}
 
@@ -87,6 +87,12 @@
         height: 100%;
         width: 100%;
     }
+    
+    /* Search highlight */
+    .highlight {
+        background-color: yellow;
+        font-weight: bold;
+    }
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 {% endblock %}
@@ -130,12 +136,13 @@
                 <h6 class="text-uppercase text-muted mb-3 fs-7 fw-bold">Available Data</h6>
                 <div class="mb-3">
                     <input type="text" class="form-control form-control-sm mb-2" placeholder="Search models..."
-                        id="modelSearch">
-                    <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
+                        id="modelSearch" onkeyup="filterModels()">
+                    <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;" id="modelList">
                         {% for model in available_models %}
-                        <button class="list-group-item list-group-item-action py-2 px-1 small"
-                            onclick="setModel('{{ model.id }}', '{{ model.name }}')">
-                            <i class="bi bi-database me-2"></i> {{ model.name }}
+                        <button class="list-group-item list-group-item-action py-2 px-1 small model-item"
+                            onclick="selectModel('{{ model.id }}', '{{ model.name }}')" 
+                            data-model-name="{{ model.name }}" data-model-id="{{ model.id }}">
+                            <i class="bi bi-database me-2"></i> <span class="model-name">{{ model.name }}</span>
                             <small class="d-block text-muted" style="font-size: 10px;">{{ model.app_label }}</small>
                         </button>
                         {% endfor %}
@@ -188,7 +195,7 @@
                                     {% endfor %}
                                 </select>
                                 <select class="form-select" id="cfgAggField" onchange="updateWidgetConfig()">
-                                    <!-- Populated dynamiclly -->
+                                    <!-- Populated dynamically -->
                                 </select>
                             </div>
                         </div>
@@ -231,6 +238,70 @@
     let widgets = [];
     let selectedWidgetIndex = null;
     let modelFieldsCache = {};
+    let selectedModel = null;
+
+    // --- Model Selection and Search ---
+
+    function filterModels() {
+        const searchTerm = document.getElementById('modelSearch').value.toLowerCase();
+        const modelItems = document.querySelectorAll('.model-item');
+        
+        modelItems.forEach(item => {
+            const modelName = item.getAttribute('data-model-name').toLowerCase();
+            const modelNameElement = item.querySelector('.model-name');
+            const text = modelNameElement.textContent;
+            
+            if (searchTerm === '' || modelName.includes(searchTerm)) {
+                item.style.display = 'block';
+                
+                // Highlight matching text
+                if (searchTerm !== '') {
+                    const regex = new RegExp(`(${searchTerm})`, 'gi');
+                    const newText = text.replace(regex, '<span class="highlight">$1</span>');
+                    modelNameElement.innerHTML = newText;
+                } else {
+                    modelNameElement.textContent = text;
+                }
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    function selectModel(modelId, modelName) {
+        selectedModel = {id: modelId, name: modelName};
+        
+        // Highlight selected model
+        document.querySelectorAll('.model-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        event.currentTarget.classList.add('active');
+        
+        // Show step-by-step workflow
+        showModelWorkflow(modelId, modelName);
+    }
+
+    function showModelWorkflow(modelId, modelName) {
+        // If no widget is selected, create a default one
+        if (selectedWidgetIndex === null) {
+            // Auto create a table widget for the selected model
+            addWidget('table', modelName + ' Data');
+            const widget = widgets[widgets.length - 1];
+            widget.config.model = modelId;
+            selectWidget(widgets.length - 1);
+        } else {
+            // Update the selected widget with this model
+            const widget = widgets[selectedWidgetIndex];
+            widget.config.model = modelId;
+            document.getElementById('cfgModel').value = modelId;
+            loadModelFields(modelId);
+        }
+        
+        // Show configuration panel
+        if (document.getElementById('configPanel').style.display === 'none') {
+            openConfig(widgets[selectedWidgetIndex]);
+        }
+    }
 
     // --- Widget Management ---
 
@@ -243,7 +314,7 @@
             title: label,
             colSpan: type === 'number' ? 3 : 6,
             config: {
-                model: '',
+                model: selectedModel ? selectedModel.id : '',
                 aggregation: 'count',
                 agg_field: '',
                 group_by: '',
@@ -477,7 +548,7 @@
         }
     }
 
-    // Quick Add from Model List
+    // Workflow enhancement - when a model is selected from the list
     function setModel(modelId, modelName) {
         if (selectedWidgetIndex !== null) {
             document.getElementById('cfgModel').value = modelId;

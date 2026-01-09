@@ -133,20 +133,15 @@ def check_feature_flag_consistency() -> None:
             
     except Exception as e:
         logger.error(f"Failed to check feature flags: {e}")
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-Background tasks for business metrics calculations
-"""
+
+
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from core.services.business_metrics_service import BusinessMetricsService
-from core.models import Tenant
+from tenants.models import Tenant
 from datetime import datetime, timedelta
 from django.core.cache import cache
-from core.core.cache import BusinessMetricsCache
+from core.cache import BusinessMetricsCache
 
 
 logger = get_task_logger(__name__)
@@ -429,10 +424,4 @@ def scheduled_metrics_refresh_task():
             'error': str(e),
             'refresh_attempted_at': datetime.now().isoformat()
         }
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+

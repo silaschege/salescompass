@@ -1,4 +1,4 @@
-{% extends "logged_in/base.html" %}
+{% extends "marketing/base.html" %}
 {% load humanize %}
 
 {% block content %}
@@ -83,10 +83,10 @@
                         <td>{{ row.name }}</td>
                         <td>{{ row.leads }}</td>
                         <td>{{ row.conversions }}</td>
-                        <td>${{ row.cost|floatform:2|intcomma }}</td>
-                        <td>${{ row.revenue|floatform:2|intcomma }}</td>
+                        <td>${{ row.cost|floatformat:2|intcomma }}</td>
+                        <td>${{ row.revenue|floatformat:2|intcomma }}</td>
                         <td class="{% if row.roi > 0 %}text-success{% elif row.roi < 0 %}text-danger{% endif %}">
-                            {{ row.roi|floatform:1 }}%
+                            {{ row.roi|floatformat:1 }}%
                         </td>
                     </tr>
                     {% empty %}

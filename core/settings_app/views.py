@@ -5,8 +5,10 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, DetailView, View
 from django.urls import reverse_lazy
-from .models import Setting, CustomField, ModuleLabel, TeamMember, AssignmentRule, PipelineStage, EmailIntegration, BehavioralScoringRule, DemographicScoringRule, SettingType, ModelChoice, FieldType, ModuleChoice, TeamRole, Territory, AssignmentRuleType, PipelineType, EmailProvider, ActionType, OperatorType, SettingGroup
-from .forms import SettingForm, CustomFieldForm, ModuleLabelForm, TeamMemberForm, AssignmentRuleForm, PipelineStageForm, EmailIntegrationForm, BehavioralScoringRuleForm, DemographicScoringRuleForm, SettingTypeForm, ModelChoiceForm, FieldTypeForm, ModuleChoiceForm, TeamRoleForm, TerritoryForm, AssignmentRuleTypeForm, PipelineTypeForm, EmailProviderForm, ActionTypeForm, OperatorTypeForm
+from .models import Setting, CustomField, ModuleLabel, AssignmentRule, PipelineStage, EmailIntegration, BehavioralScoringRule, DemographicScoringRule, SettingType, ModelChoice, FieldType, ModuleChoice, AssignmentRuleType, PipelineType, EmailProvider, ActionType, OperatorType, SettingGroup
+from sales.models import SalesTarget
+from commissions.models import Quota
+from .forms import SettingForm, CustomFieldForm, ModuleLabelForm, AssignmentRuleForm, PipelineStageForm, EmailIntegrationForm, BehavioralScoringRuleForm, DemographicScoringRuleForm, SettingTypeForm, ModelChoiceForm, FieldTypeForm, ModuleChoiceForm, AssignmentRuleTypeForm, PipelineTypeForm, EmailProviderForm, ActionTypeForm, OperatorTypeForm
 from tenants.models import Tenant as TenantModel
 
 
@@ -35,78 +37,10 @@ class TenantSettingsView(TemplateView):
     template_name = 'settings_app/tenant_settings.html'
 
 
-class TeamListView(ListView):
-    """List team members."""
-    model = TeamMember
-    template_name = 'settings_app/team_list.html'
-    context_object_name = 'team_members'
 
 
-class TeamCreateView(CreateView):
-    """Create team member."""
-    model = TeamMember
-    form_class = TeamMemberForm
-    template_name = 'settings_app/team_form.html'
-    success_url = reverse_lazy('settings_app:team_list')
 
 
-class TeamDetailView(DetailView):
-    """View team member details."""
-    model = TeamMember
-    template_name = 'settings_app/team_detail.html'
-
-
-class TeamUpdateView(UpdateView):
-    """Update team member."""
-    model = TeamMember
-    form_class = TeamMemberForm
-    template_name = 'settings_app/team_form.html'
-    success_url = reverse_lazy('settings_app:team_list')
-
-
-class TeamDeleteView(DeleteView):
-    """Delete team member."""
-    model = TeamMember
-    template_name = 'settings_app/team_confirm_delete.html'
-    success_url = reverse_lazy('settings_app:team_list')
-
-
-class QuotaUpdateView(UpdateView):
-    """Update team member quota."""
-    model = TeamMember
-    fields = ['quota_amount', 'quota_period']
-    template_name = 'settings_app/quota_form.html'
-    success_url = reverse_lazy('settings_app:team_list')
-
-
-class RoleListView(ListView):
-    """List roles."""
-    model = TeamRole
-    template_name = 'settings_app/role_list.html'
-    context_object_name = 'roles'
-
-
-class RoleCreateView(CreateView):
-    """Create role."""
-    model = TeamRole
-    form_class = TeamRoleForm
-    template_name = 'settings_app/role_form.html'
-    success_url = reverse_lazy('settings_app:role_list')
-
-
-class RoleUpdateView(UpdateView):
-    """Update role."""
-    model = TeamRole
-    form_class = TeamRoleForm
-    template_name = 'settings_app/role_form.html'
-    success_url = reverse_lazy('settings_app:role_list')
-
-
-class RoleDeleteView(DeleteView):
-    """Delete role."""
-    model = TeamRole
-    template_name = 'settings_app/role_confirm_delete.html'
-    success_url = reverse_lazy('settings_app:role_list')
 
 
 class LeadStatusListView(TemplateView):
@@ -452,100 +386,10 @@ class ModuleChoiceDeleteView(DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class TeamRoleListView(ListView):
-    model = TeamRole
-    template_name = 'settings_app/team_role_list.html'
-    context_object_name = 'team_roles'
-    
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        # Filter by current tenant
-        if hasattr(self.request.user, 'tenant_id'):
-            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
-        return queryset
 
 
-class TeamRoleCreateView(CreateView):
-    model = TeamRole
-    form_class = TeamRoleForm
-    template_name = 'settings_app/team_role_form.html'
-    success_url = reverse_lazy('settings_app:team_role_list')
-    
-    def form_valid(self, form):
-        # Set tenant automatically
-        if hasattr(self.request.user, 'tenant_id'):
-            form.instance.tenant_id = self.request.user.tenant_id
-        messages.success(self.request, 'Team role created successfully.')
-        return super().form_valid(form)
 
 
-class TeamRoleUpdateView(UpdateView):
-    model = TeamRole
-    form_class = TeamRoleForm
-    template_name = 'settings_app/team_role_form.html'
-    success_url = reverse_lazy('settings_app:team_role_list')
-    
-    def form_valid(self, form):
-        messages.success(self.request, 'Team role updated successfully.')
-        return super().form_valid(form)
-
-
-class TeamRoleDeleteView(DeleteView):
-    model = TeamRole
-    template_name = 'settings_app/team_role_confirm_delete.html'
-    success_url = reverse_lazy('settings_app:team_role_list')
-    
-    def delete(self, request, *args, **kwargs):
-        messages.success(request, 'Team role deleted successfully.')
-        return super().delete(request, *args, **kwargs)
-
-
-class TerritoryListView(ListView):
-    model = Territory
-    template_name = 'settings_app/territory_list.html'
-    context_object_name = 'territories'
-    
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        # Filter by current tenant
-        if hasattr(self.request.user, 'tenant_id'):
-            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
-        return queryset
-
-
-class TerritoryCreateView(CreateView):
-    model = Territory
-    form_class = TerritoryForm
-    template_name = 'settings_app/territory_form.html'
-    success_url = reverse_lazy('settings_app:territory_list')
-    
-    def form_valid(self, form):
-        # Set tenant automatically
-        if hasattr(self.request.user, 'tenant_id'):
-            form.instance.tenant_id = self.request.user.tenant_id
-        messages.success(self.request, 'Territory created successfully.')
-        return super().form_valid(form)
-
-
-class TerritoryUpdateView(UpdateView):
-    model = Territory
-    form_class = TerritoryForm
-    template_name = 'settings_app/territory_form.html'
-    success_url = reverse_lazy('settings_app:territory_list')
-    
-    def form_valid(self, form):
-        messages.success(self.request, 'Territory updated successfully.')
-        return super().form_valid(form)
-
-
-class TerritoryDeleteView(DeleteView):
-    model = Territory
-    template_name = 'settings_app/territory_confirm_delete.html'
-    success_url = reverse_lazy('settings_app:territory_list')
-    
-    def delete(self, request, *args, **kwargs):
-        messages.success(request, 'Territory deleted successfully.')
-        return super().delete(request, *args, **kwargs)
 
 
 class AssignmentRuleTypeListView(ListView):
@@ -974,66 +818,7 @@ class ModuleLabelDeleteView(DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class TeamMemberListView(ListView):
-    model = TeamMember
-    template_name = 'settings_app/team_member_list.html'
-    context_object_name = 'team_members'
-    
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        # Filter by current tenant and prefetch related objects
-        if hasattr(self.request.user, 'tenant_id'):
-            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
-        return queryset.select_related('user', 'role_ref', 'territory_ref', 'manager')
 
-
-class TeamMemberCreateView(CreateView):
-    model = TeamMember
-    form_class = TeamMemberForm
-    template_name = 'settings_app/team_member_form.html'
-    success_url = reverse_lazy('settings_app:team_member_list')
-    
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        # Pass the current tenant to the form
-        if hasattr(self.request.user, 'tenant_id'):
-            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
-        return kwargs
-    
-    def form_valid(self, form):
-        # Set tenant automatically
-        if hasattr(self.request.user, 'tenant_id'):
-            form.instance.tenant_id = self.request.user.tenant_id
-        messages.success(self.request, 'Team member created successfully.')
-        return super().form_valid(form)
-
-
-class TeamMemberUpdateView(UpdateView):
-    model = TeamMember
-    form_class = TeamMemberForm
-    template_name = 'settings_app/team_member_form.html'
-    success_url = reverse_lazy('settings_app:team_member_list')
-    
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        # Pass the current tenant to the form
-        if hasattr(self.request.user, 'tenant_id'):
-            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
-        return kwargs
-    
-    def form_valid(self, form):
-        messages.success(self.request, 'Team member updated successfully.')
-        return super().form_valid(form)
-
-
-class TeamMemberDeleteView(DeleteView):
-    model = TeamMember
-    template_name = 'settings_app/team_member_confirm_delete.html'
-    success_url = reverse_lazy('settings_app:team_member_list')
-    
-    def delete(self, request, *args, **kwargs):
-        messages.success(request, 'Team member deleted successfully.')
-        return super().delete(request, *args, **kwargs)
 
 
 class AssignmentRuleListView(ListView):

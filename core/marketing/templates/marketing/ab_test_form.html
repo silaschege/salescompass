@@ -7,55 +7,52 @@
     <div class="container">
         <h1 class="block-title">{% if object %}Edit A/B Test{% else %}Create New A/B Test{% endif %}</h1>
         <p class="text-white text-center lead">
-            {% if object %}Update your A/B test configuration{% else %}Configure your A/B test to optimize campaign performance{% endif %}
+            {% if object %}Update your A/B test configuration{% else %}Configure your A/B test to optimize campaign
+            performance{% endif %}
         </p>
     </div>
 </div>
 
 <div class="container">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
+    <div class="row">
+        <div class="col-lg-8">
             <div class="card shadow-sm border-0">
                 <div class="card-body p-4">
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
-                        
+
                         <!-- A/B Test Configuration -->
                         <div class="mb-4">
                             <h5 class="mb-3">A/B Test Configuration</h5>
-                            
+
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="{{ form.campaign.id_for_label }}" class="form-label fw-bold text-primary">
+                                        <label for="{{ form.campaign.id_for_label }}"
+                                            class="form-label fw-bold text-primary">
                                             Campaign <span class="text-danger">*</span>
                                         </label>
                                         {{ form.campaign }}
                                         {% if form.campaign.errors %}
-                                            <div class="text-danger mt-1">{{ form.campaign.errors }}</div>
+                                        <div class="text-danger mt-1">{{ form.campaign.errors }}</div>
                                         {% endif %}
-                                        <div class="form-text text-muted small">
-                                            Select the campaign you want to A/B test
-                                        </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="{{ form.name.id_for_label }}" class="form-label fw-bold text-primary">
+                                        <label for="{{ form.name.id_for_label }}"
+                                            class="form-label fw-bold text-primary">
                                             Test Name <span class="text-danger">*</span>
                                         </label>
                                         {{ form.name }}
                                         {% if form.name.errors %}
-                                            <div class="text-danger mt-1">{{ form.name.errors }}</div>
+                                        <div class="text-danger mt-1">{{ form.name.errors }}</div>
                                         {% endif %}
-                                        <div class="form-text text-muted small">
-                                            Give your A/B test a descriptive name (e.g., "Subject Line Test", "CTA Button Test")
-                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
@@ -63,92 +60,62 @@
                                             {{ form.is_active }}
                                             <span class="form-check-label fw-bold text-primary">Active</span>
                                         </label>
-                                        <div class="form-text text-muted small">
-                                            Active A/B tests will automatically send variants to recipients
-                                        </div>
-                                        {% if form.is_active.errors %}
-                                            <div class="text-danger mt-1">{{ form.is_active.errors }}</div>
-                                        {% endif %}
                                     </div>
                                 </div>
-                                
+
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="{{ form.auto_winner.id_for_label }}" class="form-check">
                                             {{ form.auto_winner }}
-                                            <span class="form-check-label fw-bold text-primary">Auto Winner Selection</span>
+                                            <span class="form-check-label fw-bold text-primary">Auto Winner
+                                                Selection</span>
                                         </label>
-                                        <div class="form-text text-muted small">
-                                            Automatically declare a winner when statistical significance is reached
-                                        </div>
-                                        {% if form.auto_winner.errors %}
-                                            <div class="text-danger mt-1">{{ form.auto_winner.errors }}</div>
-                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="{{ form.min_responses.id_for_label }}" class="form-label fw-bold text-primary">
-                                            Minimum Responses
-                                        </label>
-                                        {{ form.min_responses }}
-                                        {% if form.min_responses.errors %}
-                                            <div class="text-danger mt-1">{{ form.min_responses.errors }}</div>
-                                        {% endif %}
-                                        <div class="form-text text-muted small">
-                                            Minimum total responses needed before declaring a winner (recommended: 1000+)
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="{{ form.confidence_level.id_for_label }}" class="form-label fw-bold text-primary">
-                                            Confidence Level
-                                        </label>
-                                        {{ form.confidence_level }}
-                                        {% if form.confidence_level.errors %}
-                                            <div class="text-danger mt-1">{{ form.confidence_level.errors }}</div>
-                                        {% endif %}
-                                        <div class="form-text text-muted small">
-                                            Statistical confidence level for winner declaration (95% = 0.95)
-                                        </div>
-                                    </div>
-                                </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.description.id_for_label }}"
+                                    class="form-label fw-bold text-primary">
+                                    Description
+                                </label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                <div class="text-danger mt-1">{{ form.description.errors }}</div>
+                                {% endif %}
                             </div>
                         </div>
 
-                        <!-- Variants Configuration -->
+                        <!-- Variants -->
                         <div class="mb-4">
                             <h5 class="mb-3">Variants</h5>
                             <p class="text-muted small mb-3">
-                                Configure your A/B test variants. Each variant will be sent to the specified percentage of recipients.
+                                Configure your A/B test variants. Each variant will be sent to the specified percentage
+                                of recipients.
                             </p>
-                            
+
                             {{ variants.management_form }}
                             {% for variant_form in variants %}
                             <div class="variant-section mb-3 p-3 border rounded">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h6 class="mb-0">Variant {{ variant_form.variant.value|default:forloop.counter }}</h6>
+                                    <h6 class="mb-0">Variant {{ variant_form.variant.value|default:forloop.counter }}
+                                    </h6>
                                     {% if not variant_form.variant.value %}
-                                        <span class="badge bg-info">New Variant</span>
+                                    <span class="badge bg-info">New Variant</span>
                                     {% endif %}
                                 </div>
-                                
+
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label fw-bold text-primary">Variant</label>
                                             {{ variant_form.variant }}
                                             {% if variant_form.variant.errors %}
-                                                <div class="text-danger mt-1">{{ variant_form.variant.errors }}</div>
+                                            <div class="text-danger mt-1">{{ variant_form.variant.errors }}</div>
                                             {% endif %}
                                         </div>
                                     </div>
-                                    
+
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label fw-bold text-primary">Assignment Rate</label>
@@ -157,71 +124,74 @@
                                                 Proportion of recipients (0.0-1.0, must sum to 1.0)
                                             </div>
                                             {% if variant_form.assignment_rate.errors %}
-                                                <div class="text-danger mt-1">{{ variant_form.assignment_rate.errors }}</div>
+                                            <div class="text-danger mt-1">{{ variant_form.assignment_rate.errors }}
+                                            </div>
                                             {% endif %}
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label fw-bold text-primary">Email Template</label>
                                             {{ variant_form.email_template }}
                                             {% if variant_form.email_template.errors %}
-                                                <div class="text-danger mt-1">{{ variant_form.email_template.errors }}</div>
+                                            <div class="text-danger mt-1">{{ variant_form.email_template.errors }}</div>
                                             {% endif %}
                                         </div>
                                     </div>
-                                    
+
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label fw-bold text-primary">Landing Page</label>
                                             {{ variant_form.landing_page }}
                                             {% if variant_form.landing_page.errors %}
-                                                <div class="text-danger mt-1">{{ variant_form.landing_page.errors }}</div>
+                                            <div class="text-danger mt-1">{{ variant_form.landing_page.errors }}</div>
                                             {% endif %}
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="mb-3">
                                     <label class="form-label fw-bold text-primary">Question Text</label>
                                     {{ variant_form.question_text }}
                                     {% if variant_form.question_text.errors %}
-                                        <div class="text-danger mt-1">{{ variant_form.question_text.errors }}</div>
+                                    <div class="text-danger mt-1">{{ variant_form.question_text.errors }}</div>
                                     {% endif %}
                                 </div>
-                                
+
                                 <div class="mb-3">
                                     <label class="form-label fw-bold text-primary">Follow-up Question</label>
                                     {{ variant_form.follow_up_question }}
                                     {% if variant_form.follow_up_question.errors %}
-                                        <div class="text-danger mt-1">{{ variant_form.follow_up_question.errors }}</div>
+                                    <div class="text-danger mt-1">{{ variant_form.follow_up_question.errors }}</div>
                                     {% endif %}
                                 </div>
-                                
+
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold text-primary">Delivery Delay (Hours)</label>
+                                    <label class="form-label fw-bold text-primary">Delivery Delay (hours)</label>
                                     {{ variant_form.delivery_delay_hours }}
-                                    <div class="form-text text-muted small">
-                                        Delay delivery by specified hours after trigger (0-168 hours)
-                                    </div>
                                     {% if variant_form.delivery_delay_hours.errors %}
-                                        <div class="text-danger mt-1">{{ variant_form.delivery_delay_hours.errors }}</div>
+                                    <div class="text-danger mt-1">{{ variant_form.delivery_delay_hours.errors }}</div>
                                     {% endif %}
                                 </div>
+
+                                {{ variant_form.id }}
                             </div>
                             {% endfor %}
                         </div>
 
                         <!-- Action Buttons -->
-                        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-4 pt-3 border-top">
+                        <div
+                            class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-4 pt-3 border-top">
                             <div>
                                 {% if object %}
                                 <a href="{% url 'marketing:ab_test_list' %}" class="btn btn-outline-primary">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
-                                        <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                        class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd"
+                                            d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
                                     </svg>
                                     Back to A/B Tests
                                 </a>
@@ -231,15 +201,21 @@
                                 <a href="{% url 'marketing:ab_test_list' %}" class="btn btn-light">Cancel</a>
                                 <button type="submit" class="btn btn-primary">
                                     {% if object %}
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle me-1" viewBox="0 0 16 16">
-                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                                        <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                        class="bi bi-check-circle me-1" viewBox="0 0 16 16">
+                                        <path
+                                            d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                        <path
+                                            d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z" />
                                     </svg>
                                     Update A/B Test
                                     {% else %}
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle me-1" viewBox="0 0 16 16">
-                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                        class="bi bi-plus-circle me-1" viewBox="0 0 16 16">
+                                        <path
+                                            d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                        <path
+                                            d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
                                     </svg>
                                     Create A/B Test
                                     {% endif %}
@@ -247,6 +223,36 @@
                             </div>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Sidebar -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 text-primary">A/B Testing Guide</h5>
+                </div>
+                <div class="card-body">
+                    <h6>What to Test:</h6>
+                    <ul class="small text-muted">
+                        <li><strong>Subject Lines:</strong> Test different angles (Benefit-driven vs Curious).</li>
+                        <li><strong>CTA Buttons:</strong> Test labels (e.g., "Get Started" vs "Learn More") and colors.
+                        </li>
+                        <li><strong>Email Content:</strong> Test long-form vs short-form copy.</li>
+                    </ul>
+
+                    <h6 class="mt-4">Statistical Significance:</h6>
+                    <p class="small text-muted">Wait for at least 100 responses per variant before concluding the test.
+                        Auto-winner selection will handle this for you if enabled.</p>
+
+                    <h6 class="mt-4">Variants:</h6>
+                    <p class="small text-muted">You can add multiple variants. Ensure the assignment rates sum to 1.0
+                        (e.g., 0.5 for A and 0.5 for B).</p>
+
+                    <div class="mt-4 p-3 bg-light rounded text-center">
+                        <p class="small mb-0">Learn more about <a href="#">A/B Testing Best Practices</a></p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -259,6 +265,7 @@
     </div>
 </div>
 {% endblock %}
+
 {% block extra_head %}
 <style>
     /* Form-specific styling */
@@ -266,92 +273,95 @@
         font-size: 0.95rem;
         margin-bottom: 0.5rem;
     }
-    
-    .form-control, .form-select {
+
+    .form-control,
+    .form-select {
         border: 1px solid #e3e6f3;
         border-radius: 0.5rem;
         padding: 0.75rem 1rem;
         font-size: 0.95rem;
         transition: all 0.2s ease;
     }
-    
-    .form-control:focus, .form-select:focus {
+
+    .form-control:focus,
+    .form-select:focus {
         border-color: #6f42c1;
         box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
     }
-    
-    .form-control:focus-visible, .form-select:focus-visible {
+
+    .form-control:focus-visible,
+    .form-select:focus-visible {
         outline: none;
     }
-    
+
     textarea.form-control {
         min-height: 100px;
         resize: vertical;
     }
-    
+
     .text-danger {
         font-size: 0.875rem;
         margin-top: 0.25rem;
     }
-    
+
     .form-text {
         font-size: 0.8125rem;
         margin-top: 0.25rem;
     }
-    
+
     .badge {
         font-size: 0.75rem;
         padding: 0.3em 0.6em;
     }
-    
+
     .btn {
         padding: 0.5rem 1.25rem;
         font-weight: 600;
         border-radius: 0.5rem;
         transition: all 0.2s ease;
     }
-    
+
     .btn-primary:hover {
         background-color: #5a32a3;
         border-color: #5a32a3;
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
     }
-    
+
     .btn-light:hover {
         background-color: #f8f9fa;
         border-color: #d1c5e6;
         color: #5a32a3;
     }
-    
+
     /* Card styling */
     .card {
         border: none;
         border-radius: 1rem;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     }
-    
+
     /* Variant section styling */
     .variant-section {
         background-color: #f8f9fa;
     }
-    
+
     /* Responsive adjustments */
     @media (max-width: 768px) {
         .card {
             margin: 0 -1rem;
             border-radius: 0;
         }
-        
+
         .header-bar {
             border-radius: 0;
         }
-        
+
         .footer-bar {
             border-radius: 0;
         }
-        
-        .row > [class*="col-"] {
+
+        .row>[class*="col-"] {
             margin-bottom: 1rem;
         }
     }

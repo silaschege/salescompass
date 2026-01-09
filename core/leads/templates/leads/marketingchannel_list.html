@@ -1,70 +1,70 @@
-{% extends 'leads/base.html' %}
+{% extends "leads/base.html" %}
 
-{% block title %}Marketing Channels{% endblock %}
+{% block title %}Marketing Channels - SalesCompass{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h1>Marketing Channels</h1>
-                <a href="{% url 'leads:marketingchannel_create' %}" class="btn btn-primary">Add Marketing Channel</a>
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Marketing Channels</h1>
+        <p class="text-white text-center lead">Manage marketing channels for lead tracking</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Marketing Channels</h2>
+        <a href="{% url 'leads:marketingchannel_create' %}" class="btn btn-primary">+ Add Channel</a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            {% if marketing_channels %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Label</th>
+                            <th>Name (Internal)</th>
+                            <th>Order</th>
+                            <th>Status</th>
+                            <th>System</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for channel in marketing_channels %}
+                        <tr>
+                            <td>{{ channel.label }}</td>
+                            <td>{{ channel.channel_name }}</td>
+                            <td>{{ channel.order }}</td>
+                            <td>
+                                {% if channel.channel_is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if channel.is_system %}
+                                <span class="badge bg-info">System</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'leads:marketingchannel_update' channel.pk %}"
+                                    class="btn btn-sm btn-outline-primary">Edit</a>
+                                {% if not channel.is_system %}
+                                <a href="{% url 'leads:marketingchannel_delete' channel.pk %}"
+                                    class="btn btn-sm btn-outline-danger">Delete</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            
-            <div class="card">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Label</th>
-                                    <th>Order</th>
-                                    <th>Color</th>
-                                    <th>Active</th>
-                                    <th>System</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for channel in marketing_channels %}
-                                <tr>
-                                    <td>{{ channel.channel_name }}</td>
-                                    <td>{{ channel.label }}</td>
-                                    <td>{{ channel.order }}</td>
-                                    <td>
-                                        <span style="background-color: {{ channel.color }}; width: 20px; height: 20px; display: inline-block; border: 1px solid #ccc;"></span>
-                                        {{ channel.color }}
-                                    </td>
-                                    <td>
-                                        {% if channel.channel_is_active %}
-                                            <span class="badge bg-success">Active</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">Inactive</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if channel.is_system %}
-                                            <span class="badge bg-info">System</span>
-                                        {% else %}
-                                            <span class="badge bg-light">Custom</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <a href="{% url 'leads:marketingchannel_update' channel.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                        <a href="{% url 'leads:marketingchannel_delete' channel.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="7">No marketing channels found.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            {% else %}
+            <p class="text-muted">No marketing channels found.</p>
+            {% endif %}
         </div>
     </div>
 </div>

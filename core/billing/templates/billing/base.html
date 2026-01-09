@@ -12,9 +12,8 @@
             font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            display: flex;
             min-height: 100vh;
-            overflow-x: hidden;
+            overflow-x: hidden; /* Prevents horizontal scroll caused by animations */
         }
 
         /* Sidebar */
@@ -82,10 +81,12 @@
         /* Main Content */
         .main-content {
             margin-left: 250px;
-            padding: 2rem;
-            flex-grow: 1;
+            /* REMOVED: width: 100% (This was causing the off-center issue) */
+            /* REMOVED: padding: 2rem (This caused double padding with child templates) */
+            min-height: 100vh;
             transition: margin-left 0.3s ease;
-            width: 100%;
+            display: flex;
+            flex-direction: column;
         }
 
         .main-content.sidebar-hidden {
@@ -112,6 +113,7 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
+        /* Cards */
         .card {
             border-radius: 1rem;
             box-shadow: 0 2px 16px rgba(111, 66, 193, 0.08);
@@ -128,6 +130,7 @@
             border-color: #5a34a0;
         }
 
+        /* Mobile Responsive */
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -139,7 +142,12 @@
 
             .main-content {
                 margin-left: 0;
-                padding: 2rem 1rem;
+            }
+            
+            /* Add padding back on mobile since container-fluid behaves differently */
+            .main-content > .container-fluid {
+                padding-left: 1rem;
+                padding-right: 1rem;
             }
         }
     </style>
@@ -160,6 +168,12 @@
         </a>
 
         <nav class="nav flex-column">
+            <!-- Billing Portal -->
+            <a class="nav-link {% if request.resolver_match.url_name == 'portal' %}active{% endif %}" 
+               href="{% url 'billing:portal' %}">
+                <i class="bi bi-wallet2"></i> Billing Portal
+            </a>
+
             <!-- Revenue Dashboard -->
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#revenueMenu">
                 <i class="bi bi-speedometer2"></i> Revenue Dashboard
@@ -207,7 +221,6 @@
                     href="{% url 'billing:plan_list' %}">All Plans</a>
                 <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'plan_create' %}active{% endif %}"
                     href="{% url 'billing:plan_create' %}">Create New Plan</a>
-                <a class="nav-link ms-3" href="{% url 'billing:plan_list' %}">Pricing Configuration</a>
                 <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'plan_limits' %}active{% endif %}"
                     href="{% url 'billing:plan_limits' %}">Plan Limits & Features</a>
             </div>
@@ -219,6 +232,8 @@
             <div class="collapse" id="subscriptionMenu">
                 <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'subscription_list' %}active{% endif %}"
                     href="{% url 'billing:subscription_list' %}">All Subscriptions</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'subscription_create' %}active{% endif %}"
+                    href="{% url 'billing:subscription_create' %}">Create Subscription</a>
                 <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'upgrade_downgrade' %}active{% endif %}"
                     href="{% url 'billing:upgrade_downgrade' %}">Upgrades/Downgrades</a>
                 <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'proration_calculator' %}active{% endif %}"
@@ -238,12 +253,21 @@
             <div class="collapse" id="invoicingMenu">
                 <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'invoice_generation' %}active{% endif %}"
                     href="{% url 'billing:invoice_generation' %}">Invoice Generation</a>
-                <a class="nav-link ms-3" href="#pdf-templates">PDF Templates</a>
                 <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'dunning_management' %}active{% endif %}"
                     href="{% url 'billing:dunning_management' %}">Dunning Management</a>
                 <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'failed_payments' %}active{% endif %}"
                     href="{% url 'billing:failed_payments' %}">Failed Payments</a>
-                <a class="nav-link ms-3" href="#payment-retry">Payment Retry Logic</a>
+            </div>
+
+            <!-- Payment Management -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#paymentManagementMenu">
+                <i class="bi bi-currency-dollar"></i> Payment Management
+            </a>
+            <div class="collapse" id="paymentManagementMenu">
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'payment_list' %}active{% endif %}"
+                    href="{% url 'billing:payment_list' %}">All Payments</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'payment_create' %}active{% endif %}"
+                    href="{% url 'billing:payment_create' %}">Record Payment</a>
             </div>
 
             <!-- Payment Methods -->
@@ -262,7 +286,6 @@
                     href="{% url 'billing:tenant_payment_config' %}">Payment Settings</a>
                 <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'payment_method_list' %}active{% endif %}"
                     href="{% url 'billing:payment_method_list' %}">My Payment Methods</a>
-                <a class="nav-link ms-3" href="#payment-support">Payment Support Tools</a>
             </div>
 
             <!-- Tenant Billing -->
@@ -272,9 +295,27 @@
             <div class="collapse" id="tenantBillingMenu">
                 <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'tenant_billing_search' %}active{% endif %}"
                     href="{% url 'billing:tenant_billing_search' %}">Search Tenant Billing</a>
-                <a class="nav-link ms-3" href="{% url 'billing:tenant_billing_search' %}">Billing History</a>
                 <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'credit_adjustment' %}active{% endif %}"
                     href="{% url 'billing:credit_adjustment' %}">Credits & Adjustments</a>
+            </div>
+
+            <!-- Configuration -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#configMenu">
+                <i class="bi bi-gear"></i> Configuration
+            </a>
+            <div class="collapse" id="configMenu">
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'plan_tier_list' %}active{% endif %}"
+                    href="{% url 'billing:plan_tier_list' %}">Plan Tiers</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'subscription_status_list' %}active{% endif %}"
+                    href="{% url 'billing:subscription_status_list' %}">Subscription Statuses</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'adjustment_type_list' %}active{% endif %}"
+                    href="{% url 'billing:adjustment_type_list' %}">Adjustment Types</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'payment_provider_list' %}active{% endif %}"
+                    href="{% url 'billing:payment_provider_list' %}">Payment Providers</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'payment_type_list' %}active{% endif %}"
+                    href="{% url 'billing:payment_type_list' %}">Payment Types</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'payment_provider_config_list' %}active{% endif %}"
+                    href="{% url 'billing:payment_provider_config_list' %}">Payment Configurations</a>
             </div>
 
             <div class="section-title mt-4">NAVIGATION</div>
@@ -297,8 +338,9 @@
 
     <!-- Main Content -->
     <div class="main-content" id="mainContent">
+        <!-- Messages are wrapped in a container-fluid with top padding to align with children -->
         {% if messages %}
-        <div class="container-fluid mb-3">
+        <div class="container-fluid pt-4">
             {% for message in messages %}
             <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
                 {{ message }}
@@ -334,5 +376,4 @@
     </script>
     {% block extra_scripts %}{% endblock %}
 </body>
-
 </html>

@@ -1,5 +1,5 @@
 {% extends "accounts/base.html" %}
-{% load auth_extras %}
+{% load auth_extras task_tags %}
 
 {% block title %}{{ product.name }} - SalesCompass{% endblock %}
 
@@ -9,16 +9,16 @@
         <h1 class="block-title fw-bold mb-0">{{ product.name }}</h1>
         <span class="badge bg-primary">{{ product.sku }}</span>
         {% if product.esg_certified %}
-            <span class="badge bg-success">🌱 ESG Certified</span>
+        <span class="badge bg-success">🌱 ESG Certified</span>
         {% endif %}
         {% if not product.is_active %}
-            <span class="badge bg-secondary">Inactive</span>
+        <span class="badge bg-secondary">Inactive</span>
         {% endif %}
     </div>
     <div>
         {% if request.user.is_authenticated and request.user|has_perm:"products:write" %}
-            <a href="{% url 'products:update' product.pk %}" class="btn btn-outline-secondary">Edit</a>
-            <a href="{% url 'products:delete' product.pk %}" class="btn btn-outline-danger">Delete</a>
+        <a href="{% url 'products:update' product.pk %}" class="btn btn-outline-secondary">Edit</a>
+        <a href="{% url 'products:delete' product.pk %}" class="btn btn-outline-danger">Delete</a>
         {% endif %}
     </div>
 </div>
@@ -27,21 +27,36 @@
     <div class="col-md-8">
         <h3>Product Details</h3>
         <table class="table table-borderless">
-            <tr><th>Description</th><td>{{ product.description|linebreaks }}</td></tr>
-            <tr><th>Category</th><td>{{ product.category|default:"—" }}</td></tr>
-            <tr><th>Base Price</th><td>${{ product.base_price|intcomma }} {{ product.currency }}</td></tr>
-            <tr><th>Pricing Model</th><td>{{ product.get_pricing_model_display }}</td></tr>
-            <tr><th>Availability</th><td>
-                {% if product.available_from and product.available_to %}
+            <tr>
+                <th>Description</th>
+                <td>{{ product.description|linebreaks }}</td>
+            </tr>
+            <tr>
+                <th>Category</th>
+                <td>{{ product.category|default:"—" }}</td>
+            </tr>
+            <tr>
+                <th>Base Price</th>
+                <td>${{ product.base_price|intcomma }} {{ product.currency }}</td>
+            </tr>
+            <tr>
+                <th>Pricing Model</th>
+                <td>{{ product.get_pricing_model_display }}</td>
+            </tr>
+            <tr>
+                <th>Availability</th>
+                <td>
+                    {% if product.available_from and product.available_to %}
                     {{ product.available_from }} to {{ product.available_to }}
-                {% elif product.available_from %}
+                    {% elif product.available_from %}
                     From {{ product.available_from }}
-                {% elif product.available_to %}
+                    {% elif product.available_to %}
                     Until {{ product.available_to }}
-                {% else %}
+                    {% else %}
                     Always available
-                {% endif %}
-            </td></tr>
+                    {% endif %}
+                </td>
+            </tr>
         </table>
 
         {% if product.pricing_tiers.exists %}
@@ -61,16 +76,16 @@
                     <tr>
                         <td>
                             {% if tier.max_quantity %}
-                                {{ tier.min_quantity }}–{{ tier.max_quantity }}
+                            {{ tier.min_quantity }}–{{ tier.max_quantity }}
                             {% else %}
-                                {{ tier.min_quantity }}+
+                            {{ tier.min_quantity }}+
                             {% endif %}
                         </td>
                         <td>${{ tier.unit_price|intcomma }}</td>
                         <td>{{ tier.discount_percent }}%</td>
                         <td>
                             {% with price=pricing_info.10.total_price %}
-                                ${{ price|intcomma }}
+                            ${{ price|intcomma }}
                             {% endwith %}
                         </td>
                     </tr>
@@ -86,14 +101,14 @@
             <li><strong>Carbon Footprint:</strong> {{ product.carbon_footprint }} kg CO2e per unit</li>
             <li><strong>tCO2e Saved:</strong> {{ product.tco2e_saved }} tonnes</li>
             {% if product.esg_certifications %}
-                <li><strong>Certifications:</strong> 
-                    {% for cert in product.get_certifications_list %}
-                        <span class="badge bg-info text-dark">{{ cert }}</span>
-                    {% endfor %}
-                </li>
+            <li><strong>Certifications:</strong>
+                {% for cert in product.get_certifications_list %}
+                <span class="badge bg-info text-dark">{{ cert }}</span>
+                {% endfor %}
+            </li>
             {% endif %}
             {% if product.sustainability_notes %}
-                <li><strong>Sustainability Notes:</strong> {{ product.sustainability_notes }}</li>
+            <li><strong>Sustainability Notes:</strong> {{ product.sustainability_notes }}</li>
             {% endif %}
         </ul>
         {% endif %}
@@ -110,7 +125,7 @@
                         <p><strong>Price:</strong> ${{ bundle.bundle_price|intcomma }}</p>
                         <ul>
                             {% for item in bundle.bundleitem_set.all %}
-                                <li>{{ item.quantity }}x {{ item.product.name }}</li>
+                            <li>{{ item.quantity }}x {{ item.product.name }}</li>
                             {% endfor %}
                         </ul>
                     </div>
@@ -122,13 +137,20 @@
     </div>
 
     <div class="col-md-4">
+        <!-- Tasks Widget -->
+        <div class="mb-3">
+            {% render_object_tasks product %}
+        </div>
+
         <div class="card mb-3">
             <div class="card-header">Quick Actions</div>
             <div class="card-body">
-                <a href="{% url 'products:comparison' %}?product={{ product.id }}" class="btn btn-outline-primary w-100 mb-2">
+                <a href="{% url 'products:comparison' %}?product={{ product.id }}"
+                    class="btn btn-outline-primary w-100 mb-2">
                     Compare with Other Products
                 </a>
-                <a href="{% url 'products:competitor_mapping' %}?product_id={{ product.id }}" class="btn btn-outline-secondary w-100">
+                <a href="{% url 'products:competitor_mapping' %}?product_id={{ product.id }}"
+                    class="btn btn-outline-secondary w-100">
                     View Competitor Mapping
                 </a>
             </div>
@@ -144,13 +166,13 @@
                         <strong>{{ competitor.competitor_name }}</strong><br>
                         {{ competitor.name }} ({{ competitor.competitor_sku|default:"—" }})
                         {% if competitor.price_difference_percent != 0 %}
-                            <br><small>
-                                {% if competitor.price_difference_percent > 0 %}
-                                    {{ competitor.price_difference_percent }}% more expensive
-                                {% else %}
-                                    {{ competitor.price_difference_percent|abs }}% cheaper
-                                {% endif %}
-                            </small>
+                        <br><small>
+                            {% if competitor.price_difference_percent > 0 %}
+                            {{ competitor.price_difference_percent }}% more expensive
+                            {% else %}
+                            {{ competitor.price_difference_percent|abs }}% cheaper
+                            {% endif %}
+                        </small>
                         {% endif %}
                     </li>
                     {% endfor %}

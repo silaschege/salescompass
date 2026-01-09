@@ -1,0 +1,116 @@
+{% extends 'products/base.html' %}
+
+{% block title %}
+{% if object %}
+    Edit {{ object.product.product_name }} Dependency
+{% else %}
+    Add Product Dependency
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">
+            {% if object %}
+                Edit {{ object.product.product_name }} Dependency
+            {% else %}
+                Add Product Dependency
+            {% endif %}
+        </h1>
+        <a href="{% url 'products:productdependency_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.product.id_for_label }}" class="form-label">
+                                        {{ form.product.label }}
+                                    </label>
+                                    {{ form.product }}
+                                    {% if form.product.help_text %}
+                                        <div class="form-text">{{ form.product.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.product.errors %}
+                                        <div class="text-danger">{{ form.product.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.required_product.id_for_label }}" class="form-label">
+                                        {{ form.required_product.label }}
+                                    </label>
+                                    {{ form.required_product }}
+                                    {% if form.required_product.help_text %}
+                                        <div class="form-text">{{ form.required_product.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.required_product.errors %}
+                                        <div class="text-danger">{{ form.required_product.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.dependency_type.id_for_label }}" class="form-label">
+                                {{ form.dependency_type.label }}
+                            </label>
+                            {{ form.dependency_type }}
+                            {% if form.dependency_type.help_text %}
+                                <div class="form-text">{{ form.dependency_type.help_text }}</div>
+                            {% endif %}
+                            {% if form.dependency_type.errors %}
+                                <div class="text-danger">{{ form.dependency_type.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'products:productdependency_list' %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if object %}
+                                    Update Dependency
+                                {% else %}
+                                    Add Dependency
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Information</h5>
+                </div>
+                <div class="card-body">
+                    <p>Define product dependencies to guide customers during the purchasing process.</p>
+                    <ul>
+                        <li>Select the product that has a dependency</li>
+                        <li>Select the product that is required or recommended</li>
+                        <li>Specify whether this is a required or recommended dependency</li>
+                    </ul>
+                    <p class="text-muted">
+                        <strong>Required:</strong> Customers must purchase the required product<br>
+                        <strong>Recommended:</strong> Customers are encouraged to purchase the recommended product
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

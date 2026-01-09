@@ -1,0 +1,175 @@
+{% extends "communication/base.html" %}
+{% load static %}
+
+{% block title %}Compose Email - Communication{% endblock %}
+
+{% block comm_title %}✉️ Compose New Email{% endblock %}
+{% block comm_subtitle %}Send professional communications to your leads and accounts{% endblock %}
+
+{% block comm_actions %}
+<a href="{% url 'communication:email_list' %}" class="btn btn-light fw-bold px-4 shadow-sm">
+    <i class="bi bi-arrow-left me-1"></i> Back to List
+</a>
+{% endblock %}
+
+{% block comm_content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="comm-card p-4">
+            <form method="post" id="email-compose-form">
+                {% csrf_token %}
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Recipients</label>
+                    {{ form.recipients }}
+                    {% if form.recipients.errors %}
+                    <div class="text-danger small mt-1">{{ form.recipients.errors }}</div>
+                    {% endif %}
+                    <div class="form-text">Comma-separated email addresses</div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Subject</label>
+                    {{ form.subject }}
+                    {% if form.subject.errors %}
+                    <div class="text-danger small mt-1">{{ form.subject.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold">Message Template</label>
+                        <select class="form-select" id="template-selector">
+                            <option value="">-- No template --</option>
+                            {% for template in templates %}
+                            <option value="{{ template.id }}" data-content="{{ template.body_html }}">{{ template.name
+                                }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold">Email Signature</label>
+                        <select class="form-select" id="signature-selector">
+                            <option value="">-- No signature --</option>
+                            {% for signature in signatures %}
+                            <option value="{{ signature.id }}" data-content="{{ signature.content_html }}" {% if
+                                signature.is_default %}selected{% endif %}>{{ signature.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Content (HTML)</label>
+                    {{ form.content_html }}
+                    {% if form.content_html.errors %}
+                    <div class="text-danger small mt-1">{{ form.content_html.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-light border">Save Draft</button>
+                    <button type="submit" class="btn btn-comm px-5 shadow-sm">
+                        <i class="bi bi-send me-2"></i> Send Email
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="comm-card p-4 h-100">
+            <h5 class="fw-bold mb-4 border-bottom pb-2">Send Settings</h5>
+
+            <div class="mb-4 p-3 bg-light rounded-3">
+                <div class="form-check form-switch mb-2">
+                    {{ form.tracking_enabled }}
+                    <label class="form-check-label fw-bold ms-2" for="{{ form.tracking_enabled.id_for_label }}">Track
+                        Engagement</label>
+                </div>
+                <p class="text-muted small mb-0">Record when recipients open this email or click any links within it.
+                </p>
+            </div>
+
+            <div class="mb-4 p-3 bg-light rounded-3">
+                <label class="form-label fw-bold mb-2">Schedule Send</label>
+                {{ form.send_at }}
+                <p class="text-muted small mt-2 mb-0">Leave blank to send immediately. Otherwise, specify a future date
+                    and time.</p>
+            </div>
+
+            <div class="mb-4">
+                <h6 class="fw-bold small text-uppercase text-muted mb-3">Personalization Tags</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge bg-secondary-subtle text-secondary border px-2 py-1"
+                        onclick="insertTag('{{first_name}}')" style="cursor: pointer;">{{first_name}}</span>
+                    <span class="badge bg-secondary-subtle text-secondary border px-2 py-1"
+                        onclick="insertTag('{{last_name}}')" style="cursor: pointer;">{{last_name}}</span>
+                    <span class="badge bg-secondary-subtle text-secondary border px-2 py-1"
+                        onclick="insertTag('{{company}}')" style="cursor: pointer;">{{company}}</span>
+                </div>
+            </div>
+
+            <div class="mt-auto pt-4 border-top">
+                <div class="d-flex align-items-center gap-3 text-muted">
+                    <i class="bi bi-shield-check text-success display-6"></i>
+                    <div>
+                        <div class="fw-bold small">Secure Sending</div>
+                        <div class="x-small">Verified by SalesCompass SPF/DKIM</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function insertTag(tag) {
+        const textarea = document.querySelector('textarea[name="content_html"]');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = textarea.value;
+        const before = text.substring(0, start);
+        const after = text.substring(end, text.length);
+        textarea.value = (before + tag + after);
+        textarea.selectionStart = textarea.selectionEnd = start + tag.length;
+        textarea.focus();
+    }
+
+    document.getElementById('template-selector').addEventListener('change', function () {
+        const content = this.options[this.selectedIndex].getAttribute('data-content');
+        if (content) {
+            const textarea = document.querySelector('textarea[name="content_html"]');
+            textarea.value = content + (textarea.value.includes('---') ? '\n\n' + textarea.value.split('---').pop() : '');
+        }
+    });
+
+    document.getElementById('signature-selector').addEventListener('change', function () {
+        const signature = this.options[this.selectedIndex].getAttribute('data-content');
+        const textarea = document.querySelector('textarea[name="content_html"]');
+        let val = textarea.value;
+
+        if (val.includes('\n\n---\n')) {
+            val = val.split('\n\n---\n')[0];
+        }
+
+        if (signature) {
+            textarea.value = val + '\n\n---\n' + signature;
+        } else {
+            textarea.value = val;
+        }
+    });
+
+    // Initial signature load if default is selected
+    window.addEventListener('DOMContentLoaded', () => {
+        const sigSel = document.getElementById('signature-selector');
+        if (sigSel.value) {
+            const signature = sigSel.options[sigSel.selectedIndex].getAttribute('data-content');
+            const textarea = document.querySelector('textarea[name="content_html"]');
+            if (textarea && signature && !textarea.value) {
+                textarea.value = '\n\n---\n' + signature;
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -9,7 +9,7 @@
 <div class="container">
     <div class="d-flex justify-content-between mb-3">
         <h2>Case List</h2>
-        <a href="{% url 'cases:create' %}" class="btn btn-primary">+ New Case</a>
+        <a href="{% url 'cases:case_create' %}" class="btn btn-primary">+ New Case</a>
     </div>
 
     {% if cases %}
@@ -69,7 +69,7 @@
         </div>
     {% else %}
         <p class="text-muted">No cases found.</p>
-        <a href="{% url 'cases:create' %}" class="btn btn-primary">Create your first case</a>
+        <a href="{% url 'cases:case_create' %}" class="btn btn-primary">Create your first case</a>
     {% endif %}
 </div>
 {% endblock %}

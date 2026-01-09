@@ -14,10 +14,10 @@
     <!-- Action Buttons -->
     <div class="row mb-3">
         <div class="col-md-6">
-            <a href="{% url 'marketing:template_create' %}" class="btn btn-primary">+ New Email Template</a>
+            <a href="{% url 'marketing:email_template_create' %}" class="btn btn-primary">+ New Email Template</a>
         </div>
         <div class="col-md-6 text-end">
-            <a href="{% url 'marketing:list' %}" class="btn btn-outline-secondary">← Back to Campaigns</a>
+            <a href="{% url 'marketing:campaign_list' %}" class="btn btn-outline-secondary">← Back to Campaigns</a>
         </div>
     </div>
 
@@ -38,7 +38,7 @@
                     {% for template in object_list %}
                     <tr>
                         <td>
-                            <a href="{% url 'marketing:template_update' template.pk %}" class="text-decoration-none">
+                            <a href="{% url 'marketing:email_template_update' template.pk %}" class="text-decoration-none">
                                 <strong>{{ template.name }}</strong>
                             </a>
                             <br>
@@ -61,7 +61,7 @@
                         <td>{{ template.created_at|date:"M d, Y" }}</td>
                         <td>
                             <div class="d-flex flex-column gap-1">
-                                <a href="{% url 'marketing:template_update' template.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="{% url 'marketing:email_template_update' template.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
                                 <a href="#" class="btn btn-sm btn-outline-secondary preview-template" data-template-id="{{ template.id }}">
                                     Preview
                                 </a>
@@ -129,7 +129,7 @@
             </div>
             <h3 class="text-muted">No email templates found</h3>
             <p class="text-muted mb-4">Create your first email template to use in marketing campaigns.</p>
-            <a href="{% url 'marketing:template_create' %}" class="btn btn-primary">Create Your First Template</a>
+            <a href="{% url 'marketing:email_template_create' %}" class="btn btn-primary">Create Your First Template</a>
         </div>
     {% endif %}
 </div>

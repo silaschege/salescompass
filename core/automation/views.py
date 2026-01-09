@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from core.permissions import PermissionRequiredMixin, require_permission
-from .models import Automation, AutomationCondition, AutomationAction, Workflow, WorkflowTemplate,WorkflowAction,WorkflowTrigger,WorkflowExecution,WebhookDeliveryLog,WebhookEndpoint
-from .forms import AutomationForm, AutomationConditionForm, AutomationActionForm
+from .models import Automation, AutomationCondition, AutomationAction, Workflow, WorkflowTemplate,WorkflowAction,WorkflowTrigger,WorkflowExecution,WebhookDeliveryLog,WebhookEndpoint, WorkflowApproval, WorkflowVersion, CustomCodeSnippet, CustomCodeExecutionLog
+from .forms import AutomationForm, AutomationConditionForm, AutomationActionForm, CustomCodeSnippetForm
 from .utils import get_available_triggers
 from django.http import JsonResponse
 from django.views import View
@@ -25,9 +26,10 @@ class WorkflowListView(PermissionRequiredMixin, ListView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        for workflow in context['workflows']:
-            print(f"Workflow ID: {workflow.pk}")
-        print(f"Workflows count: {context['workflows'].count()}")  # Debug line
+        workflows = self.get_queryset()
+        context['total_workflows'] = workflows.count()
+        context['active_workflows'] = workflows.filter(workflow_is_active=True).count()
+        context['inactive_workflows'] = workflows.filter(workflow_is_active=False).count()
         return context
 
 class WorkflowDetailView(PermissionRequiredMixin, DetailView):
@@ -80,6 +82,21 @@ class AutomationListView(PermissionRequiredMixin, ListView):
     template_name = 'automation/list.html'
     context_object_name = 'automations'
     required_permission = 'automation:read'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        automations = self.get_queryset()
+        context['total_automations'] = automations.count()
+        context['active_automations'] = automations.filter(automation_is_active=True).count()
+        context['inactive_automations'] = automations.filter(automation_is_active=False).count()
+        
+        # Also include workflows for the combined list view
+        from .models import Workflow
+        workflows = Workflow.objects.all()
+        context['workflows'] = workflows
+        context['total_workflows'] = workflows.count()
+        context['active_workflows'] = workflows.filter(workflow_is_active=True).count()
+        return context
 
 class AutomationDetailView(PermissionRequiredMixin, DetailView):
     model = Automation
@@ -196,6 +213,81 @@ class AutomationLogDetailView(PermissionRequiredMixin, DetailView):
     model = AutomationExecutionLog
     template_name = 'automation/log_detail.html'
     required_permission = 'automation:read'
+
+class WebhookDeliveryLogListView(PermissionRequiredMixin, ListView):
+    """List all webhook delivery logs."""
+    model = WebhookDeliveryLog
+    template_name = 'automation/webhook_log_list.html'
+    context_object_name = 'logs'
+    paginate_by = 50
+    required_permission = 'automation:read'
+
+    def get_queryset(self):
+        return super().get_queryset().select_related('webhook_endpoint')
+
+class WebhookDeliveryLogDetailView(PermissionRequiredMixin, DetailView):
+    """Detail view for webhook delivery logs."""
+    model = WebhookDeliveryLog
+    template_name = 'automation/webhook_log_detail.html'
+    context_object_name = 'log'
+    required_permission = 'automation:read'
+
+class WorkflowApprovalListView(PermissionRequiredMixin, ListView):
+    """List all pending workflow approval requests."""
+    model = WorkflowApproval
+    template_name = 'automation/approval_list.html'
+    context_object_name = 'approvals'
+    required_permission = 'automation:read'
+
+    def get_queryset(self):
+        return WorkflowApproval.objects.filter(
+            tenant_id=self.request.tenant.id,
+            approval_status='pending'
+        ).select_related('workflow_execution', 'workflow_execution__workflow', 'workflow_action')
+
+@login_required
+def respond_to_workflow_approval(request, approval_id):
+    """Handle approval or rejection of a workflow step."""
+    from .models import WorkflowApproval
+    from .engine import WorkflowEngine
+    
+    approval = get_object_or_404(WorkflowApproval, id=approval_id, tenant_id=request.tenant.id)
+    
+    if request.method == 'POST':
+        action = request.POST.get('action') # 'approve' or 'reject'
+        comments = request.POST.get('comments', '')
+        
+        if action == 'approve':
+            approval.approval_status = 'approved'
+            approval.approval_responded_by = request.user
+            approval.approval_responded_at = timezone.now()
+            approval.approval_comments = comments
+            approval.save()
+            
+            # Resume the workflow execution
+            engine = WorkflowEngine()
+            engine.resume_workflow(approval.workflow_execution.id)
+            
+            messages.success(request, "Workflow execution approved and resumed.")
+            
+        elif action == 'reject':
+            approval.approval_status = 'rejected'
+            approval.approval_responded_by = request.user
+            approval.approval_responded_at = timezone.now()
+            approval.approval_comments = comments
+            approval.save()
+            
+            # Update execution status to failed
+            execution = approval.workflow_execution
+            execution.workflow_execution_status = 'failed'
+            execution.workflow_execution_error_message = f"Rejected by {request.user.email}: {comments}"
+            execution.save()
+            
+            messages.warning(request, "Workflow execution rejected.")
+            
+        return redirect('automation:approval_list')
+        
+    return render(request, 'automation/approval_response.html', {'approval': approval})
 
 class SystemAutomationListView(PermissionRequiredMixin, ListView):
     """List system automations (cannot be deleted)."""
@@ -344,6 +436,10 @@ def save_workflow(request):
         
         workflow.save()
         
+        # Sync related models (Trigger, Actions, Branches) from JSON data
+        from .utils import sync_workflow_from_builder_data
+        sync_workflow_from_builder_data(workflow)
+        
         return JsonResponse({
             'success': True,
             'workflow_id': workflow.id,
@@ -379,7 +475,7 @@ def load_workflow(request, workflow_id):
 class WorkflowActionCreateView(PermissionRequiredMixin, CreateView):
     model = WorkflowAction
     fields = ['workflow_action_type', 'workflow_action_parameters', 'workflow_action_order', 'workflow_action_is_active']
-    template_name = 'automation/action_form.html'
+    template_name = 'automation/workflow_action_form.html'
     required_permission = 'automation:write'
 
     def get_form_kwargs(self):
@@ -410,7 +506,7 @@ class WorkflowActionDeleteView(PermissionRequiredMixin, DeleteView):
 class WorkflowTriggerCreateView(PermissionRequiredMixin, CreateView):
     model = WorkflowTrigger
     fields = ['workflow_trigger_event', 'workflow_trigger_conditions', 'workflow_trigger_is_active']
-    template_name = 'automation/condition_form.html'
+    template_name = 'automation/workflow_trigger_form.html'
     required_permission = 'automation:write'
 
     def get_form_kwargs(self):
@@ -552,3 +648,256 @@ class WorkflowTemplateDeleteView(PermissionRequiredMixin, DeleteView):
     template_name = 'automation/confirm_delete.html'
     success_url = '/automation/workflow-templates/'
     required_permission = 'automation:delete'
+
+
+# ============================================================================
+# Analytics Dashboard Views
+# ============================================================================
+
+class WorkflowAnalyticsDashboardView(PermissionRequiredMixin, View):
+    """Main analytics dashboard view."""
+    template_name = 'automation/analytics_dashboard.html'
+    required_permission = 'automation:read'
+    
+    def get(self, request):
+        from .analytics import analytics_service
+        from datetime import datetime, timedelta
+        from django.utils import timezone
+        
+        tenant_id = getattr(request, 'tenant', None)
+        tenant_id = tenant_id.id if tenant_id else None
+        
+        # Get date range from query params
+        days = int(request.GET.get('days', 30))
+        start_date = timezone.now() - timedelta(days=days)
+        
+        context = {
+            'page_title': 'Workflow Analytics',
+            'tenant_analytics': analytics_service.get_tenant_analytics(
+                tenant_id=tenant_id,
+                start_date=start_date,
+            ),
+            'execution_trends': analytics_service.get_execution_trends(
+                tenant_id=tenant_id,
+                days=days,
+            ),
+            'action_stats': analytics_service.get_action_type_stats(
+                tenant_id=tenant_id,
+                days=days,
+            ),
+            'days': days,
+        }
+        
+        return render(request, self.template_name, context)
+
+
+class WorkflowAnalyticsAPIView(PermissionRequiredMixin, View):
+    """API endpoint for analytics data (JSON)."""
+    required_permission = 'automation:read'
+    
+    def get(self, request):
+        from .analytics import analytics_service
+        from datetime import timedelta
+        from django.utils import timezone
+        
+        tenant_id = getattr(request, 'tenant', None)
+        tenant_id = tenant_id.id if tenant_id else None
+        workflow_id = request.GET.get('workflow_id')
+        days = int(request.GET.get('days', 30))
+        
+        start_date = timezone.now() - timedelta(days=days)
+        
+        if workflow_id:
+            data = analytics_service.get_workflow_metrics(
+                workflow_id=int(workflow_id),
+                start_date=start_date,
+            )
+        else:
+            data = {
+                'tenant_analytics': analytics_service.get_tenant_analytics(
+                    tenant_id=tenant_id,
+                    start_date=start_date,
+                ),
+                'trends': analytics_service.get_execution_trends(
+                    tenant_id=tenant_id,
+                    days=days,
+                ),
+            }
+        
+        return JsonResponse(data)
+
+
+# ============================================================================
+# Execution Replay Views
+# ============================================================================
+
+class ReplayWorkflowExecutionView(PermissionRequiredMixin, View):
+    """Replay a workflow execution."""
+    required_permission = 'automation:write'
+    
+    def post(self, request, pk):
+        from .models import WorkflowExecution
+        from .engine import WorkflowEngine
+        from django.utils import timezone
+        
+        original = get_object_or_404(WorkflowExecution, pk=pk)
+        
+        # Create a new execution as a replay
+        replay_execution = WorkflowExecution.objects.create(
+            workflow=original.workflow,
+            workflow_execution_trigger_payload=original.workflow_execution_trigger_payload,
+            workflow_execution_status='pending',
+            is_replay=True,
+            original_execution=original,
+            tenant_id=original.tenant_id,
+        )
+        
+        # Execute the workflow
+        engine = WorkflowEngine()
+        context = {
+            'payload': original.workflow_execution_trigger_payload,
+            'tenant_id': original.tenant_id,
+            'is_replay': True,
+        }
+        
+        try:
+            success = engine.execute_workflow(original.workflow.id, context)
+            
+            if success:
+                messages.success(request, f"Workflow replayed successfully. New execution ID: {replay_execution.id}")
+            else:
+                messages.warning(request, "Workflow replay completed with issues. Check execution log for details.")
+                
+        except Exception as e:
+            messages.error(request, f"Replay failed: {str(e)}")
+        
+        return redirect('automation:workflow_execution_detail', pk=replay_execution.id)
+
+
+# ============================================================================
+# Version History Views
+# ============================================================================
+
+class WorkflowVersionListView(PermissionRequiredMixin, ListView):
+    """List all versions of a workflow."""
+    model = WorkflowVersion
+    template_name = 'automation/version_history.html'
+    context_object_name = 'versions'
+    required_permission = 'automation:read'
+    
+    def get_queryset(self):
+        from .models import WorkflowVersion
+        workflow_id = self.kwargs.get('workflow_id')
+        return WorkflowVersion.objects.filter(workflow_id=workflow_id).select_related('created_by')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['workflow'] = get_object_or_404(Workflow, pk=self.kwargs.get('workflow_id'))
+        return context
+
+
+class WorkflowRollbackView(PermissionRequiredMixin, View):
+    """Rollback workflow to a previous version."""
+    required_permission = 'automation:write'
+    
+    def post(self, request, workflow_id, version_id):
+        from .models import WorkflowVersion
+        
+        workflow = get_object_or_404(Workflow, pk=workflow_id)
+        version = get_object_or_404(WorkflowVersion, pk=version_id, workflow=workflow)
+        
+        # Create a new version before rollback (for safety)
+        current_version_num = WorkflowVersion.objects.filter(workflow=workflow).count() + 1
+        WorkflowVersion.objects.create(
+            workflow=workflow,
+            version_number=current_version_num,
+            workflow_data_snapshot=workflow.workflow_builder_data,
+            change_summary=f"Auto-saved before rollback to version {version.version_number}",
+            created_by=request.user,
+            tenant_id=workflow.tenant_id,
+        )
+        
+        # Apply the rollback
+        workflow.workflow_builder_data = version.workflow_data_snapshot
+        workflow.save()
+        
+        # Sync related models
+        from .utils import sync_workflow_from_builder_data
+        sync_workflow_from_builder_data(workflow)
+        
+        messages.success(request, f"Workflow rolled back to version {version.version_number}")
+        return redirect('automation:workflow_detail', pk=workflow_id)
+
+
+# ============================================================================
+# Custom Code Snippet Views
+# ============================================================================
+
+class CustomCodeSnippetListView(PermissionRequiredMixin, ListView):
+    """List all custom code snippets."""
+    model = CustomCodeSnippet
+    template_name = 'automation/custom_code_snippet_list.html'
+    context_object_name = 'snippets'
+    required_permission = 'automation:read'
+
+    def get_queryset(self):
+        return super().get_queryset().select_related('created_by')
+
+
+class CustomCodeSnippetDetailView(PermissionRequiredMixin, DetailView):
+    """View a custom code snippet."""
+    model = CustomCodeSnippet
+    template_name = 'automation/custom_code_snippet_detail.html'
+    required_permission = 'automation:read'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['execution_logs'] = self.object.execution_logs.all()[:10]
+        return context
+
+
+class CustomCodeSnippetCreateView(PermissionRequiredMixin, CreateView):
+    """Create a new custom code snippet."""
+    model = CustomCodeSnippet
+    form_class = CustomCodeSnippetForm
+    template_name = 'automation/custom_code_snippet_form.html'
+    success_url = '/automation/custom-code-snippets/'
+    required_permission = 'automation:write'
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        messages.success(self.request, "Custom code snippet created successfully.")
+        return super().form_valid(form)
+
+
+class CustomCodeSnippetUpdateView(PermissionRequiredMixin, UpdateView):
+    """Update a custom code snippet."""
+    model = CustomCodeSnippet
+    form_class = CustomCodeSnippetForm
+    template_name = 'automation/custom_code_snippet_form.html'
+    success_url = '/automation/custom-code-snippets/'
+    required_permission = 'automation:write'
+
+    def form_valid(self, form):
+        messages.success(self.request, "Custom code snippet updated successfully.")
+        return super().form_valid(form)
+
+
+class CustomCodeSnippetDeleteView(PermissionRequiredMixin, DeleteView):
+    """Delete a custom code snippet."""
+    model = CustomCodeSnippet
+    template_name = 'automation/confirm_delete.html'
+    success_url = '/automation/custom-code-snippets/'
+    required_permission = 'automation:delete'
+
+
+class CustomCodeExecutionLogListView(PermissionRequiredMixin, ListView):
+    """List custom code execution logs."""
+    model = CustomCodeExecutionLog
+    template_name = 'automation/custom_code_execution_log_list.html'
+    context_object_name = 'logs'
+    required_permission = 'automation:read'
+    paginate_by = 50
+
+    def get_queryset(self):
+        return super().get_queryset().select_related('custom_code_snippet', 'workflow_execution')

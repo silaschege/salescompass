@@ -1,0 +1,96 @@
+{% extends 'automation/base.html' %}
+
+{% block title %}{{ object.id|yesno:"Edit,Create" }} Custom Code - SalesCompass{% endblock %}
+
+{% block extra_head %}
+<style>
+    .code-editor {
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header-bar">
+    <div class="container">
+        <h1 class="block-title">{{ object.id|yesno:"✏️ Edit,➕ Create" }} Custom Code</h1>
+    </div>
+</div>
+
+<div class="mb-3">
+    <a href="{% url 'automation:custom_code_list' %}" class="btn btn-light">
+        <i class="bi bi-arrow-left"></i> Back to List
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Name *</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <div class="text-danger small">{{ form.name.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.language.id_for_label }}" class="form-label">Language</label>
+                        {{ form.language }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                {{ form.description }}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.code_content.id_for_label }}" class="form-label">Code *</label>
+                <div class="alert alert-info small py-2">
+                    <i class="bi bi-shield-check"></i>
+                    <strong>Security:</strong> Code runs in a sandbox with limited modules. Available:
+                    <code>json</code>, <code>datetime</code>, <code>re</code>, <code>math</code>, <code>Decimal</code>.
+                    Access <code>payload</code>, <code>parameters</code>, and <code>context</code> variables. Set
+                    <code>result</code> to return data.
+                </div>
+                {{ form.code_content }}
+                {% if form.code_content.errors %}
+                <div class="text-danger small">{{ form.code_content.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.parameters_schema.id_for_label }}" class="form-label">Parameters Schema
+                    (JSON)</label>
+                {{ form.parameters_schema }}
+                <small class="text-muted">Define expected parameters for this code snippet</small>
+                {% if form.parameters_schema.errors %}
+                <div class="text-danger small">{{ form.parameters_schema.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-4 form-check">
+                {{ form.is_active }}
+                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                    Active (can be used in workflows)
+                </label>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg"></i> {{ object.id|yesno:"Update,Create" }}
+                </button>
+                <a href="{% url 'automation:custom_code_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

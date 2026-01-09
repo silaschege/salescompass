@@ -3,7 +3,8 @@ from typing import Any, Dict, List, Optional, Union
 from django.apps import apps
 from django.db import transaction
 from django.db.models import Count, Q
-from settings_app.models import AssignmentRule, Territory, TeamMember
+from settings_app.models import AssignmentRule
+from tenants.models import TenantTerritory, TenantMember
 
 logger = logging.getLogger(__name__)
 
@@ -153,10 +154,10 @@ def _get_territory_assignee(rule: AssignmentRule, record: Any):
     
     for user in potential_assignees:
         try:
-            team_member = user.team_member
+            team_member = user.tenant_member
             if team_member.territory and country in team_member.territory.country_codes:
                 return user
-        except TeamMember.DoesNotExist:
+        except TenantMember.DoesNotExist:
             continue
             
     return None

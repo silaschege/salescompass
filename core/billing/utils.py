@@ -33,6 +33,7 @@ def get_active_subscriptions(tenant_id=None):
     return qs
 
 
+
 def calculate_mrr():
     """
     Calculate total Monthly Recurring Revenue across all active subscriptions.
@@ -44,9 +45,12 @@ def calculate_mrr():
     total_mrr = Decimal('0.00')
     
     for sub in active_subs:
-        total_mrr += Decimal(str(sub.plan.price_monthly))
+        if sub.subscription_plan:
+            total_mrr += sub.subscription_plan.price
     
     return total_mrr
+
+
 
 
 def calculate_arr():
@@ -57,6 +61,7 @@ def calculate_arr():
         Decimal: Total ARR (MRR * 12)
     """
     return calculate_mrr() * 12
+
 
 
 def get_subscription_health_score(subscription):
@@ -79,7 +84,8 @@ def get_subscription_health_score(subscription):
         return 0
     
     # Check for overdue invoices
-    overdue_count = subscription.invoices.filter(
+    overdue_count = Invoice.objects.filter(
+        subscription=subscription,
         status__in=['open', 'overdue'],
         due_date__lt=timezone.now().date()
     ).count()
@@ -95,6 +101,11 @@ def get_subscription_health_score(subscription):
     return max(0, min(100, score))
 
 
+
+
+
+
+
 def check_usage_limits(tenant_id, subscription):
     """
     Check if tenant is within their plan limits.
@@ -106,12 +117,21 @@ def check_usage_limits(tenant_id, subscription):
     Returns:
         dict: Limit check results
     """
+    if not subscription.subscription_plan:
+        return {
+            'within_limits': False,
+            'warnings': ['No plan associated with subscription']
+        }
+    
     # This is a simplified version - you'd integrate with actual usage tracking
     return {
         'within_limits': True,
-        'user_limit': subscription.plan.max_users,
-        'lead_limit': subscription.plan.max_leads,
-        'storage_limit_gb': subscription.plan.max_storage_gb,
+        'user_limit': subscription.subscription_plan.max_users,
+        'storage_limit_gb': subscription.subscription_plan.storage_limit,
+        'api_calls_limit': subscription.subscription_plan.api_calls_limit,
+        'has_reports': subscription.subscription_plan.has_reports,
+        'has_custom_fields': subscription.subscription_plan.has_custom_fields,
+        'has_integrations': subscription.subscription_plan.has_integrations,
         'warnings': []
     }
 
@@ -126,19 +146,21 @@ def get_upgrade_path(current_plan):
     Returns:
         list: List of recommended upgrade plans
     """
-    tier_order = ['starter', 'pro', 'enterprise']
-    current_index = tier_order.index(current_plan.tier)
+    # Simple implementation based on price - you could enhance this logic
+    higher_plans = Plan.objects.filter(
+        price__gt=current_plan.price,
+        is_active=True
+    ).order_by('price')
     
-    if current_index < len(tier_order) - 1:
-        next_tier = tier_order[current_index + 1]
-        return Plan.objects.filter(tier=next_tier, is_active=True)
-    
-    return Plan.objects.none()
+    return higher_plans
+
+
 
 
 # ============================================================================
 # Invoice Utilities
 # ============================================================================
+
 
 def generate_invoice_for_subscription(subscription, due_days=7):
     """
@@ -151,12 +173,65 @@ def generate_invoice_for_subscription(subscription, due_days=7):
     Returns:
         Invoice instance
     """
+    from django.utils import timezone
+    from django.db.models import Max
+    
     due_date = timezone.now().date() + timedelta(days=due_days)
     
-    invoice = Invoice.create_from_subscription(subscription, due_date=due_date)
-    invoice.finalize()
+    # Generate unique invoice number
+    last_invoice = Invoice.objects.filter(tenant=subscription.tenant).aggregate(Max('invoice_number'))
+    last_number = last_invoice['invoice_number__max']
+    
+    if last_number:
+        # Extract the numeric part and increment
+        import re
+        match = re.search(r'(\d+)$', str(last_number))
+        if match:
+            next_number = int(match.group(1)) + 1
+        else:
+            next_number = 1
+    else:
+        next_number = 1
+    
+    invoice_number = f"INV-{next_number:06d}"
+    
+    # Create the invoice
+    invoice = Invoice.objects.create(
+        tenant=subscription.tenant,
+        invoice_number=invoice_number,
+        subscription=subscription,
+        amount=subscription.subscription_plan.price,
+        due_date=due_date,
+        status='draft'
+    )
+    
+    # Set status to open
+    invoice.status = 'open'
+    invoice.save()
     
     return invoice
+
+
+def calculate_outstanding_balance(tenant_id):
+    """
+    Calculate total outstanding balance for a tenant.
+    
+    Args:
+        tenant_id: Tenant ID
+    
+    Returns:
+        Decimal: Total outstanding amount
+    """
+    from tenants.models import Tenant
+    from django.db.models import Sum
+    
+    total = Invoice.objects.filter(
+        tenant_id=tenant_id,
+        status__in=['draft', 'open', 'overdue']
+    ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    
+    return total
+
 
 
 def get_overdue_invoices(tenant_id=None):
@@ -178,20 +253,8 @@ def get_overdue_invoices(tenant_id=None):
     return qs
 
 
-def calculate_outstanding_balance(tenant_id):
-    """
-    Calculate total outstanding balance for a tenant.
-    
-    Args:
-        tenant_id: Tenant ID
-    
-    Returns:
-        Decimal: Total outstanding amount
-    """
-    return Invoice.objects.filter(
-        tenant_id=tenant_id,
-        status__in=['open', 'overdue']
-    ).aggregate(total=Sum('total'))['total'] or Decimal('0.00')
+
+
 
 
 def apply_credit_to_invoice(invoice, credit_adjustment):
@@ -205,18 +268,20 @@ def apply_credit_to_invoice(invoice, credit_adjustment):
     Returns:
         bool: Success status
     """
-    if credit_adjustment.amount >= invoice.total:
-        invoice.mark_paid()
+    if credit_adjustment.amount >= invoice.amount:
+        invoice.status = 'paid'
+        invoice.save()
         return True
     else:
-        invoice.total -= credit_adjustment.amount
-        invoice.save()
+        # For partial credit, we might want to create a new adjusted invoice
+        # For now, we'll just note the credit application
         return False
-
 
 # ============================================================================
 # Payment Utilities
 # ============================================================================
+
+
 
 def process_payment(invoice, amount, provider='stripe', payment_method_id=None, **kwargs):
     """
@@ -232,24 +297,35 @@ def process_payment(invoice, amount, provider='stripe', payment_method_id=None, 
     Returns:
         Payment instance
     """
+    from .models import PaymentMethod
+    
+    # Get the payment method if provided
+    payment_method = None
+    if payment_method_id:
+        try:
+            payment_method = PaymentMethod.objects.get(id=payment_method_id, tenant=invoice.tenant)
+        except PaymentMethod.DoesNotExist:
+            # If payment method doesn't exist, we'll continue without it
+            pass
+    
     payment = Payment.objects.create(
+        tenant=invoice.tenant,
         invoice=invoice,
         amount=amount,
-        provider=provider,
-        provider_transaction_id=kwargs.get('transaction_id', ''),
-        metadata=kwargs.get('metadata', {})
+        payment_method=payment_method,  # Can be None if not provided
+        status='succeeded',
+        stripe_payment_intent_id=kwargs.get('transaction_id', ''),
+        transaction_id=kwargs.get('transaction_id', ''),
+        processed_at=timezone.now()
     )
     
-    # In a real implementation, you'd integrate with actual payment provider here
-    # For now, simulate success/failure
-    payment.status = 'succeeded'
-    payment.save()
-    
     # Mark invoice as paid if full amount
-    if amount >= invoice.total:
-        invoice.mark_paid()
+    if amount >= invoice.amount:
+        invoice.status = 'paid'
+        invoice.save()
     
     return payment
+
 
 
 def refund_payment(payment, amount=None, reason=''):
@@ -321,6 +397,8 @@ def get_available_payment_providers(tenant_id=None):
 # Analytics Utilities
 # ============================================================================
 
+
+
 def get_revenue_metrics(start_date=None, end_date=None):
     """
     Calculate revenue metrics for a date range.
@@ -340,18 +418,18 @@ def get_revenue_metrics(start_date=None, end_date=None):
     # Get paid invoices in range
     invoices = Invoice.objects.filter(
         status='paid',
-        paid_at__date__gte=start_date,
-        paid_at__date__lte=end_date
+        invoice_created_at__date__gte=start_date,
+        invoice_created_at__date__lte=end_date
     )
     
-    total_revenue = invoices.aggregate(total=Sum('total'))['total'] or Decimal('0.00')
+    total_revenue = invoices.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
     invoice_count = invoices.count()
     
     # Get successful payments
     payments = Payment.objects.filter(
         status='succeeded',
-        created_at__date__gte=start_date,
-        created_at__date__lte=end_date
+        payment_created_at__date__gte=start_date,
+        payment_created_at__date__lte=end_date
     )
     payment_count = payments.count()
     
@@ -365,6 +443,9 @@ def get_revenue_metrics(start_date=None, end_date=None):
     }
 
 
+ 
+
+
 def get_churn_metrics():
     """
     Calculate churn metrics.
@@ -373,14 +454,14 @@ def get_churn_metrics():
         dict: Churn metrics
     """
     total_subs = Subscription.objects.count()
-    active_subs = Subscription.objects.filter(status='active').count()
+    active_subs = Subscription.objects.filter(subscription_is_active=True).count()
     canceled_subs = Subscription.objects.filter(status='canceled').count()
     
     # Canceled in last 30 days
     thirty_days_ago = timezone.now() - timedelta(days=30)
     recent_cancellations = Subscription.objects.filter(
         status='canceled',
-        updated_at__gte=thirty_days_ago
+        subscription_updated_at__gte=thirty_days_ago
     ).count()
     
     churn_rate = (recent_cancellations / active_subs * 100) if active_subs > 0 else 0
@@ -404,17 +485,22 @@ def get_ltv_estimate(subscription):
     Returns:
         Decimal: Estimated LTV
     """
+    if not subscription.subscription_plan:
+        return Decimal('0.00')
+    
     # Simple LTV calculation: Monthly price * Average customer lifetime
     # Assuming average lifetime of 24 months (adjust based on your data)
     average_lifetime_months = 24
-    monthly_value = subscription.plan.price_monthly
+    monthly_value = subscription.subscription_plan.price
     
     return monthly_value * average_lifetime_months
 
 
+ 
 # ============================================================================
 # Proration Utilities
 # ============================================================================
+
 
 def calculate_detailed_proration(subscription, new_plan, effective_date=None):
     """
@@ -431,32 +517,41 @@ def calculate_detailed_proration(subscription, new_plan, effective_date=None):
     if not effective_date:
         effective_date = timezone.now()
     
-    if not subscription.current_period_end:
+    if not hasattr(subscription, 'current_period_end') or not subscription.current_period_end:
         return {
             'credit_amount': Decimal('0.00'),
             'charge_amount': Decimal('0.00'),
             'net_amount': Decimal('0.00'),
-            'error': 'No current period end date'
+            'error': 'No current period end date available'
         }
     
     # Calculate days
-    days_remaining = (subscription.current_period_end - effective_date).days
+    # Use a default period if no end date is available
+    if subscription.current_period_end:
+        days_remaining = (subscription.current_period_end.date() - effective_date.date()).days
+    else:
+        # Default to 30 days if no end date
+        days_remaining = 30
+    
     days_in_period = 30  # Simplified
     
     # Calculate prorated amounts
-    old_daily_rate = subscription.plan.price_monthly / days_in_period
-    new_daily_rate = new_plan.price_monthly / days_in_period
+    old_daily_rate = subscription.subscription_plan.price / days_in_period if subscription.subscription_plan else Decimal('0.00')
+    new_daily_rate = new_plan.price / days_in_period if new_plan else Decimal('0.00')
     
-    credit_amount = old_daily_rate * days_remaining
-    charge_amount = new_daily_rate * days_remaining
+    credit_amount = old_daily_rate * max(0, days_remaining)
+    charge_amount = new_daily_rate * max(0, days_remaining)
     net_amount = charge_amount - credit_amount
     
     return {
         'credit_amount': credit_amount,
         'charge_amount': charge_amount,
         'net_amount': net_amount,
-        'days_remaining': days_remaining,
-        'old_plan': subscription.plan.name,
-        'new_plan': new_plan.name,
+        'days_remaining': max(0, days_remaining),
+        'old_plan': subscription.subscription_plan.name if subscription.subscription_plan else 'Unknown',
+        'new_plan': new_plan.name if new_plan else 'Unknown',
         'effective_date': effective_date
     }
+
+
+

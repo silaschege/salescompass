@@ -188,3 +188,67 @@ class BusinessRuleEngine:
             else:
                 return None
         return current
+    
+    
+    def _execute_single_action(self, action_config: Dict[str, Any], context: Dict[str, Any], rule: AutomationRule) -> bool:
+        """Execute a single action dictionary."""
+        action_type = action_config.get('type')
+        config = action_config.get('config', {})
+        
+        try:
+            if action_type == 'send_email':
+                # Implementation for sending email
+                pass
+            elif action_type == 'create_task':
+                # Implementation for creating task
+                pass
+            elif action_type == 'create_nba':
+                from engagement.models import NextBestAction
+                from django.utils import timezone
+                from datetime import timedelta
+                
+                # Resolve dynamic values from context
+                resolved_config = self._resolve_dynamic_values(config, context)
+                
+                # Set default values
+                nba_params = {
+                    'account_id': resolved_config.get('account_id'),
+                    'action_type': resolved_config.get('action_type', 'check_in'),
+                    'next_best_action_description': resolved_config.get('description', 'Auto-generated next best action'),
+                    'due_date': timezone.now() + timedelta(days=resolved_config.get('due_in_days', 7)),
+                    'priority': resolved_config.get('priority', 'medium'),
+                    'assigned_to_id': resolved_config.get('assigned_to_id'),
+                    'tenant_id': context.get('payload', {}).get('tenant_id'),
+                    'source': f'Automation Rule: {rule.automation_rule_name}'
+                }
+                
+                # Remove any None values
+                nba_params = {k: v for k, v in nba_params.items() if v is not None}
+                
+                # Create the NBA
+                NextBestAction.objects.create(**nba_params)
+            # Add other action types...
+            
+            return True
+        except Exception as e:
+            self.logger.error(f"Error executing action {action_type}: {e}")
+            return False
+
+    def _resolve_dynamic_values(self, config: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Resolve dynamic values in config from context.
+        Example: "{{payload.account_id}}" -> actual account ID from payload
+        """
+        resolved = {}
+        payload = context.get('payload', {})
+        
+        for key, value in config.items():
+            if isinstance(value, str) and value.startswith('{{') and value.endswith('}}'):
+                # Extract path like "payload.account_id"
+                path = value[2:-2].strip()
+                resolved[key] = self._get_nested_value(payload, path)
+            else:
+                resolved[key] = value
+                
+        return resolved
+# ... existing code ...

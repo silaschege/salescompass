@@ -4,16 +4,16 @@
     <title>{% block title %}SalesCompass{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         body {
             background: linear-gradient(135deg, #f7f8fc 0%, #e3e6f3 100%);
             font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            display: flex;
             min-height: 100vh;
             overflow-x: hidden; /* Prevent horizontal scroll during slide */
-        }
+        } 
 
         /* Sidebar - Slides off-screen to the left when hidden */
         .sidebar {
@@ -42,6 +42,7 @@
             display: flex;
             align-items: center;
             margin-bottom: 2rem;
+            text-decoration: none;
         }
 
         .sidebar .nav-link {
@@ -50,26 +51,58 @@
             padding: 0.5rem 1rem;
             border-radius: 0.5rem;
             transition: all 0.2s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* Ensures chevron aligns right */
         }
 
         .sidebar .nav-link:hover,
-        .sidebar .nav-link:focus {
+        .sidebar .nav-link:focus,
+        .sidebar .nav-link.active {
             color: #6f42c1;
             background-color: #f0e6ff;
             font-weight: 500;
         }
 
-        .sidebar .dropdown-toggle::after {
-            margin-left: auto;
-            float: right;
+        .sidebar .nav-link i {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        /* Submenu items indentation */
+        .sidebar .collapse .nav-link {
+            padding-left: 2.75rem; /* Indent children */
+            font-size: 0.95rem;
+        }
+
+        /* Section Dividers */
+        .sidebar .section-title {
+            color: #6c757d;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 1.5rem 0 0.5rem 1rem;
+        }
+
+        /* Chevron Rotation */
+        .sidebar .nav-link[aria-expanded="true"] .bi-chevron-down {
+            transform: rotate(180deg);
+            transition: transform 0.3s ease;
+        }
+        .bi-chevron-down {
+            transition: transform 0.3s ease;
+            font-size: 0.8em;
         }
 
         /* Main content adjusts when sidebar is hidden */
         .main-content {
             margin-left: 250px;
-            padding: 2rem;
-            flex-grow: 1;
+            min-height: 100vh;
             transition: margin-left 0.3s ease;
+            display: flex;
+            flex-direction: column;
         }
 
         .main-content.sidebar-hidden {
@@ -120,6 +153,11 @@
             border-color: #6f42c1;
         }
 
+        .btn-primary:hover {
+            background-color: #5a34a0;
+            border-color: #5a34a0;
+        }
+
         .btn-warning {
             background-color: #ffd600;
             border-color: #ffd600;
@@ -140,6 +178,7 @@
         .card {
             border-radius: 1rem;
             box-shadow: 0 2px 16px rgba(111,66,193,0.08);
+            border: none;
         }
 
         .lead {
@@ -163,10 +202,12 @@
             }
             .main-content {
                 margin-left: 0;
-                padding: 2rem 1rem;
             }
-            .toggle-sidebar {
-                display: flex;
+            
+            /* Add padding back on mobile since container-fluid behaves differently */
+            .main-content > .container-fluid {
+                padding-left: 1rem;
+                padding-right: 1rem;
             }
         }
 
@@ -184,34 +225,147 @@
 
     <!-- Hamburger Toggle Button -->
     <button class="toggle-sidebar" id="toggleSidebar">
-        ☰
+        <i class="bi bi-list"></i>
     </button>
 
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <a class="navbar-brand" href="{% url 'core:app_selection' %}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#6f42c1" class="me-2" viewBox="0 0 16 16">
-                <circle cx="8" cy="8" r="7" stroke="#6f42c1" stroke-width="2" fill="white"/>
-                <polygon points="8,3 10,10 8,13 6,6" fill="#6f42c1"/>
-            </svg>
+            <i class="bi bi-compass me-2"></i>
             SalesCompass
         </a>
         <nav class="nav flex-column">
-       
-
-            <a class="nav-link ms-3" href="{% url 'nps:nps_dashboard' %}">Dashboard</a>
-            <a class="nav-link ms-3" href="{% url 'nps:nps_survey_create' %}">Create Survey</a>
-            <a class="nav-link ms-3" href="{% url 'nps:nps_responses' %}">NPS Responses</a>
+            <!-- Core NPS Functionality -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#npsManagement" aria-expanded="false" aria-controls="npsManagement">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>NPS Management</span>
+                </div>
+                <i class="bi bi-chevron-down"></i>
+            </a>
+            <div class="collapse" id="npsManagement">
+                <a class="nav-link {% if request.resolver_match.url_name == 'nps_dashboard' %}active{% endif %}" 
+                   href="{% url 'nps:nps_dashboard' %}">
+                    Dashboard
+                </a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'nps_survey_create' %}active{% endif %}" 
+                   href="{% url 'nps:nps_survey_create' %}">
+                    Create Survey
+                </a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'nps_responses' %}active{% endif %}" 
+                   href="{% url 'nps:nps_responses' %}">
+                    NPS Responses
+                </a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'nps_trend_charts' %}active{% endif %}" 
+                   href="{% url 'nps:nps_trend_charts' %}">
+                    Trend Charts
+                </a>
+            </div>
             
-            <a class="nav-link ms-3" href="{% url 'nps:nps_trend_charts' %}">Trend Charts</a>
-           
-
-             <a class="nav-link ms-3" href="{% url 'nps:detractor_kanban' %}">Detractor Alerts</a>
-            <a class="nav-link ms-3" href="{% url 'nps:create_nps_ab_test' %}">Create A/B Test</a>
-
-   
-
-        
+            <!-- Detractor Management -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#detractorManagement" aria-expanded="false" aria-controls="detractorManagement">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <span>Detractor Management</span>
+                </div>
+                <i class="bi bi-chevron-down"></i>
+            </a>
+            <div class="collapse" id="detractorManagement">
+                <a class="nav-link {% if request.resolver_match.url_name == 'detractor_kanban' %}active{% endif %}" 
+                   href="{% url 'nps:detractor_kanban' %}">
+                    Detractor Alerts
+                </a>
+            </div>
+            
+            <!-- Promoter Advocacy -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#promoterAdvocacy" aria-expanded="false" aria-controls="promoterAdvocacy">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-stars"></i>
+                    <span>Promoter Advocacy</span>
+                </div>
+                <i class="bi bi-chevron-down"></i>
+            </a>
+            <div class="collapse" id="promoterAdvocacy">
+                <a class="nav-link {% if request.resolver_match.url_name == 'promoter_advocacy' %}active{% endif %}" 
+                   href="{% url 'nps:promoter_advocacy' %}">
+                    Promoter Overview
+                </a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'promoter_referrals' %}active{% endif %}" 
+                   href="{% url 'nps:promoter_referrals' %}">
+                    Referral Requests
+                </a>
+            </div>
+            
+            <!-- Escalation Rules -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#escalationRules" aria-expanded="false" aria-controls="escalationRules">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-lightning"></i>
+                    <span>Escalation Rules</span>
+                </div>
+                <i class="bi bi-chevron-down"></i>
+            </a>
+            <div class="collapse" id="escalationRules">
+                <a class="nav-link {% if request.resolver_match.url_name == 'escalation_rules' %}active{% endif %}" 
+                   href="{% url 'nps:escalation_rules' %}">
+                    Rules
+                </a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'escalation_actions' %}active{% endif %}" 
+                   href="{% url 'nps:escalation_actions' %}">
+                    Actions
+                </a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'escalation_action_logs' %}active{% endif %}" 
+                   href="{% url 'nps:escalation_action_logs' %}">
+                    Action Logs
+                </a>
+            </div>
+            
+            <!-- A/B Testing -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#abTesting" aria-expanded="false" aria-controls="abTesting">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-beaker"></i>
+                    <span>A/B Testing</span>
+                </div>
+                <i class="bi bi-chevron-down"></i>
+            </a>
+            <div class="collapse" id="abTesting">
+                <a class="nav-link {% if request.resolver_match.url_name == 'create_nps_ab_test' %}active{% endif %}" 
+                   href="{% url 'nps:create_nps_ab_test' %}">
+                    Create A/B Test
+                </a>
+            </div>
+            
+            <!-- Reports & Analytics -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#reportsAnalytics" aria-expanded="false" aria-controls="reportsAnalytics">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-bar-chart"></i>
+                    <span>Reports & Analytics</span>
+                </div>
+                <i class="bi bi-chevron-down"></i>
+            </a>
+            <div class="collapse" id="reportsAnalytics">
+                <a class="nav-link {% if request.resolver_match.url_name == 'trend_snapshots' %}active{% endif %}" 
+                   href="{% url 'nps:trend_snapshots' %}">
+                    Trend Snapshots
+                </a>
+            </div>
+            
+            <div class="section-title mt-4">NAVIGATION</div>
+            
+            <a class="nav-link" href="{% url 'core:app_selection' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-grid"></i>
+                    <span>Control Plane</span>
+                </div>
+            </a>
+            
+            <div class="mt-auto pt-4 border-top">
+                <a class="nav-link text-danger" href="{% url 'core:logout' %}">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Log Out</span>
+                    </div>
+                </a>
+            </div>
         </nav>
     </div>
 

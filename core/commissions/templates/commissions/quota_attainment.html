@@ -1,0 +1,205 @@
+{% extends "commissions/base.html" %}
+{% load filters_extras %}
+
+{% block title %}Quota Attainment | SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Quota Attainment</h1>
+        {% if quota %}
+        <div class="text-muted">
+            Period: {{ quota.period_start|date:"M d, Y" }} - {{ quota.period_end|date:"M d, Y" }}
+        </div>
+        {% endif %}
+    </div>
+
+    {% if quota %}
+        <!-- Performance Cards -->
+        <div class="row mb-4">
+            <!-- Quota Target Card -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Quota Target</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">${{ quota.target_amount|floatformat:2 }}
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-bullseye fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales Achieved Card -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-success shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                    Sales Achieved</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">${{ performance.sales|floatformat:2 }}
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-currency-dollar fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attainment Percentage Card -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-info shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                    Attainment</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ attainment_percentage|floatformat:2 }}%
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-graph-up fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pace Status Card -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-warning shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                    Pace Status</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    {% if pace_status == "ahead" %}
+                                        <span class="text-success">Ahead of Pace</span>
+                                    {% elif pace_status == "on_track" %}
+                                        <span class="text-info">On Track</span>
+                                    {% else %}
+                                        <span class="text-danger">Behind</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-speedometer2 fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Visualization -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">Quota Progress</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-bar">
+                            <div class="progress mb-3" style="height: 30px;">
+                                <div class="progress-bar 
+                                    {% if attainment_percentage >= 100 %}bg-success
+                                    {% elif attainment_percentage >= 80 %}bg-info
+                                    {% elif attainment_percentage >= 60 %}bg-warning
+                                    {% else %}bg-danger{% endif %}"
+                                    role="progressbar" 
+                                    style="width: {{ attainment_percentage|floatformat:0 }}%">
+                                    <span class="text-dark fw-bold">{{ attainment_percentage|floatformat:1 }}%</span>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">$0</small>
+                                <small class="text-muted">${{ quota.target_amount|floatformat:2 }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Details -->
+        <div class="row">
+            <div class="col-xl-6 col-lg-6">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">Performance Details</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-sm-6 mb-3">
+                                <div class="text-xs font-weight-bold text-uppercase mb-1">Remaining to Quota</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    ${{ remaining_to_quota|floatformat:2 }}
+                                </div>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <div class="text-xs font-weight-bold text-uppercase mb-1">Commissions Earned</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">${{ performance.commissions_earned|floatformat:2 }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-6 col-lg-6">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">Pace Analysis</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-sm-6 mb-3">
+                                <div class="text-xs font-weight-bold text-uppercase mb-1">Pace Indicator</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pace_indicator|floatformat:2 }}%</div>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <div class="text-xs font-weight-bold text-uppercase mb-1">Status</div>
+                                <div class="h5 mb-0 font-weight-bold 
+                                    {% if pace_status == "ahead" %}text-success
+                                    {% elif pace_status == "on_track" %}text-info
+                                    {% else %}text-danger{% endif %}">
+                                    {% if pace_status == "ahead" %}
+                                        Ahead of Schedule
+                                    {% elif pace_status == "on_track" %}
+                                        On Track
+                                    {% else %}
+                                        Behind Schedule
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Quota Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">No active quota found for the current period.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

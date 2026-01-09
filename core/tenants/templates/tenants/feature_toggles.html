@@ -20,7 +20,7 @@
                         <select name="tenant_id" class="form-select" onchange="this.form.submit()">
                             <option value="">-- Select Tenant --</option>
                             {% for t in tenants %}
-                            <option value="{{ t.id }}" {% if tenant and tenant.id==t.id %}selected{% endif %}>
+                            <option value="{{ t.id }}" {% if tenant and tenant.id == t.id %}selected{% endif %}>
                                 {{ t.name }}
                             </option>
                             {% endfor %}
@@ -78,12 +78,30 @@
                         <div class="list-group-item">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="mb-1">{{ name }}</h6>
-                                    <small class="text-muted">{{ config.description }}</small>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <h6 class="mb-0">{{ name }}</h6>
+                                        {% if config.type == 'trial' %}
+                                        <span class="badge bg-info">Trial</span>
+                                        {% if config.trial_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Expired</span>
+                                        {% endif %}
+                                        {% elif config.type == 'premium' %}
+                                        <span class="badge bg-warning text-dark">Premium</span>
+                                        {% elif config.type == 'plan_based' %}
+                                        <span class="badge bg-secondary">Plan</span>
+                                        {% endif %}
+                                    </div>
+                                    <small class="text-muted d-block mt-1">{{ config.description }}</small>
+                                    {% if config.type == 'trial' and config.trial_end %}
+                                    <small class="text-muted d-block">Ends: {{ config.trial_end|date:"M d, Y" }}</small>
+                                    {% endif %}
                                 </div>
-                                <span class="badge {% if config.enabled %}bg-success{% else %}bg-secondary{% endif %}">
-                                    {% if config.enabled %}Enabled{% else %}Disabled{% endif %}
-                                </span>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch" {% if config.enabled %}checked{% endif %} disabled>
+                                    <label class="form-check-label">{% if config.enabled %}Enabled{% else %}Disabled{% endif %}</label>
+                                </div>
                             </div>
                         </div>
                         {% endfor %}

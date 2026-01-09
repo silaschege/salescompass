@@ -1,248 +1,273 @@
+import random
+import logging
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
-from .models import CampaignRecipient, Unsubscribe, MarketingCampaign, LandingPage
 from django.utils import timezone
+from django.db.models import Sum
+from .models import (
+    CampaignRecipient, Campaign, LandingPage, 
+    ABTest, ABTestVariant, ABTestResponse, EmailCampaign
+)
 
-def send_campaign_email(campaign_id: int, recipient_id: int) -> bool:
-    """Send email to a campaign recipient."""
-    recipient = CampaignRecipient.objects.get(id=recipient_id)
-    
-    # Check unsubscribe
-    if Unsubscribe.objects.filter(email=recipient.email).exists():
-        recipient.status = 'unsubscribed'
-        recipient.save(update_fields=['status'])
-        return False
-    
-    # Get email content
-    campaign = recipient.campaign
-    email_campaign = campaign.email_campaigns.first()
-    template = email_campaign.email_template
-    
-    # Render with personalization
-    context = {
-        'recipient': recipient,
-        'campaign': campaign,
-        'unsubscribe_url': f"https://salescompass.com/marketing/unsubscribe/{recipient.id}/"
-    }
-    html_content = render_to_string('marketing/email_wrapper.html', {
-        'content': template.html_content,
-        'context': context
-    })
-    
-    # Send email
+logger = logging.getLogger(__name__)
+
+def send_campaign_email(recipient_id: int) -> bool:
+    """Send email to a campaign recipient using updated model fields."""
     try:
+        recipient = CampaignRecipient.objects.select_related(
+            'email_campaign', 
+            'email_campaign__campaign'
+        ).get(id=recipient_id)
+        
+        # Check unsubscribe (Assuming Unsubscribe model exists in your leads or core app)
+        # Using a try-except or a generic check to avoid import errors
+        try:
+            from core.leads.models import Unsubscribe
+            if Unsubscribe.objects.filter(email=recipient.email, tenant_id=recipient.tenant_id).exists():
+                recipient.status = 'unsubscribed'
+                recipient.save(update_fields=['status'])
+                return False
+        except ImportError:
+            pass
+     
+        email_campaign = recipient.email_campaign
+        campaign = email_campaign.campaign
+        
+        # The EmailCampaign model in your snippets doesn't have a direct FK to EmailTemplate,
+        # but the EmailCampaign object itself has 'subject' and 'content' fields.
+        # Alternatively, if you are using a template:
+        subject = email_campaign.subject
+        body_content = email_campaign.content
+        
+        # Render with personalization
+        context = {
+            'recipient': recipient,
+            'campaign_name': campaign.campaign_name,
+            'first_name': recipient.first_name,
+            'last_name': recipient.last_name,
+            'merge_data': recipient.merge_data,
+            'unsubscribe_url': f"https://salescompass.com/marketing/unsubscribe/{recipient.id}/"
+        }
+        
+        html_content = render_to_string('marketing/email_wrapper.html', {
+            'content': body_content,
+            'context': context
+        })
+        
+        # Send email
+        # Note: from_email could be dynamically pulled from EmailIntegration/Provider later
         send_mail(
-            subject=template.subject,
-            message=template.plain_text_content,
+            subject=subject,
+            message='', # Plain text
             html_message=html_content,
-            from_email=email_campaign.from_email,
+            from_email='noreply@salescompass.com',
             recipient_list=[recipient.email]
         )
+        
         recipient.status = 'sent'
         recipient.sent_at = timezone.now()
         recipient.save(update_fields=['status', 'sent_at'])
         return True
+        
     except Exception as e:
+        logger.error(f"Failed to send campaign email to {recipient_id}: {e}")
         recipient.status = 'bounced'
         recipient.save(update_fields=['status'])
         return False
 
 
-def track_email_open_event(recipient_id):
-    """Track email open event and update lead scoring."""
-    try:
-        recipient = CampaignRecipient.objects.get(id=recipient_id)
-        
-        # Update recipient status
-        if recipient.status == 'sent':
-            recipient.status = 'opened'
-            recipient.opened_at = timezone.now()
-            recipient.save(update_fields=['status', 'opened_at'])
-            
-            # Update campaign analytics
-            campaign = recipient.campaign
-            campaign.total_opened = CampaignRecipient.objects.filter(
-                campaign=campaign, 
-                status__in=['opened', 'clicked']
-            ).count()
-            campaign.save(update_fields=['total_opened'])
-            
-            # Update lead score if lead exists
-            if recipient.account and hasattr(recipient.account, 'leads'):
-                from leads.services import LeadScoringService
-                # Find lead associated with this account and email
-                lead = recipient.account.leads.filter(email=recipient.email).first()
-                if lead:
-                    LeadScoringService.update_lead_score(lead.id, 5, "Email opened")
-                    
-        return True
-        
-    except CampaignRecipient.DoesNotExist:
-        return False
-
-
-def track_link_click_event(recipient_id, url):
-    """Track link click event and update lead scoring."""
-    try:
-        recipient = CampaignRecipient.objects.get(id=recipient_id)
-        
-        # Update recipient status
-        if recipient.status in ['sent', 'opened']:
-            recipient.status = 'clicked'
-            recipient.clicked_at = timezone.now()
-            recipient.save(update_fields=['status', 'clicked_at'])
-            
-            # Update campaign analytics
-            campaign = recipient.campaign
-            campaign.total_clicked = CampaignRecipient.objects.filter(
-                campaign=campaign, 
-                status='clicked'
-            ).count()
-            campaign.save(update_fields=['total_clicked'])
-            
-            # Update lead score if lead exists
-            if recipient.account and hasattr(recipient.account, 'leads'):
-                from leads.services import LeadScoringService
-                lead = recipient.account.leads.filter(email=recipient.email).first()
-                if lead:
-                    LeadScoringService.update_lead_score(lead.id, 10, "Link clicked")
-                    
-        return url
-        
-    except CampaignRecipient.DoesNotExist:
-        return url
-
-
-def track_landing_page_visit_event(landing_page_id, lead_id):
-    """Track landing page visit and update lead scoring."""
-    try:
-        landing_page = LandingPage.objects.get(id=landing_page_id)
-        landing_page.views += 1
-        landing_page.save(update_fields=['views'])
-        
-        if lead_id:
-            from leads.services import LeadScoringService
-            LeadScoringService.update_lead_score(int(lead_id), 3, "Landing page visit")
-            
-        return True
-        
-    except LandingPage.DoesNotExist:
-        return False
-
-
-def track_marketing_engagement(event_type, lead_id=None, campaign_id=None, 
-                              recipient_id=None, points=0, ip_address=None, user_agent=None):
+def assign_ab_test_variant(ab_test_id: int, recipient_email: str) -> ABTestVariant:
     """
-    Generic marketing engagement tracking function.
-    Handles various types of engagement events and updates lead scoring.
+    Assign a variant to a recipient. Ensures tenant_id is preserved.
     """
-    result = {
-        'lead_score_updated': False,
-        'new_score': 0
+    try:
+        ab_test = ABTest.objects.get(id=ab_test_id, is_active=True)
+        
+        # Check if recipient already has a variant assigned
+        existing_response = ABTestResponse.objects.filter(
+            ab_test_variant__ab_test=ab_test,
+            email=recipient_email
+        ).first()
+        
+        if existing_response:
+            return existing_response.ab_test_variant
+            
+        variants = list(ab_test.variants.all())
+        if not variants:
+            return None
+            
+        total_weight = sum(variant.assignment_rate for variant in variants)
+        rand_val = random.uniform(0, total_weight)
+        
+        cumulative_weight = 0
+        selected_variant = variants[0] # Default fallback
+        
+        for variant in variants:
+            cumulative_weight += variant.assignment_rate
+            if rand_val <= cumulative_weight:
+                selected_variant = variant
+                break
+        
+        # Create a response record with tenant inheritance
+        ABTestResponse.objects.create(
+            ab_test_variant=selected_variant,
+            email=recipient_email,
+            tenant_id=ab_test.tenant_id
+        )
+        return selected_variant
+        
+    except ABTest.DoesNotExist:
+        return None
+
+
+def send_ab_test_email(ab_test_id: int, recipient_email: str, **kwargs) -> bool:
+    """
+    Send an A/B test email using the EmailTemplate assigned to the variant.
+    """
+    variant = assign_ab_test_variant(ab_test_id, recipient_email)
+    if not variant or not variant.email_template:
+        return False
+        
+    template = variant.email_template
+    
+    context = {
+        'email': recipient_email,
+        'ab_test_variant': variant.variant,
+        'subject': template.subject,
+        'unsubscribe_url': f"https://salescompass.com/marketing/ab-test/unsubscribe/{variant.id}/{recipient_email}/",
+        **kwargs
     }
     
+    html_content = render_to_string('marketing/email_wrapper.html', {
+        'content': template.content, # Updated from html_content to content
+        'context': context
+    })
+    
     try:
-        # Handle different event types
-        if event_type == 'email_open':
-            if recipient_id:
-                track_email_open_event(recipient_id)
-                
-        elif event_type == 'link_click':
-            if recipient_id:
-                track_link_click_event(recipient_id, '')
-                
-        elif event_type == 'landing_page_visit':
-            if lead_id:
-                from leads.services import LeadScoringService
-                new_score = LeadScoringService.update_lead_score(int(lead_id), points, f"Marketing engagement: {event_type}")
-                result['lead_score_updated'] = True
-                result['new_score'] = new_score
-                
-        elif event_type == 'form_submission':
-            if lead_id:
-                from leads.services import LeadScoringService
-                new_score = LeadScoringService.update_lead_score(int(lead_id), 15, "Form submission")
-                result['lead_score_updated'] = True
-                result['new_score'] = new_score
-                
-        elif event_type == 'content_download':
-            if lead_id:
-                from leads.services import LeadScoringService
-                new_score = LeadScoringService.update_lead_score(int(lead_id), 8, "Content download")
-                result['lead_score_updated'] = True
-                result['new_score'] = new_score
-                
-        # Log the engagement event
-        from engagement.models import EngagementEvent
-        EngagementEvent.objects.create(
-            event_type=f'marketing_{event_type}',
-            title=f"Marketing {event_type.replace('_', ' ').title()}",
-            description=f"Marketing engagement event: {event_type}",
-            lead_id=lead_id,
-            campaign_id=campaign_id,
-            ip_address=ip_address,
-            user_agent=user_agent,
-            tenant_id=getattr(lead_id, 'tenant_id', None) if lead_id else None
+        send_mail(
+            subject=template.subject,
+            message='', 
+            html_message=html_content,
+            from_email='noreply@salescompass.com',
+            recipient_list=[recipient_email]
         )
         
-        return result
-        
+        # Update variant metrics
+        variant.sent_count += 1
+        variant.save(update_fields=['sent_count'])
+        return True
     except Exception as e:
-        # Log error but don't fail the request
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.error(f"Error tracking marketing engagement: {e}")
-        return result
+        logger.error(f"Failed to send A/B test email: {e}")
+        return False
 
 
-def calculate_campaign_roi(campaign_id: int) -> float:
-    """Calculate ROI based on leads converted to opportunities."""
-    from opportunities.models import Opportunity
-    campaign = MarketingCampaign.objects.get(id=campaign_id)
-    
-    # Get leads from this campaign
-    lead_ids = CampaignRecipient.objects.filter(
-        campaign=campaign,
-        account__converted_from_lead__isnull=False
-    ).values_list('account__converted_from_lead', flat=True)
-    
-    # Get opportunities from those leads
-    opps = Opportunity.objects.filter(
-        account__converted_from_lead__in=lead_ids
-    )
-    
-    total_revenue = opps.aggregate(total=Sum('amount'))['total'] or 0
-    # Assume campaign cost is stored somewhere (e.g., $1000)
-    campaign_cost = 1000.0
-    roi = ((total_revenue - campaign_cost) / campaign_cost) * 100 if campaign_cost > 0 else 0
-    return round(roi, 2)
-
-
-def get_optimal_send_time(contact_email: str, tenant_id: str = None) -> int:
+def track_ab_test_event(event_type: str, ab_test_variant_id: int, recipient_email: str, 
+                        value: float = 0.0, ip: str = None, ua: str = None) -> bool:
     """
-    Calculate optimal send time based on historical opens.
-    Returns hour with highest open rate.
+    Unified tracking for Open, Click, and Conversion to reduce code duplication.
     """
-    # Get all opened emails for this contact
-    recipients = CampaignRecipient.objects.filter(
-        email=contact_email,
-        status__in=['opened', 'clicked']
-    ).select_related('campaign')
-    
-    if tenant_id:
-        recipients = recipients.filter(campaign__tenant_id=tenant_id)
-    
-    if not recipients.exists():
-        return 10  # default to 10 AM UTC
-    
-    # Count opens by hour
-    hour_counts = {}
-    for r in recipients:
-        if r.opened_at:
-            hour = r.opened_at.hour
-            hour_counts[hour] = hour_counts.get(hour, 0) + 1
-    
-    # Return hour with most opens
-    if hour_counts:
-        return max(hour_counts, key=hour_counts.get)
-    return 10
+    try:
+        response, created = ABTestResponse.objects.get_or_create(
+            ab_test_variant_id=ab_test_variant_id,
+            email=recipient_email
+        )
+        
+        variant = response.ab_test_variant
+        now = timezone.now()
+        updated_fields = []
+
+        if event_type == 'open' and not response.opened_at:
+            response.opened_at = now
+            variant.open_count += 1
+            updated_fields = ['opened_at']
+        elif event_type == 'click' and not response.clicked_at:
+            response.clicked_at = now
+            variant.click_count += 1
+            updated_fields = ['clicked_at']
+        elif event_type == 'conversion' and not response.conversion_at:
+            response.conversion_at = now
+            response.conversion_value = value
+            variant.conversion_count += 1
+            updated_fields = ['conversion_at', 'conversion_value']
+
+        if updated_fields:
+            response.ip_address = ip
+            response.user_agent = ua
+            response.save(update_fields=updated_fields + ['ip_address', 'user_agent'])
+            variant.save(update_fields=[f'{event_type}_count'])
+            
+        return True
+    except Exception as e:
+        logger.error(f"Error tracking AB event {event_type}: {e}")
+        return False
+
+
+def calculate_ab_test_statistics(ab_test_id: int) -> dict:
+    """
+    Calculate statistics using model properties for consistency.
+    """
+    try:
+        ab_test = ABTest.objects.prefetch_related('variants').get(id=ab_test_id)
+        variants_data = []
+        
+        for v in ab_test.variants.all():
+            variants_data.append({
+                'variant': v.variant,
+                'display': v.get_variant_display(),
+                'sent': v.sent_count,
+                'opens': v.open_count,
+                'clicks': v.click_count,
+                'conversions': v.conversion_count,
+                'open_rate': v.open_rate,
+                'click_rate': v.click_rate,
+                'ctr': v.ctr,
+                'conv_rate': v.conversion_rate,
+            })
+            
+        return {
+            'ab_test_name': ab_test.name,
+            'variants': variants_data,
+            'total_responses': ab_test.total_responses,
+        }
+    except ABTest.DoesNotExist:
+        return {}
+
+
+def declare_ab_test_winner(ab_test_id: int, metric: str = 'ctr') -> str:
+    """
+    Declare winner based on updated ABTest model fields.
+    """
+    try:
+        ab_test = ABTest.objects.get(id=ab_test_id)
+        if ab_test.is_winner_declared:
+            return ab_test.winner_variant
+            
+        stats = calculate_ab_test_statistics(ab_test_id)
+        if not stats.get('variants'):
+            return None
+            
+        # Find winner
+        winner_data = max(stats['variants'], key=lambda x: x.get(metric, 0))
+        
+        ab_test.winner_variant = winner_data['variant']
+        ab_test.is_winner_declared = True
+        ab_test.end_date = timezone.now()
+        ab_test.save(update_fields=['winner_variant', 'is_winner_declared', 'end_date'])
+            
+        return ab_test.winner_variant
+    except ABTest.DoesNotExist:
+        return None
+
+def track_email_open_event(recipient_id: int) -> bool:
+    """
+    Track when a standard campaign email is opened.
+    """
+    try:
+        recipient = CampaignRecipient.objects.get(id=recipient_id)
+        if not recipient.opened_at:
+            recipient.opened_at = timezone.now()
+            recipient.status = 'opened'
+            recipient.save(update_fields=['opened_at', 'status'])
+        return True
+    except CampaignRecipient.DoesNotExist:
+        return False

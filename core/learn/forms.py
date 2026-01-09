@@ -1,6 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Article, ArticleRating, Category
+from .models import Article, ArticleRating, Category, Course, Lesson
 
 class ArticleForm(forms.ModelForm):
     """
@@ -276,3 +276,66 @@ class ArticleVersionForm(forms.Form):
         if not content or not content.strip():
             raise ValidationError('Article content cannot be empty.')
         return content.strip()
+
+
+class CourseForm(forms.ModelForm):
+    """
+    Form for creating and updating courses.
+    """
+    class Meta:
+        model = Course
+        fields = [
+            'title', 'slug', 'description', 'category', 'status', 
+            'order', 'thumbnail', 'estimated_duration'
+        ]
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'slug': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'category': forms.Select(attrs={'class': 'form-select'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'order': forms.NumberInput(attrs={'class': 'form-control'}),
+            'thumbnail': forms.FileInput(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if user:
+            self.fields['category'].queryset = Category.objects.filter(tenant_id=user.tenant_id)
+
+
+class LessonForm(forms.ModelForm):
+    """
+    Form for creating and updating lessons.
+    """
+    class Meta:
+        model = Lesson
+        fields = [
+            'title', 'slug', 'course', 'content', 'order_in_course', 
+            'lesson_type', 'duration', 'prerequisite_lesson', 'article'
+        ]
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'slug': forms.TextInput(attrs={'class': 'form-control'}),
+            'course': forms.Select(attrs={'class': 'form-select'}),
+            'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 10}),
+            'order_in_course': forms.NumberInput(attrs={'class': 'form-control'}),
+            'lesson_type': forms.Select(attrs={'class': 'form-select'}),
+            'prerequisite_lesson': forms.Select(attrs={'class': 'form-select'}),
+            'article': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        course = kwargs.pop('course', None)
+        super().__init__(*args, **kwargs)
+        if user:
+            # Filter choices by tenant
+            self.fields['course'].queryset = Course.objects.filter(tenant_id=user.tenant_id)
+            self.fields['article'].queryset = Article.objects.filter(tenant_id=user.tenant_id)
+            if course:
+                self.fields['course'].initial = course
+                self.fields['prerequisite_lesson'].queryset = Lesson.objects.filter(course=course, tenant_id=user.tenant_id)
+            else:
+                self.fields['prerequisite_lesson'].queryset = Lesson.objects.filter(tenant_id=user.tenant_id)

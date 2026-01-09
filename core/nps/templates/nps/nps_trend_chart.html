@@ -48,28 +48,28 @@
                             <div class="p-3 border rounded">
                                 <h6>Technology</h6>
                                 <p class="display-6">42</p>
-                                <small>Your Score: {{ nps_score }}</small>
+                                <small>Your Score: {{ nps_score|floatformat:"1" }}</small>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="p-3 border rounded">
                                 <h6>Finance</h6>
                                 <p class="display-6">38</p>
-                                <small>Your Score: {{ nps_score }}</small>
+                                <small>Your Score: {{ nps_score|floatformat:"1" }}</small>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="p-3 border rounded">
                                 <h6>Healthcare</h6>
                                 <p class="display-6">45</p>
-                                <small>Your Score: {{ nps_score }}</small>
+                                <small>Your Score: {{ nps_score|floatformat:"1" }}</small>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="p-3 border rounded">
                                 <h6>Manufacturing</h6>
                                 <p class="display-6">36</p>
-                                <small>Your Score: {{ nps_score }}</small>
+                                <small>Your Score: {{ nps_score|floatformat:"1" }}</small>
                             </div>
                         </div>
                     </div>
@@ -87,32 +87,42 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-const ctx = document.getElementById('npsChart').getContext('2d');
-const data = {{ trend_data_json|safe }};
-new Chart(ctx, {
-    type: 'line',
-     {
-        labels: data.map(d => d.date),
-         data.map(d => d.nps),
-        borderColor: '#0d6efd',
-        backgroundColor: 'rgba(13, 110, 253, 0.1)',
-        fill: true,
-        tension: 0.3
-    },
-    options: {
-        responsive: true,
-        scales: {
-            y: {
-                min: -100,
-                max: 100,
-                ticks: {
-                    callback: function(value) {
-                        return value + ' NPS';
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('npsChart').getContext('2d');
+    const rawData = {{ trend_data_json|safe }};
+    
+    // Process data for Chart.js
+    const labels = rawData.map(d => d.date);
+    const data = rawData.map(d => d.nps);
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'NPS Score',
+                data: data,
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    min: -100,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + ' NPS';
+                        }
                     }
                 }
             }
         }
-    }
+    });
 });
 </script>
 {% endblock %}

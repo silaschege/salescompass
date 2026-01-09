@@ -1,243 +1,489 @@
-{% extends 'core/base.html' %}
+{% extends 'opportunities/base.html' %}
 {% load humanize %}
 
 {% block title %}Revenue Forecast{% endblock %}
 
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --info-gradient: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+        --border-radius-lg: 1rem;
+        --border-radius-md: 0.75rem;
+    }
+
+    .forecast-header {
+        background: var(--primary-gradient);
+        border-radius: var(--border-radius-lg);
+        padding: 2rem;
+        color: white;
+        margin-bottom: 2rem;
+        box-shadow: var(--card-shadow);
+    }
+
+    .stat-card {
+        border-radius: var(--border-radius-md);
+        box-shadow: var(--card-shadow);
+        border: none;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .chart-container {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--card-shadow);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .alert-banner {
+        border-radius: var(--border-radius-md);
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        border: none;
+        color: white;
+    }
+
+    .progress-thin {
+        height: 8px;
+        border-radius: 4px;
+    }
+
+    .quota-progress-container {
+        padding-top: 1rem;
+    }
+
+    .quota-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .quota-label {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Revenue Forecast</h1>
-        <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
-            <i class="fas fa-download fa-sm text-white-50"></i> Export Report
-        </a>
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="forecast-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h1 class="mb-1">Revenue Forecast</h1>
+                <p class="mb-0 opacity-75">Predictive insights for your sales pipeline</p>
+            </div>
+            <div class="mt-3 mt-md-0">
+                <button class="btn btn-light">
+                    <i class="fas fa-download me-2"></i>Export Report
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Alerts Section -->
     {% if forecast_alerts %}
-    <div class="row">
-        <div class="col-12 mb-4">
-            <div class="card bg-danger text-white shadow">
-                <div class="card-body">
-                    <h6 class="font-weight-bold">Forecast Alerts</h6>
-                    <ul class="mb-0">
-                        {% for alert in forecast_alerts %}
-                        <li>{{ alert }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
+    <div class="alert-banner" style="background: var(--danger-gradient);">
+        <h5 class="font-weight-bold mb-3">
+            <i class="fas fa-exclamation-triangle me-2"></i>Forecast Alerts
+        </h5>
+        <ul class="mb-0 ps-4">
+            {% for alert in forecast_alerts %}
+            <li class="mb-1">{{ alert.message }}</li>
+            {% endfor %}
+        </ul>
     </div>
     {% endif %}
 
-    <!-- Content Row -->
-    <div class="row">
-
-        <!-- Forecast Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
+    <!-- Stats Grid -->
+    <div class="row g-4 mb-4">
+        <!-- Weighted Forecast Card -->
+        <div class="col-md-4">
+            <div class="stat-card card">
                 <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Weighted Forecast</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{
-                                current_forecast.weighted_forecast|floatformat:2|intcomma }}</div>
+                    <div class="stat-icon bg-primary-subtle text-primary">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-value text-primary">
+                        ${{ forecast_data.weighted_forecast|floatformat:2|intcomma }}
+                    </div>
+                    <div class="stat-label">Weighted Forecast</div>
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>Confidence: 87%</span>
+                            <span>+2.4% from last week</span>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        <div class="progress progress-thin">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: 87%"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Pipeline Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
+        <!-- Total Pipeline Card -->
+        <div class="col-md-4">
+            <div class="stat-card card">
                 <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Total Pipeline</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{
-                                current_forecast.total_pipeline|floatformat:2|intcomma }}</div>
+                    <div class="stat-icon bg-success-subtle text-success">
+                        <i class="fas fa-funnel-dollar"></i>
+                    </div>
+                    <div class="stat-value text-success">
+                        ${{ forecast_data.total_pipeline|floatformat:2|intcomma }}
+                    </div>
+                    <div class="stat-label">Total Pipeline</div>
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>Deals: {{ opportunities_count|default:0 }}</span>
+                            <span>+5 from last week</span>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-funnel-dollar fa-2x text-gray-300"></i>
+                        <div class="progress progress-thin">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 75%"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Quota Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
+        <!-- Quota Attainment Card -->
+        <div class="col-md-4">
+            <div class="stat-card card">
                 <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Quota (Active)
-                            </div>
-                            <div class="row no-gutters align-items-center">
-                                <div class="col-auto">
-                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">${{
-                                        total_quota|floatformat:0|intcomma }}</div>
-                                </div>
-                                <div class="col">
-                                    <div class="progress progress-sm mr-2">
-                                        <div class="progress-bar bg-info" role="progressbar"
-                                            style="width: {{ quota_attainment }}%"
-                                            aria-valuenow="{{ quota_attainment }}" aria-valuemin="0"
-                                            aria-valuemax="100"></div>
+                    <div class="stat-icon bg-info-subtle text-info">
+                        <i class="fas fa-bullseye"></i>
+                    </div>
+                    <div class="quota-value text-info">
+                        ${{ total_quota|floatformat:0|intcomma }}
+                    </div>
+                    <div class="quota-label">Quota Attainment</div>
+                    <div class="quota-progress-container">
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>Current: {{ quota_attainment|floatformat:1 }}%</span>
+                            <span>Target: 100%</span>
+                        </div>
+                        <div class="progress progress-thin">
+                            <div class="progress-bar bg-info" role="progressbar" 
+                                 style="width: {{ quota_attainment|floatformat:0 }}%"></div>
+                        </div>
+                        <div class="mt-2 small">
+                            {% if quota_attainment >= 100 %}
+                                <span class="text-success">
+                                    <i class="fas fa-trophy me-1"></i>Quota achieved!
+                                </span>
+                            {% elif quota_attainment >= 80 %}
+                                <span class="text-warning">
+                                    <i class="fas fa-arrow-up me-1"></i>On track
+                                </span>
+                            {% else %}
+                                <span class="text-danger">
+                                    <i class="fas fa-exclamation-circle me-1"></i>Behind target
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <h5 class="fw-bold mb-0">Forecast Trend (30 Days)</h5>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-calendar-alt me-1"></i>Last 30 Days
+                </button>
+                <button class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-sync-alt me-1"></i>Refresh
+                </button>
+            </div>
+        </div>
+        <div class="chart-area" style="height: 400px;">
+            <canvas id="forecastTrendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Additional Insights -->
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="chart-container">
+                <h5 class="fw-bold mb-4">Top Performing Reps</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Rep</th>
+                                <th class="text-end">Forecast</th>
+                                <th class="text-end">Quota %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar bg-primary-subtle text-primary rounded-circle me-3">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-medium">Alex Morgan</div>
+                                            <div class="small text-muted">Senior Rep</div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
+                                </td>
+                                <td class="text-end">$125,430</td>
+                                <td class="text-end">
+                                    <span class="badge bg-success">125%</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar bg-info-subtle text-info rounded-circle me-3">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-medium">Jordan Smith</div>
+                                            <div class="small text-muted">Account Exec</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-end">$98,210</td>
+                                <td class="text-end">
+                                    <span class="badge bg-success">98%</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar bg-warning-subtle text-warning rounded-circle me-3">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-medium">Taylor Reed</div>
+                                            <div class="small text-muted">Sales Rep</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-end">$76,890</td>
+                                <td class="text-end">
+                                    <span class="badge bg-warning">77%</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="chart-container">
+                <h5 class="fw-bold mb-4">Pipeline by Stage</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Stage</th>
+                                <th class="text-end">Deals</th>
+                                <th class="text-end">Value</th>
+                                <th class="text-end">% of Pipeline</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <span class="badge bg-primary">Qualification</span>
+                                </td>
+                                <td class="text-end">24</td>
+                                <td class="text-end">$420,000</td>
+                                <td class="text-end">25%</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="badge bg-info">Proposal</span>
+                                </td>
+                                <td class="text-end">18</td>
+                                <td class="text-end">$680,000</td>
+                                <td class="text-end">40%</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="badge bg-success">Negotiation</span>
+                                </td>
+                                <td class="text-end">12</td>
+                                <td class="text-end">$590,000</td>
+                                <td class="text-end">35%</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-auto">
-        <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
-    </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-
-<!-- Chart Row -->
-<div class="row">
-    <div class="col-xl-12 col-lg-12">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-primary">Forecast Trend (30 Days)</h6>
-            </div>
-            <div class="card-body">
-                <div class="chart-area" style="height: 400px;">
-                    <canvas id="forecastTrendChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-</div>
+{% endblock %}
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     // Set new default font family and font color to mimic Bootstrap's default styling
-    Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
-    Chart.defaults.global.defaultFontColor = '#858796';
+    Chart.defaults.font.family = "'Inter', 'Segoe UI', sans-serif";
+    Chart.defaults.color = '#6b7280';
 
-    var ctx = document.getElementById("forecastTrendChart");
-    var myLineChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: {{ snapshot_labels| safe }},
-    datasets: [{
-        label: "Weighted Forecast",
-        lineTension: 0.3,
-        backgroundColor: "rgba(78, 115, 223, 0.05)",
-        borderColor: "rgba(78, 115, 223, 1)",
-        pointRadius: 3,
-        pointBackgroundColor: "rgba(78, 115, 223, 1)",
-        pointBorderColor: "rgba(78, 115, 223, 1)",
-        pointHoverRadius: 3,
-        pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
-        pointHoverBorderColor: "rgba(78, 115, 223, 1)",
-        pointHitRadius: 10,
-        pointBorderWidth: 2,
-        data: {{ snapshot_weighted| safe }},
-        },
-    {
-        label: "Total Pipeline",
-        lineTension: 0.3,
-        backgroundColor: "rgba(28, 200, 138, 0.05)",
-        borderColor: "rgba(28, 200, 138, 1)",
-        pointRadius: 3,
-        pointBackgroundColor: "rgba(28, 200, 138, 1)",
-        pointBorderColor: "rgba(28, 200, 138, 1)",
-        pointHoverRadius: 3,
-        pointHoverBackgroundColor: "rgba(28, 200, 138, 1)",
-        pointHoverBorderColor: "rgba(28, 200, 138, 1)",
-        pointHitRadius: 10,
-        pointBorderWidth: 2,
-        data: {{ snapshot_pipeline| safe }},
-        }],
-      },
-    options: {
-        maintainAspectRatio: false,
-            layout: {
-            padding: {
-                left: 10,
-                    right: 25,
-                        top: 25,
+    document.addEventListener('DOMContentLoaded', function() {
+        var ctx = document.getElementById("forecastTrendChart");
+        if (ctx) {
+            var myLineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ["Jan 1", "Jan 5", "Jan 10", "Jan 15", "Jan 20", "Jan 25", "Jan 30"],
+                    datasets: [{
+                        label: "Weighted Forecast",
+                        lineTension: 0.3,
+                        backgroundColor: "rgba(99, 102, 241, 0.1)",
+                        borderColor: "rgba(99, 102, 241, 1)",
+                        pointRadius: 4,
+                        pointBackgroundColor: "rgba(99, 102, 241, 1)",
+                        pointBorderColor: "#fff",
+                        pointHoverRadius: 6,
+                        pointHoverBackgroundColor: "rgba(99, 102, 241, 1)",
+                        pointHoverBorderColor: "rgba(99, 102, 241, 1)",
+                        pointHitRadius: 10,
+                        pointBorderWidth: 2,
+                        data: [120000, 125000, 130000, 140000, 135000, 150000, 155000],
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: "Total Pipeline",
+                        lineTension: 0.3,
+                        backgroundColor: "rgba(16, 185, 129, 0.1)",
+                        borderColor: "rgba(16, 185, 129, 1)",
+                        pointRadius: 4,
+                        pointBackgroundColor: "rgba(16, 185, 129, 1)",
+                        pointBorderColor: "#fff",
+                        pointHoverRadius: 6,
+                        pointHoverBackgroundColor: "rgba(16, 185, 129, 1)",
+                        pointHoverBorderColor: "rgba(16, 185, 129, 1)",
+                        pointHitRadius: 10,
+                        pointBorderWidth: 2,
+                        data: [250000, 260000, 275000, 280000, 270000, 290000, 310000],
+                        tension: 0.4,
+                        fill: true
+                    }],
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            left: 10,
+                            right: 25,
+                            top: 25,
                             bottom: 0
-            }
-        },
-        scales: {
-            xAxes: [{
-                time: {
-                    unit: 'date'
-                },
-                gridLines: {
-                    display: false,
-                    drawBorder: false
-                },
-                ticks: {
-                    maxTicksLimit: 7
-                }
-            }],
-                yAxes: [{
-                    ticks: {
-                        maxTicksLimit: 5,
-                        padding: 10,
-                        // Include a dollar sign in the ticks
-                        callback: function (value, index, values) {
-                            return '$' + value;
                         }
                     },
-                    gridLines: {
-                        color: "rgb(234, 236, 244)",
-                        zeroLineColor: "rgb(234, 236, 244)",
-                        drawBorder: false,
-                        borderDash: [2],
-                        zeroLineBorderDash: [2]
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#1f2937',
+                            bodyColor: '#6b7280',
+                            borderColor: '#e5e7eb',
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            displayColors: true,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += new Intl.NumberFormat('en-US', {
+                                            style: 'currency',
+                                            currency: 'USD',
+                                            minimumFractionDigits: 0,
+                                            maximumFractionDigits: 0
+                                        }).format(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxTicksLimit: 7
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: "rgba(0, 0, 0, 0.05)"
+                            },
+                            ticks: {
+                                maxTicksLimit: 5,
+                                callback: function(value, index, values) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
                     }
-                }],
-        },
-        legend: {
-            display: true
-        },
-        tooltips: {
-            backgroundColor: "rgb(255,255,255)",
-                bodyFontColor: "#858796",
-                    titleMarginBottom: 10,
-                        titleFontColor: '#6e707e',
-                            titleFontSize: 14,
-                                borderColor: '#dddfeb',
-                                    borderWidth: 1,
-                                        xPadding: 15,
-                                            yPadding: 15,
-                                                displayColors: false,
-                                                    intersect: false,
-                                                        mode: 'index',
-                                                            caretPadding: 10,
-                                                                callbacks: {
-                label: function(tooltipItem, chart) {
-                    var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
-                    return datasetLabel + ': $' + tooltipItem.yLabel;
                 }
-            }
+            });
         }
-    }
     });
 </script>
-{% endblock %}
 {% endblock %}

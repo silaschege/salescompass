@@ -8,7 +8,7 @@
             <p class="text-muted">Plan details and subscription metrics</p>
         </div>
         <div class="col-auto">
-            <a href="{% url 'billing:plan_edit' plan_id=plan.id %}" class="btn btn-primary">
+            <a href="{% url 'billing:plan_update' plan_id=plan.id %}" class="btn btn-primary">
                 <i class="bi bi-pencil me-2"></i>Edit Plan
             </a>
             <a href="{% url 'billing:plan_list' %}" class="btn btn-outline-secondary">
@@ -27,7 +27,6 @@
                     <div class="row">
                         <div class="col-md-6">
                             <p><strong>Name:</strong> {{ plan.name }}</p>
-                            <p><strong>Tier:</strong> <span class="badge bg-info">{{ plan.get_tier_display }}</span></p>
                             <p><strong>Status:</strong>
                                 {% if plan.is_active %}
                                 <span class="badge bg-success">Active</span>
@@ -35,84 +34,41 @@
                                 <span class="badge bg-secondary">Inactive</span>
                                 {% endif %}
                             </p>
+                            <p><strong>Featured:</strong>
+                                {% if plan.is_featured %}
+                                <span class="badge bg-info">Yes</span>
+                                {% else %}
+                                <span class="badge bg-light text-dark">No</span>
+                                {% endif %}
+                            </p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong>Monthly Price:</strong> ${{ plan.price_monthly }}</p>
-                            <p><strong>Yearly Price:</strong> ${{ plan.price_yearly }}</p>
+                            <p><strong>Price:</strong> ${{ plan.price }}</p>
                         </div>
                     </div>
 
                     <hr>
 
-                    <h6>Plan Limits</h6>
+                    <h6>Plan Features</h6>
                     <ul class="list-unstyled">
                         <li><i class="bi bi-people me-2"></i>Max Users: {{ plan.max_users }}</li>
-                        <li><i class="bi bi-person-badge me-2"></i>Max Leads: {{ plan.max_leads }}</li>
-                        <li><i class="bi bi-hdd me-2"></i>Storage: {{ plan.max_storage_gb }}GB</li>
+                        <li><i class="bi bi-hdd me-2"></i>Storage: {{ plan.storage_limit }}GB</li>
+                        <li><i class="bi bi-gear me-2"></i>API Calls: {{ plan.api_calls_limit }}</li>
+                        <li><i class="bi bi-check-circle me-2"></i>Reports: {% if plan.has_reports %}Yes{% else %}No{% endif %}</li>
+                        <li><i class="bi bi-check-circle me-2"></i>Custom Fields: {% if plan.has_custom_fields %}Yes{% else %}No{% endif %}</li>
+                        <li><i class="bi bi-check-circle me-2"></i>Integrations: {% if plan.has_integrations %}Yes{% else %}No{% endif %}</li>
                     </ul>
-                </div>
-            </div>
 
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Active Subscribers ({{ active_count }})</h5>
-                </div>
-                <div class="card-body">
-                    {% if active_subscriptions %}
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Tenant ID</th>
-                                    <th>Period Start</th>
-                                    <th>Period End</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for sub in active_subscriptions %}
-                                <tr>
-                                    <td>{{ sub.tenant_id }}</td>
-                                    <td>{{ sub.current_period_start|date:"Y-m-d"|default:"N/A" }}</td>
-                                    <td>{{ sub.current_period_end|date:"Y-m-d"|default:"N/A" }}</td>
-                                    <td>
-                                        <a href="{% url 'billing:subscription_detail' subscription_id=sub.id %}"
-                                            class="btn btn-sm btn-outline-primary">View</a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <p class="text-muted">No active subscriptions yet.</p>
+                    {% if plan.description %}
+                    <hr>
+                    <h6>Description</h6>
+                    <p>{{ plan.description }}</p>
                     {% endif %}
                 </div>
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h6 class="mb-0">Revenue Metrics</h6>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <small class="text-muted">Monthly Revenue</small>
-                        <h4>${{ monthly_revenue|floatformat:2 }}</h4>
-                    </div>
-                    <div class="mb-3">
-                        <small class="text-muted">Annual Revenue</small>
-                        <h4>${{ annual_revenue|floatformat:2 }}</h4>
-                    </div>
-                    <div>
-                        <small class="text-muted">Subscribers</small>
-                        <h4>{{ total_subscribers }}</h4>
-                        <small>{{ active_count }} active, {{ trial_count }} trial</small>
-                    </div>
-                </div>
-            </div>
-
             <div class="card">
                 <div class="card-header">
                     <h6 class="mb-0">Actions</h6>
@@ -130,6 +86,9 @@
                         </button>
                         {% endif %}
                     </form>
+                    <a href="{% url 'billing:plan_update' plan_id=plan.id %}" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-pencil me-2"></i>Edit Plan
+                    </a>
                 </div>
             </div>
         </div>

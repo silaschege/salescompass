@@ -29,13 +29,13 @@
                             <label for="status" class="form-label">Subscription Status</label>
                             <select class="form-select" id="status" name="status">
                                 <option value="">All Statuses</option>
-                                <option value="active" {% if request.GET.status=="active" %}selected{% endif %}>Active
+                                <option value="active" {% if request.GET.status == "active" %}selected{% endif %}>Active
                                 </option>
-                                <option value="trialing" {% if request.GET.status=="trialing" %}selected{% endif %}>
+                                <option value="trialing" {% if request.GET.status == "trialing" %}selected{% endif %}>
                                     Trialing</option>
-                                <option value="past_due" {% if request.GET.status=="past_due" %}selected{% endif %}>Past
+                                <option value="past_due" {% if request.GET.status == "past_due" %}selected{% endif %}>Past
                                     Due</option>
-                                <option value="canceled" {% if request.GET.status=="canceled" %}selected{% endif %}>
+                                <option value="canceled" {% if request.GET.status == "canceled" %}selected{% endif %}>
                                     Canceled</option>
                             </select>
                         </div>
@@ -44,8 +44,7 @@
                             <select class="form-select" id="plan" name="plan">
                                 <option value="">All Plans</option>
                                 {% for plan in plans %}
-                                <option value="{{ plan.id }}" {% if request.GET.plan==plan.id|stringformat:"s"
-                                    %}selected{% endif %}>
+                                <option value="{{ plan.id }}" {% if request.GET.plan == plan.id|stringformat:"s" %}selected{% endif %}>
                                     {{ plan.name }}
                                 </option>
                                 {% endfor %}

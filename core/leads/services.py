@@ -135,7 +135,89 @@ class LeadScoringService:
         return recommendations
 
 
+
+    @staticmethod
+    def create_opportunity_from_lead(lead, creator=None):
+        """
+        Convert a Lead into an Account (if needed) and an Opportunity.
+        """
+        from accounts.models import Account, Contact
+        from opportunities.models import Opportunity, OpportunityStage
+        from django.db import transaction
+        
+        with transaction.atomic():
+            # 1. Get or create Account
+            account = lead.converted_to_account
+            if not account:
+                if lead.account:
+                    account = lead.account
+                else:
+                    account = Account.objects.create(
+                        tenant=lead.tenant,
+                        account_name=lead.company,
+                        industry=lead.industry,
+                        owner=lead.owner or creator,
+                        is_active=True
+                    )
+                    lead.converted_to_account = account
+                    lead.save(update_fields=['converted_to_account'])
+            
+            # 2. Create Opportunity
+            # Find initial stage (usually 'New' or 'Prospecting')
+            initial_stage = OpportunityStage.objects.filter(
+                tenant=lead.tenant, 
+                order=0
+            ).first()
+            
+            if not initial_stage:
+                # Fallback or create default if missing
+                initial_stage, _ = OpportunityStage.objects.get_or_create(
+                    tenant=lead.tenant,
+                    opportunity_stage_name="Initial Prospecting",
+                    defaults={'order': 0, 'probability': 10.0}
+                )
+
+            opportunity = Opportunity.objects.create(
+                tenant=lead.tenant,
+                opportunity_name=f"Opportunity - {lead.company}",
+                account=account,
+                amount=lead.annual_revenue or 0,
+                stage=initial_stage,
+                close_date=timezone.now().date() + timezone.timedelta(days=30),
+                probability=float(initial_stage.probability) / 100.0 if initial_stage.probability > 1 else float(initial_stage.probability),
+                owner=lead.owner or creator
+            )
+            
+            # 3. Create Contact
+            contact, created = Contact.objects.get_or_create(
+                tenant=lead.tenant,
+                email=lead.email,
+                defaults={
+                    'first_name': lead.first_name,
+                    'last_name': lead.last_name,
+                    'phone_number': lead.phone,
+                    'account': account,
+                    'role': lead.job_title,
+                    'is_primary': True
+                }
+            )
+            
+            # 4. Success event
+            from engagement.utils import log_engagement_event
+            log_engagement_event(
+                tenant_id=lead.tenant_id,
+                event_type='lead_converted',
+                description=f"Lead {lead.full_name} converted to Opportunity {opportunity.opportunity_name}",
+                lead=lead,
+                opportunity=opportunity,
+                account_company=account,
+                created_by=creator
+            )
+            
+            return opportunity
+
 class CACCalculationService:
+
     """
     Service class for Customer Acquisition Cost (CAC) calculations and analytics.
     """

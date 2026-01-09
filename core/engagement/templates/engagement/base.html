@@ -5,6 +5,7 @@
     <title>{% block title %}SalesCompass{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
         body {
             background: linear-gradient(135deg, #f7f8fc 0%, #e3e6f3 100%);
@@ -182,6 +183,21 @@
                 display: flex;
             }
         }
+        
+        /* Navigation improvements */
+        .nav-section-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6c757d;
+            margin: 1.5rem 0 0.5rem 1rem;
+            font-weight: 600;
+        }
+        
+        .sidebar .nav-link.active {
+            background-color: #6f42c1;
+            color: white;
+        }
     </style>
     {% load static %}
     {% block extra_head %}{% endblock %}
@@ -205,33 +221,59 @@
             SalesCompass
         </a>
         <nav class="nav flex-column">
-
-            <a class="nav-link ms-3" href="{% url 'engagement:dashboard' %}">Dashboard</a>
-            <a class="nav-link ms-3" href="{% url 'engagement:feed' %}">Feed</a>
-            <a class="nav-link ms-3" href="{% url 'engagement:playbook_list' %}">Playbooks</a>
-
-
-
-            <!-- Reports Dropdown -->
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Reports">
-                Reports
+            <div class="nav-section-title">Main</div>
+            <a class="nav-link ms-3" href="{% url 'engagement:dashboard' %}">
+                <i class="bi bi-speedometer2 me-2"></i> Dashboard
             </a>
-            <div class="collapse" id="Reports">
-                <a class="nav-link ms-3" href="{% url 'engagement:disengaged_accounts' %}">Disengaged Accounts</a>
-                <a class="nav-link ms-3" href="{% url 'engagement:leaderboard' %}">Engagement Leaderboard</a>
-            </div>
-
+            <a class="nav-link ms-3" href="{% url 'engagement:account_breakdowns' %}">
+                <i class="bi bi-bar-chart-steps me-2"></i> Account Breakdowns
+            </a>
+            <a class="nav-link ms-3" href="{% url 'engagement:feed' %}">
+                <i class="bi bi-activity me-2"></i> Live Feed
+            </a>
+            
+            <div class="nav-section-title">Actions</div>
+        
             <!--Next Action Dropdown -->
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#NextBestAction">
-                Next Best Action
+                <i class="bi bi-lightning me-2"></i> Next Best Actions
             </a>
             <div class="collapse" id="NextBestAction">
                 <a class="nav-link ms-3" href="{% url 'engagement:next_best_action' %}">List</a>
                 <a class="nav-link ms-3" href="{% url 'engagement:next_best_action_create' %}">Create</a>
-
             </div>
-
-
+            
+            <!-- Playbooks Dropdown -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Playbooks">
+                <i class="bi bi-journal-text me-2"></i> Playbooks
+            </a>
+            <div class="collapse" id="Playbooks">
+                <a class="nav-link ms-3" href="{% url 'engagement:playbook_list' %}">List</a>
+                <a class="nav-link ms-3" href="{% url 'engagement:playbook_create' %}">Create</a>
+            </div>
+            
+         
+            <!-- Workflows Dropdown -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Workflows">
+                <i class="bi bi-diagram-3 me-2"></i> Workflows
+            </a>
+            <div class="collapse" id="Workflows">
+                <a class="nav-link ms-3" href="{% url 'engagement:workflow_list' %}">List</a>
+                <a class="nav-link ms-3" href="{% url 'engagement:workflow_create' %}">Create</a>
+            </div>
+            
+            <div class="nav-section-title">Reports</div>
+            <!-- Reports Dropdown -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Reports">
+                <i class="bi bi-bar-chart me-2"></i> Reports
+            </a>
+            <div class="collapse" id="Reports">
+                <a class="nav-link ms-3" href="{% url 'engagement:disengaged_accounts' %}">Disengaged Accounts</a>
+                <a class="nav-link ms-3" href="{% url 'engagement:top_engaged_accounts' %}">Top Engaged Accounts</a>
+                <a class="nav-link ms-3" href="{% url 'engagement:leaderboard' %}">Engagement Leaderboard</a>
+                <a class="nav-link ms-3" href="{% url 'engagement:attribution_report' %}">Attribution Report</a>
+                <a class="nav-link ms-3" href="{% url 'engagement:data_quality' %}">Data Quality</a>
+            </div>
         </nav>
     </div>
 
@@ -264,8 +306,18 @@
                     }
                 });
             }
+            
+            // Highlight active nav link
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.sidebar .nav-link');
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
         });
     </script>
+    {% block extra_js %}{% endblock %}
 </body>
 
 </html>

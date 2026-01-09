@@ -1,0 +1,43 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 text-gray-800">Delete Widget Category</h1>
+        <a href="{% url 'dashboard:widget_category_list' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to List
+        </a>
+    </div>
+
+    <!-- Delete Confirmation -->
+    <div class="card shadow border-left-danger mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-danger">
+                <i class="fas fa-exclamation-triangle"></i> Confirm Deletion
+            </h6>
+        </div>
+        <div class="card-body">
+            <p>You are about to delete the following widget category:</p>
+            
+            <div class="alert alert-danger">
+                <strong>Name:</strong> {{ object.category_name }}<br>
+                <strong>Label:</strong> {{ object.label }}
+            </div>
+            
+            <p class="text-danger">
+                <strong>Warning:</strong> This action cannot be undone. Deleting this widget category will remove it from the system.
+            </p>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'dashboard:widget_category_list' %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Confirm Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

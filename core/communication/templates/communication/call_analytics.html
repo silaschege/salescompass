@@ -1,0 +1,192 @@
+{% extends "communication/base.html" %}
+
+{% block title %}Call Analytics - Communication{% endblock %}
+
+{% block comm_title %}📊 Call Analytics Dashboard{% endblock %}
+{% block comm_subtitle %}Detailed insights into your voice interactions{% endblock %}
+
+{% block comm_actions %}
+<a href="{% url 'communication:dashboard' %}" class="btn btn-light fw-bold px-4 shadow-sm">
+    <i class="bi bi-speedometer2 me-1"></i> Dashboard
+</a>
+<a href="{% url 'communication:call_log_create' %}" class="btn btn-comm fw-bold px-4 shadow-sm">
+    <i class="bi bi-telephone-plus me-1"></i> Log Call
+</a>
+{% endblock %}
+
+{% block comm_content %}
+<div class="row g-4 mb-5">
+    <!-- Stat Cards -->
+    <div class="col-md-3">
+        <div class="comm-card p-4 text-center h-100">
+            <div class="comm-icon-box mx-auto" style="background-color: #f0f9ff; color: #0284c7;">
+                <i class="bi bi-telephone"></i>
+            </div>
+            <h3 class="fw-bold">{{ total_calls }}</h3>
+            <div class="text-muted small text-uppercase">Total Calls Logged</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="comm-card p-4 text-center h-100">
+            <div class="comm-icon-box mx-auto" style="background-color: #f0fdf4; color: #16a34a;">
+                <i class="bi bi-clock-history"></i>
+            </div>
+            <h3 class="fw-bold">{{ total_duration|floatformat:0 }}s</h3>
+            <div class="text-muted small text-uppercase">Total Talk Time</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="comm-card p-4 text-center h-100">
+            <div class="comm-icon-box mx-auto" style="background-color: #fffbeb; color: #d97706;">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+            <h3 class="fw-bold">{{ avg_duration|floatformat:1 }}s</h3>
+            <div class="text-muted small text-uppercase">Avg. Call Duration</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="comm-card p-4 text-center h-100">
+            <div class="comm-icon-box mx-auto" style="background-color: #fef2f2; color: #dc2626;">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <h3 class="fw-bold">{% if total_calls > 0 %}{{ total_calls }}{% else %}0{% endif %}</h3>
+            <div class="text-muted small text-uppercase">Engagement Velocity</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Call Outcomes -->
+    <div class="col-lg-6">
+        <div class="comm-card">
+            <div class="card-header bg-transparent border-bottom p-4">
+                <h5 class="mb-0 fw-bold">Call Outcomes</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="d-flex flex-column gap-3">
+                    {% for outcome in outcome_breakdown %}
+                    <div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="fw-bold">{{ outcome.outcome|title }}</span>
+                            <span class="text-muted">{{ outcome.count }} calls</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-comm" role="progressbar"
+                                style="width: {% widthratio outcome.count total_calls 100 %}%"></div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-center text-muted py-4">No call data available</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call Types -->
+    <div class="col-lg-6">
+        <div class="comm-card">
+            <div class="card-header bg-transparent border-bottom p-4">
+                <h5 class="mb-0 fw-bold">Call Types (Inbound vs Outbound)</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="d-flex flex-column gap-3">
+                    {% for type in type_breakdown %}
+                    <div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="fw-bold">{{ type.call_type|title }}</span>
+                            <span class="text-muted">{{ type.count }} calls</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-warning" role="progressbar"
+                                style="width: {% widthratio type.count total_calls 100 %}%"></div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-center text-muted py-4">No call data available</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Performers -->
+    <div class="col-lg-12">
+        <div class="comm-card">
+            <div class="card-header bg-transparent border-bottom p-4">
+                <h5 class="mb-0 fw-bold">Top Agents by Call Volume</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Agent Name</th>
+                                <th>Username</th>
+                                <th>Total Calls</th>
+                                <th class="text-end pe-4">Activity Level</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in top_users %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">{{ user.user__first_name }} {{ user.user__last_name }}</div>
+                                </td>
+                                <td>{{ user.user__username }}</td>
+                                <td>{{ user.count }}</td>
+                                <td class="text-end pe-4">
+                                    <div class="progress" style="height: 6px; width: 100px; margin-left: auto;">
+                                        <div class="progress-bar bg-success" role="progressbar"
+                                            style="width: {% widthratio user.count total_calls 100 %}%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">No agent data available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calls Over Time (Simple List representation since we don't have Chart.js here yet) -->
+    <div class="col-12">
+        <div class="comm-card">
+            <div class="card-header bg-transparent border-bottom p-4">
+                <h5 class="mb-0 fw-bold">Activity Log (Last 30 Days)</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Date</th>
+                                <th class="text-end pe-4">Call Volume</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in calls_over_time %}
+                            <tr>
+                                <td class="ps-4">{{ day.day }}</td>
+                                <td class="text-end pe-4">
+                                    <span class="badge bg-comm rounded-pill">{{ day.count }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="text-center py-4 text-muted">No recent activity</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

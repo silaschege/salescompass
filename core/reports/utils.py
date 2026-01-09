@@ -1,54 +1,99 @@
 import csv
 import json
 from django.http import HttpResponse
-from django.db.models import Q, Sum, Avg, Count
+from django.db.models import Q, Sum, Avg, Count, F
+from django.db.models.functions import TruncMonth, TruncYear, TruncDay
 from django.utils import timezone
 from datetime import datetime, timedelta
-
+from django.apps import apps
+ 
 def generate_report(report_id, export_format='csv', user=None):
     """
     Generate report in specified format.
     """
     from .models import Report
     report = Report.objects.get(id=report_id)
-    config = report.config or {}
+    query_config = report.query_config or {}
     
     # Build queryset based on report type and config
     if report.report_type == 'sales_performance':
-        queryset = _build_sales_performance_query(config)
+        queryset = _build_sales_performance_query(query_config)
     elif report.report_type == 'esg_impact':
-        queryset = _build_esg_impact_query(config)
+        queryset = _build_esg_impact_query(query_config)
     elif report.report_type == 'pipeline_forecast':
-        queryset = _build_pipeline_forecast_query(config)
+        queryset = _build_pipeline_forecast_query(query_config)
     elif report.report_type == 'csrd_compliance':
-        queryset = _build_csrd_compliance_query(config)
+        queryset = _build_csrd_compliance_query(query_config)
     elif report.report_type == 'leads_recent':
-        queryset = _build_leads_recent_query(config)
+        queryset = _build_leads_recent_query(query_config)
     elif report.report_type == 'cases_recent':
-        queryset = _build_cases_recent_query(config)
+        queryset = _build_cases_recent_query(query_config)
     else:  # custom
-        queryset = _build_custom_query(config)
+        queryset = _build_custom_query(query_config)
 
-    # Apply filters from config
-    if 'filters' in config:
-        queryset = _apply_filters(queryset, config['filters'])
+    # Apply Joins (Cross-object)
+    joins = query_config.get('joins', [])
+    for join in joins:
+        queryset = queryset.select_related(join) if '__' not in join else queryset.prefetch_related(join)
+
+    # Apply Formulas (Computed fields)
+    formulas = query_config.get('formulas', [])
+    for formula in formulas:
+        name = formula.get('name')
+        expression = formula.get('expression')
+        if name and expression:
+            try:
+                # Enhanced parser for expressions using F objects
+                from django.db.models import FloatField, ExpressionWrapper
+                import re
+
+                def to_expression(expr_str):
+                    tokens = re.split(r'(\s*[\+\-\*/\(\)]\s*)', expr_str)
+                    processed_tokens = []
+                    for t in tokens:
+                        t = t.strip()
+                        if not t: continue
+                        if t in '+-*/()':
+                            processed_tokens.append(t)
+                        else:
+                            try:
+                                float(t)
+                                processed_tokens.append(t)
+                            except ValueError:
+                                processed_tokens.append(f"F('{t}')")
+                    return "".join(processed_tokens)
+
+                python_expr = to_expression(expression)
+                queryset = queryset.annotate(**{name: ExpressionWrapper(eval(python_expr), output_field=FloatField())})
+            except Exception as e:
+                print(f"Formula error: {e}")
+                pass
+
+    # Apply filters from query_config
+    if 'filters' in query_config:
+        queryset = _apply_filters(queryset, query_config['filters'])
     
     # Apply ordering
-    if 'sort_by' in config:
-        queryset = queryset.order_by(config['sort_by'])
+    if 'sort_by' in query_config:
+        queryset = queryset.order_by(query_config['sort_by'])
     else:
-        queryset = queryset.order_by('-created_at')
+        queryset = queryset.order_by('-report_created_at')
     
     # Get fields to include
-    fields = config.get('fields', _get_default_fields(report.report_type))
+    fields = query_config.get('fields', _get_default_fields(report.report_type))
+
+    # Apply Conditional Formatting (Annotates data for UI)
+    formatting = query_config.get('formatting', [])
+    data_rows = list(queryset) # Evaluate for formatting
+    _apply_formatting(data_rows, formatting)
     
     # Generate export
     if export_format == 'csv':
-        return _generate_csv_export(queryset, fields, report.report_type)
+        return _generate_csv_export(data_rows, fields, report.report_type)
     elif export_format == 'xlsx':
-        return _generate_xlsx_export(queryset, fields, report.report_type)
+        return _generate_xlsx_export(data_rows, fields, report.report_type)
     else:  # pdf
-        return _generate_pdf_export(queryset, fields, report.report_type)
+        return _generate_pdf_export(data_rows, fields, report.report_type)
 
 
 def _get_default_fields(report_type):
@@ -136,41 +181,249 @@ def _build_cases_recent_query(config):
 
 def _build_custom_query(config):
     """Build custom report query based on entities specified."""
-    entities = config.get('entities', ['account'])
+    entity = config.get('entity', 'account') # Single primary entity
     
-    try:
-        if 'opportunity' in entities:
-            from opportunities.models import Opportunity
-            return Opportunity.objects.all()
-        elif 'lead' in entities:
-            from leads.models import Lead
-            return Lead.objects.all()
-        elif 'case' in entities:
-            from cases.models import Case
-            return Case.objects.all()
-        else:
-            from accounts.models import Account
-            return Account.objects.all()
-    except ImportError:
-        from accounts.models import Account
-        return Account.objects.none()
+    model_map = {
+        'account': 'accounts.Account',
+        'opportunity': 'opportunities.Opportunity',
+        'lead': 'leads.Lead',
+        'case': 'support.Case',
+        'task': 'tasks.Task',
+    }
 
+    model_path = model_map.get(entity, 'accounts.Account')
+    app_label, model_name = model_path.split('.')
+    Model = apps.get_model(app_label, model_name)
+    
+    queryset = Model.objects.all()
 
-def _apply_filters(queryset, filters):
-    """Apply filters to queryset."""
-    for field, value in filters.items():
-        if isinstance(value, list):
-            queryset = queryset.filter(**{f"{field}__in": value})
-        elif isinstance(value, dict):
-            # Handle range filters like __gte, __lte
-            for op, val in value.items():
-                if op.startswith('__'):
-                    queryset = queryset.filter(**{f"{field}{op}": val})
-                else:
-                    queryset = queryset.filter(**{f"{field}__{op}": val})
-        else:
-            queryset = queryset.filter(**{field: value})
+    # Apply performance optimizations (Select Related / Prefetch Related)
+    joins = config.get('joins', [])
+    select_related_list = []
+    prefetch_related_list = []
+    
+    for join in joins:
+        if isinstance(join, str):
+            if '__' in join: # Likely a nested prefetch
+                prefetch_related_list.append(join)
+            else:
+                select_related_list.append(join)
+    
+    if select_related_list:
+        queryset = queryset.select_related(*select_related_list)
+    if prefetch_related_list:
+        queryset = queryset.prefetch_related(*prefetch_related_list)
+
     return queryset
+
+
+def _apply_formatting(data_rows, formatting_rules):
+    """
+    Apply conditional formatting rules to data rows.
+    Adds a '_formatting' dict to each object in the list.
+    """
+    if not formatting_rules:
+        return
+
+    for obj in data_rows:
+        obj._formatting = {}
+        for rule in formatting_rules:
+            field = rule.get('field')
+            operator = rule.get('operator')
+            value = rule.get('value')
+            style = rule.get('style') # e.g. {'color': 'red', 'font-weight': 'bold'}
+            
+            if not (field and operator and style):
+                continue
+            
+            field_val = getattr(obj, field, None)
+            if field_val is None:
+                continue
+
+            match = False
+            if operator == 'gt': match = field_val > value
+            elif operator == 'lt': match = field_val < value
+            elif operator == 'eq': match = field_val == value
+            elif operator == 'contains': match = str(value) in str(field_val)
+            
+            if match:
+                obj._formatting[field] = style
+    """Apply filters to queryset (handles both dict and list of dicts)."""
+    if isinstance(filters, list):
+        for f in filters:
+            field = f.get('field')
+            operator = f.get('operator')
+            value = f.get('value')
+            if field and operator and value:
+                lookup = f"{field}__{operator}" if operator != 'exact' else field
+                queryset = queryset.filter(**{lookup: value})
+    else:
+        for field, value in filters.items():
+            if isinstance(value, list):
+                queryset = queryset.filter(**{f"{field}__in": value})
+            elif isinstance(value, dict):
+                for op, val in value.items():
+                    lookup = f"{field}{op}" if op.startswith('__') else f"{field}__{op}"
+                    queryset = queryset.filter(**{lookup: val})
+            else:
+                queryset = queryset.filter(**{field: value})
+    return queryset
+
+
+def get_report_data(query_config):
+    """
+    Generate data for charts/tables based on query_config.
+    Returns: { 'labels': [...], 'datasets': [{ 'label': '...', 'data': [...] }] }
+    """
+    entity = query_config.get('entity', 'account')
+    filters = query_config.get('filters', [])
+    group_by = query_config.get('group_by')
+    chart_type = query_config.get('chart_type', 'bar')
+    formulas = query_config.get('formulas', [])
+    pivot_config = query_config.get('pivot_config', {})
+
+    # Map entity to model
+    model_map = {
+        'account': 'accounts.Account',
+        'opportunity': 'opportunities.Opportunity',
+        'lead': 'leads.Lead',
+        'case': 'cases.Case', # Fixed mapping from support.Case to cases.Case
+        'task': 'tasks.Task',
+    }
+
+    model_path = model_map.get(entity)
+    if not model_path:
+        return {'error': 'Invalid entity'}
+
+    try:
+        app_label, model_name = model_path.split('.')
+        Model = apps.get_model(app_label, model_name)
+    except LookupError:
+        return {'error': f'Model {entity} not found'}
+
+    # Base QuerySet
+    queryset = Model.objects.all()
+
+    # Apply Formulas
+    for formula in formulas:
+        name = formula.get('name')
+        expr = formula.get('expression')
+        if name and expr:
+            try:
+                from django.db.models import FloatField, ExpressionWrapper
+                import re
+                def to_expression(expr_str):
+                    tokens = re.split(r'(\s*[\+\-\*/\(\)]\s*)', expr_str)
+                    processed_tokens = []
+                    for t in tokens:
+                        t = t.strip()
+                        if not t: continue
+                        if t in '+-*/()':
+                            processed_tokens.append(t)
+                        else:
+                            try:
+                                float(t)
+                                processed_tokens.append(t)
+                            except ValueError:
+                                processed_tokens.append(f"F('{t}')")
+                    return "".join(processed_tokens)
+                
+                python_expr = to_expression(expr)
+                queryset = queryset.annotate(**{name: ExpressionWrapper(eval(python_expr), output_field=FloatField())})
+            except Exception:
+                pass
+
+    # Aggregation
+    labels = []
+    datasets = []
+
+    if chart_type == 'pivot' and pivot_config.get('rows') and pivot_config.get('cols'):
+        row_field = pivot_config['rows']
+        col_field = pivot_config['cols']
+        
+        # Aggregate by both fields
+        data = queryset.values(row_field, col_field).annotate(count=Count('id')).order_by(row_field, col_field)
+        
+        # Group into a matrix
+        rows = sorted(list(set(item[row_field] for item in data if item[row_field])))
+        cols = sorted(list(set(item[col_field] for item in data if item[col_field])))
+        
+        labels = [str(c) for c in cols]
+        for r in rows:
+            row_data = []
+            for c in cols:
+                count = next((item['count'] for item in data if item[row_field] == r and item[col_field] == c), 0)
+                row_data.append(count)
+            
+            datasets.append({
+                'label': str(r),
+                'data': row_data
+            })
+            
+        return {
+            'labels': labels,
+            'datasets': datasets,
+            'is_pivot': True
+        }
+
+    if group_by:
+        # Check for date truncation
+        date_field = None
+        trunc_func = None
+
+        if '__month' in group_by:
+            date_field = group_by.replace('__month', '')
+            trunc_func = TruncMonth
+        elif '__year' in group_by:
+            date_field = group_by.replace('__year', '')
+            trunc_func = TruncYear
+        elif '__day' in group_by:
+            date_field = group_by.replace('__day', '')
+            trunc_func = TruncDay
+
+        if date_field and trunc_func:
+            data = queryset.annotate(period=trunc_func(date_field)).values('period').annotate(count=Count('id')).order_by('period')
+            for item in data:
+                labels.append(item['period'].strftime('%Y-%m-%d') if item['period'] else 'None')
+                datasets.append(item['count'])
+        else:
+            # Special case for geographic mapping
+            is_geo = group_by in ['billing_country', 'territory', 'shipping_country', 'billing_state', 'shipping_state']
+            if is_geo:
+                chart_type = 'choropleth'
+            
+            # Categorical grouping with optional secondary measure
+            measure = query_config.get('measure', 'count')
+            if measure == 'sum' and query_config.get('measure_field'):
+                data = queryset.values(group_by).annotate(value=Sum(query_config['measure_field'])).order_by('-value')
+            elif measure == 'avg' and query_config.get('measure_field'):
+                data = queryset.values(group_by).annotate(value=Avg(query_config['measure_field'])).order_by('-value')
+            else:
+                data = queryset.values(group_by).annotate(value=Count('id')).order_by('-value')
+
+            for item in data:
+                labels.append(str(item[group_by]) if item[group_by] else 'None')
+                datasets.append(item['value'])
+    else:
+        # No grouping, maybe just top 10?
+        labels = ["Total Records"]
+        datasets = [queryset.count()]
+
+    # Standardize result for Chart.js
+    if not isinstance(datasets, list) or (datasets and not isinstance(datasets[0], dict)):
+        datasets = [{
+            'label': entity.title(),
+            'data': datasets,
+            'backgroundColor': 'rgba(111, 66, 193, 0.5)',
+            'borderColor': 'rgba(111, 66, 193, 1)',
+            'borderWidth': 1
+        }]
+
+    return {
+        'labels': labels,
+        'datasets': datasets,
+        'chart_type': chart_type
+    }
 
 
 def _generate_csv_export(queryset, fields, report_type):
@@ -422,7 +675,7 @@ def send_scheduled_report_email(export, recipients):
     })
     
     msg = EmailMultiAlternatives(
-        subject=f"SalesCompass Report: {export.report.name}",
+        subject=f"SalesCompass Report: {export.report.report_name}",
         body="Please find your scheduled report attached.",
         from_email="reports@salescompass.com",
         to=recipients
@@ -463,31 +716,31 @@ def get_dashboard_widget_data(widget_id):
     widget = DashboardWidget.objects.get(id=widget_id)
     report = widget.report
     
-    # Generate the data based on report config
-    config = report.config or {}
-    fields = config.get('fields', _get_default_fields(report.report_type))
+    # Generate the data based on report query_config
+    query_config = report.query_config or {}
+    fields = query_config.get('fields', _get_default_fields(report.report_type))
     
     # Build queryset
     if report.report_type == 'sales_performance':
-        queryset = _build_sales_performance_query(config)
+        queryset = _build_sales_performance_query(query_config)
     elif report.report_type == 'esg_impact':
-        queryset = _build_esg_impact_query(config)
+        queryset = _build_esg_impact_query(query_config)
     elif report.report_type == 'pipeline_forecast':
-        queryset = _build_pipeline_forecast_query(config)
+        queryset = _build_pipeline_forecast_query(query_config)
     elif report.report_type == 'csrd_compliance':
-        queryset = _build_csrd_compliance_query(config)
+        queryset = _build_csrd_compliance_query(query_config)
     else:
-        queryset = _build_custom_query(config)
+        queryset = _build_custom_query(query_config)
     
     # Apply filters
-    if 'filters' in config:
-        queryset = _apply_filters(queryset, config['filters'])
+    if 'filters' in query_config:
+        queryset = _apply_filters(queryset, query_config['filters'])
     
     # Get data based on widget type
     if widget.widget_type == 'kpi_card':
         return {
             'value': queryset.count(),
-            'label': report.name
+            'label': report.report_name
         }
     elif widget.widget_type == 'chart':
         # Return chart data

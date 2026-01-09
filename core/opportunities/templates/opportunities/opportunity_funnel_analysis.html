@@ -1,0 +1,277 @@
+{% extends 'opportunities/base.html' %}
+{% load humanize %}
+
+{% block title %}Funnel Analytics | SalesCompass{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --brand-primary: #6366f1;
+        --brand-secondary: #a855f7;
+        --bg-main: #ffffff; /* Changed to White */
+        --card-border: #e2e8f0;
+        --text-heading: #000000; /* Changed to Black */
+        --text-body: #334155;
+    }
+
+    body {
+        background-color: var(--bg-main);
+        color: var(--text-body);
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Remove empty space at the top of the container */
+    .main-content-wrapper {
+        padding-top: 0 !important;
+    }
+
+    /* Clean White Header */
+    .funnel-header {
+        background: #ffffff;
+        padding: 1.5rem 0; /* Tightened padding */
+        margin-bottom: 2rem;
+        color: var(--text-heading);
+        border-bottom: 1px solid var(--card-border);
+    }
+
+    .breadcrumb-item a, .breadcrumb-item.active {
+        color: #64748b !important;
+        font-size: 0.85rem;
+    }
+
+    /* Stat Cards */
+    .modern-stat-card {
+        background: #ffffff;
+        border: 1px solid var(--card-border);
+        border-radius: 1rem;
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .modern-stat-card:hover {
+        border-color: var(--brand-primary);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+    }
+
+    .icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    /* Funnel Visualization */
+    .funnel-visual-card {
+        background: #ffffff;
+        border-radius: 1rem;
+        border: 1px solid var(--card-border);
+        padding: 2rem;
+    }
+
+    .funnel-wrap {
+        position: relative;
+        padding: 2rem 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .funnel-step {
+        position: relative;
+        margin-bottom: 6px;
+        height: 55px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 0.85rem;
+        clip-path: polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%);
+        transition: transform 0.2s ease;
+    }
+
+    .funnel-step:hover {
+        transform: scale(1.01);
+        filter: saturate(1.2);
+    }
+
+    .rate-bubble {
+        position: absolute;
+        right: -85px;
+        background: #f8fafc;
+        border: 1px solid var(--card-border);
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: var(--text-heading);
+    }
+
+    /* List Styling */
+    .analysis-list {
+        border-radius: 1rem;
+        border: 1px solid var(--card-border);
+        background: white;
+    }
+
+    .stage-item {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .ls-1 { letter-spacing: 0.05em; }
+    .fw-800 { font-weight: 800; }
+    
+    .btn-outline-black {
+        border: 1px solid #000;
+        color: #000;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        transition: all 0.2s;
+    }
+
+    .btn-outline-black:hover {
+        background: #000;
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-0 px-lg-5">
+    <!-- Header Section -->
+    <div class="funnel-header px-2">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1">
+                        <li class="breadcrumb-item"><a href="#" class="text-decoration-none">Analytics</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Funnel Analysis</li>
+                    </ol>
+                </nav>
+                <h1 class="fw-800 mb-0" style="letter-spacing: -0.02em;">Pipeline Velocity</h1>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <button class="btn btn-outline-black px-4">
+                    <i class="bi bi-download me-2"></i>Export CSV
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="modern-stat-card">
+                <div class="icon-box bg-light text-dark">
+                    <i class="bi bi-layers"></i>
+                </div>
+                <div>
+                    <div class="small fw-bold text-uppercase text-muted ls-1" style="font-size: 0.65rem;">Stages</div>
+                    <div class="h5 mb-0 fw-800">{{ funnel_data|length }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="modern-stat-card">
+                <div class="icon-box bg-light text-dark">
+                    <i class="bi bi-people"></i>
+                </div>
+                <div>
+                    <div class="small fw-bold text-uppercase text-muted ls-1" style="font-size: 0.65rem;">Total Prospects</div>
+                    <div class="h5 mb-0 fw-800">{{ funnel_data.0.count|default:"0" }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="modern-stat-card">
+                <div class="icon-box bg-light text-dark">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+                <div>
+                    <div class="small fw-bold text-uppercase text-muted ls-1" style="font-size: 0.65rem;">Closed Won</div>
+                    <div class="h5 mb-0 fw-800">{% with funnel_data|last as last %}{{ last.count|default:"0" }}{% endwith %}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="modern-stat-card">
+                <div class="icon-box bg-light text-dark">
+                    <i class="bi bi-lightning"></i>
+                </div>
+                <div>
+                    <div class="small fw-bold text-uppercase text-muted ls-1" style="font-size: 0.65rem;">Win Rate</div>
+                    <div class="h5 mb-0 fw-800">
+                        {% if funnel_data %}{% with funnel_data|last as last %}{% widthratio last.count funnel_data.0.count 100 %}%{% endwith %}{% else %}0%{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Visual Funnel -->
+        <div class="col-lg-8">
+            <div class="funnel-visual-card shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h6 class="fw-800 mb-0">Conversion Flow</h6>
+                    <span class="small text-muted"><i class="bi bi-circle-fill text-success me-1" style="font-size: 0.5rem;"></i> Live Pipeline</span>
+                </div>
+                
+                <div class="funnel-wrap">
+                    {% for stage in funnel_data %}
+                    <div class="funnel-step" 
+                         style="width: calc(100% * ({{ stage.count }} / {{ funnel_data.0.count|default:1 }} * 0.7 + 0.3));
+                                background: linear-gradient(90deg, #1e293b, #334155);">
+                        <span>{{ stage.stage }}: {{ stage.count }}</span>
+                        
+                        {% if not forloop.first %}
+                        <div class="rate-bubble">
+                            {{ stage.conversion_rate|floatformat:0 }}%
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5">
+                        <p class="text-muted small">No data available for the selected period.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Stage Breakdown -->
+        <div class="col-lg-4">
+            <div class="analysis-list shadow-sm">
+                <div class="p-3 border-bottom bg-light-subtle">
+                    <h6 class="fw-800 mb-0">Detailed Breakdown</h6>
+                </div>
+                {% for stage in funnel_data %}
+                <div class="stage-item">
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-700 text-dark small">{{ stage.stage }}</span>
+                            <span class="fw-800 small">{{ stage.count }}</span>
+                        </div>
+                        <div class="progress mt-2" style="height: 4px; background: #f1f5f9;">
+                            <div class="progress-bar bg-dark" style="width: {{ stage.conversion_rate }}%"></div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

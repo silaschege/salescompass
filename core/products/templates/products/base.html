@@ -3,8 +3,106 @@
 {% block extra_css %}{% endblock %}
 
 {% block module_nav %}
-<a class="nav-link ms-3" href="{% url 'products:product_list' %}">Product List</a>
-<a class="nav-link ms-3" href="{% url 'products:product_create' %}">Create Product</a>
-<a class="nav-link ms-3" href="{% url 'products:competitor_mapping' %}">Competitor Mapping</a>
-<a class="nav-link ms-3" href="{% url 'products:comparison' %}">Product Comparison</a>
+<!-- Products Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#productsMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-box-seam nav-icon"></i>
+        <span>Products</span>
+    </div>
+   
+</a>
+<div class="collapse" id="productsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'product_list' %}active{% endif %}" 
+       href="{% url 'products:product_list' %}">
+        Product List
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'product_create' %}active{% endif %}" 
+       href="{% url 'products:product_create' %}">
+        Create Product
+    </a>
+</div>
+
+<!-- Bundles Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#bundlesMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-collection nav-icon"></i>
+        <span>Bundles</span>
+    </div>
+   
+</a>
+<div class="collapse" id="bundlesMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'productbundle_list' %}active{% endif %}" 
+       href="{% url 'products:productbundle_list' %}">
+        Bundle List
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'productbundle_create' %}active{% endif %}" 
+       href="{% url 'products:productbundle_create' %}">
+        Create Bundle
+    </a>
+</div>
+
+<!-- Competitors Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#competitorsMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-binoculars nav-icon"></i>
+        <span>Competitors</span>
+    </div>
+   
+</a>
+<div class="collapse" id="competitorsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'competitorproduct_list' %}active{% endif %}" 
+       href="{% url 'products:competitorproduct_list' %}">
+        Competitor List
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'competitorproduct_create' %}active{% endif %}" 
+       href="{% url 'products:competitorproduct_create' %}">
+        Add Competitor
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'competitor_mapping' %}active{% endif %}" 
+       href="{% url 'products:competitor_mapping' %}">
+        Competitor Mapping
+    </a>
+</div>
+
+<!-- Comparisons Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#comparisonsMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-layout-text-window-reverse nav-icon"></i>
+        <span>Comparisons</span>
+    </div>
+   
+</a>
+<div class="collapse" id="comparisonsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'productcomparison_list' %}active{% endif %}" 
+       href="{% url 'products:productcomparison_list' %}">
+        Comparison List
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'productcomparison_create' %}active{% endif %}" 
+       href="{% url 'products:productcomparison_create' %}">
+        New Comparison
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'comparison' %}active{% endif %}" 
+       href="{% url 'products:comparison' %}">
+        Product Comparison
+    </a>
+</div>
+
+<!-- Dependencies Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#dependenciesMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-link nav-icon"></i>
+        <span>Dependencies</span>
+    </div>
+   
+</a>
+<div class="collapse" id="dependenciesMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'productdependency_list' %}active{% endif %}" 
+       href="{% url 'products:productdependency_list' %}">
+        Dependency List
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'productdependency_create' %}active{% endif %}" 
+       href="{% url 'products:productdependency_create' %}">
+        Add Dependency
+    </a>
+</div>
 {% endblock %}

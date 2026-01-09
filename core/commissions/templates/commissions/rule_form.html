@@ -1,0 +1,146 @@
+<!-- core/commissions/templates/commissions/rule_form.html -->
+{% extends 'commissions/base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Commission Rule</h1>
+        <a href="{% url 'commissions:plan_list' %}" class="btn btn-sm btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Plans
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        {% if object %}Edit Rule{% else %}Create Rule{% endif %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.product.id_for_label }}" class="form-label">Product</label>
+                                    {{ form.product }}
+                                    <div class="form-text">Specific product this rule applies to. Leave blank for all.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.product_category.id_for_label }}" class="form-label">Product Category</label>
+                                    {{ form.product_category }}
+                                    <div class="form-text">Category of products this rule applies to.</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.rate_type.id_for_label }}" class="form-label">Rate Type</label>
+                                    {{ form.rate_type }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.rate_value.id_for_label }}" class="form-label">Rate Value</label>
+                                    {{ form.rate_value }}
+                                    <div class="form-text">{{ form.rate_value.help_text }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="tiered-fields" class="row" style="display: none;">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.tier_min_amount.id_for_label }}" class="form-label">Minimum Amount</label>
+                                    {{ form.tier_min_amount }}
+                                    <div class="form-text">{{ form.tier_min_amount.help_text }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.tier_max_amount.id_for_label }}" class="form-label">Maximum Amount</label>
+                                    {{ form.tier_max_amount }}
+                                    <div class="form-text">{{ form.tier_max_amount.help_text }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="performance-fields" class="row" style="display: none;">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="{{ form.performance_threshold.id_for_label }}" class="form-label">Performance Threshold</label>
+                                    {{ form.performance_threshold }}
+                                    <div class="form-text">{{ form.performance_threshold.help_text }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="split-fields" class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.split_with.id_for_label }}" class="form-label">Split With</label>
+                                    {{ form.split_with }}
+                                    <div class="form-text">{{ form.split_with.help_text }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.split_percentage.id_for_label }}" class="form-label">Split Percentage</label>
+                                    {{ form.split_percentage }}
+                                    <div class="form-text">{{ form.split_percentage.help_text }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">Save Rule</button>
+                            <a href="{% url 'commissions:plan_update' object.commission_rule_plan.id %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Show/hide fields based on rate type selection
+    const rateTypeSelect = document.getElementById('id_rate_type');
+    const tieredFields = document.getElementById('tiered-fields');
+    const performanceFields = document.getElementById('performance-fields');
+    
+    if (rateTypeSelect) {
+        // Function to handle field visibility
+        function updateFieldVisibility() {
+            const selectedValue = rateTypeSelect.value;
+            
+            // Hide all conditional fields first
+            tieredFields.style.display = 'none';
+            performanceFields.style.display = 'none';
+            
+            // Show relevant fields based on selection
+            if (selectedValue === 'tiered') {
+                tieredFields.style.display = 'flex';
+                performanceFields.style.display = 'none';
+            } else if (selectedValue === 'accelerator' || selectedValue === 'decelerator') {
+                performanceFields.style.display = 'flex';
+                tieredFields.style.display = 'none';
+            }
+        }
+        
+        // Set initial visibility based on current value
+        updateFieldVisibility();
+        
+        // Add event listener to update visibility when selection changes
+        rateTypeSelect.addEventListener('change', updateFieldVisibility);
+    }
+});
+</script>
+{% endblock %}

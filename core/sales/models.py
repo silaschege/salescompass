@@ -1,6 +1,7 @@
 from django.db import models
 from core.models import User as Account
-from settings_app.models import Territory, TeamMember
+from core.models import User as Account
+from tenants.models import TenantTerritory, TenantMember
 from django.db.models import Sum, Count, Avg
 from products.models import Product
 from tenants.models import TenantAwareModel as TenantModel
@@ -11,7 +12,7 @@ SALE_TYPE_CHOICES = [
     ('upsell', 'Upsell'),
     ('cross_sell', 'Cross-sell'),
 ]
-class CommissionRule(models.Model):
+class SalesCommissionRule(models.Model):
     """
     Rules for calculating sales commissions.
     """
@@ -106,7 +107,7 @@ class Sale(models.Model):
         
         today = timezone.now().date()
         
-        rules = CommissionRule.objects.filter(
+        rules = SalesCommissionRule.objects.filter(
             is_active=True,
             start_date__lte=today,
         ).filter(
@@ -124,7 +125,7 @@ class Sale(models.Model):
         return 0, None
 
 
-class Commission(models.Model):
+class SalesCommission(models.Model):
     """
     Recorded commission for a sale.
     """
@@ -136,8 +137,8 @@ class Commission(models.Model):
     ]
 
     sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name='commissions')
-    sales_rep = models.ForeignKey('core.User', on_delete=models.CASCADE, related_name='commissions')
-    rule_applied = models.ForeignKey(CommissionRule, on_delete=models.SET_NULL, null=True, blank=True)
+    sales_rep = models.ForeignKey('core.User', on_delete=models.CASCADE, related_name='sales_commissions')
+    rule_applied = models.ForeignKey(SalesCommissionRule, on_delete=models.SET_NULL, null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     date_earned = models.DateTimeField(auto_now_add=True)
@@ -152,7 +153,7 @@ class TerritoryPerformance(models.Model):
     """
     Model to track performance metrics for territories
     """
-    territory = models.ForeignKey(Territory, on_delete=models.CASCADE, related_name='performance_metrics')
+    territory = models.ForeignKey(TenantTerritory, on_delete=models.CASCADE, related_name='performance_metrics')
     period_start = models.DateField(help_text="Start date of the performance period")
     period_end = models.DateField(help_text="End date of the performance period")
     
@@ -187,18 +188,18 @@ class TerritoryPerformance(models.Model):
     
     class Meta:
         unique_together = ['territory', 'period_start', 'period_end']
-        ordering = ['-period_end', 'territory__label']
+        ordering = ['-period_end', 'territory__name']
     
     def __str__(self):
-        return f"{self.territory.label} Performance ({self.period_start} to {self.period_end})"
+        return f"{self.territory.name} Performance ({self.period_start} to {self.period_end})"
     
     def calculate_metrics(self):
         """
         Calculate and update all territory performance metrics
         """
         # Calculate based on sales reps in this territory
-        team_members_in_territory = TeamMember.objects.filter(territory_ref=self.territory)
-        sales_reps = [tm.user for tm in team_members_in_territory if tm.role_ref and tm.role_ref.role_name in ['sales_rep', 'sales_manager']]
+        team_members_in_territory = TenantMember.objects.filter(territory=self.territory)
+        sales_reps = [tm.user for tm in team_members_in_territory if tm.role and tm.role.name in ['sales_rep', 'sales_manager']]
         
         # Calculate revenue and deals from sales by reps in this territory
         sales_in_territory = Sale.objects.filter(
@@ -270,7 +271,7 @@ class TerritoryAssignmentOptimizer(models.Model):
     """
     Model to store territory assignment optimization data and logic
     """
-    territory = models.ForeignKey(Territory, on_delete=models.CASCADE, related_name='assignment_optimizations')
+    territory = models.ForeignKey(TenantTerritory, on_delete=models.CASCADE, related_name='assignment_optimizations')
     optimization_date = models.DateTimeField(auto_now_add=True)
     optimization_type = models.CharField(max_length=50, choices=[
         ('load_balancing', 'Load Balancing'),
@@ -305,17 +306,16 @@ class TerritoryAssignmentOptimizer(models.Model):
         ordering = ['-optimization_date']
     
     def __str__(self):
-        return f"{self.territory.label} Optimization ({self.optimization_type}) - {self.optimization_date}"
+        return f"{self.territory.name} Optimization ({self.optimization_type}) - {self.optimization_date}"
     
     def run_optimization(self):
         """
         Run the territory assignment optimization algorithm
         """
-        from core.models import User
-        from settings_app.models import TeamMember
+        from tenants.models import TenantMember
         
         # Get all team members in this territory
-        team_members = TeamMember.objects.filter(territory_ref=self.territory)
+        team_members = TenantMember.objects.filter(territory=self.territory)
         
         # Calculate current performance metrics
         self.current_load = team_members.count()
@@ -370,7 +370,7 @@ class TeamMemberTerritoryMetrics(models.Model):
     """
     Model to track territory-specific metrics for team members
     """
-    team_member = models.OneToOneField('settings_app.TeamMember', on_delete=models.CASCADE, related_name='territory_metrics')
+    team_member = models.OneToOneField('tenants.TenantMember', on_delete=models.CASCADE, related_name='territory_metrics')
     
     # Individual territory performance
     personal_revenue = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, help_text="Personal revenue generated in assigned territory")
@@ -429,9 +429,9 @@ class TeamMemberTerritoryMetrics(models.Model):
             self.quota_attainment = 0.00
         
         # Territory contribution - calculate percentage of territory's total revenue
-        if self.team_member.territory_ref:
+        if self.team_member.territory:
             try:
-                territory_total = self.team_member.territory_ref.performance_metrics.latest('period_end').total_revenue
+                territory_total = self.team_member.territory.performance_metrics.latest('period_end').total_revenue
                 if territory_total > 0:
                     self.territory_revenue_contribution = (self.personal_revenue / territory_total) * 10
                 else:
@@ -520,8 +520,8 @@ class SalesTarget(TenantModel):
     target_type = models.CharField(max_length=20, choices=TARGET_TYPE_CHOICES)
     # Generic relation or specific fields could be used. specific fields are simpler for now.
     user_target = models.ForeignKey('core.User', on_delete=models.CASCADE, null=True, blank=True)
-    team_target = models.ForeignKey('settings_app.TeamMember', on_delete=models.CASCADE, null=True, blank=True) # Using TeamMember as team representation (simplified)
-    territory_target = models.ForeignKey(Territory, on_delete=models.CASCADE, null=True, blank=True)
+    team_target = models.ForeignKey('tenants.TenantMember', on_delete=models.CASCADE, null=True, blank=True) # Using TenantMember as team representation
+    territory_target = models.ForeignKey(TenantTerritory, on_delete=models.CASCADE, null=True, blank=True)
     
     metric_name = models.CharField(max_length=50, choices=METRIC_NAME_CHOICES)
     target_value = models.DecimalField(max_digits=12, decimal_places=2)

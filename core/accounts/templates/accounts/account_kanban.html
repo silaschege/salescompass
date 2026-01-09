@@ -4,22 +4,23 @@
 {% block title %}Account Kanban - SalesCompass{% endblock %}
 
 {% block content %}
-<h2 class="block-title fw-bold mb-0" >Account Health Kanban</h2>
+<h2 class="block-title fw-bold mb-0">Account Health Kanban</h2>
 <p class="text-muted">Drag accounts between columns to update their status.</p>
 
 <div id="kanban-board" class="d-flex flex-wrap gap-3">
+
     <!-- Active Column -->
     <div class="kanban-column" data-status="active">
         <div class="card bg-light">
             <div class="card-header bg-success text-white">
                 <h5 class="mb-0">✅ Active
-                    <span class="badge bg-white text-success ms-2">{{ account|active_count }}</span>
+                    <span class="badge bg-white text-success ms-2">{{ accounts|active_count }}</span>
                 </h5>
             </div>
             <div class="card-body p-2" id="active-cards">
                 {% for account in accounts %}
                     {% if account.status == 'active' %}
-                        {% include "accounts/kanban_card.html" with account=account  status="active" %}
+                        {% include "accounts/kanban_card.html" with account=account status="active" %}
                     {% endif %}
                 {% endfor %}
             </div>
@@ -31,13 +32,13 @@
         <div class="card bg-light">
             <div class="card-header bg-warning text-dark">
                 <h5 class="mb-0">⚠️ At Risk
-                    <span class="badge bg-white text-warning ms-2">{{ at_risk_count|at_risk_count }}</span>
+                    <span class="badge bg-white text-warning ms-2">{{ accounts|at_risk_count }}</span>
                 </h5>
             </div>
             <div class="card-body p-2" id="at_risk-cards">
                 {% for account in accounts %}
                     {% if account.status == 'at_risk' %}
-                        {% include "accounts/kanban_card.html" with account=account %}
+                        {% include "accounts/kanban_card.html" with account=account status="at_risk" %}
                     {% endif %}
                 {% endfor %}
             </div>
@@ -49,19 +50,20 @@
         <div class="card bg-light">
             <div class="card-header bg-danger text-white">
                 <h5 class="mb-0">❌ Churned
-                    <span class="badge bg-white text-danger ms-2">{{ churned_count|churned_count }}</span>
+                    <span class="badge bg-white text-danger ms-2">{{ accounts|churned_count }}</span>
                 </h5>
             </div>
             <div class="card-body p-2" id="churned-cards">
-                {% for account in accounts_index %}
+                {% for account in accounts %}
                     {% if account.status == 'churned' %}
-                        {% include "accounts/kanban_card.html" with account=account %}
+                        {% include "accounts/kanban_card.html" with account=account status="churned" %}
                     {% endif %}
                 {% endfor %}
             </div>
         </div>
     </div>
 </div>
+<!-- ... existing code ... -->
 
 <style>
 .kanban-column { min-width: 300px; flex: 1; }
@@ -95,8 +97,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function handleDragStart(e) {
         draggedCard = this;
-        setTimeout(() => this.classList.add('dragging'), 0);
+        this.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', this.dataset.accountId);
     }
 
     function handleDragEnd() {
@@ -107,7 +110,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleDragOver(e) {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        return false;
     }
 
     function handleDragEnter(e) {
@@ -153,6 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
+            console.error('Error:', error);
             alert('Network error: ' + error);
         });
     }

@@ -1,126 +1,217 @@
-{% extends "products/base.html" %}
+{% extends 'products/base.html' %}
 
-{% block title %}{% if object %}Edit {{ object.name }}{% else %}New Product{% endif %} - SalesCompass{% endblock %}
+{% block title %}Competitor Mapping{% endblock %}
 
 {% block content %}
-<h1 class="block-title fw-bold mb-0">{% if object %}Edit Product{% else %}New Product{% endif %}</h1>
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Competitor Mapping</h1>
+    </div>
 
-<form method="post">
-    {% csrf_token %}
     <div class="row">
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label for="{{ form.name.id_for_label }}" class="form-label">Product Name *</label>
-                {{ form.name }}
-                {% if form.name.errors %}
-                    <div class="text-danger">{{ form.name.errors }}</div>
-                {% endif %}
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.sku.id_for_label }}" class="form-label">SKU *</label>
-                {{ form.sku }}
-                <div class="form-text">Stock Keeping Unit (e.g., TECH-LAPTOP-001)</div>
-                {% if form.sku.errors %}
-                    <div class="text-danger">{{ form.sku.errors }}</div>
-                {% endif %}
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.upc.id_for_label }}" class="form-label">UPC</label>
-                {{ form.upc }}
-                <div class="form-text">Universal Product Code (12 digits)</div>
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
-                {{ form.category }}
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.tags.id_for_label }}" class="form-label">Tags</label>
-                {{ form.tags }}
-                <div class="form-text">Comma-separated (e.g., laptop, tech, business)</div>
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
-                {{ form.description }}
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label for="{{ form.base_price.id_for_label }}" class="form-label">Base Price *</label>
-                {{ form.base_price }}
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.currency.id_for_label }}" class="form-label">Currency</label>
-                {{ form.currency }}
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.pricing_model.id_for_label }}" class="form-label">Pricing Model</label>
-                {{ form.pricing_model }}
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">ESG Certified</label>
-                <div class="form-check">
-                    {{ form.esg_certified }}
-                    <label class="form-check-label">This product is ESG certified</label>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Select Product</h5>
+                </div>
+                <div class="card-body">
+                    {% if product %}
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">{{ product.product_name }}</h6>
+                            <small class="text-muted">{{ product.sku }}</small>
+                        </div>
+                        <a href="?product_id=" class="btn btn-sm btn-outline-primary">Change</a>
+                    </div>
+                    {% else %}
+                    <form method="get">
+                        <div class="mb-3">
+                            <label for="product_id" class="form-label">Select a Product</label>
+                            <select name="product_id" id="product_id" class="form-select" onchange="this.form.submit()">
+                                <option value="">-- Select Product --</option>
+                                {% for p in all_products %}
+                                <option value="{{ p.id }}" {% if p.id == product.id %}selected{% endif %}>
+                                    {{ p.product_name }} ({{ p.sku }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </form>
+                    {% endif %}
+                    
+                    {% if product %}
+                    <div class="mt-3">
+                        <a href="{% url 'products:product_detail' product.pk %}" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-eye"></i> View Product Details
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
-
-            <div class="mb-3">
-                <label for="{{ form.carbon_footprint.id_for_label }}" class="form-label">Carbon Footprint</label>
-                {{ form.carbon_footprint }}
-                <div class="form-text">kg CO2e per unit</div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">ESG Certifications</label>
-                {{ form.esg_certifications }}
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.sustainability_notes.id_for_label }}" class="form-label">Sustainability Notes</label>
-                {{ form.sustainability_notes }}
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.tco2e_saved.id_for_label }}" class="form-label">tCO2e Saved</label>
-                {{ form.tco2e_saved }}
-                <div class="form-text">Tonnes of CO2e saved by customer</div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Availability</label>
-                <div class="row">
-                    <div class="col-md-6">
-                        {{ form.available_from }}
-                        <label for="{{ form.available_from.id_for_label }}" class="form-label">Available From</label>
-                    </div>
-                    <div class="col-md-6">
-                        {{ form.available_to }}
-                        <label for="{{ form.available_to.id_for_label }}" class="form-label">Available To</label>
-                    </div>
+            
+            {% if product %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Add Competitor</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="our_product" value="{{ product.id }}">
+                        
+                        <div class="mb-3">
+                            <label for="{{ competitor_form.competitor_name.id_for_label }}" class="form-label">
+                                {{ competitor_form.competitor_name.label }} *
+                            </label>
+                            {{ competitor_form.competitor_name }}
+                            {% if competitor_form.competitor_name.errors %}
+                                <div class="text-danger">{{ competitor_form.competitor_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ competitor_form.competitor_product_name.id_for_label }}" class="form-label">
+                                {{ competitor_form.competitor_product_name.label }} *
+                            </label>
+                            {{ competitor_form.competitor_product_name }}
+                            {% if competitor_form.competitor_product_name.errors %}
+                                <div class="text-danger">{{ competitor_form.competitor_product_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ competitor_form.competitor_sku.id_for_label }}" class="form-label">
+                                {{ competitor_form.competitor_sku.label }}
+                            </label>
+                            {{ competitor_form.competitor_sku }}
+                            {% if competitor_form.competitor_sku.errors %}
+                                <div class="text-danger">{{ competitor_form.competitor_sku.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ competitor_form.price_difference_percent.id_for_label }}" class="form-label">
+                                {{ competitor_form.price_difference_percent.label }}
+                            </label>
+                            <div class="input-group">
+                                {{ competitor_form.price_difference_percent }}
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div class="form-text">Positive = More expensive than our product</div>
+                            <div class="form-text">Negative = Cheaper than our product</div>
+                            {% if competitor_form.price_difference_percent.errors %}
+                                <div class="text-danger">{{ competitor_form.price_difference_percent.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">{{ competitor_form.is_direct_competitor.label }}</label>
+                            <div class="form-check">
+                                {{ competitor_form.is_direct_competitor }}
+                                <label class="form-check-label" for="{{ competitor_form.is_direct_competitor.id_for_label }}">
+                                    {{ competitor_form.is_direct_competitor.label }}
+                                </label>
+                            </div>
+                            {% if competitor_form.is_direct_competitor.errors %}
+                                <div class="text-danger">{{ competitor_form.is_direct_competitor.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ competitor_form.competitive_advantage.id_for_label }}" class="form-label">
+                                {{ competitor_form.competitive_advantage.label }}
+                            </label>
+                            {{ competitor_form.competitive_advantage }}
+                            {% if competitor_form.competitive_advantage.errors %}
+                                <div class="text-danger">{{ competitor_form.competitive_advantage.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-plus-circle"></i> Add Competitor Mapping
+                        </button>
+                    </form>
                 </div>
             </div>
-
-            <div class="mb-3 form-check">
-                {{ form.is_active }}
-                <label class="form-check-label">Active</label>
+            {% endif %}
+        </div>
+        
+        <div class="col-md-8">
+            {% if product %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Competitor Mappings for {{ product.product_name }}</h5>
+                </div>
+                <div class="card-body">
+                    {% if competitors %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Competitor</th>
+                                    <th>Product</th>
+                                    <th>SKU</th>
+                                    <th>Price Difference</th>
+                                    <th>Direct</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for competitor in competitors %}
+                                <tr>
+                                    <td>{{ competitor.competitor_name }}</td>
+                                    <td>{{ competitor.competitor_product_name }}</td>
+                                    <td>{{ competitor.competitor_sku|default:"—" }}</td>
+                                    <td>
+                                        {% if competitor.price_difference_percent > 0 %}
+                                            <span class="text-danger">+{{ competitor.price_difference_percent }}%</span>
+                                        {% elif competitor.price_difference_percent < 0 %}
+                                            <span class="text-success">{{ competitor.price_difference_percent }}%</span>
+                                        {% else %}
+                                            <span class="text-muted">0%</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if competitor.is_direct_competitor %}
+                                            <span class="badge bg-success">Yes</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">No</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'products:competitorproduct_update' competitor.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{% url 'products:competitorproduct_delete' competitor.pk %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-binoculars display-5 text-muted mb-3"></i>
+                        <h5>No competitor mappings found</h5>
+                        <p class="text-muted">Add competitor products to enable competitive analysis for {{ product.product_name }}.</p>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-binoculars display-4 text-muted mb-3"></i>
+                    <h5>Select a Product to View Competitor Mappings</h5>
+                    <p class="text-muted">
+                        Choose a product from the dropdown to view and manage its competitor mappings.
+                    </p>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
-
-    <div class="d-flex gap-2 mt-3">
-        <button type="submit" class="btn btn-primary">
-            {% if object %}Update Product{% else %}Create Product{% endif %}
-        </button>
-        <a href="{% url 'products:product_list' %}" class="btn btn-secondary">Cancel</a>
-    </div>
-</form>
+</div>
 {% endblock %}

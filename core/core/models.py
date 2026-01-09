@@ -13,7 +13,7 @@ class TimeStampedModel(models.Model):
     
     class Meta:
         abstract = True
-
+ 
 class User(AbstractUser):
     id = models.AutoField(primary_key=True)
     email = models.EmailField(unique=True)
@@ -47,10 +47,21 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
 
+    def get_full_name(self):
+        """
+        Return the first_name plus the last_name, with a space in between.
+        """
+        full_name = '%s %s' % (self.first_name, self.last_name)
+        return full_name.strip()
+
+    def get_short_name(self):
+        """Return the short name for the user."""
+        return self.first_name
+
     def calculate_avg_order_value(self):
         """Calculate the average order value from all payments made by this user"""
         from django.db.models import Avg
-        from core.billing.models import Payment
+        from billing.models import Payment
         
         # Get all payments related to this user through their invoices and subscriptions
         avg_value = Payment.objects.filter(
@@ -64,7 +75,7 @@ class User(AbstractUser):
         """Calculate retention rate based on subscription renewals"""
         # This is a simplified calculation - in practice, you might want to consider
         # more complex factors like subscription duration, gaps in service, etc.
-        from core.billing.models import Subscription
+        from billing.models import Subscription
         subscriptions = Subscription.objects.filter(user=self)
         
         if not subscriptions.exists():
@@ -84,7 +95,7 @@ class User(AbstractUser):
         """Calculate how many purchases the customer makes per year"""
         from django.db.models import Count
         from datetime import datetime, timedelta
-        from core.billing.models import Payment
+        from billing.models import Payment
         
         # Count successful payments in the last year
         one_year_ago = datetime.now() - timedelta(days=365)

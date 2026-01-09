@@ -12,7 +12,13 @@ django-celery-beat>=2.5.0
 redis>=5.0.0
 djangorestframework>=3.14.0
 channels>=4.0.0
+channels-redis>=4.0.0
 daphne>=4.0.0
 elasticsearch>=7.0.0
 drf-spectacular>=0.27.0
-dj-database-url>=2.1.0scikit-learn
+drf-spectacular-sidecar>=2024.1.1
+django-crispy-forms>=2.0
+django-filter>=23.0
+dj-database-url>=2.1.0
+scikit-learn
+weasyprint>=60.0.0

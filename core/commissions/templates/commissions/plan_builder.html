@@ -1,0 +1,425 @@
+<!-- core/commissions/templates/commissions/plan_builder.html -->
+{% extends 'commissions/base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Visual Plan Builder</h1>
+        <div>
+            <button class="btn btn-sm btn-primary me-2" id="save-plan-btn">
+                <i class="fas fa-save"></i> Save Plan
+            </button>
+            <a href="{% url 'commissions:plan_list' %}" class="btn btn-sm btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Plan Configuration</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="plan-name" class="form-label">Plan Name</label>
+                                <input type="text" class="form-control" id="plan-name" placeholder="Enter plan name">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="plan-description" class="form-label">Description</label>
+                                <textarea class="form-control" id="plan-description" rows="2" placeholder="Enter plan description"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="plan-basis" class="form-label">Basis</label>
+                                <select class="form-select" id="plan-basis">
+                                    <option value="revenue">Total Revenue</option>
+                                    <option value="margin">Gross Margin/Profit</option>
+                                    <option value="units">Units Sold</option>
+                                    <option value="acv">Annual Contract Value (ACV)</option>
+                                    <option value="mrr">Monthly Recurring Revenue (MRR)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="plan-period" class="form-label">Period</label>
+                                <select class="form-select" id="plan-period">
+                                    <option value="monthly">Monthly</option>
+                                    <option value="quarterly">Quarterly</option>
+                                    <option value="annually">Annually</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Commission Rules</h6>
+                    <button class="btn btn-sm btn-success" id="add-rule-btn">
+                        <i class="fas fa-plus"></i> Add Rule
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="rules-container">
+                        <div class="text-center py-4 text-muted" id="no-rules-message">
+                            <p>No rules defined yet.</p>
+                            <p>Add a rule to define how commissions are calculated.</p>
+                        </div>
+                        <div id="rules-list" class="list-group" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rule Modal -->
+<div class="modal fade" id="ruleModal" tabindex="-1" aria-labelledby="ruleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ruleModalLabel">Commission Rule</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="rule-product" class="form-label">Product</label>
+                            <select class="form-select" id="rule-product">
+                                <option value="">All Products</option>
+                                {% for product in products %}
+                                <option value="{{ product.id }}">{{ product.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="rule-category" class="form-label">Product Category</label>
+                            <input type="text" class="form-control" id="rule-category" placeholder="Enter product category">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="rule-type" class="form-label">Rate Type</label>
+                            <select class="form-select" id="rule-type">
+                                <option value="flat">Flat Rate</option>
+                                <option value="tiered">Tiered Rate</option>
+                                <option value="accelerator">Accelerator</option>
+                                <option value="decelerator">Decelerator</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="rule-rate" class="form-label">Rate Value (%)</label>
+                            <input type="number" class="form-control" id="rule-rate" step="0.01" placeholder="Enter rate value" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tiered Rate Fields -->
+                <div id="tiered-fields" class="row d-none">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="rule-tier-min" class="form-label">Minimum Amount</label>
+                            <input type="number" class="form-control" id="rule-tier-min" step="0.01" value="0" placeholder="Minimum sales amount for this tier">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="rule-tier-max" class="form-label">Maximum Amount</label>
+                            <input type="number" class="form-control" id="rule-tier-max" step="0.01" placeholder="Maximum sales amount for this tier (leave blank for infinity)">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Accelerator/Decelerator Fields -->
+                <div id="performance-fields" class="row d-none">
+                    <div class="col-md-12">
+                        <div class="mb-3">
+                            <label for="rule-threshold" class="form-label">Performance Threshold (%)</label>
+                            <input type="number" class="form-control" id="rule-threshold" step="0.01" placeholder="Performance threshold for accelerator/decelerator (e.g., 90 for 90% attainment)">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Split Commission Fields -->
+                <div id="split-fields" class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="rule-split-user" class="form-label">Split With</label>
+                            <select class="form-select" id="rule-split-user">
+                                <option value="">No split</option>
+                                {% for user in users %}
+                                <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="rule-split-pct" class="form-label">Split Percentage (%)</label>
+                            <input type="number" class="form-control" id="rule-split-pct" step="0.01" value="50.00" placeholder="Percentage of commission to give to the split user">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-rule-btn">Save Rule</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let rules = [];
+    let currentRuleId = 0;
+    
+    // Show/hide fields based on rule type selection
+    const ruleTypeSelect = document.getElementById('rule-type');
+    const tieredFields = document.getElementById('tiered-fields');
+    const performanceFields = document.getElementById('performance-fields');
+    
+    if (ruleTypeSelect) {
+        ruleTypeSelect.addEventListener('change', function() {
+            const selectedValue = this.value;
+            
+            // Hide all conditional fields first
+            tieredFields.classList.add('d-none');
+            performanceFields.classList.add('d-none');
+            
+            // Show relevant fields based on selection
+            if (selectedValue === 'tiered') {
+                tieredFields.classList.remove('d-none');
+                performanceFields.classList.add('d-none');
+            } else if (selectedValue === 'accelerator' || selectedValue === 'decelerator') {
+                performanceFields.classList.remove('d-none');
+                tieredFields.classList.add('d-none');
+            }
+        });
+    }
+    
+    // Add rule button click handler
+    document.getElementById('add-rule-btn').addEventListener('click', function() {
+        // Reset form
+        document.getElementById('rule-product').value = '';
+        document.getElementById('rule-category').value = '';
+        document.getElementById('rule-type').value = 'flat';
+        document.getElementById('rule-rate').value = '';
+        document.getElementById('rule-tier-min').value = '0';
+        document.getElementById('rule-tier-max').value = '';
+        document.getElementById('rule-threshold').value = '';
+        document.getElementById('rule-split-user').value = '';
+        document.getElementById('rule-split-pct').value = '50.00';
+        
+        // Hide conditional fields
+        tieredFields.classList.add('d-none');
+        performanceFields.classList.add('d-none');
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('ruleModal'));
+        modal.show();
+    });
+    
+    // Save rule button click handler
+    document.getElementById('save-rule-btn').addEventListener('click', function() {
+        // Get form values
+        const rule = {
+            id: currentRuleId++,
+            product: document.getElementById('rule-product').value,
+            category: document.getElementById('rule-category').value,
+            type: document.getElementById('rule-type').value,
+            rate: document.getElementById('rule-rate').value,
+            tierMin: document.getElementById('rule-tier-min').value || '0',
+            tierMax: document.getElementById('rule-tier-max').value,
+            threshold: document.getElementById('rule-threshold').value,
+            splitUser: document.getElementById('rule-split-user').value,
+            splitPct: document.getElementById('rule-split-pct').value || '50.00'
+        };
+        
+        // Add to rules array
+        rules.push(rule);
+        
+        // Update UI
+        updateRulesList();
+        
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('ruleModal'));
+        modal.hide();
+    });
+    
+    // Update the rules list display
+    function updateRulesList() {
+        const rulesList = document.getElementById('rules-list');
+        const noRulesMessage = document.getElementById('no-rules-message');
+        
+        if (rules.length > 0) {
+            noRulesMessage.style.display = 'none';
+            rulesList.style.display = 'block';
+            
+            let html = '';
+            rules.forEach(rule => {
+                const productText = rule.product ? getProductById(rule.product) : (rule.category || 'All Products');
+                const rateTypeText = getRateTypeText(rule.type);
+                
+                html += `
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold">${productText}</div>
+                        <div class="small text-muted">${rateTypeText}: ${rule.rate}%</div>
+                        ${rule.type === 'tiered' ? `<div class="small text-info">Tier: $${rule.tierMin} - $${rule.tierMax || '∞'}</div>` : ''}
+                        ${rule.type === 'accelerator' || rule.type === 'decelerator' ? `<div class="small text-info">Threshold: ${rule.threshold}%</div>` : ''}
+                        ${rule.splitUser ? `<div class="small text-success">Split: ${rule.splitPct}%</div>` : ''}
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-info edit-rule-btn" data-rule-id="${rule.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-rule-btn" data-rule-id="${rule.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>`;
+            });
+            
+            rulesList.innerHTML = html;
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-rule-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const ruleId = parseInt(this.dataset.ruleId);
+                    rules = rules.filter(rule => rule.id !== ruleId);
+                    updateRulesList();
+                });
+            });
+            
+            // Add event listeners to edit buttons
+            document.querySelectorAll('.edit-rule-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const ruleId = parseInt(this.dataset.ruleId);
+                    const rule = rules.find(r => r.id === ruleId);
+                    
+                    if (rule) {
+                        // Fill form with rule data
+                        document.getElementById('rule-product').value = rule.product;
+                        document.getElementById('rule-category').value = rule.category;
+                        document.getElementById('rule-type').value = rule.type;
+                        document.getElementById('rule-rate').value = rule.rate;
+                        document.getElementById('rule-tier-min').value = rule.tierMin;
+                        document.getElementById('rule-tier-max').value = rule.tierMax;
+                        document.getElementById('rule-threshold').value = rule.threshold;
+                        document.getElementById('rule-split-user').value = rule.splitUser;
+                        document.getElementById('rule-split-pct').value = rule.splitPct;
+                        
+                        // Show relevant fields
+                        if (rule.type === 'tiered') {
+                            tieredFields.classList.remove('d-none');
+                        } else if (rule.type === 'accelerator' || rule.type === 'decelerator') {
+                            performanceFields.classList.remove('d-none');
+                        }
+                        
+                        // Remove the rule from the list temporarily
+                        rules = rules.filter(r => r.id !== ruleId);
+                        
+                        // Show modal
+                        const modal = new bootstrap.Modal(document.getElementById('ruleModal'));
+                        modal.show();
+                    }
+                });
+            });
+        } else {
+            noRulesMessage.style.display = 'block';
+            rulesList.style.display = 'none';
+        }
+    }
+    
+    // Helper function to get product name by ID
+    function getProductById(productId) {
+        const productSelect = document.getElementById('rule-product');
+        const option = productSelect.querySelector(`option[value="${productId}"]`);
+        return option ? option.text : 'Product';
+    }
+    
+    // Helper function to get rate type display text
+    function getRateTypeText(type) {
+        const typeMap = {
+            'flat': 'Flat Rate',
+            'tiered': 'Tiered Rate',
+            'accelerator': 'Accelerator',
+            'decelerator': 'Decelerator'
+        };
+        return typeMap[type] || type;
+    }
+    
+    // Save plan button click handler
+    document.getElementById('save-plan-btn').addEventListener('click', function() {
+        // Get plan data
+        const planData = {
+            name: document.getElementById('plan-name').value,
+            description: document.getElementById('plan-description').value,
+            basis: document.getElementById('plan-basis').value,
+            period: document.getElementById('plan-period').value,
+            rules: rules
+        };
+        
+        // Validate required fields
+        if (!planData.name) {
+            alert('Please enter a plan name');
+            return;
+        }
+        
+        if (rules.length === 0) {
+            alert('Please add at least one rule');
+            return;
+        }
+        
+        // Send data to server (this would be an AJAX call in a real implementation)
+        console.log('Plan data to save:', planData);
+        
+        // In a real implementation, you would send this to the server
+        // fetch('/api/commission-plans/', {
+        //     method: 'POST',
+        //     headers: {
+        //         'Content-Type': 'application/json',
+        //         'X-CSRFToken': getCookie('csrftoken')
+        //     },
+        //     body: JSON.stringify(planData)
+        // })
+        // .then(response => response.json())
+        // .then(data => {
+        //     if (data.success) {
+        //         alert('Plan saved successfully!');
+        //         window.location.href = '/commissions/plans/';
+        //     } else {
+        //         alert('Error saving plan: ' + data.error);
+        //     }
+        // });
+        
+        alert('Plan would be saved with ' + rules.length + ' rules. (Implementation pending)');
+    });
+});
+</script>
+{% endblock %}

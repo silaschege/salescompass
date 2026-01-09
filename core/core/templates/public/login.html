@@ -1,57 +1,77 @@
 {% extends "public/base.html" %}
 {% load static %}
 
-{% block title %}Log In | SalesCompass{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'core/css/public-design-system.css' %}">
-{% endblock %}
+{% block title %}Sign In | SalesCompass{% endblock %}
 
 {% block content %}
-<section class="py-5 bg-light d-flex align-items-center" style="min-height: 80vh;">
-  <div class="container">
+<section class="section-large d-flex align-items-center justify-content-center position-relative overflow-hidden"
+  style="min-height: 100vh;">
+  <!-- Background Elements -->
+  <div class="hero-glow" style="opacity: 0.3; transform: translate(-30%, -30%);"></div>
+  <div class="hero-glow"
+    style="background: radial-gradient(circle, var(--color-primary-subtle) 0%, transparent 70%); bottom: -20%; right: -10%; opacity: 0.4;">
+  </div>
+
+  <div class="container position-relative z-1">
     <div class="row justify-content-center">
-      <div class="col-md-6 col-lg-5">
-        <div class="card border-0 shadow-lg rounded-4 p-4">
-          <div class="card-body p-4">
-            <div class="text-center mb-4">
-              <h2 class="fw-bold mb-1">Welcome back</h2>
-              <p class="text-muted">Sign in to your account</p>
+      <div class="col-md-8 col-lg-5 col-xl-4">
+
+        <!-- Branding -->
+        <div class="text-center mb-10">
+          <div
+            class="d-inline-flex align-items-center justify-content-center bg-white text-primary rounded-4 shadow-lg mb-5"
+            style="width: 72px; height: 72px;">
+            <i class="bi bi-compass-fill fs-1"></i>
+          </div>
+          <h2 class="fw-extrabold text-dark mb-2">Welcome Back</h2>
+          <p class="text-muted">Enter your details to access your dashboard.</p>
+        </div>
+
+        <!-- Login Card -->
+        <div class="glass-card p-6 p-lg-8 shadow-3xl bg-white border border-light">
+          <form method="post" action="{% url 'core:login' %}">
+            {% csrf_token %}
+
+            <div class="mb-5">
+              <label class="form-label extra-small fw-bold text-uppercase text-muted tracking-widest mb-3">Work
+                Email</label>
+              <div class="position-relative">
+                <i class="bi bi-envelope position-absolute top-50 start-0 translate-middle-y ms-4 text-muted"></i>
+                <input type="email" name="username" class="form-control py-3 ps-5 border-light bg-light bg-opacity-50"
+                  placeholder="jane@company.com" required>
+              </div>
             </div>
 
-            <form method="post" action="{% url 'core:login' %}">
-              {% csrf_token %}
-
-              <div class="mb-3">
-                <label class="form-label fw-semibold">Email address</label>
-                <input type="email" name="username" class="form-control form-control-lg bg-light border-0"
-                  placeholder="name@company.com" required>
+            <div class="mb-6">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <label
+                  class="form-label extra-small fw-bold text-uppercase text-muted tracking-widest mb-0">Password</label>
+                <a href="#" class="extra-small fw-bold text-primary text-decoration-none">Forgot?</a>
               </div>
-
-              <div class="mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                  <label class="form-label fw-semibold mb-0">Password</label>
-                  <a href="#" class="text-decoration-none text-primary small">Forgot password?</a>
-                </div>
-                <input type="password" name="password" class="form-control form-control-lg bg-light border-0"
-                  placeholder="••••••••" required>
+              <div class="position-relative">
+                <i class="bi bi-lock position-absolute top-50 start-0 translate-middle-y ms-4 text-muted"></i>
+                <input type="password" name="password"
+                  class="form-control py-3 ps-5 border-light bg-light bg-opacity-50" placeholder="••••••••" required>
               </div>
+            </div>
 
-              <div class="d-grid mb-4">
-                <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold">
-                  Sign in
-                </button>
-              </div>
+            <button type="submit" class="btn btn-primary btn-lg w-100 py-3 fw-bold mb-6 shadow-lg">
+              Sign In
+            </button>
 
-              <div class="text-center">
-                <p class="text-muted small mb-0">
-                  Don't have an account? <a href="{% url 'core:try_free' %}"
-                    class="text-primary fw-bold text-decoration-none">Start free trial</a>
-                </p>
-              </div>
-            </form>
-          </div>
+            <div class="text-center">
+              <p class="extra-small text-muted mb-0">
+                New here? <a href="{% url 'core:try_free' %}" class="text-primary fw-bold text-decoration-none">Start a
+                  14-day trial</a>
+              </p>
+            </div>
+          </form>
         </div>
+
+        <div class="text-center mt-8">
+          <p class="extra-small text-muted opacity-50">&copy; 2025 SalesCompass Inc. Secured by Enterprise Armor.</p>
+        </div>
+
       </div>
     </div>
   </div>

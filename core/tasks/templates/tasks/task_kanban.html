@@ -5,245 +5,198 @@
 {% block content %}
 <div class="header-bar mb-4">
     <div class="container">
-        <h1 class="block-title">Tasks Kanban Board</h1>
-        <p class="text-white text-center lead">Drag and drop tasks between columns</p>
+        <h1 class="block-title">Task Pipeline</h1>
+        <p class="text-white text-center lead">Visualise and manage your task workflow</p>
     </div>
 </div>
 
-<div class="container">
-    <!-- Action Buttons -->
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <a href="{% url 'tasks:create' %}" class="btn btn-primary">+ New Task</a>
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex gap-2">
+            <a href="{% url 'tasks:create' %}" class="btn btn-primary shadow-sm">
+                <i class="bi bi-plus-lg"></i> New Task
+            </a>
+            <a href="{% url 'tasks:dashboard' %}" class="btn btn-outline-secondary">Dashboard</a>
         </div>
-        <div class="col-md-6 text-end">
-            <div class="btn-group" role="group">
-                <a href="{% url 'tasks:dashboard' %}" class="btn btn-outline-secondary">Dashboard</a>
-                <a href="{% url 'tasks:calendar' %}" class="btn btn-outline-secondary">Calendar</a>
-                <a href="{% url 'tasks:list' %}" class="btn btn-outline-secondary">List View</a>
+        <div class="d-flex gap-2">
+            <div class="btn-group">
+                <a href="{% url 'tasks:list' %}" class="btn btn-outline-primary" title="List View">
+                    <i class="bi bi-list-ul"></i>
+                </a>
+                <a href="{% url 'tasks:kanban' %}" class="btn btn-primary active" title="Kanban View">
+                    <i class="bi bi-grid-3x3-gap"></i>
+                </a>
+                <a href="{% url 'tasks:calendar' %}" class="btn btn-outline-primary" title="Calendar View">
+                    <i class="bi bi-calendar3"></i>
+                </a>
             </div>
         </div>
     </div>
 
-    <!-- Kanban Board -->
-    <div class="row" id="kanban-board">
-        <!-- To Do Column -->
-        <div class="col-md-3">
-            <div class="kanban-column">
-                <div class="card bg-light">
-                    <div class="card-header bg-secondary text-white">
-                        <h5 class="mb-0">To Do 
-                            <span class="badge bg-white text-secondary ms-2">{{ todo_tasks.count }}</span>
-                        </h5>
-                    </div>
-                    <div class="card-body p-2" data-status="todo">
-                        {% for task in todo_tasks %}
-                            {% include "tasks/task_kanban_card.html" with task=task %}
-                        {% endfor %}
-                    </div>
+    <div class="row g-3 kanban-board overflow-auto pb-4" style="min-height: 70vh; flex-wrap: nowrap;">
+        {% for status, tasks in tasks_by_status.items %}
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3" style="min-width: 300px;">
+            <div class="kanban-column" data-status="{{ status.status_name }}">
+                <div class="kanban-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold">{{ status.label }}</h6>
+                    <span class="badge bg-white text-primary border shadow-sm">{{ tasks.count }}</span>
+                </div>
+                <div class="kanban-cards-container d-flex flex-column gap-2" style="min-height: 100px;">
+                    {% for task in tasks %}
+                    {% include "tasks/task_kanban_card.html" with task=task %}
+                    {% endfor %}
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'tasks:create' %}?status_ref={{ status.id }}"
+                        class="btn btn-sm btn-link text-muted text-decoration-none w-100 text-start">
+                        <i class="bi bi-plus-lg"></i> Add a task
+                    </a>
                 </div>
             </div>
         </div>
-
-        <!-- In Progress Column -->
-        <div class="col-md-3">
-            <div class="kanban-column">
-                <div class="card bg-light">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="mb-0">In Progress 
-                            <span class="badge bg-white text-warning ms-2">{{ in_progress_tasks.count }}</span>
-                        </h5>
-                    </div>
-                    <div class="card-body p-2" data-status="in_progress">
-                        {% for task in in_progress_tasks %}
-                            {% include "tasks/task_kanban_card.html" with task=task %}
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Completed Column -->
-        <div class="col-md-3">
-            <div class="kanban-column">
-                <div class="card bg-light">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0">Completed 
-                                                        <span class="badge bg-white text-success ms-2">{{ completed_tasks.count }}</span>
-                        </h5>
-                    </div>
-                    <div class="card-body p-2" data-status="completed">
-                        {% for task in completed_tasks %}
-                            {% include "tasks/task_kanban_card.html" with task=task %}
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Cancelled Column -->
-        <div class="col-md-3">
-            <div class="kanban-column">
-                <div class="card bg-light">
-                    <div class="card-header bg-dark text-white">
-                        <h5 class="mb-0">Cancelled 
-                            <span class="badge bg-white text-dark ms-2">{{ cancelled_tasks.count }}</span>
-                        </h5>
-                    </div>
-                    <div class="card-body p-2" data-status="cancelled">
-                        {% for task in cancelled_tasks %}
-                            {% include "tasks/task_kanban_card.html" with task=task %}
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
+        {% endfor %}
     </div>
 </div>
 
-<div class="footer-bar mt-5">
-    <div class="container">
-        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
-    </div>
-</div>
+{% csrf_token %}
 {% endblock %}
 <!-- Kanban Card Template (included above) -->
 {% block extra_head %}
 <style>
-.kanban-column {
-    min-height: 500px;
-}
+    .kanban-column {
+        min-height: 500px;
+    }
 
-.card-header h5 {
-    margin-bottom: 0;
-    font-size: 1rem;
-}
+    .card-header h5 {
+        margin-bottom: 0;
+        font-size: 1rem;
+    }
 
-.kanban-card {
-    background: white;
-    border: 1px solid #e9ecef;
-    border-radius: 0.375rem;
-    padding: 12px;
-    margin-bottom: 12px;
-    cursor: move;
-    transition: all 0.2s ease;
-}
+    .kanban-card {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 0.375rem;
+        padding: 12px;
+        margin-bottom: 12px;
+        cursor: move;
+        transition: all 0.2s ease;
+    }
 
-.kanban-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-}
+    .kanban-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
 
-.kanban-card h6 {
-    margin-bottom: 8px;
-    font-size: 0.95rem;
-    font-weight: 600;
-}
+    .kanban-card h6 {
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
 
-.kanban-card p {
-    font-size: 0.85rem;
-    margin-bottom: 8px;
-    color: #6c757d;
-}
+    .kanban-card p {
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+        color: #6c757d;
+    }
 
-.kanban-card .card-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.75rem;
-    color: #6c757d;
-}
+    .kanban-card .card-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.75rem;
+        color: #6c757d;
+    }
 
-.kanban-card .badge {
-    font-size: 0.65rem;
-    padding: 0.2em 0.4em;
-}
+    .kanban-card .badge {
+        font-size: 0.65rem;
+        padding: 0.2em 0.4em;
+    }
 
-.overdue-task {
-    border-left: 4px solid #dc3545;
-}
+    .overdue-task {
+        border-left: 4px solid #dc3545;
+    }
 
-.high-priority {
-    border-left: 4px solid #dc3545;
-}
+    .high-priority {
+        border-left: 4px solid #dc3545;
+    }
 
-.medium-priority {
-    border-left: 4px solid #ffc107;
-}
+    .medium-priority {
+        border-left: 4px solid #ffc107;
+    }
 
-.low-priority {
-    border-left: 4px solid #6c757d;
-}
+    .low-priority {
+        border-left: 4px solid #6c757d;
+    }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Make cards draggable
-    const cards = document.querySelectorAll('.kanban-card');
-    const columns = document.querySelectorAll('.card-body[data-status]');
-    
-    cards.forEach(card => {
-        card.setAttribute('draggable', true);
-        
-        card.addEventListener('dragstart', function(e) {
-            e.dataTransfer.setData('text/plain', this.dataset.taskId);
-            this.classList.add('dragging');
+    document.addEventListener('DOMContentLoaded', function () {
+        // Make cards draggable
+        const cards = document.querySelectorAll('.kanban-card');
+        const columns = document.querySelectorAll('.card-body[data-status]');
+
+        cards.forEach(card => {
+            card.setAttribute('draggable', true);
+
+            card.addEventListener('dragstart', function (e) {
+                e.dataTransfer.setData('text/plain', this.dataset.taskId);
+                this.classList.add('dragging');
+            });
+
+            card.addEventListener('dragend', function (e) {
+                this.classList.remove('dragging');
+            });
         });
-        
-        card.addEventListener('dragend', function(e) {
-            this.classList.remove('dragging');
+
+        columns.forEach(column => {
+            column.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                this.classList.add('drag-over');
+            });
+
+            column.addEventListener('dragleave', function (e) {
+                this.classList.remove('drag-over');
+            });
+
+            column.addEventListener('drop', function (e) {
+                e.preventDefault();
+                this.classList.remove('drag-over');
+
+                const taskId = e.dataTransfer.getData('text/plain');
+                const newStatus = this.dataset.status;
+                const card = document.querySelector(`[data-task-id="${taskId}"]`);
+
+                if (card && card.dataset.status !== newStatus) {
+                    updateTaskStatus(taskId, newStatus);
+                    // Move the card visually
+                    this.appendChild(card);
+                    card.dataset.status = newStatus;
+                }
+            });
         });
-    });
-    
-    columns.forEach(column => {
-        column.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            this.classList.add('drag-over');
-        });
-        
-        column.addEventListener('dragleave', function(e) {
-            this.classList.remove('drag-over');
-        });
-        
-        column.addEventListener('drop', function(e) {
-            e.preventDefault();
-            this.classList.remove('drag-over');
-            
-            const taskId = e.dataTransfer.getData('text/plain');
-            const newStatus = this.dataset.status;
-            const card = document.querySelector(`[data-task-id="${taskId}"]`);
-            
-            if (card && card.dataset.status !== newStatus) {
-                updateTaskStatus(taskId, newStatus);
-                // Move the card visually
-                this.appendChild(card);
-                card.dataset.status = newStatus;
-            }
-        });
-    });
-    
-    function updateTaskStatus(taskId, newStatus) {
-        fetch('/tasks/api/update-status/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            },
-            body: JSON.stringify({
-                task_id: taskId,
-                status: newStatus
+
+        function updateTaskStatus(taskId, newStatus) {
+            fetch('/tasks/api/update-status/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({
+                    task_id: taskId,
+                    status: newStatus
+                })
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (!data.success) {
-                alert('Error updating task status: ' + data.error);
-            }
-        })
-        .catch(error => {
-            alert('Error: ' + error);
-        });
-    }
-});
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        alert('Error updating task status: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('Error: ' + error);
+                });
+        }
+    });
 </script>
 {% endblock %}

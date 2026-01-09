@@ -1,0 +1,92 @@
+{% extends "marketing/base.html" %}
+
+{% block title %}Segment Members - {{ segment.name }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Segment Members: {{ segment.name }}</h1>
+        <p class="text-white text-center lead">{{ segment.description }}</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Add Member</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'marketing:add_segment_member' segment.pk %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="lead_id" class="form-label">Select Lead</label>
+                            <select name="lead_id" id="lead_id" class="form-select" required>
+                                <option value="">-- Choose a Lead --</option>
+                                {% for lead in leads %}
+                                <option value="{{ lead.pk }}">{{ lead.first_name }} {{ lead.last_name }} ({{ lead.email
+                                    }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Add to Segment</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6>Segment Stats</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li><strong>Total Members:</strong> {{ members.count }}</li>
+                        <li><strong>Type:</strong> {{ segment.get_segment_type_display }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Member</th>
+                                    <th>Email</th>
+                                    <th>Added On</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for member in members %}
+                                <tr>
+                                    <td>{{ member.contact.first_name }} {{ member.contact.last_name }}</td>
+                                    <td>{{ member.contact.email }}</td>
+                                    <td>{{ member.added_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <form method="post"
+                                            action="{% url 'marketing:remove_segment_member' segment.pk member.pk %}"
+                                            class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-muted">
+                                        No members in this segment yet.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

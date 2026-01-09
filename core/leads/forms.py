@@ -1,5 +1,5 @@
 from django import forms
-from django.forms.widgets import Select
+from django.forms.widgets import Select, TextInput, Textarea, NumberInput, CheckboxInput, DateTimeInput, URLInput
 from core.models import User
 from .models import Lead, LeadSource, LeadStatus, Industry, MarketingChannel, AssignmentRule, ActionType, OperatorType, BehavioralScoringRule, DemographicScoringRule, WebToLeadForm
 from settings_app.models import AssignmentRuleType
@@ -32,10 +32,41 @@ class LeadForm(forms.ModelForm):
             'cac_cost', 'marketing_channel', 'marketing_channel_ref', 'campaign_source', 'lead_acquisition_date'
         ]
         widgets = {
-            'lead_source': DynamicChoiceWidget(choice_model=LeadSource),
-            'status': DynamicChoiceWidget(choice_model=LeadStatus),
-            'industry': DynamicChoiceWidget(choice_model=Industry),
-            'marketing_channel_ref': DynamicChoiceWidget(choice_model=MarketingChannel),
+            # Text inputs
+            'first_name': TextInput(attrs={'class': 'form-control'}),
+            'last_name': TextInput(attrs={'class': 'form-control'}),
+            'email': TextInput(attrs={'class': 'form-control', 'type': 'email'}),
+            'phone': TextInput(attrs={'class': 'form-control'}),
+            'company': TextInput(attrs={'class': 'form-control'}),
+            'job_title': TextInput(attrs={'class': 'form-control'}),
+            'country': TextInput(attrs={'class': 'form-control'}),
+            'title': TextInput(attrs={'class': 'form-control'}),
+            'campaign_source': TextInput(attrs={'class': 'form-control'}),
+            'funding_stage': TextInput(attrs={'class': 'form-control'}),
+            'business_type': TextInput(attrs={'class': 'form-control'}),
+            
+            # Textareas
+            'lead_description': Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            
+            # Selects
+            'lead_source': DynamicChoiceWidget(choice_model=LeadSource, attrs={'class': 'form-select'}),
+            'status': DynamicChoiceWidget(choice_model=LeadStatus, attrs={'class': 'form-select'}),
+            'industry': DynamicChoiceWidget(choice_model=Industry, attrs={'class': 'form-select'}),
+            'marketing_channel_ref': DynamicChoiceWidget(choice_model=MarketingChannel, attrs={'class': 'form-select'}),
+            'account': Select(attrs={'class': 'form-select'}),
+            'owner': Select(attrs={'class': 'form-select'}),
+            'source_ref': Select(attrs={'class': 'form-select'}),
+            'status_ref': Select(attrs={'class': 'form-select'}),
+            'industry_ref': Select(attrs={'class': 'form-select'}),
+            
+            # Numbers
+            'lead_score': NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 100}),
+            'company_size': NumberInput(attrs={'class': 'form-control', 'min': 0}),
+            'annual_revenue': NumberInput(attrs={'class': 'form-control', 'min': 0, 'step': '0.01'}),
+            'cac_cost': NumberInput(attrs={'class': 'form-control', 'min': 0, 'step': '0.01'}),
+            
+            # Dates
+            'lead_acquisition_date': DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
         }
     
     def __init__(self, *args, **kwargs):
@@ -97,7 +128,13 @@ class LeadSourceForm(forms.ModelForm):
         model = LeadSource
         fields = ['source_name', 'label', 'order', 'color', 'icon', 'source_is_active', 'is_system']
         widgets = {
-            'color': forms.TextInput(attrs={'type': 'color'}),
+            'source_name': TextInput(attrs={'class': 'form-control'}),
+            'label': TextInput(attrs={'class': 'form-control'}),
+            'order': NumberInput(attrs={'class': 'form-control'}),
+            'color': TextInput(attrs={'class': 'form-control', 'type': 'color'}),
+            'icon': TextInput(attrs={'class': 'form-control'}),
+            'source_is_active': CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_system': CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
 
@@ -106,12 +143,30 @@ class LeadStatusForm(forms.ModelForm):
         model = LeadStatus
         fields = ['status_name', 'label', 'order', 'color', 'icon', 'status_is_active', 'is_system', 
                   'is_qualified', 'is_closed']
+        widgets = {
+            'status_name': TextInput(attrs={'class': 'form-control'}),
+            'label': TextInput(attrs={'class': 'form-control'}),
+            'order': NumberInput(attrs={'class': 'form-control'}),
+            'color': TextInput(attrs={'class': 'form-control', 'type': 'color'}),
+            'icon': TextInput(attrs={'class': 'form-control'}),
+            'status_is_active': CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_system': CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_qualified': CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_closed': CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
 
 
 class IndustryForm(forms.ModelForm):
     class Meta:
         model = Industry
         fields = ['industry_name', 'label', 'order', 'industry_is_active', 'is_system']
+        widgets = {
+            'industry_name': TextInput(attrs={'class': 'form-control'}),
+            'label': TextInput(attrs={'class': 'form-control'}),
+            'order': NumberInput(attrs={'class': 'form-control'}),
+            'industry_is_active': CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_system': CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
 
 
 class AssignmentRuleForm(forms.ModelForm):
@@ -119,10 +174,13 @@ class AssignmentRuleForm(forms.ModelForm):
         model = AssignmentRule
         fields = ['assignment_rule_name', 'rule_type', 'rule_type_ref', 'criteria', 'assigned_to', 'rule_is_active', 'priority']
         widgets = {
-            'criteria': forms.Textarea(attrs={'rows': 3, 'placeholder': 'JSON format: {"country": "US"}'}),
-            'assigned_to': forms.Select(attrs={'class': 'form-select'}),
-            'rule_type': forms.Select(attrs={'class': 'form-select'}),
-            'rule_type_ref': forms.Select(attrs={'class': 'form-select'}),
+            'assignment_rule_name': TextInput(attrs={'class': 'form-control'}),
+            'rule_type': Select(attrs={'class': 'form-select'}),
+            'rule_type_ref': Select(attrs={'class': 'form-select'}),
+            'criteria': Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'JSON format: {"country": "US"}'}),
+            'assigned_to': Select(attrs={'class': 'form-select'}),
+            'rule_is_active': CheckboxInput(attrs={'class': 'form-check-input'}),
+            'priority': NumberInput(attrs={'class': 'form-control'}),
         }
     
     def __init__(self, *args, **kwargs):
@@ -142,12 +200,26 @@ class ActionTypeForm(forms.ModelForm):
     class Meta:
         model = ActionType
         fields = ['action_type_name', 'label', 'order', 'action_type_is_active', 'is_system']
+        widgets = {
+            'action_type_name': TextInput(attrs={'class': 'form-control'}),
+            'label': TextInput(attrs={'class': 'form-control'}),
+            'order': NumberInput(attrs={'class': 'form-control'}),
+            'action_type_is_active': CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_system': CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
 
 
 class OperatorTypeForm(forms.ModelForm):
     class Meta:
         model = OperatorType
         fields = ['operator_name', 'label', 'order', 'operator_is_active', 'is_system']
+        widgets = {
+            'operator_name': TextInput(attrs={'class': 'form-control'}),
+            'label': TextInput(attrs={'class': 'form-control'}),
+            'order': NumberInput(attrs={'class': 'form-control'}),
+            'operator_is_active': CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_system': CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
 
 
 class BehavioralScoringRuleForm(forms.ModelForm):
@@ -155,8 +227,14 @@ class BehavioralScoringRuleForm(forms.ModelForm):
         model = BehavioralScoringRule
         fields = ['behavioral_scoring_rule_name', 'action_type', 'action_type_ref', 'points', 'time_decay_factor', 'business_impact', 'business_impact_ref', 'rule_is_active']
         widgets = {
-            'action_type_ref': DynamicChoiceWidget(choice_model=ActionType),
-            'business_impact_ref': forms.Select(attrs={'class': 'form-select'}), # Self-referencing might need care
+            'behavioral_scoring_rule_name': TextInput(attrs={'class': 'form-control'}),
+            'action_type': Select(attrs={'class': 'form-select'}),
+            'action_type_ref': DynamicChoiceWidget(choice_model=ActionType, attrs={'class': 'form-select'}),
+            'points': NumberInput(attrs={'class': 'form-control'}),
+            'time_decay_factor': NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'business_impact': Select(attrs={'class': 'form-select'}),
+            'business_impact_ref': Select(attrs={'class': 'form-select'}),
+            'rule_is_active': CheckboxInput(attrs={'class': 'form-check-input'}),
         }
     
     def __init__(self, *args, **kwargs):
@@ -181,7 +259,13 @@ class DemographicScoringRuleForm(forms.ModelForm):
         model = DemographicScoringRule
         fields = ['demographic_scoring_rule_name', 'field_name', 'operator', 'operator_ref', 'field_value', 'points', 'rule_is_active']
         widgets = {
-            'operator_ref': DynamicChoiceWidget(choice_model=OperatorType),
+            'demographic_scoring_rule_name': TextInput(attrs={'class': 'form-control'}),
+            'field_name': TextInput(attrs={'class': 'form-control'}),
+            'operator': Select(attrs={'class': 'form-select'}),
+            'operator_ref': DynamicChoiceWidget(choice_model=OperatorType, attrs={'class': 'form-select'}),
+            'field_value': TextInput(attrs={'class': 'form-control'}),
+            'points': NumberInput(attrs={'class': 'form-control'}),
+            'rule_is_active': CheckboxInput(attrs={'class': 'form-check-input'}),
         }
     
     def __init__(self, *args, **kwargs):
@@ -201,7 +285,13 @@ class MarketingChannelForm(forms.ModelForm):
         model = MarketingChannel
         fields = ['channel_name', 'label', 'order', 'color', 'icon', 'channel_is_active', 'is_system']
         widgets = {
-            'color': forms.TextInput(attrs={'type': 'color'}),
+            'channel_name': TextInput(attrs={'class': 'form-control'}),
+            'label': TextInput(attrs={'class': 'form-control'}),
+            'order': NumberInput(attrs={'class': 'form-control'}),
+            'color': TextInput(attrs={'class': 'form-control', 'type': 'color'}),
+            'icon': TextInput(attrs={'class': 'form-control'}),
+            'channel_is_active': CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_system': CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
 
@@ -215,8 +305,19 @@ class WebToLeadForm(forms.ModelForm):
             'assign_to', 'assign_to_role'
         ]
         widgets = {
-            'form_description': forms.Textarea(attrs={'rows': 3}),
-            'assign_to': forms.Select(attrs={'class': 'form-select'}),
+            'form_name': TextInput(attrs={'class': 'form-control'}),
+            'form_description': Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'form_is_active': CheckboxInput(attrs={'class': 'form-check-input'}),
+            'success_redirect_url': URLInput(attrs={'class': 'form-control'}),
+            'include_first_name': CheckboxInput(attrs={'class': 'form-check-input'}),
+            'include_last_name': CheckboxInput(attrs={'class': 'form-check-input'}),
+            'include_email': CheckboxInput(attrs={'class': 'form-check-input'}),
+            'include_phone': CheckboxInput(attrs={'class': 'form-check-input'}),
+            'include_company': CheckboxInput(attrs={'class': 'form-check-input'}),
+            'include_job_title': CheckboxInput(attrs={'class': 'form-check-input'}),
+            'include_industry': CheckboxInput(attrs={'class': 'form-check-input'}),
+            'assign_to': Select(attrs={'class': 'form-select'}),
+            'assign_to_role': TextInput(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -228,4 +329,3 @@ class WebToLeadForm(forms.ModelForm):
             # Assuming User is available globally but we want to restrict to tenant users if possible
             # For now, simplistic approach or just pass
             pass
-

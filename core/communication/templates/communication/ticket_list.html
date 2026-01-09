@@ -1,0 +1,125 @@
+{% extends "communication/base.html" %}
+{% load static %}
+
+{% block title %}Support Tickets - Communication{% endblock %}
+
+{% block comm_title %}🎫 Support Dashboard{% endblock %}
+{% block comm_subtitle %}Manage customer inquiries and technical issues{% endblock %}
+
+{% block comm_actions %}
+<a href="{% url 'communication:ticket_create' %}" class="btn btn-comm fw-bold px-4 shadow-sm">
+    <i class="bi bi-plus-circle me-1"></i> New Ticket
+</a>
+{% endblock %}
+
+{% block comm_content %}
+<div class="row g-4 mb-5">
+    <!-- Quick Stats -->
+    <div class="col-md-3">
+        <div class="comm-card p-3 text-center">
+            <h5 class="fw-bold mb-0 text-primary">{{ tickets.count }}</h5>
+            <small class="text-muted text-uppercase fw-bold">Open Tickets</small>
+        </div>
+    </div>
+    <!-- ... more stats could go here ... -->
+</div>
+
+<div class="comm-card">
+    <div class="card-header bg-transparent border-bottom p-4 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold">Active Tickets</h5>
+        <div class="btn-group">
+            <button class="btn btn-sm btn-outline-secondary active">All</button>
+            <button class="btn btn-sm btn-outline-secondary">Open</button>
+            <button class="btn btn-sm btn-outline-secondary">Closed</button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 table-comm">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Ticket ID</th>
+                        <th>Subject</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Assigned To</th>
+                        <th>Created</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ticket in tickets %}
+                    <tr>
+                        <td class="ps-4">
+                            <span class="fw-bold text-muted">#{{ ticket.id }}</span>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-comm text-truncate" style="max-width: 250px;">{{ ticket.subject }}
+                            </div>
+                            <small class="text-muted">{{ ticket.ticket_type|title }}</small>
+                        </td>
+                        <td>
+                            {% if ticket.priority == 'urgent' or ticket.priority == 'high' %}
+                            <span class="text-danger fw-bold"><i class="bi bi-fire me-1"></i> {{ ticket.priority|title
+                                }}</span>
+                            {% elif ticket.priority == 'medium' %}
+                            <span class="text-warning fw-bold"><i class="bi bi-exclamation-triangle me-1"></i> {{
+                                ticket.priority|title }}</span>
+                            {% else %}
+                            <span class="text-info fw-bold">{{ ticket.priority|title }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if ticket.status == 'new' %}
+                            <span
+                                class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">New</span>
+                            {% elif ticket.status == 'open' or ticket.status == 'in_progress' %}
+                            <span
+                                class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill">In
+                                Progress</span>
+                            {% elif ticket.status == 'resolved' or ticket.status == 'closed' %}
+                            <span
+                                class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">{{
+                                ticket.status|title }}</span>
+                            {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary rounded-pill">{{ ticket.status|title
+                                }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if ticket.assigned_to %}
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+                                    style="width: 24px; height: 24px; font-size: 10px;">
+                                    {{ ticket.assigned_to.username|slice:":2"|upper }}
+                                </div>
+                                <span>{{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}</span>
+                            </div>
+                            {% else %}
+                            <span class="text-muted italic small">Unassigned</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ ticket.created_at|date:"M d" }}</td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group">
+                                <a href="{% url 'communication:ticket_detail' ticket.pk %}"
+                                    class="btn btn-sm btn-light border"><i class="bi bi-eye"></i></a>
+                                <a href="{% url 'communication:ticket_edit' ticket.pk %}"
+                                    class="btn btn-sm btn-light border"><i class="bi bi-pencil"></i></a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-ticket-perforated display-4 mb-3 d-block"></i>
+                            <p>No support tickets found</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

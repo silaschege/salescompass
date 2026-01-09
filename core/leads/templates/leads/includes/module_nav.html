@@ -1,7 +1,116 @@
-<a class="nav-link ms-3" href="{% url 'leads:lead_analytics' %}">Analytics</a>
-<a class="nav-link ms-3" href="{% url 'leads:lead_pipeline' %}">Pipeline</a>
-<a class="nav-link ms-3" href="{% url 'leads:lead_list' %}">List</a>
-<a class="nav-link ms-3" href="{% url 'leads:lead_create' %}">Create</a>
-<a class="nav-link ms-3" href="{% url 'leads:web_to_lead_builder' %}">Web To Lead Builder</a>
-<a class="nav-link ms-3" href="{% url 'leads:web_to_lead_list' %}">Web To Lead List</a>
-<a class="nav-link ms-3" href="{% url 'leads:cac_analytics' %}">CAC Analytics</a>
+<!-- Core Lead Operations -->
+<a class="nav-link {% if request.resolver_match.url_name == 'lead_list' %}active{% endif %}" 
+   href="{% url 'leads:lead_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-people nav-icon"></i>
+        <span>Leads</span>
+    </div>
+</a>
+
+<a class="nav-link {% if request.resolver_match.url_name == 'lead_create' %}active{% endif %}" 
+   href="{% url 'leads:lead_create' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-person-plus nav-icon"></i>
+        <span>Create Lead</span>
+    </div>
+</a>
+
+<a class="nav-link {% if request.resolver_match.url_name == 'lead_pipeline' %}active{% endif %}" 
+   href="{% url 'leads:lead_pipeline' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-kanban nav-icon"></i>
+        <span>Pipeline</span>
+    </div>
+</a>
+
+<!-- Analytics -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#analyticsMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-bar-chart nav-icon"></i>
+        <span>Analytics</span>
+    </div>
+    <i class="bi bi-chevron-down"></i>
+</a>
+<div class="collapse" id="analyticsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'lead_analytics' %}active{% endif %}" 
+       href="{% url 'leads:lead_analytics' %}">
+        General Analytics
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'cac_analytics' %}active{% endif %}" 
+       href="{% url 'leads:cac_analytics' %}">
+        CAC Analytics
+    </a>
+    <a class="nav-link disabled" href="#">
+        Channel Metrics
+    </a>
+    <a class="nav-link disabled" href="#">
+        Campaign Metrics
+    </a>
+</div>
+
+<!-- Web-to-Lead -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#webToLeadMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-globe nav-icon"></i>
+        <span>Web-to-Lead</span>
+    </div>
+    <i class="bi bi-chevron-down"></i>
+</a>
+<div class="collapse" id="webToLeadMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'web_to_lead_builder' %}active{% endif %}" 
+       href="{% url 'leads:web_to_lead_builder' %}">
+        Builder
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'web_to_lead_list' %}active{% endif %}" 
+       href="{% url 'leads:web_to_lead_list' %}">
+        Forms
+    </a>
+</div>
+
+<!-- Configuration Section -->
+<div class="section-title ms-3 mt-3">CONFIGURATION</div>
+
+<!-- Marketing Channels -->
+<a class="nav-link {% if request.resolver_match.url_name == 'marketingchannel_list' %}active{% endif %}" 
+   href="{% url 'leads:marketingchannel_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-megaphone nav-icon"></i>
+        <span>Marketing Channels</span>
+    </div>
+</a>
+
+<!-- Assignment Rules -->
+<a class="nav-link {% if request.resolver_match.url_name == 'assignment_rule_list' %}active{% endif %}" 
+   href="{% url 'leads:assignment_rule_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-rulers nav-icon"></i>
+        <span>Assignment Rules</span>
+    </div>
+</a>
+
+<!-- Scoring Configuration -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#scoringMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-star nav-icon"></i>
+        <span>Scoring Rules</span>
+    </div>
+    <i class="bi bi-chevron-down"></i>
+</a>
+<div class="collapse" id="scoringMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'behavioral_scoring_rule_list' %}active{% endif %}" 
+       href="{% url 'leads:behavioral_scoring_rule_list' %}">
+        Behavioral Scoring
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'demographic_scoring_rule_list' %}active{% endif %}" 
+       href="{% url 'leads:demographic_scoring_rule_list' %}">
+        Demographic Scoring
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'action_type_list' %}active{% endif %}" 
+       href="{% url 'leads:action_type_list' %}">
+        Action Types
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'operator_type_list' %}active{% endif %}" 
+       href="{% url 'leads:operator_type_list' %}">
+        Operator Types
+    </a>
+</div>

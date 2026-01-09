@@ -1,47 +1,37 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
-from .models import TeamRole
+from tenants.models import TenantRole, TenantMember, Tenant
 import json
 
 User = get_user_model()
 
 class RoleManagementTests(TestCase):
     def setUp(self):
-        # Create user and tenant
+        # Create tenant
+        self.tenant = Tenant.objects.create(name='Test Tenant', domain_prefix='test')
+        
+        # Create user
         self.user = User.objects.create_user(
             username='adminuser',
             email='admin@example.com',
             password='password123',
-            tenant_id='tenant1'
-        )
-        # Assign a role that has permission to manage settings
-        # We need to create a role for the user first, or bypass permission check if we mock it.
-        # But since we are testing the view which uses PermissionRequiredMixin, we should give the user the permission.
-        # The required permission is 'settings_app:write'
-        
-        # Create a role for the user
-        self.admin_role = TeamRole.objects.create(
-            name='Admin',
-            tenant_id='tenant1',
-            base_permissions=['settings_app:write', 'settings_app:read']
+            tenant=self.tenant
         )
         
-        # Assign role to user. Wait, User.role links to core.Role, not TeamRole?
-        # Let's check how permissions are checked.
-        # PermissionRequiredMixin checks self.request.user.has_perm(self.required_permission)
-        # User.has_perm checks self.role.permissions.
-        # User.role is a ForeignKey to core.Role.
-        # So we need to create a core.Role for the user to pass the permission check.
-        
-        from core.models import Role
-        self.core_role = Role.objects.create(
-            name='Core Admin',
-            tenant_id='tenant1',
-            permissions=['settings_app:write', 'settings_app:read']
+        # Create a tenant role
+        self.admin_role = TenantRole.objects.create(
+            name='admin_role',
+            label='Admin',
+            tenant=self.tenant
         )
-        self.user.role = self.core_role
-        self.user.save()
+        
+        # Create TenantMember for the user
+        self.tenant_member = TenantMember.objects.create(
+            user=self.user,
+            role=self.admin_role,
+            tenant=self.tenant
+        )
         
         self.client.force_login(self.user)
 
@@ -57,15 +47,12 @@ class RoleManagementTests(TestCase):
         self.assertIn('read', response.context['actions'])
 
     def test_role_create_success(self):
-        """Test creating a role with permissions from the matrix."""
+        """Test creating a role from the matrix."""
         url = reverse('settings_app:role_create')
         
-        # The form expects 'base_permissions' as a JSON string
-        permissions_list = ['accounts:read', 'leads:write']
         data = {
-            'name': 'Sales Rep',
-            'description': 'Sales Representative Role',
-            'base_permissions': json.dumps(permissions_list),
+            'name': 'sales_rep',
+            'label': 'Sales Representative',
             'is_active': True
         }
         
@@ -75,16 +62,15 @@ class RoleManagementTests(TestCase):
         self.assertRedirects(response, reverse('settings_app:role_list'))
         
         # Verify role was created
-        role = TeamRole.objects.get(name='Sales Rep')
-        self.assertEqual(role.tenant_id, 'tenant1')
-        self.assertEqual(role.base_permissions, permissions_list)
+        role = TenantRole.objects.get(name='sales_rep')
+        self.assertEqual(role.tenant, self.tenant)
 
     def test_role_update_view_context(self):
         """Test that the role update view renders correctly."""
-        role = TeamRole.objects.create(
-            name='Support Agent',
-            tenant_id='tenant1',
-            base_permissions=['cases:read']
+        role = TenantRole.objects.create(
+            name='support_agent',
+            label='Support Agent',
+            tenant=self.tenant
         )
         
         url = reverse('settings_app:role_update', args=[role.id])
@@ -93,61 +79,33 @@ class RoleManagementTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('resources', response.context)
         
-        # Verify the form has the correct initial value
-        # Note: The form renders the value in the hidden input. 
-        # We can check if the value is present in the rendered HTML or context form.
         form = response.context['form']
-        self.assertEqual(form.initial['base_permissions'], ['cases:read'])
+        self.assertEqual(form.instance.name, 'support_agent')
 
-    def test_wildcard_permissions(self):
-        """Test saving and checking wildcard permissions."""
-        url = reverse('settings_app:role_create')
-        
-        # Save a role with wildcard permission
-        permissions_list = ['accounts:*', 'leads:read']
-        data = {
-            'name': 'Account Manager',
-            'description': 'Full access to accounts',
-            'base_permissions': json.dumps(permissions_list),
-            'is_active': True
-        }
-        
-        self.client.post(url, data)
-        
-        role = TeamRole.objects.get(name='Account Manager')
-        self.assertIn('accounts:*', role.base_permissions)
-        
-        # Verify logic (assuming TeamRole logic mirrors core.Role or is used to sync)
-        # Currently TeamRole is a separate model. If we want to test if a user HAS this permission,
-        # we need to assign this TeamRole to a TeamMember, and that TeamMember's user should get the permissions.
-        # However, the current implementation seems to link User -> core.Role. 
-        # TeamMember links User -> TeamRole.
-        # We need to ensure that when a TeamMember is assigned a TeamRole, the User's core.Role is updated or synced.
-        # If that sync logic isn't implemented yet, this test might just verify the model storage for now.
-        
     def test_role_assignment(self):
-        """Test assigning a role to a user (TeamMember)."""
-        # Create a TeamRole
-        role = TeamRole.objects.create(
-            name='Junior Sales',
-            tenant_id='tenant1',
-            base_permissions=['leads:read']
+        """Test assigning a role to a user (TenantMember)."""
+        # Create a TenantRole
+        role = TenantRole.objects.create(
+            name='junior_sales',
+            label='Junior Sales',
+            tenant=self.tenant
         )
         
         # Create a new user to assign to
-        new_user = User.objects.create_user(
+        new_user = User.objects.get_or_create(
             username='newuser',
-            email='new@example.com',
-            password='password123',
-            tenant_id='tenant1'
-        )
+            defaults={
+                'email': 'new@example.com',
+                'password': 'password123',
+                'tenant': self.tenant
+            }
+        )[0]
         
-        # Create TeamMember for this user
-        from .models import TeamMember
-        team_member = TeamMember.objects.create(
+        # Create TenantMember for this user
+        team_member = TenantMember.objects.create(
             user=new_user,
             role=role,
-            tenant_id='tenant1'
+            tenant=self.tenant
         )
         
         self.assertEqual(team_member.role, role)

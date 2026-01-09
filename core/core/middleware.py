@@ -4,8 +4,10 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
 from django.contrib import messages
 from django.urls import resolve
+from django.template.response import TemplateResponse
 from tenants.models import Tenant
 import logging
+
 
 
 _thread_locals = threading.local()
@@ -102,57 +104,50 @@ class BusinessMetricsAccessMiddleware(MiddlewareMixin):
         return response
 
     def process_request(self, request):
-        """
-        Process the request and check permissions
-        """
-        # Get the current URL name
-        try:
-            resolver_match = resolve(request.path_info)
-            url_name = resolver_match.url_name
-            app_name = resolver_match.app_name
-        except:
-            # If we can't resolve the URL, continue with the request
-            return None
-
-        # Check if this is a protected business metrics URL
-        full_url_name = f"{app_name}:{url_name}" if app_name else url_name
-        
-        if url_name in self.protected_patterns or full_url_name in self.protected_patterns:
-            # Check if user is authenticated
-            if not request.user.is_authenticated:
-                messages.error(request, "You need to be logged in to access business metrics.")
-                return redirect('accounts:login')
-            
-            # Check if user has permission to access business metrics
-            if not request.user.has_perm('reports.read') and not request.user.has_perm('core.read'):
-                logger.warning(f"User {request.user.email} tried to access business metrics without permission: {full_url_name}")
-                messages.error(request, "You don't have permission to access business metrics.")
-                return HttpResponseForbidden("Access denied")
-            
-            # Additional tenant-based access control
-            if hasattr(request.user, 'tenant_id') and request.user.tenant_id:
-                # Verify that the user belongs to a valid tenant
-                try:
-                    tenant = Tenant.objects.get(id=request.user.tenant_id)
-                    if not tenant.is_active:
-                        logger.warning(f"User {request.user.email} tried to access metrics for inactive tenant {request.user.tenant_id}")
-                        messages.error(request, "Your tenant account is inactive.")
-                        return HttpResponseForbidden("Tenant inactive")
-                except Tenant.DoesNotExist:
-                    logger.warning(f"User {request.user.email} has invalid tenant_id: {request.user.tenant_id}")
-                    messages.error(request, "Invalid tenant account.")
-                    return HttpResponseForbidden("Invalid tenant")
-        
         return None
-    
+
     def process_response(self, request, response):
-        """
-        Process the response after the view has been executed
-        """
-        # Add security headers for sensitive metrics data
-        if any(pattern in request.path for pattern in ['/api/metrics/', '/reports/', '/dashboard/']):
-            response['X-Content-Type-Options'] = 'nosniff'
-            response['X-Frame-Options'] = 'DENY'
-            response['X-XSS-Protection'] = '1; mode=block'
-        
         return response
+
+
+class ForbiddenAccessMiddleware(MiddlewareMixin):
+    """
+    Middleware to handle 403 Forbidden responses consistently across the system.
+    If user is authenticated, show a custom 403 page.
+    If user is not authenticated, redirect to login page.
+    """
+    
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        
+        # Check if response is 403 Forbidden
+        if response.status_code == 403:
+            # Check if user is authenticated
+            if request.user.is_authenticated:
+                # User is logged in but doesn't have permission
+                # Render custom 403 template
+                context = {
+                    'message': 'You do not have permission to access this page.',
+                    'contact_admin': True,
+                }
+                return TemplateResponse(
+                    request, 
+                    'core/403.html', 
+                    context, 
+                    status=403
+                )
+            else:
+                # User is not logged in, redirect to login page
+                # Preserve the next parameter so they can be redirected back after login
+                from django.urls import reverse
+                login_url = reverse('accounts:login')
+                from django.shortcuts import redirect
+                redirect_url = f"{login_url}?next={request.path}"
+                return redirect(redirect_url)
+                
+        return response
+
+

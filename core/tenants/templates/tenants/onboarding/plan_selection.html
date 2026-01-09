@@ -1,0 +1,65 @@
+{% extends 'tenants/onboarding/base.html' %}
+
+{% block step_content %}
+<div class="row">
+  {% csrf_token %}
+  {% for plan in plans %}
+  <div class="col-md-4 mb-3">
+    <div class="card h-100 border-2 {% if plan.plan_is_active %}border-primary{% endif %}">
+      {% if plan.plan_is_active %}
+      <div class="position-absolute top-0 start-100 translate-middle badge bg-primary">
+        Popular
+        <span class="visually-hidden">featured</span>
+      </div>
+      {% endif %}
+      <div class="card-header text-center">
+        <h5 class="card-title">{{ plan.name }}</h5>
+        <h3 class="card-text">${{ plan.price }}<small class="text-muted">/month</small></h3>
+      </div>
+      <div class="card-body">
+        <ul class="list-unstyled mt-3 mb-4">
+          <li>{{ plan.max_users }} Users</li>
+          <li>{{ plan.api_calls_limit }} API Calls Limit</li>
+          <li>{{ plan.storage_limit }}GB Storage</li>
+          {% if plan.features %}
+          {% for feature in plan.features %}
+          <li>{{ feature }}</li>
+          {% endfor %}
+          {% endif %}
+        </ul>
+      </div>
+      <div class="card-footer text-center">
+        <button class="btn btn-outline-primary select-plan-btn" data-plan-id="{{ plan.id }}">Select Plan</button>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+  document.querySelectorAll('.select-plan-btn').forEach(button => {
+    button.addEventListener('click', function () {
+      const planId = this.getAttribute('data-plan-id');
+      // Store selected plan in session
+      fetch('{% url "tenants:onboarding_plan_selection" %}', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ selected_plan_id: planId })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            window.location.href = "{% url 'tenants:onboarding_subdomain' %}";
+          }
+        });
+    });
+  });
+</script>
+{% endblock %}
+
+{% block next_button %}
+<div></div> <!-- Empty div to maintain alignment since we have custom buttons -->
+{% endblock %}

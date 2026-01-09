@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from core.models import User
-from tenants.models import Tenant
+from tenants.models import Tenant, TenantAwareModel
 
 
 class NotificationTemplate(models.Model):
@@ -103,6 +103,11 @@ class CommunicationHistory(models.Model):
         ('microsoft_teams', 'Microsoft Teams'),
         ('discord', 'Discord'),
     ])
+    DIRECTION_CHOICES = [
+        ('inbound', 'Inbound'),
+        ('outbound', 'Outbound'),
+    ]
+    direction = models.CharField(max_length=10, choices=DIRECTION_CHOICES, default='outbound')
     recipient = models.CharField(max_length=255, help_text="Recipient of the communication (email, phone number, etc.)")
     recipient_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='communications_received')
     sender = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='communications_sent')
@@ -280,8 +285,16 @@ class FeedbackAndSurvey(models.Model):
         return f"{self.feedback_type.replace('_', ' ').title()}: {self.title}"
 
 
-class Email(Tenant):
+class Email(TenantAwareModel):
     """Model for managing email communications"""
+    DIRECTION_CHOICES = [
+        ('inbound', 'Inbound'),
+        ('outbound', 'Outbound'),
+    ]
+    direction = models.CharField(max_length=10, choices=DIRECTION_CHOICES, default='outbound')
+    account = models.ForeignKey('accounts.Account', on_delete=models.SET_NULL, null=True, blank=True, related_name='emails')
+    contact = models.ForeignKey('accounts.Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='emails')
+    lead = models.ForeignKey('leads.Lead', on_delete=models.SET_NULL, null=True, blank=True, related_name='emails')
     STATUS_CHOICES = [
         ('draft', 'Draft'),
         ('queued', 'Queued'),
@@ -319,13 +332,14 @@ class Email(Tenant):
     sent_at = models.DateTimeField(null=True, blank=True, help_text="Actual time the email was sent")
     delivered_at = models.DateTimeField(null=True, blank=True, help_text="Time the email was delivered")
     opened_at = models.DateTimeField(null=True, blank=True, help_text="Time the email was opened")
+    clicked_at = models.DateTimeField(null=True, blank=True, help_text="Time the email was clicked")
     error_message = models.TextField(blank=True, help_text="Error message if email failed to send")
     service_used = models.CharField(max_length=50, blank=True, help_text="Email service used to send (e.g., smtp, sendgrid)")
     tracking_enabled = models.BooleanField(default=True, help_text="Whether to track opens/clicks for this email")
-    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
+    tracking_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
     
-    email_created_at = models.DateTimeField(auto_now_add=True)
-    email_updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         verbose_name = "Email"
@@ -333,11 +347,14 @@ class Email(Tenant):
         ordering = ['-created_at']
     
     def __str__(self):
-        return self.name
+        return self.email_name
 
 
-class Call(Tenant):
-    """Model for managing phone calls"""
+class CallLog(TenantAwareModel):
+    """Model for logging phone calls"""
+    account = models.ForeignKey('accounts.Account', on_delete=models.SET_NULL, null=True, blank=True, related_name='calls')
+    contact = models.ForeignKey('accounts.Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='calls')
+    lead = models.ForeignKey('leads.Lead', on_delete=models.SET_NULL, null=True, blank=True, related_name='calls')
     CALL_TYPE_CHOICES = [
         ('incoming', 'Incoming'),
         ('outgoing', 'Outgoing'),
@@ -354,41 +371,78 @@ class Call(Tenant):
         ('transferred', 'Transferred'),
     ]
     
-    call_name = models.CharField(max_length=255, help_text="Name/description of the call")
     call_type = models.CharField(max_length=20, choices=CALL_TYPE_CHOICES, help_text="Type of call")
     direction = models.CharField(max_length=10, choices=[('inbound', 'Inbound'), ('outbound', 'Outbound')])
-    caller = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='calls_initiated')
-    callee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='calls_received')
-    phone_number_from = models.CharField(max_length=20, help_text="Caller's phone number")
-    phone_number_to = models.CharField(max_length=20, help_text="Callee's phone number")
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='calls_initiated')
+    phone_number = models.CharField(max_length=20, help_text="Phone number")
+    contact_name = models.CharField(max_length=255, blank=True, help_text="Name of the contact")
     duration_seconds = models.IntegerField(default=0, help_text="Duration of the call in seconds")
-    result = models.CharField(max_length=20, choices=RESULT_CHOICES, help_text="Result of the call")
+    outcome = models.CharField(max_length=20, choices=RESULT_CHOICES, help_text="Result of the call")
     recording_url = models.URLField(blank=True, help_text="URL to the call recording")
     transcript = models.TextField(blank=True, help_text="Text transcript of the call")
     notes = models.TextField(blank=True, help_text="Notes about the call")
-    disposition = models.CharField(max_length=50, blank=True, help_text="Call disposition (e.g., interested, not interested)")
+    follow_up_required = models.BooleanField(default=False, help_text="Whether follow-up is required")
     related_object_type = models.CharField(max_length=50, blank=True, help_text="Type of object this call is related to")
     related_object_id = models.CharField(max_length=50, blank=True, help_text="ID of the related object")
-    start_time = models.DateTimeField(help_text="When the call started")
-    end_time = models.DateTimeField(null=True, blank=True, help_text="When the call ended")
-    cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Cost of the call")
-    service_used = models.CharField(max_length=50, help_text="Service used for the call (e.g., twilio, asterisk)")
-    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
+    call_started_at = models.DateTimeField(default=timezone.now)
+    call_ended_at = models.DateTimeField(null=True, blank=True)
     
-    call_created_at = models.DateTimeField(auto_now_add=True)
-    call_updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        verbose_name = "Call"
-        verbose_name_plural = "Calls"
-        ordering = ['-start_time']
+        verbose_name = "Call Log"
+        verbose_name_plural = "Call Logs"
+        ordering = ['-call_started_at']
     
     def __str__(self):
-        return f"{self.call_type.title()} call: {self.phone_number_from} to {self.phone_number_to}"
+        return f"{self.call_type.title()} call: {self.phone_number} ({self.outcome})"
 
 
-class Meeting(Tenant):
+class SMS(TenantAwareModel):
+    """Model for managing SMS communications"""
+    DIRECTION_CHOICES = [
+        ('inbound', 'Inbound'),
+        ('outbound', 'Outbound'),
+    ]
+    direction = models.CharField(max_length=10, choices=DIRECTION_CHOICES, default='outbound')
+    account = models.ForeignKey('accounts.Account', on_delete=models.SET_NULL, null=True, blank=True, related_name='sms_messages')
+    contact = models.ForeignKey('accounts.Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='sms_messages')
+    lead = models.ForeignKey('leads.Lead', on_delete=models.SET_NULL, null=True, blank=True, related_name='sms_messages')
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('queued', 'Queued'),
+        ('sending', 'Sending'),
+        ('sent', 'Sent'),
+        ('delivered', 'Delivered'),
+        ('failed', 'Failed'),
+    ]
+    
+    recipient_phone = models.CharField(max_length=20, help_text="Recipient phone number")
+    sender = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='sms_sent')
+    message = models.TextField(help_text="SMS content")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    scheduled_send_time = models.DateTimeField(null=True, blank=True, help_text="Scheduled time to send the SMS")
+    sent_at = models.DateTimeField(null=True, blank=True)
+    error_message = models.TextField(blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "SMS"
+        verbose_name_plural = "SMS Messages"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"SMS to {self.recipient_phone}"
+
+
+class Meeting(TenantAwareModel):
     """Model for managing meetings"""
+    account = models.ForeignKey('accounts.Account', on_delete=models.SET_NULL, null=True, blank=True, related_name='meetings')
+    contact = models.ForeignKey('accounts.Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='meetings')
+    lead = models.ForeignKey('leads.Lead', on_delete=models.SET_NULL, null=True, blank=True, related_name='meetings')
     MEETING_TYPE_CHOICES = [
         ('online', 'Online'),
         ('offline', 'Offline'),
@@ -428,10 +482,9 @@ class Meeting(Tenant):
     related_object_id = models.CharField(max_length=50, blank=True, help_text="ID of the related object")
     reminder_set = models.BooleanField(default=False, help_text="Whether a reminder has been set")
     reminder_time_minutes = models.IntegerField(default=15, help_text="Minutes before meeting to send reminder")
-    tenant_id = models.CharField(max_length=50, db_index=True, null=True, blank=True)
     
-    meeting_created_at = models.DateTimeField(auto_now_add=True)
-    meeting_updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         verbose_name = "Meeting"
@@ -439,4 +492,81 @@ class Meeting(Tenant):
         ordering = ['-start_time']
     
     def __str__(self):
-        return f"{self.name} - {self.start_time.strftime('%Y-%m-%d %H:%M')}"
+        return f"{self.meeting_name} - {self.start_time.strftime('%Y-%m-%d %H:%M')}"
+
+
+class SocialMediaPost(TenantAwareModel):
+    """Model for tracking social media posts"""
+    account = models.ForeignKey('accounts.Account', on_delete=models.SET_NULL, null=True, blank=True, related_name='social_posts')
+    contact = models.ForeignKey('accounts.Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='social_posts')
+    lead = models.ForeignKey('leads.Lead', on_delete=models.SET_NULL, null=True, blank=True, related_name='social_posts')
+    platform = models.CharField(max_length=50, choices=[
+        ('twitter', 'Twitter'),
+        ('linkedin', 'LinkedIn'),
+        ('facebook', 'Facebook'),
+        ('instagram', 'Instagram'),
+    ])
+    post_id = models.CharField(max_length=255, blank=True)
+    content = models.TextField()
+    url = models.URLField(blank=True)
+    is_inmail = models.BooleanField(default=False)
+    metadata = models.JSONField(default=dict, blank=True)
+    posted_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Social Media Post"
+        verbose_name_plural = "Social Media Posts"
+
+    def __str__(self):
+        return f"{self.platform.title()} post - {self.posted_at}"
+
+
+class ChatMessage(TenantAwareModel):
+    """Model for tracking chat messages"""
+    account = models.ForeignKey('accounts.Account', on_delete=models.SET_NULL, null=True, blank=True, related_name='chat_messages')
+    contact = models.ForeignKey('accounts.Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='chat_messages')
+    channel = models.CharField(max_length=50, choices=[
+        ('whatsapp', 'WhatsApp'),
+        ('website_chat', 'Website Chat'),
+        ('slack', 'Slack'),
+        ('messenger', 'Messenger'),
+    ])
+    sender_name = models.CharField(max_length=255)
+    message = models.TextField()
+    external_id = models.CharField(max_length=255, blank=True, null=True, help_text="ID from the external platform")
+    metadata = models.JSONField(default=dict, blank=True)
+    received_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Chat Message"
+        verbose_name_plural = "Chat Messages"
+
+    def __str__(self):
+        return f"{self.channel.title()} from {self.sender_name} - {self.received_at}"
+
+
+class EmailSignature(TenantAwareModel):
+    """Model for managing email signatures for users."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='email_signatures')
+    name = models.CharField(max_length=100, help_text="Name of the signature (e.g., 'Professional', 'Informal')")
+    content_html = models.TextField(help_text="HTML content of the signature")
+    is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Email Signature"
+        verbose_name_plural = "Email Signatures"
+
+    def __str__(self):
+        return f"{self.user.username}'s {self.name} signature"
+
+    def save(self, *args, **kwargs):
+        if self.is_default:
+            # Set all other signatures of this user to not default
+            EmailSignature.objects.filter(user=self.user, tenant=self.tenant).exclude(id=self.id).update(is_default=False)
+        super().save(*args, **kwargs)
+
+# Import WhatsApp models to ensure they are registered
+from .whatsapp_models import WhatsAppConfiguration, WhatsAppMessage, WhatsAppTemplate

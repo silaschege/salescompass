@@ -1,96 +1,180 @@
 {% extends "opportunities/base.html" %}
+{% load static %}
 
-{% block title %}{% if object %}Edit {{ object.name }}{% else %}New Opportunity{% endif %} - SalesCompass{% endblock %}
+{% block title %}
+    {% if object %}Edit {{ object.name }}{% else %}New Opportunity{% endif %} | SalesCompass
+{% endblock %}
 
 {% block content %}
-<h1 class="block-title fw-bold mb-0">{% if object %}Edit Opportunity{% else %}New Opportunity{% endif %}</h1>
+<div class="container-fluid py-4">
+    <!-- Breadcrumbs & Header -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a href="{% url 'opportunities:opportunity_list' %}" class="text-decoration-none">Opportunities</a></li>
+            <li class="breadcrumb-item active">{% if object %}Edit{% else %}New{% endif %}</li>
+        </ol>
+    </nav>
 
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <div class="row">
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label for="{{ form.name.id_for_label }}" class="form-label">Opportunity Name *</label>
-                {{ form.name }}
-                {% if form.name.errors %}
-                    <div class="text-danger">{{ form.name.errors }}</div>
-                {% endif %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 fw-bold">
+            {% if object %}
+                <i class="bi bi-pencil-square me-2 text-primary"></i>Edit Opportunity
+            {% else %}
+                <i class="bi bi-plus-circle me-2 text-success"></i>Create New Opportunity
+            {% endif %}
+        </h1>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger shadow-sm mb-4">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="row g-4">
+            <!-- Left Column: Core Details -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-transparent py-3">
+                        <h5 class="card-title mb-0 fw-semibold">General Information</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="mb-4">
+                            <label for="{{ form.name.id_for_label }}" class="form-label fw-bold small text-uppercase">Opportunity Name</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}<div class="invalid-feedback d-block">{{ form.name.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="{{ form.account.id_for_label }}" class="form-label fw-bold small text-uppercase">Account</label>
+                                {{ form.account }}
+                                {% if form.account.errors %}<div class="invalid-feedback d-block">{{ form.account.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label for="{{ form.owner.id_for_label }}" class="form-label fw-bold small text-uppercase">Owner</label>
+                                {{ form.owner }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="{{ form.amount.id_for_label }}" class="form-label fw-bold small text-uppercase">Amount</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted">$</span>
+                                    {{ form.amount }}
+                                </div>
+                                {% if form.amount.errors %}<div class="invalid-feedback d-block">{{ form.amount.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label for="{{ form.close_date.id_for_label }}" class="form-label fw-bold small text-uppercase">Close Date</label>
+                                {{ form.close_date }}
+                                {% if form.close_date.errors %}<div class="invalid-feedback d-block">{{ form.close_date.errors }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-0">
+                            <label for="{{ form.products.id_for_label }}" class="form-label fw-bold small text-uppercase">Associated Products</label>
+                            {{ form.products }}
+                            <div class="form-text mt-2"><i class="bi bi-info-circle me-1"></i>Hold Ctrl/Cmd to select multiple products.</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="mb-3">
-                <label for="{{ form.account.id_for_label }}" class="form-label">Account *</label>
-                {{ form.account }}
-                {% if form.account.errors %}
-                    <div class="text-danger">{{ form.account.errors }}</div>
-                {% endif %}
-            </div>
+            <!-- Right Column: Status & ESG -->
+            <div class="col-lg-5">
+                <!-- Sales Status Card -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <div class="mb-4">
+                            <label for="{{ form.stage.id_for_label }}" class="form-label fw-bold small text-uppercase text-primary">Sales Stage</label>
+                            {{ form.stage }}
+                        </div>
 
-            <div class="mb-3">
-                <label for="{{ form.amount.id_for_label }}" class="form-label">Amount *</label>
-                {{ form.amount }}
-                {% if form.amount.errors %}
-                    <div class="text-danger">{{ form.amount.errors }}</div>
-                {% endif %}
-            </div>
+                        <div class="mb-0">
+                            <label for="{{ form.probability.id_for_label }}" class="form-label fw-bold small text-uppercase">Probability (%)</label>
+                            <div class="input-group">
+                                {{ form.probability }}
+                                <span class="input-group-text bg-light text-muted"><i class="bi bi-percent"></i></span>
+                            </div>
+                            {% if form.probability.errors %}<div class="invalid-feedback d-block">{{ form.probability.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+                </div>
 
-            <div class="mb-3">
-                <label for="{{ form.close_date.id_for_label }}" class="form-label">Close Date *</label>
-                {{ form.close_date }}
-                {% if form.close_date.errors %}
-                    <div class="text-danger">{{ form.close_date.errors }}</div>
-                {% endif %}
-            </div>
+                <!-- ESG Tracking Card (Impact/Sustainability) -->
+                <div class="card border-0 shadow-sm bg-light border-start border-4 border-success">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-leaf-fill text-success fs-4 me-2"></i>
+                            <h5 class="card-title mb-0 fw-semibold text-success">ESG Tracking</h5>
+                        </div>
+                        
+                        <div class="form-check form-switch mb-3">
+                            {{ form.esg_tagged }}
+                            <label class="form-check-label fw-medium" for="{{ form.esg_tagged.id_for_label }}">
+                                Mark as ESG Impact Opportunity
+                            </label>
+                        </div>
 
-            <div class="mb-3">
-                <label for="{{ form.probability.id_for_label }}" class="form-label">Probability</label>
-                {{ form.probability }}
-                <div class="form-text">0.0 to 1.0 (e.g., 0.75 = 75%)</div>
-                {% if form.probability.errors %}
-                    <div class="text-danger">{{ form.probability.errors }}</div>
-                {% endif %}
+                        <div id="esg_description_wrapper">
+                            <label for="{{ form.esg_impact_description.id_for_label }}" class="form-label fw-bold small text-uppercase">Impact Description</label>
+                            {{ form.esg_impact_description }}
+                            {% if form.esg_impact_description.errors %}
+                                <div class="invalid-feedback d-block">{{ form.esg_impact_description.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label for="{{ form.stage.id_for_label }}" class="form-label">Stage</label>
-                {{ form.stage }}
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.owner.id_for_label }}" class="form-label">Owner</label>
-                {{ form.owner }}
-            </div>
-
-            <div class="mb-3 form-check">
-                {{ form.esg_tagged }}
-                <label class="form-check-label" for="{{ form.esg_tagged.id_for_label }}">
-                    {{ form.esg_tagged.label }}
-                </label>
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.esg_impact_description.id_for_label }}" class="form-label">ESG Impact Description</label>
-                {{ form.esg_impact_description }}
-                <div class="form-text">Describe the environmental or social impact of this opportunity</div>
-                {% if form.esg_impact_description.errors %}
-                    <div class="text-danger">{{ form.esg_impact_description.errors }}</div>
-                {% endif %}
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Products</label>
-                {{ form.products }}
-                <div class="form-text">Select products associated with this opportunity</div>
+        <!-- Sticky Footer for Actions -->
+        <div class="card shadow-lg border-0 mt-5 sticky-bottom bg-white rounded-3">
+            <div class="card-body d-flex justify-content-end gap-2 p-3">
+                <a href="{% url 'opportunities:opportunity_list' %}" class="btn btn-outline-secondary px-4">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm">
+                    {% if object %}
+                        <i class="bi bi-check-lg me-2"></i>Save Changes
+                    {% else %}
+                        <i class="bi bi-plus-lg me-2"></i>Create Opportunity
+                    {% endif %}
+                </button>
             </div>
         </div>
-    </div>
+    </form>
+</div>
 
-    <div class="d-flex gap-2 mt-3">
-        <button type="submit" class="btn btn-primary">
-            {% if object %}Update Opportunity{% else %}Create Opportunity{% endif %}
-        </button>
-        <a href="{% url 'opportunities:opportunities_list' %}" class="btn btn-secondary">Cancel</a>
-    </div>
-</form>
+<style>
+    /* Styling for better Django Form Widget appearance */
+    input[type="text"], input[type="number"], input[type="date"], select, textarea {
+        display: block;
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    input:focus, select:focus, textarea:focus {
+        border-color: #86b7fe;
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .form-check-input:checked {
+        background-color: #198754;
+        border-color: #198754;
+    }
+</style>
 {% endblock %}

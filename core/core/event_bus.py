@@ -165,7 +165,7 @@ class EventBus:
     def _emit_async(self, event: Dict[str, Any]) -> None:
         """Asynchronously dispatch event via Celery."""
         try:
-            from core.core.tasks import process_event_task
+            from core.tasks import process_event_task
             process_event_task.delay(event)
         except ImportError:
             logger.warning("Celery task not available, falling back to sync")

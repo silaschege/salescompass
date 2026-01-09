@@ -1,4 +1,5 @@
 from django.db import models
+import uuid
 from core.models import TimeStampedModel
 from tenants.models import TenantAwareModel as TenantModel
 from core.models import User
@@ -287,6 +288,10 @@ class Report(TenantModel):
     created_by = models.ForeignKey('core.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='reports_created')
     report_created_at = models.DateTimeField(auto_now_add=True)  # Renamed from 'created_at' to avoid conflict with base class
     report_updated_at = models.DateTimeField(auto_now=True)  # Renamed from 'updated_at' to avoid conflict with base class
+    
+    # Public sharing fields
+    is_public = models.BooleanField(default=False, help_text="Whether this report is accessible via a public link")
+    public_token = models.UUIDField(default=uuid.uuid4, editable=False, null=True, blank=True)
 
     def __str__(self):
         return self.report_name
@@ -313,6 +318,14 @@ class ReportSchedule(TenantModel):
         blank=True,
         related_name='report_schedules',
         help_text="Dynamic frequency (replaces frequency field)"
+    )
+    export_format_ref = models.ForeignKey(
+        'ExportFormat',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='scheduled_exports',
+        help_text="Dynamic export format"
     )
     recipients = models.JSONField(default=list)
     schedule_is_active = models.BooleanField(default=True)  # Renamed from 'is_active' to avoid conflict with base class
@@ -465,3 +478,30 @@ class ReportNotification(TenantModel):
 
     def __str__(self):
         return f"{self.recipient_email} - {self.report_schedule.schedule_name}"
+
+
+class ReportSnapshot(TenantModel):
+    report = models.ForeignKey(Report, on_delete=models.CASCADE, related_name='snapshots')
+    snapshot_data = models.JSONField(help_text="Historical data of the report at a specific time")
+    snapshot_date = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey('core.User', on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        ordering = ['-snapshot_date']
+
+    def __str__(self):
+        return f"Snapshot of {self.report.report_name} on {self.snapshot_date}"
+
+
+class ReportSubscription(TenantModel):
+    report = models.ForeignKey(Report, on_delete=models.CASCADE, related_name='subscriptions')
+    user = models.ForeignKey('core.User', on_delete=models.CASCADE, related_name='report_subscriptions')
+    schedule = models.ForeignKey(ReportSchedule, on_delete=models.CASCADE, related_name='subscriptions', null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['report', 'user', 'schedule']
+
+    def __str__(self):
+        return f"{self.user.email} subscription to {self.report.report_name}"

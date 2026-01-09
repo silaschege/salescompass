@@ -109,14 +109,18 @@ services:
 
   # -----------------------------------
   # Wazo AGENTD — Call center agent management
-  # (handles agent states, queuing, etc.)  
-  # Official image: wazoplatform/wazo-agentd :contentReference[oaicite:0]{index=0}
+  # (handles agent states, queuing, etc.)
   # -----------------------------------
   wazo-agentd:
     image: wazoplatform/wazo-agentd:latest
     depends_on:
       - wazo-auth
       - wazo-confd
+    ports:
+      - "9493:9493"
+    environment:
+      WAZO_AUTH_URL: http://wazo-auth:9497
+      WAZO_CONFD_URL: http://wazo-confd:9486
 
   # -----------------------------------
   # Wazo AMID — Bridge to Asterisk
@@ -126,19 +130,92 @@ services:
     depends_on:
       - wazo-db
       - wazo-confd
+      - asterisk
     environment:
       WAZO_DB_URI: postgresql://wazo:wazo@wazo-db/wazo
+      WAZO_AMID_AMI_HOST: asterisk
+      WAZO_AMID_AMI_PORT: 5038
     ports:
       - "4573:4573"
 
   # -----------------------------------
-  # Telephony core — Asterisk
-  # This handles SIP, RTP, and media
+  # Wazo CALLD — Call daemon (REQUIRED for making/receiving calls)
+  # Handles call initiation, transfer, hold, etc.
   # -----------------------------------
+  wazo-calld:
+    image: wazoplatform/wazo-calld:latest
+    depends_on:
+      - wazo-auth
+      - wazo-confd
+      - wazo-amid
+      - asterisk
+    ports:
+      - "9500:9500"
+    environment:
+      WAZO_AUTH_URL: http://wazo-auth:9497
+      WAZO_CONFD_URL: http://wazo-confd:9486
+      WAZO_AMID_URL: http://wazo-amid:4573
+      WAZO_CALLD_ARI_URL: http://asterisk:8088
+      WAZO_CALLD_ARI_USERNAME: xivo
+      WAZO_CALLD_ARI_PASSWORD: xivo
 
+  # -----------------------------------
+  # Wazo CHATD — Chat/SMS daemon (REQUIRED for SMS/messaging)
+  # Handles SMS, WhatsApp, and instant messaging
+  # -----------------------------------
+  wazo-chatd:
+    image: wazoplatform/wazo-chatd:latest
+    depends_on:
+      - wazo-auth
+      - wazo-db
+    ports:
+      - "9304:9304"
+    environment:
+      WAZO_AUTH_URL: http://wazo-auth:9497
+      WAZO_DB_URI: postgresql://wazo:wazo@wazo-db/wazo
+
+  # -----------------------------------
+  # Wazo WEBHOOKD — Webhook daemon for external integrations
+  # Sends events to SalesCompass CRM
+  # -----------------------------------
+  wazo-webhookd:
+    image: wazoplatform/wazo-webhookd:latest
+    depends_on:
+      - wazo-auth
+      - wazo-db
+    ports:
+      - "9300:9300"
+    environment:
+      WAZO_AUTH_URL: http://wazo-auth:9497
+      WAZO_DB_URI: postgresql://wazo:wazo@wazo-db/wazo
+
+  # -----------------------------------
+  # Asterisk PBX — Telephony core
+  # Handles SIP, RTP, and media processing
+  # -----------------------------------
+  asterisk:
+    image: wazoplatform/asterisk:latest
+    depends_on:
+      - wazo-db
+    ports:
+      - "5060:5060/udp"               # SIP UDP
+      - "5060:5060/tcp"               # SIP TCP
+      - "8088:8088"                   # ARI WebSocket
+      - "5038:5038"                   # AMI
+      - "10000-10100:10000-10100/udp" # RTP media ports
+    volumes:
+      - asterisk_recordings:/var/spool/asterisk/recording
+      - asterisk_voicemail:/var/spool/asterisk/voicemail
+      - asterisk_logs:/var/log/asterisk
+    environment:
+      WAZO_DB_URI: postgresql://wazo:wazo@wazo-db/wazo
+    restart: unless-stopped
 
 volumes:
   postgres_data: {}
   wazo_db: {}
   redis_data: {}
   asterisk_recordings: {}
+  asterisk_voicemail: {}
+  asterisk_logs: {}
+

@@ -1,0 +1,171 @@
+{% extends 'cases/base.html' %}
+{% load static %}
+
+{% block title %}{{ form.instance.sla_policy_name|default:"New SLA Policy" }} - SLA Policies{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .form-section {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+
+    .form-section h3 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 20px 0;
+        color: #333;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 10px;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .page-header h1 {
+        font-size: 28px;
+        font-weight: 600;
+        margin: 0 0 8px 0;
+    }
+
+    .page-header .subtitle {
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: #374151;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .help-text {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 30px;
+    }
+
+    .btn {
+        padding: 10px 24px;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-primary {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .btn-secondary {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .info-box {
+        background: #eff6ff;
+        border-left: 4px solid #3b82f6;
+        padding: 16px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="page-header">
+        <h1>{{ form.instance.pk|yesno:"Edit SLA Policy,Create SLA Policy" }}</h1>
+        <p class="subtitle">Define Service Level Agreement parameters for cases</p>
+    </div>
+
+    <div class="info-box">
+        <h4>About SLA Policies</h4>
+        <p>SLA policies define response and resolution timeframes for cases based on their priority level.</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-section">
+            <h3>Basic Information</h3>
+            <div class="form-group">
+                <label for="{{ form.sla_policy_name.id_for_label }}" class="required">SLA Policy Name</label>
+                {{ form.sla_policy_name }}
+                <div class="help-text">A descriptive name for this SLA policy</div>
+                {{ form.sla_policy_name.errors }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.priority.id_for_label }}">Priority</label>
+                {{ form.priority }}
+                <div class="help-text">The priority level this SLA policy applies to</div>
+                {{ form.priority.errors }}
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Timeframes</h3>
+            <div class="form-group">
+                <label for="{{ form.response_hours.id_for_label }}">Response Time (Hours)</label>
+                {{ form.response_hours }}
+                <div class="help-text">Maximum time allowed to respond to a case</div>
+                {{ form.response_hours.errors }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.resolution_hours.id_for_label }}">Resolution Time (Hours)</label>
+                {{ form.resolution_hours }}
+                <div class="help-text">Maximum time allowed to resolve a case</div>
+                {{ form.resolution_hours.errors }}
+            </div>
+
+            <div class="form-group">
+                <div class="checkbox-wrapper">
+                    {{ form.business_hours_only }}
+                    <label for="{{ form.business_hours_only.id_for_label }}">Business Hours Only</label>
+                </div>
+                <div class="help-text">If checked, SLA calculations will only include business hours</div>
+                {{ form.business_hours_only.errors }}
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button type="submit" class="btn btn-primary">Save SLA Policy</button>
+            <a href="{% url 'cases:sla_policy_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

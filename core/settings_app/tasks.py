@@ -181,8 +181,8 @@ def _get_territory_assignee(record, rule):
         territory = record.account.territory
     elif hasattr(record, 'country'):
         # Try to find territory by country code
-        from .models import Territory
-        territory = Territory.objects.filter(
+        from tenants.models import TenantTerritory
+        territory = TenantTerritory.objects.filter(
             tenant_id=record.tenant_id,
             country_codes__contains=record.country
         ).first()
@@ -194,7 +194,7 @@ def _get_territory_assignee(record, rule):
     # Find an assignee in this territory
     assignees = rule.assignees.filter(
         is_active=True,
-        team_members__territory=territory
+        tenant_member__territory=territory
     )
     
     if not assignees.exists():
@@ -308,7 +308,7 @@ def trigger_webhook(event_type, payload, tenant_id):
         payload (dict): Data to send
         tenant_id (str): Tenant ID
     """
-    from .models import Webhook
+    from developer.models import Webhook
     
     # Find active webhooks for this tenant
     # Note: We filter by event in Python to avoid DB-specific JSON lookup issues (SQLite)
@@ -342,7 +342,7 @@ def deliver_webhook(self, webhook_id, event_type, payload):
         event_type (str): Event name
         payload (dict): Data to send
     """
-    from .models import Webhook
+    from developer.models import Webhook
     import requests
     import hmac
     import hashlib

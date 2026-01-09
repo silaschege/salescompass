@@ -18,7 +18,8 @@ from .forms import (
     BehavioralScoringRuleForm, DemographicScoringRuleForm, MarketingChannelForm,
     WebToLeadForm as WebToLeadModelForm
 )
-from tenants.models import TenantAwareModel
+from tenants.models import TenantAwareModel,Tenant
+from engagement.utils import log_engagement_event
 
 from core.views import (
     TenantAwareViewMixin, SalesCompassListView, SalesCompassDetailView, 
@@ -136,8 +137,47 @@ def update_lead_status(request, lead_id):
         
         new_status = request.POST.get('status')
         if new_status:
+            old_status = lead.status
             lead.status = new_status
             lead.save()
+            
+            # Log engagement event based on status change
+            try:
+                event_type = 'lead_contacted'  # default
+                engagement_score = 3
+                
+                if new_status == 'qualified':
+                    event_type = 'lead_qualified'
+                    engagement_score = 4
+                elif new_status == 'unqualified':
+                    event_type = 'lead_unqualified'
+                    engagement_score = 0
+                elif new_status == 'converted':
+                    event_type = 'lead_converted'
+                    engagement_score = 5
+                    # Trigger conversion logic
+                    from .services import LeadScoringService
+                    LeadScoringService.create_opportunity_from_lead(lead, creator=request.user)
+                elif new_status == 'contacted':
+                    event_type = 'lead_contacted'
+                    engagement_score = 3
+                
+                log_engagement_event(
+                    tenant_id=request.user.tenant_id if hasattr(request.user, 'tenant_id') else None,
+                    event_type=event_type,
+                    description=f"Lead {lead.full_name} status changed from {old_status} to {new_status}",
+                    lead=lead,
+                    account=lead.owner,
+                    title=f"Lead Status: {new_status.title()}",
+                    engagement_score=engagement_score,
+                    created_by=request.user if request.user.is_authenticated else None
+                )
+            except Exception as e:
+                # Don't fail status update if engagement logging fails
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Failed to log engagement event for status change: {e}")
+            
             return JsonResponse({'success': True, 'message': 'Lead status updated successfully'})
         else:
             return JsonResponse({'error': 'Status not provided'}, status=400)
@@ -147,20 +187,43 @@ def update_lead_status(request, lead_id):
 
 
 
-class LeadListView(SalesCompassListView):
+# Example of how to use feature enforcement in another app
+# This would be in the leads/views.py file
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView
+from tenants.views import FeatureEnforcementMiddleware
+
+class LeadListView(LoginRequiredMixin, ListView):
     model = Lead
     template_name = 'leads/lead_list.html'
     context_object_name = 'leads'
     
+    # def dispatch(self, request, *args, **kwargs):
+    #     # Check if user has access to leads management feature
+    #     if not FeatureEnforcementMiddleware.has_feature_access(request.user, 'leads_management'):
+    #         messages.error(request, "You don't have access to leads management.")
+    #         return redirect('core:home')  # or wherever appropriate
+    #     return super().dispatch(request, *args, **kwargs)
+    
     def get_queryset(self):
-        queryset = super().get_queryset()
-        return queryset.select_related('source_ref', 'status_ref', 'industry_ref', 'account', 'owner')
-
+        return Lead.objects.filter(tenant=self.request.user.tenant)
 
 class LeadDetailView(SalesCompassDetailView):
     model = Lead
     template_name = 'leads/lead_detail.html'
     context_object_name = 'lead'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        lead = self.object
+        
+        # Get engagement events for this lead
+        from engagement.models import EngagementEvent
+        context['timeline_events'] = EngagementEvent.objects.filter(
+            lead=lead
+        ).select_related('created_by', 'task', 'case').order_by('-created_at')
+        
+        return context
 
 
 class LeadCreateView(SalesCompassCreateView):
@@ -169,6 +232,27 @@ class LeadCreateView(SalesCompassCreateView):
     template_name = 'leads/lead_form.html'
     success_url = reverse_lazy('leads:lead_list')
     success_message = 'Lead created successfully.'
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        # Log engagement event for lead creation
+        try:
+            log_engagement_event(
+                tenant_id=self.request.user.tenant_id if hasattr(self.request.user, 'tenant_id') else None,
+                event_type='lead_created',
+                description=f"Lead {self.object.full_name} created from {self.object.get_lead_source_display()}",
+                lead=self.object,
+                account=self.object.owner,
+                title="Lead Created",
+                engagement_score=2,
+                created_by=self.request.user if self.request.user.is_authenticated else None
+            )
+        except Exception as e:
+            # Don't fail lead creation if engagement logging fails
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to log engagement event for lead creation: {e}")
+        return response
 
 
 class LeadUpdateView(SalesCompassUpdateView):
@@ -756,7 +840,7 @@ class BehavioralScoringRuleCreateView(CreateView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         if hasattr(self.request.user, 'tenant_id'):
-            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+            kwargs['tenant'] = Tenant.objects.get(id=self.request.user.tenant_id)
         return kwargs
     
     def form_valid(self, form):
@@ -775,7 +859,7 @@ class BehavioralScoringRuleUpdateView(UpdateView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         if hasattr(self.request.user, 'tenant_id'):
-            kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
+            kwargs['tenant'] = Tenant.objects.get(id=self.request.user.tenant_id)
         return kwargs
     
     def form_valid(self, form):

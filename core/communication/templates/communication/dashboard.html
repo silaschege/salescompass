@@ -1,0 +1,197 @@
+{% extends "communication/base.html" %}
+
+{% block title %}Dashboard - Communication{% endblock %}
+
+{% block comm_title %}💬 Communication Hub{% endblock %}
+{% block comm_subtitle %}Consolidated view of all your interactions{% endblock %}
+
+{% block comm_actions %}
+<div class="d-flex gap-2 flex-wrap">
+    <a href="{% url 'communication:unified_inbox' %}" class="btn btn-primary fw-bold px-4 shadow-sm">
+        <i class="bi bi-inbox me-1"></i> Unified Inbox
+    </a>
+    <a href="{% url 'communication:email_compose' %}" class="btn btn-warning fw-bold px-4 shadow-sm">
+        <i class="bi bi-envelope-plus me-1"></i> Compose Email
+    </a>
+    <a href="{% url 'communication:sms_send' %}" class="btn btn-light fw-bold px-4 shadow-sm border">
+        <i class="bi bi-chat-dots me-1"></i> Send SMS
+    </a>
+    <a href="{% url 'communication:call_log_create' %}" class="btn btn-comm fw-bold px-4 shadow-sm">
+        <i class="bi bi-telephone-plus me-1"></i> Log Call
+    </a>
+    <a href="{% url 'communication:signature_list' %}" class="btn btn-outline-comm fw-bold px-4 shadow-sm border bg-white">
+        <i class="bi bi-pen me-1"></i> Signatures
+    </a>
+</div>
+{% endblock %}
+
+{% block comm_content %}
+<div class="row g-4 mb-5">
+    <!-- Stat Cards -->
+    <div class="col-md-3">
+        <div class="comm-card p-4 text-center">
+            <div class="comm-icon-box mx-auto">
+                <i class="bi bi-envelope"></i>
+            </div>
+            <h3 class="fw-bold">{{ email_count }}</h3>
+            <div class="text-muted small text-uppercase">Emails Sent</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="comm-card p-4 text-center">
+            <div class="comm-icon-box mx-auto" style="background-color: #e0f2fe; color: #0ea5e9;">
+                <i class="bi bi-chat-left-text"></i>
+            </div>
+            <h3 class="fw-bold">{{ sms_count }}</h3>
+            <div class="text-muted small text-uppercase">SMS Sent</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="comm-card p-4 text-center">
+            <div class="comm-icon-box mx-auto" style="background-color: #fef3c7; color: #d97706;">
+                <i class="bi bi-telephone"></i>
+            </div>
+            <h3 class="fw-bold">{{ call_count }}</h3>
+            <div class="text-muted small text-uppercase">Calls Logged</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="comm-card p-4 text-center">
+            <div class="comm-icon-box mx-auto" style="background-color: #fee2e2; color: #dc2626;">
+                <i class="bi bi-ticket-perforated"></i>
+            </div>
+            <h3 class="fw-bold">{{ ticket_count }}</h3>
+            <div class="text-muted small text-uppercase">Support Tickets</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Recent Emails -->
+    <div class="col-lg-6">
+        <div class="comm-card h-100">
+            <div class="card-header bg-transparent border-bottom p-4 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">Recent Emails</h5>
+                <a href="{% url 'communication:email_list' %}" class="btn btn-sm btn-link text-comm text-decoration-none">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <tbody class="border-top-0">
+                            {% for email in recent_emails %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold text-dark">{{ email.subject|truncatechars:40 }}</div>
+                                    <div class="text-muted small">To: {{ email.recipients }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill {% if email.status == 'sent' %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {{ email.status|title }}
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4 text-muted small">
+                                    {{ email.created_at|date:"M d" }}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="text-center py-4 text-muted small">No recent emails</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Tickets -->
+    <div class="col-lg-6">
+        <div class="comm-card h-100">
+            <div class="card-header bg-transparent border-bottom p-4 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">Recent Support Tickets</h5>
+                <a href="{% url 'communication:ticket_list' %}" class="btn btn-sm btn-link text-comm text-decoration-none">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <tbody class="border-top-0">
+                            {% for ticket in recent_tickets %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold text-dark">{{ ticket.subject|truncatechars:40 }}</div>
+                                    <div class="text-muted small">Ref: #{{ ticket.id }} | {{ ticket.priority|title }} Priority</div>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill {% if ticket.status == 'open' %}bg-primary{% elif ticket.status == 'in_progress' %}bg-warning{% else %}bg-success{% endif %}">
+                                        {{ ticket.status|title }}
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4 text-muted small">
+                                    {{ ticket.created_at|date:"M d" }}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="text-center py-4 text-muted small">No recent tickets</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Calls -->
+    <div class="col-12">
+        <div class="comm-card">
+            <div class="card-header bg-transparent border-bottom p-4 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">Call History</h5>
+                <a href="{% url 'communication:call_log_list' %}" class="btn btn-sm btn-link text-comm text-decoration-none">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Type</th>
+                                <th>Contact</th>
+                                <th>Duration</th>
+                                <th>Outcome</th>
+                                <th>Date</th>
+                                <th class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for call in recent_calls %}
+                            <tr>
+                                <td class="ps-4">
+                                    <i class="bi {% if call.direction == 'incoming' %}bi-arrow-down-left text-success{% else %}bi-arrow-up-right text-primary{% endif %} me-2"></i>
+                                    {{ call.call_type|title }}
+                                </td>
+                                <td>
+                                    <div class="fw-bold">{{ call.contact_name|default:call.phone_number }}</div>
+                                    <div class="text-muted small">{{ call.phone_number }}</div>
+                                </td>
+                                <td>{{ call.duration_seconds }}s</td>
+                                <td>
+                                    <!-- Fixed: Changed 'ticket.status' to 'call.outcome' (or whatever your call model uses) -->
+                                    <span class="badge rounded-pill bg-info text-dark">
+                                        {{ call.outcome|default:"Logged"|title }}
+                                    </span>
+                                </td>
+                                <td>{{ call.call_started_at|date:"M d, H:i" }}</td>
+                                <td class="text-end pe-4">
+                                    <a href="{% url 'communication:call_log_detail' call.id %}" class="btn btn-sm btn-outline-comm">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="text-center py-4 text-muted small">No recent calls</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

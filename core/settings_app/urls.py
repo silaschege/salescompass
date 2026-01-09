@@ -14,28 +14,7 @@ urlpatterns = [
     # Tenant Settings
     path('tenant/', views.TenantSettingsView.as_view(), name='tenant_settings'),
     
-    # Team Management
-    path('team/', views.TeamListView.as_view(), name='team_list'),
-    path('team/create/', views.TeamCreateView.as_view(), name='team_create'),
-    path('team/<int:pk>/', views.TeamDetailView.as_view(), name='team_detail'),
-    path('team/<int:pk>/edit/', views.TeamUpdateView.as_view(), name='team_update'),
-    path('team/<int:pk>/delete/', views.TeamDeleteView.as_view(), name='team_delete'),
-    
-    # Territories
-    path('territories/', views.TerritoryListView.as_view(), name='territory_list'),
-    path('territories/create/', views.TerritoryCreateView.as_view(), name='territory_create'),
-    path('territories/<int:pk>/edit/', views.TerritoryUpdateView.as_view(), name='territory_update'),
-    path('territories/<int:pk>/delete/', views.TerritoryDeleteView.as_view(), name='territory_delete'),
-    
-    # Quotas
-    path('quotas/<int:team_member_id>/', views.QuotaUpdateView.as_view(), name='quota_update'),
-    
-    # Roles & Permissions
-    path('roles/', views.RoleListView.as_view(), name='role_list'),
-    path('roles/create/', views.RoleCreateView.as_view(), name='role_create'),
-    path('roles/<int:pk>/edit/', views.RoleUpdateView.as_view(), name='role_update'),
-    path('roles/<int:pk>/delete/', views.RoleDeleteView.as_view(), name='role_delete'),
-    
+
     # Lead Settings
     path('leads/statuses/', views.LeadStatusListView.as_view(), name='lead_status_list'),
     path('leads/statuses/create/', views.LeadStatusCreateView.as_view(), name='lead_status_create'),

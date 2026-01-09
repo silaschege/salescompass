@@ -1,87 +1,171 @@
-{% extends 'settings_base.html' %}
+{% extends 'opportunities/base.html' %}
 {% load static %}
 
 {% block title %}{{ form.instance.assignment_rule_name|default:"New Rule" }} - Opportunity Assignment{% endblock %}
 
 {% block extra_css %}
 <style>
-    .form-container {
-        max-width: 900px;
+    .page-container {
+        max-width: 1400px;
         margin: 0 auto;
-    }
-
-    .form-section {
-        background: white;
-        border-radius: 8px;
-        padding: 30px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
-    }
-
-    .form-section h3 {
-        font-size: 18px;
-        font-weight: 600;
-        margin: 0 0 20px 0;
-        color: #333;
-        border-bottom: 2px solid #e5e7eb;
-        padding-bottom: 10px;
+        padding: 2rem;
     }
 
     .page-header {
         text-align: center;
-        margin-bottom: 30px;
+        margin-bottom: 2rem;
     }
 
     .page-header h1 {
-        font-size: 28px;
-        font-weight: 600;
-        margin: 0 0 8px 0;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0 0 0.5rem 0;
     }
 
     .page-header .subtitle {
-        color: #6b7280;
-        font-size: 14px;
+        color: #64748b;
+        font-size: 1rem;
+    }
+
+    .content-layout {
+        display: flex;
+        gap: 2rem;
+    }
+
+    .form-container {
+        flex: 3;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        padding: 2rem;
+        min-width: 0;
+    }
+
+    .info-sidebar {
+        flex: 1;
+        background: #f8fafc;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        padding: 1.5rem;
+        align-self: flex-start;
+        position: sticky;
+        top: 2rem;
+        max-height: calc(100vh - 4rem);
+        overflow-y: auto;
+    }
+
+    .info-sidebar h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0 0 1rem 0;
+        color: #1e293b;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .form-section {
+        margin-bottom: 2rem;
+    }
+
+    .form-section h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0 0 1.5rem 0;
+        color: #1e293b;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-col {
+        flex: 1;
     }
 
     .form-group {
-        margin-bottom: 20px;
+        margin-bottom: 1.5rem;
     }
 
     .form-group label {
         display: block;
         font-weight: 500;
-        margin-bottom: 8px;
-        color: #374151;
+        margin-bottom: 0.5rem;
+        color: #334155;
     }
 
     .form-control {
         width: 100%;
-        padding: 10px 12px;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
-        font-size: 14px;
+        padding: 0.75rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        background: white;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .form-control.select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+    }
+
+    .checkbox-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .checkbox-wrapper input {
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 4px;
+        border: 1px solid #cbd5e1;
+        accent-color: #3b82f6;
     }
 
     .help-text {
-        font-size: 12px;
-        color: #6b7280;
-        margin-top: 4px;
+        font-size: 0.875rem;
+        color: #64748b;
+        margin-top: 0.5rem;
+    }
+
+    .error-message {
+        color: #ef4444;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
     }
 
     .btn-group {
         display: flex;
-        gap: 12px;
-        margin-top: 30px;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e2e8f0;
     }
 
     .btn {
-        padding: 10px 24px;
-        border-radius: 6px;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
         font-weight: 500;
         cursor: pointer;
         border: none;
         text-decoration: none;
         display: inline-block;
+        transition: all 0.2s ease;
     }
 
     .btn-primary {
@@ -89,131 +173,348 @@
         color: white;
     }
 
+    .btn-primary:hover {
+        background: #2563eb;
+    }
+
     .btn-secondary {
-        background: #e5e7eb;
-        color: #374151;
+        background: #e2e8f0;
+        color: #334155;
+    }
+
+    .btn-secondary:hover {
+        background: #cbd5e1;
     }
 
     .info-box {
-        background: #eff6ff;
+        background: #dbeafe;
         border-left: 4px solid #3b82f6;
-        padding: 16px;
-        border-radius: 6px;
-        margin-bottom: 20px;
+        padding: 1rem;
+        border-radius: 0 8px 8px 0;
+        margin-bottom: 1.5rem;
     }
 
-    .json-editor {
-        font-family: 'Courier New', monospace;
-        font-size: 13px;
-        min-height: 150px;
+    .info-box h4 {
+        margin: 0 0 0.5rem 0;
+        color: #1e3a8a;
+    }
+
+    .info-box p {
+        margin: 0;
+        color: #1e40af;
+        font-size: 0.9rem;
+    }
+
+    .info-content h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 0 1.5rem 0;
+        color: #1e293b;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .info-item {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .info-item h4 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0 0 1rem 0;
+        color: #1e293b;
+    }
+
+    .info-item p {
+        font-size: 0.95rem;
+        color: #64748b;
+        margin: 0 0 1rem 0;
+        line-height: 1.6;
+    }
+
+    .info-item ul {
+        padding-left: 1.25rem;
+        margin: 0 0 1rem 0;
+    }
+
+    .info-item li {
+        margin-bottom: 0.5rem;
+        color: #64748b;
+    }
+
+    .info-item code {
+        background: #e2e8f0;
+        padding: 0.125rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-family: 'SF Mono', SFMono-Regular, ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace;
+    }
+
+    .json-example {
         background: #1e293b;
-        color: #e2e8f0;
-        border: 1px solid #334155;
-        border-radius: 6px;
-        padding: 12px;
+        color: #f1f5f9;
+        padding: 1rem;
+        border-radius: 8px;
+        font-family: 'SF Mono', SFMono-Regular, ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace;
+        font-size: 0.9rem;
+        margin: 1rem 0;
     }
 
-    .json-help {
-        background: #f9fafb;
-        padding: 12px;
-        border-radius: 6px;
-        margin-top: 8px;
-        font-size: 12px;
+    @media (max-width: 1024px) {
+        .content-layout {
+            flex-direction: column;
+        }
+        
+        .info-sidebar {
+            position: static;
+            max-height: none;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .form-row {
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        .page-container {
+            padding: 1rem;
+        }
+        
+        .form-container {
+            padding: 1.5rem;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="form-container">
+<div class="page-container">
     <div class="page-header">
         <h1>{{ form.instance.pk|yesno:"Edit Assignment Rule,Create Assignment Rule" }}</h1>
         <p class="subtitle">Automate opportunity assignment to your team members</p>
     </div>
 
-    <div class="info-box">
-        <h4>About Opportunity Assignment Rules</h4>
-        <p>Assignment rules automatically distribute opportunities to team members based on criteria you define (e.g.,
-            stage, value).</p>
+    <div class="content-layout">
+        <div class="form-container">
+            <div class="info-box">
+                <h4>About Opportunity Assignment Rules</h4>
+                <p>Assignment rules automatically distribute opportunities to team members based on criteria you define (e.g., stage, value).</p>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="form-section">
+                    <h3>Basic Information</h3>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="{{ form.assignment_rule_name.id_for_label }}" class="required">Rule Name</label>
+                                <input type="text" name="{{ form.assignment_rule_name.name }}" class="form-control{% if form.assignment_rule_name.errors %} is-invalid{% endif %}" 
+                                       id="{{ form.assignment_rule_name.id_for_label }}" 
+                                       value="{% if form.assignment_rule_name.value %}{{ form.assignment_rule_name.value }}{% endif %}">
+                                <div class="help-text">A descriptive name for this assignment rule</div>
+                                {% if form.assignment_rule_name.errors %}
+                                    <div class="error-message">
+                                        {% for error in form.assignment_rule_name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="{{ form.priority.id_for_label }}">Priority</label>
+                                <input type="number" name="{{ form.priority.name }}" class="form-control{% if form.priority.errors %} is-invalid{% endif %}" 
+                                       id="{{ form.priority.id_for_label }}" 
+                                       value="{% if form.priority.value %}{{ form.priority.value }}{% else %}1{% endif %}">
+                                <div class="help-text">Lower numbers are evaluated first (e.g., 1 is higher priority than 10)</div>
+                                {% if form.priority.errors %}
+                                    <div class="error-message">
+                                        {% for error in form.priority.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Rule Configuration</h3>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="{{ form.rule_type.id_for_label }}" class="required">Rule Type</label>
+                                <select name="{{ form.rule_type.name }}" class="form-control select{% if form.rule_type.errors %} is-invalid{% endif %}" 
+                                        id="{{ form.rule_type.id_for_label }}">
+                                    {% for choice in form.rule_type %}
+                                        {{ choice }}
+                                    {% endfor %}
+                                </select>
+                                {% if form.rule_type.errors %}
+                                    <div class="error-message">
+                                        {% for error in form.rule_type.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="form-col"></div>
+                    </div>
+
+                    <div class="form-group" id="criteriaGroup">
+                        <label for="{{ form.criteria.id_for_label }}">Matching Criteria (JSON)</label>
+                        <textarea name="{{ form.criteria.name }}" class="form-control{% if form.criteria.errors %} is-invalid{% endif %}" 
+                                  id="{{ form.criteria.id_for_label }}" 
+                                  style="font-family: 'SF Mono', SFMono-Regular, ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace; min-height: 150px;">{% if form.criteria.value %}{{ form.criteria.value }}{% endif %}</textarea>
+                        <div class="help-text">Define matching criteria as JSON. Leave empty to match all records.</div>
+                        <div class="json-example">
+                            Examples:<br>
+                            Match Stage: {"stage": "Negotiation"}<br>
+                            Match Value: {"value_gt": 10000}
+                        </div>
+                        {% if form.criteria.errors %}
+                            <div class="error-message">
+                                {% for error in form.criteria.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Assignee</h3>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="{{ form.assigned_to.id_for_label }}">Assign To User</label>
+                                <select name="{{ form.assigned_to.name }}" class="form-control select{% if form.assigned_to.errors %} is-invalid{% endif %}" 
+                                        id="{{ form.assigned_to.id_for_label }}">
+                                    {% for choice in form.assigned_to %}
+                                        {{ choice }}
+                                    {% endfor %}
+                                </select>
+                                <div class="help-text">Select a user to assign the opportunity to (optional for some rule types)</div>
+                                {% if form.assigned_to.errors %}
+                                    <div class="error-message">
+                                        {% for error in form.assigned_to.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <div class="checkbox-wrapper">
+                                    <input type="checkbox" name="{{ form.rule_is_active.name }}" 
+                                           id="{{ form.rule_is_active.id_for_label }}" {% if form.rule_is_active.value %}checked{% endif %}>
+                                    <label for="{{ form.rule_is_active.id_for_label }}">This rule is active</label>
+                                </div>
+                                {% if form.rule_is_active.errors %}
+                                    <div class="error-message">
+                                        {% for error in form.rule_is_active.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">Save Assignment Rule</button>
+                    <a href="{% url 'opportunities:assignment_rule_list' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="info-sidebar">
+            <h3>Information & Help</h3>
+            
+            <div class="info-item">
+                <h4>What are Assignment Rules?</h4>
+                <p>Assignment rules automate the distribution of opportunities to team members based on predefined criteria, saving time and ensuring consistent allocation. They help eliminate bias in assignment and ensure fair distribution of work.</p>
+            </div>
+            
+            <div class="info-item">
+                <h4>Rule Types Explained</h4>
+                <ul>
+                    <li><strong>Round Robin:</strong> Distributes opportunities evenly among team members in a rotating fashion.</li>
+                    <li><strong>Territory-Based:</strong> Assigns opportunities based on geographic regions or market segments.</li>
+                    <li><strong>Load Balanced:</strong> Distributes opportunities based on current workload of team members.</li>
+                    <li><strong>Criteria-Based:</strong> Assigns opportunities based on specific conditions you define using JSON syntax.</li>
+                </ul>
+            </div>
+            
+            <div class="info-item">
+                <h4>Understanding Priority</h4>
+                <p>Rules with lower priority numbers are evaluated first. For example, a rule with priority 1 runs before a rule with priority 10. This allows you to create fallback rules with higher numbers that only execute if no lower-priority rules match.</p>
+            </div>
+            
+            <div class="info-item">
+                <h4>Criteria Syntax Guide</h4>
+                <p>Use JSON format to define matching criteria:</p>
+                <div class="json-example">
+{
+  "stage": "Qualification",
+  "value_gt": 5000,
+  "product_category": "Software"
+}
+                </div>
+                <p>Supported operators:</p>
+                <ul>
+                    <li><code>_gt</code> - Greater than</li>
+                    <li><code>_lt</code> - Less than</li>
+                    <li><code>_gte</code> - Greater than or equal</li>
+                    <li><code>_lte</code> - Less than or equal</li>
+                    <li><code>_contains</code> - String contains</li>
+                </ul>
+            </div>
+            
+            <div class="info-item">
+                <h4>Best Practices</h4>
+                <ul>
+                    <li>Start with simple rules and gradually add complexity</li>
+                    <li>Test rules with sample data before activating</li>
+                    <li>Monitor assignment effectiveness and adjust as needed</li>
+                    <li>Regularly review and update rules to reflect changing business needs</li>
+                    <li>Use priority effectively to create fallback assignments</li>
+                    <li>Document the purpose of each rule for future reference</li>
+                </ul>
+            </div>
+        </div>
     </div>
-
-    <form method="post">
-        {% csrf_token %}
-
-        <div class="form-section">
-            <h3>Basic Information</h3>
-            <div class="form-group">
-                <label for="{{ form.assignment_rule_name.id_for_label }}" class="required">Rule Name</label>
-                {{ form.assignment_rule_name }}
-                <div class="help-text">A descriptive name for this assignment rule</div>
-                {{ form.assignment_rule_name.errors }}
-            </div>
-
-            <div class="form-group">
-                <label for="{{ form.priority.id_for_label }}">Priority</label>
-                {{ form.priority }}
-                <div class="help-text">Lower numbers are evaluated first (e.g., 1 is higher priority than 10)</div>
-                {{ form.priority.errors }}
-            </div>
-        </div>
-
-        <div class="form-section">
-            <h3>Rule Configuration</h3>
-            <div class="form-group">
-                <label for="{{ form.rule_type.id_for_label }}" class="required">Rule Type</label>
-                {{ form.rule_type }}
-                {{ form.rule_type.errors }}
-            </div>
-
-            <div class="form-group" id="criteriaGroup">
-                <label for="{{ form.criteria.id_for_label }}">Matching Criteria (JSON)</label>
-                {{ form.criteria }}
-                <div class="help-text">Define matching criteria as JSON. Leave empty to match all records.</div>
-                <div class="json-help">
-                    <strong>Examples:</strong><br>
-                    Match Stage: <code>{"stage": "Negotiation"}</code><br>
-                    Match Value: <code>{"value_gt": 10000}</code>
-                </div>
-                {{ form.criteria.errors }}
-            </div>
-        </div>
-
-        <div class="form-section">
-            <h3>Assignee</h3>
-            <div class="form-group">
-                <label for="{{ form.assigned_to.id_for_label }}">Assign To User</label>
-                {{ form.assigned_to }}
-                <div class="help-text">Select a user to assign the opportunity to (optional for some rule types)</div>
-                {{ form.assigned_to.errors }}
-            </div>
-
-            <div class="form-group">
-                <div class="checkbox-wrapper">
-                    {{ form.rule_is_active }}
-                    <label for="{{ form.rule_is_active.id_for_label }}">This rule is active</label>
-                </div>
-                {{ form.rule_is_active.errors }}
-            </div>
-        </div>
-
-        <div class="btn-group">
-            <button type="submit" class="btn btn-primary">Save Assignment Rule</button>
-            <a href="{% url 'opportunities:assignment_rule_list' %}" class="btn btn-secondary">Cancel</a>
-        </div>
-    </form>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Toggle criteria field visibility based on rule type
         const criteriaGroup = document.getElementById('criteriaGroup');
         const ruleTypeSelect = document.getElementById('{{ form.rule_type.id_for_label }}');
 
         function toggleCriteriaField() {
-            if (ruleTypeSelect.value === 'criteria') {
+            if (ruleTypeSelect && ruleTypeSelect.value === 'criteria') {
                 criteriaGroup.style.display = 'block';
             } else {
-                // criteriaGroup.style.display = 'none'; // Keep visible
+                // Keep visible but indicate it's not required
             }
         }
 

@@ -1,166 +1,154 @@
 /**
- * SalesCompass Minimalist Design System
- * Inspired by Ramp.com - Conversion-focused, clean aesthetic
- * Colors: Black, White, Purple (#6f42c1)
+ * SalesCompass Enterprise Design System
+ * Aesthetic: Premium, Glassmorphism, Deep Purple & Gold
  */
 
 /* ===================================
    DESIGN TOKENS
    =================================== */
 
-/* Core Colors - SalesCompass Purple Palette */
---color-black: #1E293B;
-/* Slate 800 */
---color-white: #ffffff;
+:root {
+  /* Core Colors */
+  --color-black: #0F172A;
+  /* Slate 900 */
+  --color-white: #FFFFFF;
 
-/* Primary - Purple */
---color-primary: #7C3AED;
-/* Violet 600 */
---color-primary-dark: #6D28D9;
-/* Violet 700 */
---color-primary-light: #F5F3FF;
-/* Violet 50 */
+  /* Primary - Deep Royal Purple */
+  --color-primary: #5B21B6;
+  /* Violet 800 */
+  --color-primary-dark: #4C1D95;
+  /* Violet 900 */
+  --color-primary-light: #F5F3FF;
+  /* Violet 50 */
+  --color-primary-subtle: #DDD6FE;
+  /* Violet 200 */
 
-/* Secondary - Gold (Complementary) */
---color-secondary: #F59E0B;
-/* Amber 500 */
---color-secondary-light: #FFFBEB;
-/* Amber 50 */
+  /* Secondary - Metallic Gold */
+  --color-secondary: #D97706;
+  /* Amber 600 */
+  --color-secondary-light: #FFFBEB;
+  /* Amber 50 */
+  --color-secondary-dark: #B45309;
+  /* Amber 700 */
 
-/* Accents */
---color-success: #10B981;
-/* Emerald 500 */
---color-success-light: #ECFDF5;
-/* Emerald 50 */
+  /* Accents */
+  --color-success: #10B981;
+  /* Emerald 500 */
+  --color-info: #0EA5E9;
+  /* Sky 500 - Use sparingly */
+  --color-danger: #EF4444;
+  /* Red 500 */
 
-/* Grays - Slate Scale */
---gray-50: #F8FAFC;
---gray-100: #F1F5F9;
---gray-200: #E2E8F0;
---gray-300: #CBD5E1;
---gray-400: #94A3B8;
---gray-500: #64748B;
---gray-600: #475569;
---gray-700: #334155;
---gray-800: #1E293B;
---gray-900: #0F172A;
+  /* Grays - Slate Scale (Cooler grays for tech feel) */
+  --gray-50: #F8FAFC;
+  --gray-100: #F1F5F9;
+  --gray-200: #E2E8F0;
+  --gray-300: #CBD5E1;
+  --gray-400: #94A3B8;
+  --gray-500: #64748B;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1E293B;
+  --gray-900: #0F172A;
 
-/* Typography Scale */
---font-family: 'Inter',
--apple-system,
-BlinkMacSystemFont,
-'Segoe UI',
-sans-serif;
+  /* App Specific Colors (Odoo Inspired) */
+  --app-crm: #FF9F00;
+  /* Orange */
+  --app-sales: #00A09D;
+  /* Teal */
+  --app-marketing: #007BFF;
+  /* Blue */
+  --app-automation: #6C757D;
+  /* gray */
+  --app-ml: #714B67;
+  /* Purple (Odoo brand) */
+  --app-intelligence: #E91E63;
+  /* Pink */
+  --app-reports: #4CAF50;
+  /* Green */
+  --app-commissions: #FFC107;
+  /* Amber */
+  --app-products: #3F51B5;
+  /* Indigo */
 
-/* Ramp uses very large type */
---text-xs: 0.75rem;
-/* 12px */
---text-sm: 0.875rem;
-/* 14px */
---text-base: 1rem;
-/* 16px */
---text-lg: 1.125rem;
-/* 18px */
---text-xl: 1.25rem;
-/* 20px */
---text-2xl: 1.5rem;
-/* 24px */
---text-3xl: 1.875rem;
-/* 30px */
---text-4xl: 2.25rem;
-/* 36px */
---text-5xl: 3rem;
-/* 48px */
---text-6xl: 3.75rem;
-/* 60px */
---text-7xl: 4.5rem;
-/* 72px */
---text-8xl: 6rem;
-/* 96px */
+  /* Glassmorphism Tokens (Enhanced) */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-bg-accent: rgba(255, 255, 255, 0.4);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.6);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+  --glass-blur: blur(12px);
 
-/* Font Weights */
---font-normal: 400;
---font-medium: 500;
---font-semibold: 600;
---font-bold: 700;
---font-extrabold: 800;
+  /* Typography */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-handwritten: 'Permanent Marker', cursive;
+  /* Fallback to cursive if not loaded */
 
-/* Spacing - Generous like Ramp */
---space-1: 0.25rem;
-/* 4px */
---space-2: 0.5rem;
-/* 8px */
---space-3: 0.75rem;
-/* 12px */
---space-4: 1rem;
-/* 16px */
---space-5: 1.25rem;
-/* 20px */
---space-6: 1.5rem;
-/* 24px */
---space-8: 2rem;
-/* 32px */
---space-10: 2.5rem;
-/* 40px */
---space-12: 3rem;
-/* 48px */
---space-16: 4rem;
-/* 64px */
---space-20: 5rem;
-/* 80px */
---space-24: 6rem;
-/* 96px */
---space-32: 8rem;
-/* 128px */
+  /* Type Scale */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+  --text-6xl: 3.75rem;
+  --text-display: 4.5rem;
 
-/* Shadows - Subtle only */
---shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
---shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
---shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
 
-/* Border Radius - Subtle */
---radius-sm: 0.375rem;
-/* 6px */
---radius-md: 0.5rem;
-/* 8px */
---radius-lg: 0.75rem;
-/* 12px */
---radius-xl: 1rem;
-/* 16px */
---radius-full: 9999px;
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+  /* Reduced darkness */
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08);
+  --shadow-glow: 0 0 15px rgba(91, 33, 182, 0.15);
+  /* Purple glow */
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
 
-/* Transitions - Fast and subtle */
---transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
---transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ===================================
-   GLOBAL RESET & BASE STYLES
+   BASE & RESET
    =================================== */
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html {
-  scroll-behavior: smooth;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
 
 body {
   font-family: var(--font-family);
   font-size: var(--text-base);
   line-height: 1.6;
-  color: var(--color-black);
-  background-color: var(--color-white);
+  color: var(--gray-700);
+  background-color: var(--gray-100);
+  /* Slightly darker for better contrast with white cards */
+  overflow-x: hidden;
 }
-
-/* ===================================
-   TYPOGRAPHY
-   =================================== */
 
 h1,
 h2,
@@ -168,184 +156,450 @@ h3,
 h4,
 h5,
 h6 {
-  font-weight: var(--font-bold);
-  line-height: 1.2;
   color: var(--color-black);
+  font-weight: 800;
+  /* Extra bold for enterprise feel */
+  letter-spacing: -0.03em;
+  line-height: 1.1;
 }
 
 h1 {
-  font-size: var(--text-6xl);
-  font-weight: var(--font-extrabold);
-  letter-spacing: -0.02em;
+  font-size: var(--text-5xl);
 }
 
 h2 {
-  font-size: var(--text-5xl);
-  font-weight: var(--font-bold);
-  letter-spacing: -0.01em;
+  font-size: var(--text-4xl);
 }
 
 h3 {
   font-size: var(--text-3xl);
-  font-weight: var(--font-bold);
 }
 
 h4 {
   font-size: var(--text-2xl);
-  font-weight: var(--font-semibold);
 }
 
-p {
-  font-size: var(--text-lg);
-  line-height: 1.7;
-  color: var(--gray-700);
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
 }
 
-.text-large {
-  font-size: var(--text-xl);
-  line-height: 1.7;
-}
-
-.text-small {
-  font-size: var(--text-sm);
-}
-
-/* Mobile responsive typography */
-@media (max-width: 768px) {
-  h1 {
-    font-size: var(--text-5xl);
-  }
-
-  h2 {
-    font-size: var(--text-4xl);
-  }
-
-  h3 {
-    font-size: var(--text-2xl);
-  }
+a:hover {
+  color: var(--color-primary-dark);
 }
 
 /* ===================================
-   LAYOUT UTILITIES
+   APP ICON UTILITIES (Odoo Inspired)
    =================================== */
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 var(--space-6);
+.app-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: white;
+  margin-bottom: var(--space-4);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  box-shadow: var(--shadow-md);
 }
 
-.container-wide {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 var(--space-6);
+.app-icon:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-lg);
 }
 
-.section {
-  padding: var(--space-20) 0;
+.app-crm {
+  background-color: var(--app-crm);
 }
 
-.section-large {
-  padding: var(--space-32) 0;
+.app-sales {
+  background-color: var(--app-sales);
 }
 
-@media (max-width: 768px) {
-  .section {
-    padding: var(--space-12) 0;
-  }
+.app-marketing {
+  background-color: var(--app-marketing);
+}
 
-  .section-large {
-    padding: var(--space-16) 0;
-  }
+.app-automation {
+  background-color: var(--app-automation);
+}
+
+.app-ml {
+  background-color: var(--app-ml);
+}
+
+.app-intelligence {
+  background-color: var(--app-intelligence);
+}
+
+.app-reports {
+  background-color: var(--app-reports);
+}
+
+.app-commissions {
+  background-color: var(--app-commissions);
+}
+
+.app-products {
+  background-color: var(--app-products);
+}
+
+/* Small variant */
+.app-icon-sm {
+  width: 40px;
+  height: 40px;
+  font-size: 1.25rem;
+  border-radius: var(--radius-lg);
 }
 
 /* ===================================
-   BUTTONS - Ramp Style
+   HANDWRITTEN HIGHLIGHTS
+   =================================== */
+
+.highlight-handwritten {
+  position: relative;
+  display: inline-block;
+  padding: 0 0.2em;
+}
+
+.highlight-handwritten::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -0.1em;
+  width: 100%;
+  height: 0.3em;
+  background-color: var(--color-secondary-subtle, rgba(217, 119, 6, 0.2));
+  z-index: -1;
+  transform: rotate(-1deg);
+  border-radius: 1em;
+}
+
+.highlight-circle {
+  position: relative;
+  z-index: 1;
+}
+
+.highlight-circle::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  left: -5%;
+  width: 110%;
+  height: 120%;
+  border: 2px solid var(--color-secondary);
+  border-radius: 50% 40% 50% 45%;
+  z-index: -1;
+  opacity: 0.7;
+  transform: rotate(-2deg);
+}
+
+.text-handwritten {
+  font-family: var(--font-handwritten);
+  color: var(--color-secondary);
+  font-weight: 400;
+}
+
+/* ===================================
+   BUTTONS
    =================================== */
 
 .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-4) var(--space-8);
-  font-size: var(--text-base);
-  font-weight: var(--font-semibold);
-  text-decoration: none;
-  border-radius: var(--radius-lg);
-  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  /* Odoo uses slightly less rounded buttons than SalesCompass currently does */
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  padding: 0.75rem 1.75rem;
   transition: all var(--transition-base);
-  cursor: pointer;
-  white-space: nowrap;
+  border: none;
 }
 
 .btn-primary {
   background-color: var(--color-primary);
-  color: var(--color-white);
-  border-color: var(--color-primary);
+  color: white;
 }
 
 .btn-primary:hover {
   background-color: var(--color-primary-dark);
-  border-color: var(--color-primary-dark);
-  color: var(--color-white);
   transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background-color: var(--color-white);
-  color: var(--color-black);
-  border-color: var(--gray-300);
+  background-color: var(--color-secondary);
+  color: white;
 }
 
 .btn-secondary:hover {
-  background-color: var(--gray-50);
-  border-color: var(--gray-400);
-  color: var(--color-black);
+  background-color: var(--color-secondary-dark);
+  transform: translateY(-1px);
 }
 
-.btn-large {
-  padding: var(--space-5) var(--space-10);
-  font-size: var(--text-lg);
+.btn-outline-primary {
+  background-color: transparent;
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
 }
 
-.btn-small {
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--text-sm);
+.btn-outline-primary:hover {
+  background-color: var(--color-primary);
+  color: white;
 }
 
 /* ===================================
-   CARDS - Clean & Minimal
+   HEADER & FOOTER Enhancement
    =================================== */
 
-.card {
-  background-color: var(--color-white);
+.navbar-enhanced {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 0.75rem 0;
+}
+
+.footer-dark {
+  background-color: var(--gray-900);
+  color: var(--gray-300);
+  padding-top: var(--space-16);
+  padding-bottom: var(--space-8);
+}
+
+.footer-dark h6 {
+  color: white;
+  text-transform: uppercase;
+  font-size: var(--text-sm);
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-6);
+}
+
+.footer-dark a {
+  color: var(--gray-400);
+  transition: color var(--transition-fast);
+}
+
+.footer-dark a:hover {
+  color: white;
+}
+
+/* ===================================
+   HERO GLOW
+   =================================== */
+
+.hero-glow {
+  position: absolute;
+  top: -10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at 50% 20%, rgba(91, 33, 182, 0.15) 0%, rgba(217, 119, 6, 0.05) 30%, transparent 70%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Enhanced hero glow with Ramp-inspired styling */
+.hero-glow-enhanced {
+  position: absolute;
+  top: -10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at 50% 20%, rgba(0, 200, 150, 0.15) 0%, rgba(0, 163, 255, 0.1) 30%, rgba(91, 33, 182, 0.1) 50%, transparent 70%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* ===================================
+   LOGIN FORM UPGRADES
+   =================================== */
+
+.login-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.login-left-panel {
+  flex: 1;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.login-right-panel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: white;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 2.5rem;
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xl);
+  background: white;
+}
+
+/* Enhanced form inputs */
+.form-input-enhanced {
+  background: var(--color-white);
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-lg);
-  padding: var(--space-6);
-  transition: all var(--transition-base);
+  padding: 0.875rem 1rem;
+  transition: all 0.2s;
+  position: relative;
 }
 
-.card:hover {
-  border-color: var(--gray-300);
-  box-shadow: var(--shadow-md);
-}
-
-.card-interactive {
-  cursor: pointer;
-}
-
-.card-interactive:hover {
+.form-input-enhanced:focus {
   border-color: var(--color-primary);
-  transform: translateY(-2px);
+  box-shadow: 0 0 0 4px rgba(91, 33, 182, 0.1);
+  outline: none;
+}
+
+.form-input-enhanced:focus+.input-icon {
+  color: var(--color-primary);
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-400);
+  transition: color var(--transition-base);
 }
 
 /* ===================================
-   GRID LAYOUTS
+   SOCIAL PROOF & TESTIMONIALS
    =================================== */
 
+.social-proof {
+  padding: 2rem 0;
+  background: white;
+}
+
+.trust-badges {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2rem;
+  align-items: center;
+}
+
+.trust-badge {
+  opacity: 0.6;
+  transition: opacity var(--transition-base);
+  filter: grayscale(100%);
+}
+
+.trust-badge:hover {
+  opacity: 1;
+  filter: grayscale(0%);
+}
+
+/* ===================================
+   MISC UTILITIES
+   =================================== */
+
+.text-primary {
+  color: var(--color-primary) !important;
+}
+
+.text-secondary {
+  color: var(--color-secondary) !important;
+}
+
+.bg-primary {
+  background-color: var(--color-primary) !important;
+}
+
+.bg-primary-subtle {
+  background-color: var(--color-primary-light) !important;
+  color: var(--color-primary-dark);
+}
+
+.bg-light {
+  background-color: var(--gray-50) !important;
+}
+
+/* Form upgrades */
+.form-input-glass {
+  background: var(--color-white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 0.875rem 1rem;
+  transition: all 0.2s;
+}
+
+.form-input-glass:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(91, 33, 182, 0.1);
+  outline: none;
+}
+
+/* Conversion Card (for Login/Try) */
+.conversion-card {
+  background: var(--color-white);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--gray-100);
+  overflow: hidden;
+}
+
+/* Enhanced section styling */
+.section {
+  padding: 6rem 0;
+}
+
+.section-large {
+  padding: 10rem 0;
+}
+
+.section-bg-gradient {
+  background: linear-gradient(135deg, var(--gray-50) 0%, white 100%);
+}
+
+/* Enhanced typography */
+.text-gradient-gold {
+  background: linear-gradient(135deg, #D97706 0%, #F59E0B 50%, #B45309 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.text-gradient-purple {
+  background: linear-gradient(135deg, #5B21B6 0%, #7C3AED 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Tracking utilities */
+.tracking-tight {
+  letter-spacing: -0.015em;
+}
+
+.tracking-wide {
+  letter-spacing: 0.025em;
+}
+
+/* Enhanced grid utilities */
 .grid {
   display: grid;
-  gap: var(--space-8);
 }
 
 .grid-2 {
@@ -360,222 +614,63 @@ p {
   grid-template-columns: repeat(4, 1fr);
 }
 
-@media (max-width: 1024px) {
-  .grid-4 {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .grid-3 {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.divide-x> :not([hidden])~ :not([hidden]) {
+  border-left: 1px solid var(--gray-200);
 }
 
-@media (max-width: 640px) {
-
-  .grid-2,
-  .grid-3,
-  .grid-4 {
-    grid-template-columns: 1fr;
-  }
+.divide-y> :not([hidden])~ :not([hidden]) {
+  border-top: 1px solid var(--gray-200);
 }
 
-/* ===================================
-   METRICS BAR - Ramp Style
-   =================================== */
-
-.metrics-bar {
-  display: flex;
-  gap: var(--space-12);
-  justify-content: center;
-  flex-wrap: wrap;
-  padding: var(--space-8) 0;
+/* Spacing utilities */
+.space-y-3> :not([hidden])~ :not([hidden]) {
+  margin-top: 0.75rem;
 }
 
-.metric {
-  text-align: center;
+.space-y-4> :not([hidden])~ :not([hidden]) {
+  margin-top: 1rem;
 }
 
-.metric-number {
-  font-size: var(--text-5xl);
-  font-weight: var(--font-extrabold);
-  color: var(--color-success);
-  /* Use success color for metrics */
-  line-height: 1;
-  margin-bottom: var(--space-2);
+.space-y-5> :not([hidden])~ :not([hidden]) {
+  margin-top: 1.25rem;
 }
 
-.metric-label {
-  font-size: var(--text-sm);
-  color: var(--gray-600);
-  font-weight: var(--font-medium);
+/* Enhanced button sizes */
+.btn-large {
+  padding: 1rem 2rem;
+  font-size: var(--text-lg);
 }
 
-/* ===================================
-   PRODUCT CARDS - Simplified
-   =================================== */
+/* Blur effects */
+.blur-3xl {
+  filter: blur(16px);
+}
 
-.product-card {
-  text-align: left;
-  padding: var(--space-6);
-  background-color: var(--color-white);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-lg);
+/* Hover transitions */
+.hover-primary:hover {
+  color: var(--color-primary) !important;
+}
+
+.transition-base {
   transition: all var(--transition-base);
-  text-decoration: none;
-  display: block;
 }
 
-.product-card:hover {
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-md);
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .section {
+    padding: 3rem 0;
+  }
+
+  .section-large {
+    padding: 5rem 0;
+  }
+
+  h1 {
+    font-size: var(--text-3xl);
+  }
+
+  .display-3,
+  .display-4 {
+    font-size: var(--text-2xl);
+  }
 }
-
-.product-icon {
-  width: 48px;
-  height: 48px;
-  background-color: var(--color-primary-light);
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: var(--space-4);
-}
-
-.product-icon i {
-  font-size: 24px;
-  color: var(--color-primary);
-}
-
-.product-title {
-  font-size: var(--text-xl);
-  font-weight: var(--font-semibold);
-  color: var(--color-black);
-  margin-bottom: var(--space-2);
-}
-
-.product-description {
-  font-size: var(--text-base);
-  color: var(--gray-600);
-  margin-bottom: var(--space-4);
-  line-height: 1.5;
-}
-
-.product-link {
-  font-size: var(--text-sm);
-  color: var(--color-primary);
-  font-weight: var(--font-semibold);
-  text-decoration: none;
-}
-
-.product-link:hover {
-  color: var(--color-primary-dark);
-}
-
-/* ===================================
-   NAVBAR - Minimal
-   =================================== */
-
-.navbar-minimal {
-  background-color: var(--color-white);
-  border-bottom: 1px solid var(--gray-200);
-  padding: var(--space-4) 0;
-}
-
-.navbar-minimal .navbar-brand {
-  font-size: var(--text-2xl);
-  font-weight: var(--font-bold);
-  color: var(--color-black);
-  text-decoration: none;
-}
-
-.navbar-minimal .nav-link {
-  color: var(--gray-700);
-  font-weight: var(--font-medium);
-  font-size: var(--text-base);
-  transition: color var(--transition-fast);
-}
-
-.navbar-minimal .nav-link:hover {
-  color: var(--color-primary);
-}
-
-/* ===================================
-   UTILITY CLASSES
-   =================================== */
-
-.text-primary {
-  color: var(--color-primary);
-}
-
-.bg-primary {
-  background-color: var(--color-primary);
-}
-
-.bg-primary-light {
-  background-color: var(--color-primary-light);
-}
-
-.text-success {
-  color: var(--color-success);
-}
-
-.mt-4 {
-  margin-top: var(--space-4);
-}
-
-.mt-6 {
-  margin-top: var(--space-6);
-}
-
-.mt-8 {
-  margin-top: var(--space-8);
-}
-
-.mt-12 {
-  margin-top: var(--space-12);
-}
-
-.mb-4 {
-  margin-bottom: var(--space-4);
-}
-
-.mb-6 {
-  margin-bottom: var(--space-6);
-}
-
-.mb-8 {
-  margin-bottom: var(--space-8);
-}
-
-.mb-12 {
-  margin-bottom: var(--space-12);
-}
-
-.flex {
-  display: flex;
-}
-
-.flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.gap-4 {
-  gap: var(--space-4);
-}
-
-.gap-6 {
-  gap: var(--space-6);
-}
-
-.gap-8 {
-  gap: var(--space-8);
-}
-
-/* ===================================
-   NO DECORATIVE ELEMENTS
-   =================================== */
-
-/* Removed: floating orbs, complex gradients, glassmorphism */
-/* Focus: Clean, professional, conversion-driven */

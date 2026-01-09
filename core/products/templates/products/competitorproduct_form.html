@@ -1,0 +1,181 @@
+{% extends 'products/base.html' %}
+
+{% block title %}
+{% if object %}
+    Edit {{ object.competitor_name }} - {{ object.competitor_product_name }}
+{% else %}
+    Add Competitor Product
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">
+            {% if object %}
+                Edit {{ object.competitor_name }} - {{ object.competitor_product_name }}
+            {% else %}
+                Add Competitor Product
+            {% endif %}
+        </h1>
+        <a href="{% url 'products:competitorproduct_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.competitor_name.id_for_label }}" class="form-label">
+                                        {{ form.competitor_name.label }}
+                                    </label>
+                                    {{ form.competitor_name }}
+                                    {% if form.competitor_name.help_text %}
+                                        <div class="form-text">{{ form.competitor_name.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.competitor_name.errors %}
+                                        <div class="text-danger">{{ form.competitor_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.competitor_product_name.id_for_label }}" class="form-label">
+                                        {{ form.competitor_product_name.label }}
+                                    </label>
+                                    {{ form.competitor_product_name }}
+                                    {% if form.competitor_product_name.help_text %}
+                                        <div class="form-text">{{ form.competitor_product_name.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.competitor_product_name.errors %}
+                                        <div class="text-danger">{{ form.competitor_product_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.competitor_sku.id_for_label }}" class="form-label">
+                                        {{ form.competitor_sku.label }}
+                                    </label>
+                                    {{ form.competitor_sku }}
+                                    {% if form.competitor_sku.help_text %}
+                                        <div class="form-text">{{ form.competitor_sku.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.competitor_sku.errors %}
+                                        <div class="text-danger">{{ form.competitor_sku.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.our_product.id_for_label }}" class="form-label">
+                                        {{ form.our_product.label }}
+                                    </label>
+                                    {{ form.our_product }}
+                                    {% if form.our_product.help_text %}
+                                        <div class="form-text">{{ form.our_product.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.our_product.errors %}
+                                        <div class="text-danger">{{ form.our_product.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.competitive_advantage.id_for_label }}" class="form-label">
+                                {{ form.competitive_advantage.label }}
+                            </label>
+                            {{ form.competitive_advantage }}
+                            {% if form.competitive_advantage.help_text %}
+                                <div class="form-text">{{ form.competitive_advantage.help_text }}</div>
+                            {% endif %}
+                            {% if form.competitive_advantage.errors %}
+                                <div class="text-danger">{{ form.competitive_advantage.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.price_difference_percent.id_for_label }}" class="form-label">
+                                        {{ form.price_difference_percent.label }}
+                                    </label>
+                                    {{ form.price_difference_percent }}
+                                    {% if form.price_difference_percent.help_text %}
+                                        <div class="form-text">{{ form.price_difference_percent.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.price_difference_percent.errors %}
+                                        <div class="text-danger">{{ form.price_difference_percent.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.is_direct_competitor.label }}</label>
+                                    <div class="form-check">
+                                        {{ form.is_direct_competitor }}
+                                        <label class="form-check-label" for="{{ form.is_direct_competitor.id_for_label }}">
+                                            {{ form.is_direct_competitor.label }}
+                                        </label>
+                                    </div>
+                                    {% if form.is_direct_competitor.help_text %}
+                                        <div class="form-text">{{ form.is_direct_competitor.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.is_direct_competitor.errors %}
+                                        <div class="text-danger">{{ form.is_direct_competitor.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'products:competitorproduct_list' %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if object %}
+                                    Update Competitor
+                                {% else %}
+                                    Add Competitor
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Information</h5>
+                </div>
+                <div class="card-body">
+                    <p>Map competitor products to your own products for competitive analysis.</p>
+                    <ul>
+                        <li>Enter the competitor's company name</li>
+                        <li>Specify the competitor's product name</li>
+                        <li>Link to your equivalent product</li>
+                        <li>Record price differences as a percentage</li>
+                        <li>Note any competitive advantages</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

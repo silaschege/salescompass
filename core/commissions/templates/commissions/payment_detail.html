@@ -1,4 +1,5 @@
 {% extends 'commissions/base.html' %}
+{% load task_tags %}
 
 {% block content %}
 <div class="container-fluid py-4">
@@ -9,75 +10,91 @@
         </a>
     </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-            <h6 class="m-0 font-weight-bold text-primary">Payment ID: #{{ payment.pk }}</h6>
-            <span
-                class="badge bg-{% if payment.status == 'paid' %}success{% elif payment.status == 'approved' %}primary{% elif payment.status == 'processing' %}info{% else %}secondary{% endif %} px-3 py-2">
-                {{ payment.get_status_display }}
-            </span>
+    <div class="row">
+        <!-- Main Content Column -->
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Payment ID: #{{ payment.pk }}</h6>
+                    <span
+                        class="badge bg-{% if payment.status == 'paid' %}success{% elif payment.status == 'approved' %}primary{% elif payment.status == 'processing' %}info{% else %}secondary{% endif %} px-3 py-2">
+                        {{ payment.get_status_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Period</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ payment.period_start|date:"M d" }} - {{ payment.period_end|date:"M d, Y" }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Total Amount</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ payment.total_amount|floatformat:2
+                                }}</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Paid Date</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ payment.paid_date|default:"-" }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">Actions</div>
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            {% if payment.status == 'calculated' %}
+                            <input type="hidden" name="action" value="approve">
+                            <button type="submit" class="btn btn-primary btn-sm">Approve</button>
+                            {% elif payment.status == 'approved' %}
+                            <input type="hidden" name="action" value="process">
+                            <button type="submit" class="btn btn-info btn-sm">Process</button>
+                            {% elif payment.status == 'processing' %}
+                            <input type="hidden" name="action" value="pay">
+                            <button type="submit" class="btn btn-success btn-sm">Mark Paid</button>
+                            {% endif %}
+                        </form>
+                        <a href="{% url 'commissions:statement_export' payment.pk %}"
+                            class="btn btn-secondary btn-sm ml-2">
+                            <i class="fas fa-file-pdf"></i> Download PDF
+                        </a>
+                    </div>
+
+                    <hr>
+
+                    <h5 class="font-weight-bold text-gray-800 mb-3">Included Commissions</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Opportunity</th>
+                                    <th>Rate</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for comm in payment.commissions.all %}
+                                <tr>
+                                    <td>{{ comm.date_earned|date:"M d, Y" }}</td>
+                                    <td>{{ comm.opportunity.name }}</td>
+                                    <td>{{ comm.rate_applied }}%</td>
+                                    <td>${{ comm.amount|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="text-xs font-weight-bold text-uppercase mb-1">Period</div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800">
-                        {{ payment.period_start|date:"M d" }} - {{ payment.period_end|date:"M d, Y" }}
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="text-xs font-weight-bold text-uppercase mb-1">Total Amount</div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800">${{ payment.total_amount|floatformat:2 }}</div>
-                </div>
-                <div class="col-md-3">
-                    <div class="text-xs font-weight-bold text-uppercase mb-1">Paid Date</div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800">
-                        {{ payment.paid_date|default:"-" }}
-                    </div>
-                </div>
-                <div class="col-md-3 text-right">
-                    <div class="text-xs font-weight-bold text-uppercase mb-1">Actions</div>
-                    <form method="post" class="d-inline">
-                        {% csrf_token %}
-                        {% if payment.status == 'calculated' %}
-                        <input type="hidden" name="action" value="approve">
-                        <button type="submit" class="btn btn-primary btn-sm">Approve</button>
-                        {% elif payment.status == 'approved' %}
-                        <input type="hidden" name="action" value="process">
-                        <button type="submit" class="btn btn-info btn-sm">Process</button>
-                        {% elif payment.status == 'processing' %}
-                        <input type="hidden" name="action" value="pay">
-                        <button type="submit" class="btn btn-success btn-sm">Mark Paid</button>
-                        {% endif %}
-                    </form>
-                </div>
-            </div>
 
-            <hr>
-
-            <h5 class="font-weight-bold text-gray-800 mb-3">Included Commissions</h5>
-            <div class="table-responsive">
-                <table class="table table-bordered" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Opportunity</th>
-                            <th>Rate</th>
-                            <th>Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for comm in payment.commissions.all %}
-                        <tr>
-                            <td>{{ comm.date_earned|date:"M d, Y" }}</td>
-                            <td>{{ comm.opportunity.name }}</td>
-                            <td>{{ comm.rate_applied }}%</td>
-                            <td>${{ comm.amount|floatformat:2 }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        <!-- Sidebar Column -->
+        <div class="col-lg-4">
+            {% render_object_tasks payment %}
         </div>
     </div>
 </div>

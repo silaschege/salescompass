@@ -1,4 +1,4 @@
-{% extends 'logged_in/base.html' %}
+{% extends 'tenants/base.html' %}
 
 {% block title %}Tenant Data Preservation{% endblock %}
 
@@ -17,7 +17,7 @@
                     <h6 class="m-0 font-weight-bold text-primary">Create New Preservation</h6>
                 </div>
                 <div class="card-body">
-                    <form method="post" action="{% url 'tenants:create-data-preservation' %}">
+                    <form method="post" action="">
                         {% csrf_token %}
                         <div class="form-row align-items-center">
                             <div class="form-group col-md-4">

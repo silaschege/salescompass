@@ -1,0 +1,93 @@
+{% extends "automation/base.html" %}
+{% load core_extras %}
+
+{% block title %}Webhook Log Detail - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Webhook Log Detail</h1>
+        <p class="text-white text-center">Delivery ID: {{ log.pk }}</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="mb-3">
+        <a href="{% url 'automation:webhook_log_list' %}" class="btn btn-outline-secondary">← Back to Logs</a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Payload</h5>
+                </div>
+                <div class="card-body p-0">
+                    <pre class="bg-dark text-light p-3 mb-0"
+                        style="max-height: 400px; overflow: auto;"><code>{{ log.payload|pretty_json }}</code></pre>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Response Body</h5>
+                </div>
+                <div class="card-body p-0">
+                    <pre class="bg-light p-3 mb-0"
+                        style="max-height: 400px; overflow: auto;"><code>{{ log.response_body }}</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Delivery Info</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Status
+                            <span
+                                class="badge bg-{% if log.status == 'delivered' %}success{% elif log.status == 'failed' %}danger{% else %}secondary{% endif %}">
+                                {{ log.get_status_display }}
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            HTTP Method
+                            <span class="badge bg-info">{{ log.http_method }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Response Code
+                            <span class="fw-bold">{{ log.response_status_code|default:"—" }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Event Type
+                            <code>{{ log.event_type }}</code>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Execution Time
+                            <span>{{ log.execution_time_ms|floatformat:2 }}ms</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Created At
+                            <span>{{ log.webhook_delivery_created_at|date:"Y-m-d H:i:s" }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Endpoint Detail</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1 fw-bold">{{ log.webhook_endpoint.webhook_endpoint_name }}</p>
+                    <p class="small text-muted mb-3">{{ log.webhook_delivery_url }}</p>
+                    <a href="#" class="btn btn-sm btn-outline-primary w-100">View Endpoint Config</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

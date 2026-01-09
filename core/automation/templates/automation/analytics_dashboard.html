@@ -1,0 +1,357 @@
+{% extends 'automation/base.html' %}
+{% load static %}
+
+{% block title %}Workflow Analytics - SalesCompass{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .metric-card {
+        background: linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%);
+        color: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);
+    }
+
+    .metric-card.success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+
+    .metric-card.warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+
+    .metric-card.danger {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+
+    .metric-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .chart-container {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    .date-filter {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .date-filter .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+    }
+
+    .date-filter .btn.active {
+        background-color: #6f42c1;
+        color: white;
+    }
+    
+    .progress-container {
+        margin-top: 10px;
+    }
+    
+    .performance-metric {
+        margin-bottom: 1rem;
+    }
+    
+    .performance-metric .label {
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+    }
+    
+    .performance-metric .value {
+        font-size: 1.2rem;
+        color: #6f42c1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header-bar">
+    <div class="container">
+        <h1 class="block-title">📊 {{ page_title }}</h1>
+        <p class="text-center text-light opacity-75 mb-0">Monitor workflow performance and execution metrics</p>
+    </div>
+</div>
+
+<!-- Date Range Filter -->
+<div class="date-filter justify-content-center">
+    <a href="?days=7" class="btn btn-light {% if days == 7 %}active{% endif %}">7 Days</a>
+    <a href="?days=30" class="btn btn-light {% if days == 30 %}active{% endif %}">30 Days</a>
+    <a href="?days=90" class="btn btn-light {% if days == 90 %}active{% endif %}">90 Days</a>
+</div>
+
+<!-- Metric Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-value">{{ tenant_analytics.workflows.total|default:0 }}</div>
+            <div class="metric-label">Total Workflows</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card success">
+            <div class="metric-value">{{ tenant_analytics.workflows.active|default:0 }}</div>
+            <div class="metric-label">Active Workflows</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card warning">
+            <div class="metric-value">{{ tenant_analytics.executions.total|default:0 }}</div>
+            <div class="metric-label">Total Executions</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        {% with success_count=tenant_analytics.executions.by_status.completed|default:0 %}
+        {% with total=tenant_analytics.executions.total|default:1 %}
+        <div
+            class="metric-card {% if success_count >= total %}success{% elif success_count > 0 %}warning{% else %}danger{% endif %}">
+            <div class="metric-value">{{ tenant_analytics.executions.by_status.completed|default:0 }}</div>
+            <div class="metric-label">Successful Executions</div>
+        </div>
+        {% endwith %}
+        {% endwith %}
+    </div>
+</div>
+
+<!-- Status Breakdown -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="metric-card danger">
+            <div class="metric-value">{{ tenant_analytics.executions.by_status.failed|default:0 }}</div>
+            <div class="metric-label">Failed Executions</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="metric-card warning">
+            <div class="metric-value">{{ tenant_analytics.executions.by_status.pending|default:0 }}</div>
+            <div class="metric-label">Pending Executions</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="metric-card">
+            <div class="metric-value">{{ tenant_analytics.executions.by_status.waiting_for_approval|default:0 }}</div>
+            <div class="metric-label">Awaiting Approval</div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Metrics -->
+<div class="row g-4 mb-4">
+    <div class="col-md-12">
+        <div class="chart-container">
+            <h5 class="mb-3">Performance Metrics</h5>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="performance-metric text-center">
+                        <div class="label">Avg. Execution Time</div>
+                        <div class="value">{{ tenant_analytics.top_workflows.0.avg_time|floatformat:2|default:"0.00" }} ms</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="performance-metric text-center">
+                        <div class="label">Success Rate</div>
+                        {% with total=tenant_analytics.executions.total|default:1 %}
+                        {% with success=tenant_analytics.executions.by_status.completed|default:0 %}
+                        <div class="value">{{ success|div:total|mul:100|floatformat:1 }}%</div>
+                        {% endwith %}
+                        {% endwith %}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="performance-metric text-center">
+                        <div class="label">Avg. Failed Rate</div>
+                        {% with total=tenant_analytics.executions.total|default:1 %}
+                        {% with failed=tenant_analytics.executions.by_status.failed|default:0 %}
+                        <div class="value">{{ failed|div:total|mul:100|floatformat:1 }}%</div>
+                        {% endwith %}
+                        {% endwith %}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="performance-metric text-center">
+                        <div class="label">Active Workflows</div>
+                        <div class="value">{{ tenant_analytics.workflows.active|default:0 }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-4">
+    <div class="col-md-8">
+        <div class="chart-container">
+            <h5 class="mb-3">Execution Trends</h5>
+            <canvas id="trendsChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="chart-container">
+            <h5 class="mb-3">Action Types</h5>
+            <canvas id="actionChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Top Workflows -->
+{% if tenant_analytics.top_workflows %}
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">🏆 Top Performing Workflows</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Workflow</th>
+                        <th>Executions</th>
+                        <th>Avg. Time (ms)</th>
+                        <th>Success Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for wf in tenant_analytics.top_workflows %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'automation:workflow_detail' pk=wf.workflow_id %}">
+                                {{ wf.workflow__workflow_name }}
+                            </a>
+                        </td>
+                        <td><span class="badge bg-primary">{{ wf.execution_count }}</span></td>
+                        <td>{{ wf.avg_time|floatformat:0|default:"-" }}</td>
+                        <td>
+                            {% with total=wf.execution_count|default:1 %}
+                            {% with success=wf.execution_count|default:0 %}
+                            {{ success|div:total|mul:100|floatformat:1 }}%
+                            {% endwith %}
+                            {% endwith %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-muted text-center">No workflow executions in this period</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Execution Trends Chart
+        const trendsData = {{ execution_trends|safe}};
+        const labels = trendsData.map(d => d.date);
+        const totals = trendsData.map(d => d.total);
+        const completed = trendsData.map(d => d.completed);
+        const failed = trendsData.map(d => d.failed);
+
+        new Chart(document.getElementById('trendsChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Total',
+                        data: totals,
+                        borderColor: '#6f42c1',
+                        backgroundColor: 'rgba(111, 66, 193, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Completed',
+                        data: completed,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: false,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Failed',
+                        data: failed,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        fill: false,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { 
+                    legend: { position: 'top' },
+                    title: {
+                        display: true,
+                        text: 'Execution Trends Over Time'
+                    }
+                },
+                scales: { 
+                    y: { 
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Executions'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Action Types Chart
+        const actionData = {{ action_stats|safe}};
+        const actionLabels = Object.keys(actionData);
+        const actionValues = Object.values(actionData);
+
+        new Chart(document.getElementById('actionChart'), {
+            type: 'doughnut',
+            data: {
+                labels: actionLabels,
+                datasets: [{
+                    data: actionValues,
+                    backgroundColor: [
+                        '#6f42c1', '#10b981', '#f59e0b', '#ef4444',
+                        '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4',
+                        '#84cc16', '#f97316', '#0ea5e9', '#8b5cf6'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { 
+                    legend: { position: 'bottom' },
+                    title: {
+                        display: true,
+                        text: 'Action Type Distribution'
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

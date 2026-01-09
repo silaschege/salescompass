@@ -23,6 +23,7 @@
                             <th>Name</th>
                             <th>Slug</th>
                             <th>Domain</th>
+                            <th>Admin User</th>
                             <th>Plan</th>
                             <th>Status</th>
                             <th>Created</th>
@@ -35,6 +36,7 @@
                             <td><strong>{{ tenant.name }}</strong></td>
                             <td><code>{{ tenant.slug }}</code></td>
                             <td>{{ tenant.domain|default:"N/A" }}</td>
+                            <td>{{ tenant.tenant_admin.email|default:"-" }}</td>
                             <td>{{ tenant.plan.name|default:"No Plan" }}</td>
                             <td>
                                 {% if tenant.subscription_status == 'active' %}
@@ -69,13 +71,13 @@
                                         {% else %}
                                         <li>
                                             <a class="dropdown-item"
-                                                href="{% url 'tenants:suspend_tenant' tenant_id=tenant.id %}">
+                                                href="{% url 'tenants:suspend' tenant_id=tenant.id %}">
                                                 <i class="bi bi-pause-circle text-warning me-2"></i>Suspend
                                             </a>
                                         </li>
                                         <li>
                                             <a class="dropdown-item"
-                                                href="{% url 'tenants:archive_tenant' tenant_id=tenant.id %}">
+                                                href="{% url 'tenants:archive' tenant_id=tenant.id %}">
                                                 <i class="bi bi-archive text-secondary me-2"></i>Archive
                                             </a>
                                         </li>
@@ -85,7 +87,7 @@
                                         </li>
                                         <li>
                                             <a class="dropdown-item text-danger"
-                                                href="{% url 'tenants:delete_tenant' tenant_id=tenant.id %}">
+                                                href="{% url 'tenants:delete' tenant_id=tenant.id %}">
                                                 <i class="bi bi-trash me-2"></i>Delete
                                             </a>
                                         </li>

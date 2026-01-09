@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container-fluid">
     <h1>Workflow Builder</h1>
-    
+
     <div class="row">
         <div class="col-md-3">
             <div class="card">
@@ -30,9 +30,50 @@
                             <i class="bi bi-stop-circle"></i> End
                         </div>
                     </div>
-                    
+
                     <hr>
-                    
+
+                    <h6>Available Triggers by Module</h6>
+                    {% for module_key, module_data in module_config.items %}
+                    <div class="module-section">
+                        <h6>{{ module_data.label }}</h6>
+                        {% for trigger in module_data.triggers %}
+                        <div class="trigger-item draggable" data-type="trigger"
+                            data-trigger-id="{{ module_key }}.{{ trigger.id }}"
+                            data-trigger-label="{{ trigger.label }}">
+                            {{ trigger.label }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+
+                    <hr>
+
+                    <h6>Available Actions</h6>
+                    {% for module_key, module_data in module_config.items %}
+                    <div class="module-section">
+                        <h6>{{ module_data.label }}</h6>
+                        {% for action in module_data.actions %}
+                        <div class="action-item draggable" data-type="action"
+                            data-action-id="{{ module_key }}.{{ action.id }}" data-action-label="{{ action.label }}">
+                            {{ action.label }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+
+                    <hr>
+
+                    <h6>Common Actions</h6>
+                    {% for action in module_config.COMMON_ACTIONS %}
+                    <div class="action-item draggable" data-type="action" data-action-id="{{ action.id }}"
+                        data-action-label="{{ action.label }}">
+                        {{ action.label }}
+                    </div>
+                    {% endfor %}
+
+                    <hr>
+
                     <h6>Templates</h6>
                     {% for template in templates %}
                     <div class="template-item" data-template-id="{{ template.id }}">
@@ -42,15 +83,15 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header d-flex justify-content-between">
                     <h5>
                         {% if workflow %}
-                            Editing: {{ workflow.workflow_name }}
+                        Editing: {{ workflow.workflow_name }}
                         {% else %}
-                            New Workflow
+                        New Workflow
                         {% endif %}
                     </h5>
                     <div>
@@ -66,7 +107,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-3">
             <div class="card">
                 <div class="card-header">
@@ -91,7 +132,7 @@
         border: 1px solid #ccc;
         overflow: auto;
     }
-    
+
     .elements-list .element {
         padding: 10px;
         margin: 5px 0;
@@ -100,11 +141,30 @@
         border-radius: 4px;
         cursor: grab;
     }
-    
+
     .elements-list .element:hover {
         background: #e9ecef;
     }
-    
+
+    .module-section {
+        margin-bottom: 15px;
+    }
+
+    .trigger-item,
+    .action-item {
+        padding: 8px;
+        margin: 3px 0;
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        border-radius: 3px;
+        cursor: grab;
+    }
+
+    .trigger-item:hover,
+    .action-item:hover {
+        background: #ade4f1;
+    }
+
     .template-item {
         padding: 8px;
         margin: 3px 0;
@@ -113,14 +173,14 @@
         border-radius: 3px;
         cursor: pointer;
     }
-    
+
     .template-item:hover {
         background: #ade4f1;
     }
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const canvas = document.getElementById('drawflow');
         const editor = new Drawflow(canvas);
         editor.start();
@@ -143,6 +203,10 @@
 
         function dragStart(e) {
             e.dataTransfer.setData('text/plain', e.target.dataset.type);
+            e.dataTransfer.setData('triggerId', e.target.dataset.triggerId || '');
+            e.dataTransfer.setData('actionId', e.target.dataset.actionId || '');
+            e.dataTransfer.setData('triggerLabel', e.target.dataset.triggerLabel || '');
+            e.dataTransfer.setData('actionLabel', e.target.dataset.actionLabel || '');
         }
 
         canvas.addEventListener('dragover', (e) => {
@@ -152,19 +216,36 @@
         canvas.addEventListener('drop', (e) => {
             e.preventDefault();
             const type = e.dataTransfer.getData('text/plain');
+            const triggerId = e.dataTransfer.getData('triggerId');
+            const actionId = e.dataTransfer.getData('actionId');
+            const triggerLabel = e.dataTransfer.getData('triggerLabel');
+            const actionLabel = e.dataTransfer.getData('actionLabel');
+
             const rect = canvas.getBoundingClientRect();
             const pos = editor.canvasToClientXY(e.clientX - rect.left, e.clientY - rect.top);
-            
+
             // Add new node based on type
-            switch(type) {
+            switch (type) {
                 case 'trigger':
-                    editor.addNode('trigger', 1, 1, pos.x, pos.y, 'trigger', { event_type: 'account.created' }, 'Trigger');
+                    const eventType = triggerId || 'account.created';
+                    const triggerLabelText = triggerLabel || 'Trigger';
+                    editor.addNode('trigger', 1, 1, pos.x, pos.y, 'trigger', {
+                        event_type: eventType
+                    }, triggerLabelText);
                     break;
                 case 'action':
-                    editor.addNode('action', 2, 1, pos.x, pos.y, 'action', { action_type: 'send_email' }, 'Action');
+                    const actionType = actionId || 'send_email';
+                    const actionLabelText = actionLabel || 'Action';
+                    editor.addNode('action', 2, 1, pos.x, pos.y, 'action', {
+                        action_type: actionType
+                    }, actionLabelText);
                     break;
                 case 'condition':
-                    editor.addNode('condition', 2, 1, pos.x, pos.y, 'condition', { field: '', operator: 'eq', value: '' }, 'Condition');
+                    editor.addNode('condition', 2, 1, pos.x, pos.y, 'condition', {
+                        field: '',
+                        operator: 'eq',
+                        value: ''
+                    }, 'Condition');
                     break;
                 case 'decision':
                     editor.addNode('decision', 2, 2, pos.x, pos.y, 'decision', {}, 'Decision');
@@ -176,10 +257,10 @@
         });
 
         // Save workflow button
-        document.getElementById('save-workflow-btn').addEventListener('click', function() {
+        document.getElementById('save-workflow-btn').addEventListener('click', function () {
             const workflowData = editor.export();
             const workflowName = prompt('Enter workflow name:', '{{ workflow.workflow_name|default:"New Workflow" }}');
-            
+
             if (workflowName) {
                 fetch('{% url "automation:save_workflow" %}', {
                     method: 'POST',
@@ -192,33 +273,34 @@
                         workflow_data: workflowData,
                         {% if workflow_id %}
                         id: {{ workflow_id }},
-                        {% endif %}
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Workflow saved successfully!');
-                        if (!{{ workflow_id|default:0 }}) {
-                            window.location.href = `/automation/builder/${data.workflow_id}/`;
-                        }
+            {% endif %}
+        })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Workflow saved successfully!');
+                if (!{{ workflow_id |default: 0 }
+            }) {
+        window.location.href = `/automation/builder/${data.workflow_id}/`;
+    }
                     } else {
-                        alert('Error saving workflow: ' + data.message);
-                    }
+        alert('Error saving workflow: ' + data.message);
+    }
                 })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while saving the workflow.');
-                });
+                .catch (error => {
+        console.error('Error:', error);
+        alert('An error occurred while saving the workflow.');
+    });
             }
         });
 
-        // Template loading
-        document.querySelectorAll('.template-item').forEach(item => {
-            item.addEventListener('click', function() {
-                const templateId = this.dataset.templateId;
-                // Load template data via AJAX
-                fetch(`/automation/api/load-template/${templateId}/`)
+    // Template loading
+    document.querySelectorAll('.template-item').forEach(item => {
+        item.addEventListener('click', function () {
+            const templateId = this.dataset.templateId;
+            // Load template data via AJAX
+            fetch(`/automation/api/load-template/${templateId}/`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -229,8 +311,154 @@
                 .catch(error => {
                     console.error('Error loading template:', error);
                 });
-            });
         });
+    });
+    // Element selection
+    editor.on('nodeSelected', function (id) {
+        const node = editor.getNodeFromId(id);
+        renderPropertiesPanel(id, node);
+    });
+
+    editor.on('nodeUnselected', function (true_bool) {
+        document.getElementById('properties-panel').innerHTML = '<p>Select an element to edit its properties</p>';
+    });
+
+    function renderPropertiesPanel(id, node) {
+        const panel = document.getElementById('properties-panel');
+        const data = node.data;
+        const type = node.name; // 'action', 'trigger', etc.
+
+        let html = `<h6>Properties: ${node.html}</h6>`;
+        html += `<form id="node-properties-form">`;
+
+        if (type === 'action') {
+            const actionType = data.action_type;
+            html += `<div class="mb-3"><label class="form-label">Action Type</label><input type="text" class="form-control" value="${actionType}" disabled></div>`;
+
+            // Config for Create Task
+            if (actionType === 'create_task') {
+                // Initialize empty config if needed
+                if (!data.config) data.config = {};
+
+                html += `
+                        <div class="mb-3">
+                            <label class="form-label">Task Title</label>
+                            <input type="text" class="form-control" name="title" value="${data.config.title || ''}" placeholder="e.g. Call {{ object.first_name }}">
+                            <div class="form-text">Supports placeholders like {{ object.field }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="3">${data.config.description || ''}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Due Date Rule</label>
+                            <select class="form-select mb-2" name="due_date_type">
+                                <option value="fixed" ${data.config.due_date_rule?.type === 'fixed' ? 'selected' : ''}>Fixed Date</option>
+                                <option value="relative" ${data.config.due_date_rule?.type === 'relative' ? 'selected' : ''}>Relative (e.g. +2 days)</option>
+                            </select>
+                            
+                            <div id="due_date_relative" style="display: ${data.config.due_date_rule?.type === 'relative' ? 'block' : 'none'}">
+                                <div class="input-group">
+                                    <input type="number" class="form-control" name="due_date_value" value="${data.config.due_date_rule?.value || 0}">
+                                    <select class="form-select" name="due_date_unit">
+                                        <option value="hours" ${data.config.due_date_rule?.unit === 'hours' ? 'selected' : ''}>Hours</option>
+                                        <option value="days" ${data.config.due_date_rule?.unit === 'days' ? 'selected' : ''}>Days</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Assignee Rule</label>
+                            <select class="form-select mb-2" name="assignee_type">
+                                <option value="owner" ${data.config.assignee_rule?.type === 'owner' ? 'selected' : ''}>Owner of Trigger Object</option>
+                                <option value="user" ${data.config.assignee_rule?.type === 'user' ? 'selected' : ''}>Specific User</option>
+                            </select>
+                            
+                            <div id="assignee_user" style="display: ${data.config.assignee_rule?.type === 'user' ? 'block' : 'none'}">
+                                <input type="number" class="form-control" name="assignee_user_id" placeholder="User ID" value="${data.config.assignee_rule?.value || ''}">
+                            </div>
+                             <div id="assignee_fallback">
+                                <label class="form-label small">Fallback User ID</label>
+                                <input type="number" class="form-control" name="assignee_fallback_id" value="${data.config.assignee_rule?.fallback_user_id || ''}">
+                            </div>
+                        </div>
+                    `;
+            }
+            // Generic Config for others
+            else {
+                html += `
+                        <div class="mb-3">
+                            <label class="form-label">Configuration (JSON)</label>
+                            <textarea class="form-control font-monospace" name="json_config" rows="5">${JSON.stringify(data.config || {}, null, 2)}</textarea>
+                        </div>
+                    `;
+            }
+        } else if (type === 'trigger') {
+            html += `
+                    <div class="mb-3">
+                        <label class="form-label">Event Type</label>
+                        <input type="text" class="form-control" value="${data.event_type}" disabled>
+                    </div>
+                 `;
+        }
+
+        html += `</form>`;
+        panel.innerHTML = html;
+
+        // Bind Events
+        const form = document.getElementById('node-properties-form');
+        if (form) {
+            form.addEventListener('input', function (e) {
+                const formData = new FormData(form);
+
+                if (type === 'action' && data.action_type === 'create_task') {
+                    if (!data.config) data.config = {};
+                    data.config.title = formData.get('title');
+                    data.config.description = formData.get('description');
+
+                    // Due Date Rule
+                    const dueType = formData.get('due_date_type');
+                    if (dueType === 'relative') {
+                        data.config.due_date_rule = {
+                            type: 'relative',
+                            value: parseInt(formData.get('due_date_value')),
+                            unit: formData.get('due_date_unit')
+                        };
+                    } else {
+                        // Handle fixed... or clear
+                        data.config.due_date_rule = { type: 'fixed' };
+                    }
+
+                    // Toggle visibility
+                    document.getElementById('due_date_relative').style.display = dueType === 'relative' ? 'block' : 'none';
+
+                    // Assignee Rule
+                    const assignType = formData.get('assignee_type');
+                    data.config.assignee_rule = {
+                        type: assignType,
+                        value: assignType === 'user' ? parseInt(formData.get('assignee_user_id')) : null,
+                        fallback_user_id: parseInt(formData.get('assignee_fallback_id'))
+                    };
+
+                    document.getElementById('assignee_user').style.display = assignType === 'user' ? 'block' : 'none';
+
+                } else if (type === 'action') {
+                    // Generic JSON parsing
+                    try {
+                        const jsonVal = formData.get('json_config');
+                        data.config = JSON.parse(jsonVal);
+                    } catch (err) {
+                        // ignore parse error while typing
+                    }
+                }
+
+                // Update node data
+                editor.updateNodeDataFromId(id, data);
+            });
+        }
+    }
     });
 </script>
 {% endblock %}

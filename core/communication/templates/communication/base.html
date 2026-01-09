@@ -1,0 +1,137 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    :root {
+        --comm-purple: #6f42c1;
+        --comm-purple-light: #f0e6ff;
+        --comm-gold: #ffd600;
+        --comm-gold-dark: #ccac00;
+    }
+
+    .header-bar {
+        background: linear-gradient(135deg, var(--comm-purple) 0%, #5a34a0 100%);
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+        color: white;
+        text-align: center;
+        border-radius: 0 0 2rem 2rem;
+        box-shadow: 0 4px 20px rgba(111, 66, 193, 0.2);
+    }
+
+    .block-title {
+        font-weight: 800;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.5px;
+    }
+
+    .comm-card {
+        background: white;
+        border-radius: 1rem;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        margin-bottom: 1.5rem;
+    }
+
+    .comm-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(111, 66, 193, 0.1);
+    }
+
+    .comm-icon-box {
+        width: 60px;
+        height: 60px;
+        background: var(--comm-purple-light);
+        color: var(--comm-purple);
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .btn-comm {
+        background-color: var(--comm-purple);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+
+    .btn-comm:hover {
+        background-color: #5a34a0;
+        color: white;
+        transform: scale(1.02);
+    }
+
+    .btn-gold {
+        background-color: var(--comm-gold);
+        color: #333;
+        border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+
+    .btn-gold:hover {
+        background-color: var(--comm-gold-dark);
+        color: #000;
+        transform: scale(1.02);
+    }
+
+    .nav-tabs-comm .nav-link {
+        border: none;
+        color: #6c757d;
+        font-weight: 600;
+        padding: 1rem 1.5rem;
+        border-bottom: 3px solid transparent;
+    }
+
+    .nav-tabs-comm .nav-link.active {
+        color: var(--comm-purple);
+        background: transparent;
+        border-bottom: 3px solid var(--comm-purple);
+    }
+
+    .table-comm thead th {
+        background-color: #f8f9fa;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        color: #6c757d;
+        border-top: none;
+    }
+
+    .badge-comm {
+        padding: 0.5em 1em;
+        border-radius: 2rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">{% block comm_title %}Communication Center{% endblock %}</h1>
+        <p class="text-white opacity-75 lead">{% block comm_subtitle %}Manage interactions across all channels{%
+            endblock %}</p>
+
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            {% block comm_actions %}{% endblock %}
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    {% block comm_content %}{% endblock %}
+</div>
+{% endblock %}

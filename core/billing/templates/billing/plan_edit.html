@@ -22,60 +22,87 @@
                         <div class="mb-3">
                             {{ form.name.label_tag }}
                             {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="text-danger">{{ form.name.errors }}</div>
+                            {% endif %}
                         </div>
                         <div class="mb-3">
-                            {{ form.slug.label_tag }}
-                            {{ form.slug }}
+                            {{ form.description.label_tag }}
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger">{{ form.description.errors }}</div>
+                            {% endif %}
                         </div>
                         <div class="mb-3">
-                            {{ form.tier.label_tag }}
-                            {{ form.tier }}
+                            {{ form.price.label_tag }}
+                            {{ form.price }}
+                            {% if form.price.errors %}
+                                <div class="text-danger">{{ form.price.errors }}</div>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            {{ form.price_monthly.label_tag }}
-                            {{ form.price_monthly }}
+                            {{ form.max_users.label_tag }}
+                            {{ form.max_users }}
+                            {% if form.max_users.errors %}
+                                <div class="text-danger">{{ form.max_users.errors }}</div>
+                            {% endif %}
                         </div>
                         <div class="mb-3">
-                            {{ form.price_yearly.label_tag }}
-                            {{ form.price_yearly }}
+                            {{ form.storage_limit.label_tag }}
+                            {{ form.storage_limit }}
+                            {% if form.storage_limit.errors %}
+                                <div class="text-danger">{{ form.storage_limit.errors }}</div>
+                            {% endif %}
                         </div>
                         <div class="mb-3">
-                            {{ form.is_active.label_tag }}
-                            {{ form.is_active }}
+                            {{ form.api_calls_limit.label_tag }}
+                            {{ form.api_calls_limit }}
+                            {% if form.api_calls_limit.errors %}
+                                <div class="text-danger">{{ form.api_calls_limit.errors }}</div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
 
                 <hr>
 
-                <h6>Plan Limits</h6>
+                <h6>Plan Features</h6>
                 <div class="row">
                     <div class="col-md-4">
-                        <div class="mb-3">
-                            {{ form.max_users.label_tag }}
-                            {{ form.max_users }}
+                        <div class="mb-3 form-check">
+                            {{ form.has_reports }}
+                            {{ form.has_reports.label_tag }}
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="mb-3">
-                            {{ form.max_leads.label_tag }}
-                            {{ form.max_leads }}
+                        <div class="mb-3 form-check">
+                            {{ form.has_custom_fields }}
+                            {{ form.has_custom_fields.label_tag }}
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="mb-3">
-                            {{ form.max_storage_gb.label_tag }}
-                            {{ form.max_storage_gb }}
+                        <div class="mb-3 form-check">
+                            {{ form.has_integrations }}
+                            {{ form.has_integrations.label_tag }}
                         </div>
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    {{ form.features.label_tag }}
-                    {{ form.features }}
-                    <small class="form-text text-muted">Enter feature flags as JSON array</small>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3 form-check">
+                            {{ form.is_active }}
+                            {{ form.is_active.label_tag }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3 form-check">
+                            {{ form.is_featured }}
+                            {{ form.is_featured.label_tag }}
+                        </div>
+                    </div>
                 </div>
 
                 <div class="mt-4">

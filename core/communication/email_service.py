@@ -1,17 +1,6 @@
-"""
-Email Service for SalesCompass CRM
-
-Provides unified email sending through multiple providers:
-- SendGrid (primary)
-- Django SMTP (fallback)
-
-Supports:
-- Transactional emails
-- Marketing campaigns
-- Drip sequences
-- Template-based emails
-"""
 import logging
+import re
+import uuid
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 from enum import Enum
@@ -19,6 +8,8 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.utils import timezone
+from urllib.parse import urlencode
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +35,7 @@ class EmailMessage:
     custom_args: Optional[Dict[str, str]] = None
     template_id: Optional[str] = None
     template_data: Optional[Dict[str, Any]] = None
+    tracking_id: Optional[str] = None
 
 
 class EmailResult:
@@ -110,6 +102,11 @@ class SendGridProvider:
             if message.categories:
                 for cat in message.categories:
                     mail.add_category(Category(cat))
+            
+            if message.tracking_id:
+                if not message.custom_args:
+                    message.custom_args = {}
+                message.custom_args['tracking_id'] = message.tracking_id
             
             if message.custom_args:
                 for key, value in message.custom_args.items():
@@ -193,26 +190,13 @@ class SMTPProvider:
 
 class EmailService:
     """
-    Unified email service with provider fallback.
-    
-    Usage:
-        from communication.email_service import EmailService
-        
-        service = EmailService()
-        result = service.send_email(
-            to=['user@example.com'],
-            subject='Welcome!',
-            template='welcome_email',
-            context={'name': 'John'}
-        )
-        
-        if result.success:
-            print(f"Email sent via {result.provider}")
+    Unified email service with provider fallback, scheduling and tracking.
     """
     
     def __init__(self):
         self.sendgrid = SendGridProvider()
         self.smtp = SMTPProvider()
+        self.base_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
     
     def get_active_provider(self) -> Optional[object]:
         """Get the first configured provider."""
@@ -221,55 +205,88 @@ class EmailService:
         if self.smtp.is_configured():
             return self.smtp
         return None
-    
-    def send_email(
-        self,
-        to: List[str],
-        subject: str,
-        template: str = None,
-        html_content: str = None,
-        context: Dict[str, Any] = None,
-        **kwargs
-    ) -> EmailResult:
-        """
-        Send an email using the best available provider.
+
+    def _inject_tracking_pixel(self, html_content: str, tracking_id: str) -> str:
+        """Inject an invisible image for open tracking."""
+        pixel_url = f"{self.base_url}/communication/track/open/{tracking_id}/"
+        pixel_img = f'<img src="{pixel_url}" width="1" height="1" style="display:none;" alt="" />'
         
-        Args:
-            to: List of recipient emails
-            subject: Email subject
-            template: Django template name (without extension)
-            html_content: Raw HTML content (if not using template)
-            context: Template context variables
-            **kwargs: Additional EmailMessage fields
+        if '</body>' in html_content:
+            return html_content.replace('</body>', f'{pixel_img}</body>')
+        return html_content + pixel_img
+
+    def _wrap_links(self, html_content: str, tracking_id: str) -> str:
+        """Wrap all links for click tracking."""
+        def replace_link(match):
+            original_url = match.group(2)
+            # Skip non-http links or already tracked links
+            if not original_url.startswith('http') or '/track/click/' in original_url:
+                return match.group(0)
+            
+            tracking_url = f"{self.base_url}/communication/track/click/{tracking_id}/?{urlencode({'url': original_url})}"
+            return f'href="{tracking_url}"'
+
+        return re.sub(r'href=(["\'])(.*?)\1', replace_link, html_content)
+
+    def send_model_email(self, email_instance) -> EmailResult:
+        """Send an email based on an Email model instance."""
+        from .models import Email
         
-        Returns:
-            EmailResult with success status and details
-        """
-        if template:
-            html_content = render_to_string(f'{template}.html', context or {})
+        if email_instance.status == 'sent':
+            return EmailResult(success=True, error='Email already sent')
+
+        tracking_id = email_instance.tracking_id or str(uuid.uuid4())
+        email_instance.tracking_id = tracking_id
         
-        if not html_content:
-            return EmailResult(
-                success=False,
-                error='No content provided (template or html_content required)'
-            )
+        html_content = email_instance.content_html
+        
+        # Append signature if not present and available
+        if email_instance.sender:
+            from .models import EmailSignature
+            default_sig = EmailSignature.objects.filter(user=email_instance.sender, is_default=True).first()
+            if default_sig and default_sig.content_html not in html_content:
+                html_content += f'<br><br>---<br>{default_sig.content_html}'
+
+        if email_instance.tracking_enabled:
+            html_content = self._inject_tracking_pixel(html_content, tracking_id)
+            html_content = self._wrap_links(html_content, tracking_id)
         
         message = EmailMessage(
-            to=to,
-            subject=subject,
+            to=email_instance.recipients,
+            subject=email_instance.subject,
             html_content=html_content,
-            text_content=strip_tags(html_content),
-            **kwargs
+            text_content=email_instance.content_text or strip_tags(html_content),
+            from_email=email_instance.sender.email if email_instance.sender else None,
+            reply_to=email_instance.reply_to_email if email_instance.is_reply_to_different else None,
+            cc=email_instance.cc,
+            bcc=email_instance.bcc,
+            tracking_id=tracking_id
         )
         
+        email_instance.status = 'sending'
+        email_instance.save()
+        
+        result = self.send_email_message(message)
+        
+        if result.success:
+            email_instance.status = 'sent'
+            email_instance.sent_at = timezone.now()
+            email_instance.service_used = result.provider
+            email_instance.save()
+        else:
+            email_instance.status = 'failed'
+            email_instance.error_message = result.error
+            email_instance.save()
+            
+        return result
+
+    def send_email_message(self, message: EmailMessage) -> EmailResult:
+        """Send an EmailMessage standardized object."""
         provider = self.get_active_provider()
         
         if not provider:
             logger.warning("No email provider configured, skipping send")
-            return EmailResult(
-                success=False,
-                error='No email provider configured'
-            )
+            return EmailResult(success=False, error='No email provider configured')
         
         result = provider.send(message)
         
@@ -282,38 +299,34 @@ class EmailService:
             self._log_email_sent(message, result)
         
         return result
-    
-    def send_template_email(
+
+    def send_email(
         self,
         to: List[str],
-        template_id: str,
-        template_data: Dict[str, Any],
+        subject: str,
+        template: str = None,
+        html_content: str = None,
+        context: Dict[str, Any] = None,
         **kwargs
     ) -> EmailResult:
         """
-        Send email using a SendGrid dynamic template.
-        
-        Args:
-            to: List of recipient emails
-            template_id: SendGrid template ID
-            template_data: Dynamic template variables
+        Legacy/Convenience method for sending emails.
         """
-        if not self.sendgrid.is_configured():
-            return EmailResult(
-                success=False,
-                error='SendGrid required for template emails'
-            )
+        if template:
+            html_content = render_to_string(f'{template}.html', context or {})
+        
+        if not html_content:
+            return EmailResult(success=False, error='No content provided')
         
         message = EmailMessage(
             to=to,
-            subject='',
-            html_content='',
-            template_id=template_id,
-            template_data=template_data,
+            subject=subject,
+            html_content=html_content,
+            text_content=strip_tags(html_content),
             **kwargs
         )
         
-        return self.sendgrid.send(message)
+        return self.send_email_message(message)
     
     def _log_email_sent(self, message: EmailMessage, result: EmailResult) -> None:
         """Log successful email sends for tracking."""
@@ -325,8 +338,7 @@ class EmailService:
                 'subject': message.subject,
                 'message_id': result.message_id,
                 'provider': result.provider,
-                'categories': message.categories or [],
-                'tenant_id': message.custom_args.get('tenant_id') if message.custom_args else None,
+                'tracking_id': message.tracking_id,
             })
         except Exception as e:
             logger.debug(f"Failed to emit email event: {e}")

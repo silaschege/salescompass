@@ -57,11 +57,11 @@ class ReportBuilderTests(TestCase):
         }
         
         data = {
-            'name': 'High Value Opps',
-            'description': 'Opportunities over 1000',
+            'report_name': 'High Value Opps',
+            'report_description': 'Opportunities over 1000',
             'report_type': 'custom',
-            'config': json.dumps(config_data),
-            'is_active': True
+            'query_config': json.dumps(config_data),
+            'report_is_active': True
         }
         
         response = self.client.post(url, data)
@@ -70,10 +70,10 @@ class ReportBuilderTests(TestCase):
         self.assertRedirects(response, reverse('reports:list'))
         
         # Verify report created
-        report = Report.objects.get(name='High Value Opps')
+        report = Report.objects.get(report_name='High Value Opps')
         self.assertEqual(report.tenant_id, 'tenant1')
-        self.assertEqual(report.config['entity'], 'opportunity')
-        self.assertEqual(report.config['chart_type'], 'bar')
+        self.assertEqual(report.query_config['entity'], 'opportunity')
+        self.assertEqual(report.query_config['chart_type'], 'bar')
 
 
 class ReportGenerationTests(TestCase):
@@ -409,12 +409,12 @@ class ReportScheduleTests(TestCase):
         
         # Create a test report
         self.report = Report.objects.create(
-            name='Test Report',
-            description='Test report for scheduling',
+            report_name='Test Report',
+            report_description='Test report for scheduling',
             report_type='sales_performance',
             tenant_id='tenant1',
-            owner=self.user,
-            config={'entity': 'opportunity', 'fields': ['name', 'amount']}
+            created_by=self.user,
+            query_config={'entity': 'opportunity', 'fields': ['name', 'amount']}
         )
         
         self.client.force_login(self.user)
@@ -426,6 +426,7 @@ class ReportScheduleTests(TestCase):
         
         schedule = ReportSchedule.objects.create(
             report=self.report,
+            schedule_name='Daily Sales',
             frequency='daily',
             recipients=['test1@example.com', 'test2@example.com'],
             export_format='csv',
@@ -437,7 +438,7 @@ class ReportScheduleTests(TestCase):
         self.assertEqual(schedule.frequency, 'daily')
         self.assertEqual(len(schedule.recipients), 2)
         self.assertEqual(schedule.export_format, 'csv')
-        self.assertTrue(schedule.is_active)
+        self.assertTrue(schedule.schedule_is_active)
         self.assertIn('Test Report', str(schedule))
     
     def test_report_schedule_form_recipient_parsing(self):
@@ -473,6 +474,7 @@ class ReportScheduleTests(TestCase):
         # Create a schedule
         schedule = ReportSchedule.objects.create(
             report=self.report,
+            schedule_name='Daily PDF',
             frequency='daily',
             recipients=['recipient@example.com'],
             export_format='pdf',
@@ -518,11 +520,12 @@ class ReportScheduleTests(TestCase):
         past_time = timezone.now() - timedelta(hours=1)
         schedule = ReportSchedule.objects.create(
             report=self.report,
+            schedule_name='Past Due',
             frequency='daily',
             recipients=['recipient@example.com'],
             export_format='csv',
             next_run=past_time,
-            is_active=True,
+            schedule_is_active=True,
             tenant_id='tenant1'
         )
         
@@ -576,6 +579,7 @@ class ReportScheduleTests(TestCase):
         # Create initial schedule
         schedule = ReportSchedule.objects.create(
             report=self.report,
+            schedule_name='Daily Sales',
             frequency='daily',
             recipients=['old@example.com'],
             export_format='csv',
@@ -586,11 +590,12 @@ class ReportScheduleTests(TestCase):
         url = reverse('reports:schedule_update', kwargs={'pk': schedule.id})
         
         data = {
+            'schedule_name': 'Updated Name',
             'report': self.report.id,
             'frequency': 'weekly',
             'recipients': 'new@example.com',
             'export_format': 'pdf',
-            'is_active': False
+            'schedule_is_active': False
         }
         
         response = self.client.post(url, data)
@@ -601,7 +606,7 @@ class ReportScheduleTests(TestCase):
         self.assertEqual(schedule.frequency, 'weekly')
         self.assertIn('new@example.com', schedule.recipients)
         self.assertEqual(schedule.export_format, 'pdf')
-        self.assertFalse(schedule.is_active)
+        self.assertFalse(schedule.schedule_is_active)
     
     def test_schedule_delete_view(self):
         """Test deleting a report schedule via the view."""
@@ -610,6 +615,7 @@ class ReportScheduleTests(TestCase):
         
         schedule = ReportSchedule.objects.create(
             report=self.report,
+            schedule_name='Delete Me',
             frequency='daily',
             recipients=['delete@example.com'],
             export_format='csv',
@@ -634,6 +640,7 @@ class ReportScheduleTests(TestCase):
         for i in range(3):
             ReportSchedule.objects.create(
                 report=self.report,
+                schedule_name=f'Schedule {i}',
                 frequency='daily',
                 recipients=[f'user{i}@example.com'],
                 export_format='csv',
@@ -660,11 +667,12 @@ class ReportScheduleTests(TestCase):
         past_time = timezone.now() - timedelta(hours=1)
         schedule = ReportSchedule.objects.create(
             report=self.report,
+            schedule_name='Inactive',
             frequency='daily',
             recipients=['recipient@example.com'],
             export_format='csv',
             next_run=past_time,
-            is_active=False,  # Inactive
+            schedule_is_active=False,  # Inactive
             tenant_id='tenant1'
         )
         
@@ -701,11 +709,11 @@ class ReportExportTests(TestCase):
         
         # Create report
         self.report = Report.objects.create(
-            name='Export Test Report',
+            report_name='Export Test Report',
             report_type='custom',
             tenant_id='tenant1',
-            owner=self.user,
-            config={'entity': 'account', 'fields': ['name', 'industry']}
+            created_by=self.user,
+            query_config={'entity': 'account', 'fields': ['name', 'industry']}
         )
         
         # Create data

@@ -1,0 +1,32 @@
+<!-- Promoter Referral Thank You Template -->
+<div class="email-container">
+    <h2>Thank You for Your Referral!</h2>
+    
+    <p>Dear {{ account.name }},</p>
+    
+    <p>Thank you for recommending us to your colleagues! We truly appreciate your support.</p>
+    
+    <div class="referral-section">
+        <h3>Your Referral Program</h3>
+        <p>You have successfully referred {{ referral_count }} contacts so far.</p>
+        <p>Here's your unique referral link:</p>
+        <p><a href="{{ referral_link }}" class="referral-link">{{ referral_link }}</a></p>
+        <p>Share this link with your network to earn rewards for each successful referral.</p>
+    </div>
+    
+    <div class="benefits-section">
+        <h3>Referral Benefits</h3>
+        <ul>
+            <li>Exclusive discounts on our services</li>
+            <li>Early access to new features</li>
+            <li>Personalized support</li>
+        </ul>
+    </div>
+    
+    <p>Best regards,<br>SalesCompass Team</p>
+    
+    <div class="footer">
+        <p class="small-text">You're receiving this email because you've been identified as a valued promoter of our services.</p>
+        <p class="small-text">Unsubscribe | Preferences</p>
+    </div>
+</div>

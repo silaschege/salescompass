@@ -2,178 +2,266 @@
 <html lang="en">
 
 <head>
-    <title>{% block title %}SalesCompass{% endblock %}</title>
+    <title>{% block title %}{% if white_label_settings %}{{ white_label_settings.brand_name }}{% else %}SalesCompass{%endif %}{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    {% if white_label_settings %}
     <style>
+        :root {
+            --primary-color: {{ white_label_settings.primary_color }};
+            --secondary-color: {{ white_label_settings.secondary_color }};
+            --accent-color: {{ white_label_settings.accent_color }};
+            --background-color: {{ white_label_settings.background_color }};
+        }
+
         body {
-            background: linear-gradient(135deg, #f7f8fc 0%, #e3e6f3 100%);
+            background: linear-gradient(135deg, {{ white_label_settings.login_background_color|slice:":7" }} 0%, {{ white_label_settings.background_color|slice:":7" }} 100%);
             font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            display: flex;
             min-height: 100vh;
             overflow-x: hidden;
         }
 
-        /* --- Sidebar Styling --- */
+        /* --- Sidebar Styling (Matches Dashboard) --- */
         .sidebar {
-            width: 280px;
-            /* Slightly wider to accommodate long admin titles */
+            width: 250px;
             background: #fff;
             border-right: 1px solid #e3e6f3;
-            display: flex;
-            flex-direction: column;
+            padding: 1.5rem 1rem;
             position: fixed;
             top: 0;
             bottom: 0;
             left: 0;
+            overflow-y: auto;
             z-index: 1000;
             transition: transform 0.3s ease;
-            overflow-y: auto;
-            /* Allow scrolling inside sidebar */
-            scrollbar-width: thin;
         }
 
         .sidebar.hidden {
             transform: translateX(-100%);
         }
 
-        /* Sidebar Header */
-        .sidebar-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .navbar-brand {
-            color: #6f42c1 !important;
+        .sidebar .navbar-brand {
+            color: var(--primary-color) !important;
             font-weight: bold;
-            font-size: 1.4rem;
-            text-decoration: none;
+            font-size: 1.5rem;
             display: flex;
             align-items: center;
+            margin-bottom: 2rem;
+            text-decoration: none;
         }
 
-        /* Sidebar Navigation */
-        .sidebar-nav {
-            padding: 1rem;
-            flex-grow: 1;
-        }
-
-        .nav-section-label {
-            color: #6c757d;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 1.5rem 0 0.5rem 0.5rem;
-        }
-
-        /* Main Links */
-        .nav-link {
+        .sidebar .nav-link {
             color: #333;
-            padding: 0.6rem 0.8rem;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem 1rem;
             border-radius: 0.5rem;
             transition: all 0.2s ease;
+            text-decoration: none;
             display: flex;
             align-items: center;
-            font-size: 0.95rem;
-            text-decoration: none;
-            margin-bottom: 0.25rem;
-            cursor: pointer;
+            justify-content: space-between;
         }
 
-        .nav-link:hover {
-            background-color: #f8f9fa;
-            color: #6f42c1;
-        }
-
-        .nav-link.active {
+        /* Navigation Hover & Active States */
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link:focus,
+        .sidebar .nav-link.active {
+            color: var(--primary-color);
             background-color: #f0e6ff;
-            color: #6f42c1;
-            font-weight: 600;
+            font-weight: 500;
         }
 
-        .nav-link i {
+        /* Icon Styling */
+        .sidebar .nav-link i.nav-icon {
             margin-right: 0.75rem;
             font-size: 1.1rem;
             width: 20px;
             text-align: center;
         }
 
-        /* Collapsible Sub-menus */
-        .collapse-link {
-            justify-content: space-between;
+        /* Submenu items indentation */
+        .sidebar .collapse .nav-link {
+            padding-left: 2.75rem;
+            font-size: 0.95rem;
         }
 
-        .collapse-icon {
-            transition: transform 0.2s;
-            font-size: 0.8rem !important;
-            margin-right: 0 !important;
-        }
-
-        .nav-link[aria-expanded="true"] .collapse-icon {
-            transform: rotate(90deg);
-        }
-
-        .sub-menu {
-            padding-left: 1.5rem;
-            background: #fafafa;
-            border-radius: 0.5rem;
-            margin-bottom: 0.5rem;
-            padding-top: 0.5rem;
-            /* Added for better spacing */
-            padding-bottom: 0.5rem;
-            /* Added for better spacing */
-        }
-
-        .sub-menu .nav-link {
-            font-size: 0.9rem;
-            padding: 0.5rem 0.8rem;
-        }
-
-        /* User Profile Section (Bottom) */
-        .sidebar-footer {
-            padding: 1rem;
-            border-top: 1px solid #f0f0f0;
-            background: #fdfdfd;
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 0.75rem;
-        }
-
-        .user-info {
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .user-name {
-            font-weight: 600;
-            font-size: 0.9rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .user-role {
-            font-size: 0.75rem;
+        /* Section Dividers */
+        .sidebar .section-title {
             color: #6c757d;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 1.5rem 0 0.5rem 1rem;
+        }
+
+        /* Chevron Rotation */
+        .sidebar .nav-link[aria-expanded="true"] .bi-chevron-down {
+            transform: rotate(180deg);
+            transition: transform 0.3s ease;
+        }
+        .bi-chevron-down {
+            transition: transform 0.3s ease;
+            font-size: 0.8em;
         }
 
         /* --- Main Content --- */
         .main-content {
-            margin-left: 280px;
-            /* Matches sidebar width */
-            padding: 2rem;
-            flex-grow: 1;
+            margin-left: 250px;
+            min-height: 100vh;
             transition: margin-left 0.3s ease;
-            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content.sidebar-hidden {
+            margin-left: 0;
+        }
+
+        /* Toggle Button */
+        .toggle-sidebar {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Helper Classes */
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.visible { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .main-content > .container-fluid { padding-left: 1rem; padding-right: 1rem; }
+        }
+    </style>
+    {% else %}
+    <style>
+        body {
+            background: linear-gradient(135deg, #f7f8fc 0%, #e3e6f3 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- Sidebar Styling (Matches Dashboard) --- */
+        .sidebar {
+            width: 250px;
+            background: #fff;
+            border-right: 1px solid #e3e6f3;
+            padding: 1.5rem 1rem;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
+        .sidebar .navbar-brand {
+            color: #6f42c1 !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+            text-decoration: none;
+        }
+
+        .sidebar .nav-link {
+            color: #333;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Navigation Hover & Active States */
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link:focus,
+        .sidebar .nav-link.active {
+            color: #6f42c1;
+            background-color: #f0e6ff;
+            font-weight: 500;
+        }
+
+        /* Icon Styling */
+        .sidebar .nav-link i.nav-icon {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Submenu items indentation */
+        .sidebar .collapse .nav-link {
+            padding-left: 2.75rem;
+            font-size: 0.95rem;
+        }
+
+        /* Section Dividers */
+        .sidebar .section-title {
+            color: #6c757d;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 1.5rem 0 0.5rem 1rem;
+        }
+
+        /* Chevron Rotation */
+        .sidebar .nav-link[aria-expanded="true"] .bi-chevron-down {
+            transform: rotate(180deg);
+            transition: transform 0.3s ease;
+        }
+        .bi-chevron-down {
+            transition: transform 0.3s ease;
+            font-size: 0.8em;
+        }
+
+        /* --- Main Content --- */
+        .main-content {
+            margin-left: 250px;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
             display: flex;
             flex-direction: column;
         }
@@ -200,46 +288,27 @@
             justify-content: center;
             cursor: pointer;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            transition: opacity 0.2s;
         }
 
-        /* Keep toggle visible on desktop too, for manual hide/show */
-        .toggle-sidebar {
-            opacity: 1;
-            pointer-events: auto;
+        /* Helper Classes */
+        .btn-primary {
+            background-color: #6f42c1;
+            border-color: #6f42c1;
         }
-
-
-        .footer-bar {
-            margin-top: auto;
-            padding-top: 2rem;
-            text-align: center;
-            color: #6c757d;
-            font-size: 0.9rem;
+        .btn-primary:hover {
+            background-color: #5a34a0;
+            border-color: #5a34a0;
         }
 
         /* Mobile Responsive */
         @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                width: 260px;
-            }
-
-            .sidebar.visible {
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-
-            .toggle-sidebar {
-                display: flex;
-                opacity: 1;
-                pointer-events: auto;
-            }
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.visible { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .main-content > .container-fluid { padding-left: 1rem; padding-right: 1rem; }
         }
     </style>
+    {% endif %}
     {% block extra_head %}{% endblock %}
 </head>
 
@@ -251,223 +320,352 @@
     </button>
 
     <!-- Sidebar -->
-    <nav class="sidebar" id="sidebar">
-        <!-- Brand -->
-        <div class="sidebar-header">
-            <a class="navbar-brand" href="{% url 'core:app_selection' %}">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#6f42c1" class="me-2"
-                    viewBox="0 0 16 16">
-                    <circle cx="8" cy="8" r="7" stroke="#6f42c1" stroke-width="2" fill="white" />
-                    <polygon points="8,3 10,10 8,13 6,6" fill="#6f42c1" />
-                </svg>
-                SalesCompass
-            </a>
-        </div>
+    <div class="sidebar" id="sidebar">
+        <a class="navbar-brand" href="{% url 'core:app_selection' %}">
+            {% if white_label_settings and white_label_settings.logo %}
+            <img src="{{ white_label_settings.logo.url }}" alt="Logo" style="height: 30px; margin-right: 0.5rem;">
+            {% elif white_label_settings and white_label_settings.show_brand_name %}
+            {{ white_label_settings.brand_name|default:"SalesCompass" }}
+            {% else %}
+            <i class="bi bi-compass me-2"></i> SalesCompass
+            {% endif %}
+        </a>
 
-        <!-- Navigation Links -->
-        {% block sidebar_nav %}
-        <div class="sidebar-nav">
+        <nav class="nav flex-column">
+            <!-- General Section -->
+            <div class="section-title">GENERAL</div>
+            <a class="nav-link {% if request.resolver_match.url_name == 'app_selection' %}active{% endif %}" 
+               href="{% url 'core:app_selection' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-grid nav-icon"></i> 
+                    <span>All Apps</span>
+                </div>
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'clv_dashboard' %}active{% endif %}" 
+               href="{% url 'core:clv_dashboard' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-bar-chart nav-icon"></i> 
+                    <span>CLV Dashboard</span>
+                </div>
+            </a>
 
-            <div class="nav-section-label">General</div>
-            <a class="nav-link" href="{% url 'core:app_selection' %}">
-                <i class="bi bi-grid-fill"></i> All Apps
+            <!-- Revenue Operations Dropdown -->
+            {% load plan_access_tags %}
+            {% has_module_access 'leads' as leads_access %}
+            {% has_module_access 'sales' as sales_access %}
+            {% if leads_access or sales_access %}
+            <div class="section-title">REVENUE OPERATIONS</div>
+            {% if leads_access %}
+            <a class="nav-link {% if request.resolver_match.url_name == 'lead_list' %}active{% endif %}" 
+               href="{% url 'leads:lead_list' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-person-plus nav-icon"></i> 
+                    <span>Leads</span>
+                </div>
             </a>
-            <a class="nav-link" href="{% url 'core:clv_dashboard' %}">
-                <i class="bi bi-graph-up-arrow"></i> CLV Dashboard
+            {% endif %}
+            {% if sales_access %}
+            <a class="nav-link {% if request.resolver_match.url_name == 'sale_list' %}active{% endif %}" 
+               href="{% url 'sales:sale_list' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-currency-dollar nav-icon"></i> 
+                    <span>Sales</span>
+                </div>
             </a>
+            {% endif %}
+            <a class="nav-link {% if request.resolver_match.url_name == 'opportunity_list' %}active{% endif %}" 
+               href="{% url 'opportunities:opportunity_list' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-lightbulb nav-icon"></i> 
+                    <span>Opportunities</span>
+                </div>
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'account_list' %}active{% endif %}" 
+               href="{% url 'accounts:account_list' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-building nav-icon"></i> 
+                    <span>Accounts</span>
+                </div>
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'contact_list' %}active{% endif %}" 
+               href="{% url 'accounts:contact_list' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-people nav-icon"></i> 
+                    <span>Contacts</span>
+                </div>
+            </a>
+            {% endif %}
+
+            <!-- Customer Engagement Dropdown -->
+            {% has_module_access 'engagement' as engagement_access %}
+            {% if engagement_access %}
+            <div class="section-title">CUSTOMER ENGAGEMENT</div>
+            <a class="nav-link {% if request.resolver_match.url_name == 'campaign_list' %}active{% endif %}" 
+               href="{% url 'marketing:campaign_list' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-megaphone nav-icon"></i> 
+                    <span>Campaigns</span>
+                </div>
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'campaign_calendar' %}active{% endif %}" 
+               href="{% url 'marketing:campaign_calendar' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-calendar3 nav-icon"></i> 
+                    <span>Marketing Calendar</span>
+                </div>
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'nps_dashboard' %}active{% endif %}" 
+               href="{% url 'nps:nps_dashboard' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-heart nav-icon"></i> 
+                    <span>NPS Dashboard</span>
+                </div>
+            </a>
+            {% endif %}
+
+            <!-- Service Delivery Dropdown -->
+            {% has_module_access 'cases' as cases_access %}
+            {% if cases_access %}
+            <div class="section-title">SERVICE DELIVERY</div>
+            <a class="nav-link {% if request.resolver_match.url_name == 'case_list' %}active{% endif %}" 
+               href="{% url 'cases:case_list' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-headset nav-icon"></i> 
+                    <span>Service Cases</span>
+                </div>
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'knowledge_base' %}active{% endif %}" 
+               href="{% url 'cases:knowledge_base' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-journal-text nav-icon"></i> 
+                    <span>Knowledge Base</span>
+                </div>
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'task_list' %}active{% endif %}" 
+               href="{% url 'tasks:list' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-check2-square nav-icon"></i> 
+                    <span>Tasks</span>
+                </div>
+            </a>
+            {% endif %}
+
+            <!-- Intelligence & Reports Dropdown -->
+            {% has_module_access 'reports' as reports_access %}
+            {% if reports_access %}
+            <div class="section-title">INTELLIGENCE & REPORTS</div>
+            <a class="nav-link {% if request.resolver_match.url_name == 'reports_dashboard' %}active{% endif %}" 
+               href="{% url 'reports:dashboard' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-speedometer2 nav-icon"></i> 
+                    <span>Reports Dashboard</span>
+                </div>
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'report_list' %}active{% endif %}" 
+               href="{% url 'reports:report_list' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-file-earmark-bar-graph nav-icon"></i> 
+                    <span>All Reports</span>
+                </div>
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'export_list' %}active{% endif %}" 
+               href="{% url 'reports:export_list' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-download nav-icon"></i> 
+                    <span>Export Logs</span>
+                </div>
+            </a>
+            {% endif %}
 
             <!-- Configuration & Dynamic Choices (Superuser Only) -->
             {% if user.is_superuser %}
-            <div class="nav-section-label">Configuration</div>
-            <a class="nav-link collapse-link collapsed" data-bs-toggle="collapse" href="#configCollapse" role="button"
-                aria-expanded="false">
-                <span><i class="bi bi-sliders"></i> Dynamic Choices</span>
-                <i class="bi bi-chevron-right collapse-icon"></i>
+            <div class="section-title">CONFIGURATION</div>
+            
+            <!-- Dynamic Choices Dropdown -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#configMenu" aria-expanded="false">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-sliders nav-icon"></i>
+                    <span>Dynamic Choices</span>
+                </div>
+                <i class="bi bi-chevron-down"></i>
             </a>
-            <div class="collapse sub-menu" id="configCollapse">
-                <a class="nav-link" href="{% url 'core:dynamic_choices_dashboard' %}">Overview</a>
-                <div class="text-muted small px-3 py-1 mt-2">Module Setup</div>
-                <a class="nav-link" href="{% url 'core:module_label_list' %}">Module Labels</a>
-                <a class="nav-link" href="{% url 'core:module_choice_list' %}">Module Choices</a>
-                <a class="nav-link" href="{% url 'core:model_choice_list' %}">Model Choices</a>
-                <a class="nav-link" href="{% url 'core:field_type_list' %}">Field Types</a>
-                <a class="nav-link" href="{% url 'core:assignment_rule_type_list' %}">Assignment Rule Types</a>
+            <div class="collapse" id="configMenu">
+                <a class="nav-link {% if request.resolver_match.url_name == 'dynamic_choices_dashboard' %}active{% endif %}"
+                    href="{% url 'core:dynamic_choices_dashboard' %}">
+                    Overview
+                </a>
+                <div class="section-title">Module Setup</div>
+                <a class="nav-link {% if request.resolver_match.url_name == 'module_label_list' %}active{% endif %}"
+                    href="{% url 'core:module_label_list' %}">Module Labels</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'module_choice_list' %}active{% endif %}"
+                    href="{% url 'core:module_choice_list' %}">Module Choices</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'model_choice_list' %}active{% endif %}"
+                    href="{% url 'core:model_choice_list' %}">Model Choices</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'field_type_list' %}active{% endif %}"
+                    href="{% url 'core:field_type_list' %}">Field Types</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'assignment_rule_type_list' %}active{% endif %}"
+                    href="{% url 'core:assignment_rule_type_list' %}">Assignment Rule Types</a>
 
-                <div class="text-muted small px-3 py-1 mt-2">System Config</div>
-                <a class="nav-link" href="{% url 'core:system_config_type_list' %}">Config Types</a>
-                <a class="nav-link" href="{% url 'core:system_config_category_list' %}">Config Categories</a>
+                <div class="section-title">System Config</div>
+                <a class="nav-link {% if request.resolver_match.url_name == 'system_config_type_list' %}active{% endif %}"
+                    href="{% url 'core:system_config_type_list' %}">Config Types</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'system_config_category_list' %}active{% endif %}"
+                    href="{% url 'core:system_config_category_list' %}">Config Categories</a>
 
-                <div class="text-muted small px-3 py-1 mt-2">System Events</div>
-                <a class="nav-link" href="{% url 'core:system_event_type_list' %}">Event Types</a>
-                <a class="nav-link" href="{% url 'core:system_event_severity_list' %}">Event Severities</a>
+                <div class="section-title">System Events</div>
+                <a class="nav-link {% if request.resolver_match.url_name == 'system_event_type_list' %}active{% endif %}"
+                    href="{% url 'core:system_event_type_list' %}">Event Types</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'system_event_severity_list' %}active{% endif %}"
+                    href="{% url 'core:system_event_severity_list' %}">Event Severities</a>
 
-                <div class="text-muted small px-3 py-1 mt-2">Health & Maintenance</div>
-                <a class="nav-link" href="{% url 'core:health_check_type_list' %}">Health Check Types</a>
-                <a class="nav-link" href="{% url 'core:health_check_status_list' %}">Health Check Statuses</a>
-                <a class="nav-link" href="{% url 'core:maintenance_type_list' %}">Maintenance Types</a>
-                <a class="nav-link" href="{% url 'core:maintenance_status_list' %}">Maintenance Statuses</a>
+                <div class="section-title">Health & Maintenance</div>
+                <a class="nav-link {% if request.resolver_match.url_name == 'health_check_type_list' %}active{% endif %}"
+                    href="{% url 'core:health_check_type_list' %}">Health Check Types</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'health_check_status_list' %}active{% endif %}"
+                    href="{% url 'core:health_check_status_list' %}">Health Check Statuses</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'maintenance_type_list' %}active{% endif %}"
+                    href="{% url 'core:maintenance_type_list' %}">Maintenance Types</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'maintenance_status_list' %}active{% endif %}"
+                    href="{% url 'core:maintenance_status_list' %}">Maintenance Statuses</a>
 
-                <div class="text-muted small px-3 py-1 mt-2">Performance</div>
-                <a class="nav-link" href="{% url 'core:performance_metric_type_list' %}">Metric Types</a>
-                <a class="nav-link" href="{% url 'core:performance_environment_list' %}">Environments</a>
+                <div class="section-title">Performance</div>
+                <a class="nav-link {% if request.resolver_match.url_name == 'performance_metric_type_list' %}active{% endif %}"
+                    href="{% url 'core:performance_metric_type_list' %}">Metric Types</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'performance_environment_list' %}active{% endif %}"
+                    href="{% url 'core:performance_environment_list' %}">Environments</a>
 
-                <div class="text-muted small px-3 py-1 mt-2">Notifications</div>
-                <a class="nav-link" href="{% url 'core:notification_type_list' %}">Notification Types</a>
-                <a class="nav-link" href="{% url 'core:notification_priority_list' %}">Notification Priorities</a>
+                <div class="section-title">Notifications</div>
+                <a class="nav-link {% if request.resolver_match.url_name == 'notification_type_list' %}active{% endif %}"
+                    href="{% url 'core:notification_type_list' %}">Notification Types</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'notification_priority_list' %}active{% endif %}"
+                    href="{% url 'core:notification_priority_list' %}">Notification Priorities</a>
             </div>
 
-            <!-- System Admin Collapsible -->
-            <a class="nav-link collapse-link collapsed" data-bs-toggle="collapse" href="#adminCollapse" role="button"
-                aria-expanded="false">
-                <span><i class="bi bi-gear-wide"></i> System Admin</span>
-                <i class="bi bi-chevron-right collapse-icon"></i>
+            <!-- System Admin Dropdown -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#adminMenu" aria-expanded="false">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-gear-wide nav-icon"></i>
+                    <span>System Admin</span>
+                </div>
+                <i class="bi bi-chevron-down"></i>
             </a>
-            <div class="collapse sub-menu" id="adminCollapse">
-                <!-- Core Admin -->
-
-                <a class="nav-link" href="{% url 'core:system_configuration' %}">System Configuration</a>
-                <a class="nav-link" href="{% url 'core:feature_toggle_management' %}">Feature Toggles</a>
-
-                <!-- Data & Maintenance -->
-                <a class="nav-link" href="{% url 'core:data_management' %}">Data Management</a>
-                <a class="nav-link" href="{% url 'core:backup_management' %}">Backup Management</a>
-                <a class="nav-link" href="{% url 'core:system_maintenance' %}">System Maintenance</a>
+            <div class="collapse" id="adminMenu">
+                <a class="nav-link {% if request.resolver_match.url_name == 'system_configuration' %}active{% endif %}"
+                    href="{% url 'core:system_configuration' %}">System Configuration</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'feature_toggle_management' %}active{% endif %}"
+                    href="{% url 'core:feature_toggle_management' %}">Feature Toggles</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'data_management' %}active{% endif %}"
+                    href="{% url 'core:data_management' %}">Data Management</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'backup_management' %}active{% endif %}"
+                    href="{% url 'core:backup_management' %}">Backup Management</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'system_maintenance' %}active{% endif %}"
+                    href="{% url 'core:system_maintenance' %}">System Maintenance</a>
             </div>
 
-
-            <!-- Security Admin Collapsible -->
-            <a class="nav-link collapse-link collapsed" data-bs-toggle="collapse" href="#securityCollapse" role="button"
-                aria-expanded="false">
-                <span><i class="bi bi-shield-lock"></i> Security</span>
-                <i class="bi bi-chevron-right collapse-icon"></i>
+            <!-- Security Dropdown -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#securityMenu" aria-expanded="false">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-shield-lock nav-icon"></i>
+                    <span>Security</span>
+                </div>
+                <i class="bi bi-chevron-down"></i>
             </a>
-            <div class="collapse sub-menu" id="securityCollapse">
-                <!-- Security Admin -->
-
-                <!-- Security Group -->
-                <div class="text-muted small px-3 py-1 mt-2">Security</div>
-                <a class="nav-link" href="{% url 'core:security_dashboard' %}">Security Dashboard</a>
-                <a class="nav-link" href="{% url 'core:compliance_dashboard' %}">Compliance</a>
-                <a class="nav-link" href="">Audit Logs</a>
-                <a class="nav-link" href="{% url 'core:ip_whitelist_management' %}">IP Whitelist</a>
-                <a class="nav-link" href="{% url 'core:security_event_monitoring' %}">Security Events</a>
-                <a class="nav-link" href="{% url 'core:intrusion_detection' %}">Intrusion Detection</a>
-                <a class="nav-link" href="{% url 'core:secure_credential_management' %}">Credentials</a>
-                <a class="nav-link" href="{% url 'core:security_policy_management' %}">Security Policies</a>
-                <a class="nav-link" href="{% url 'core:vulnerability_management' %}">Vulnerabilities</a>
-                <a class="nav-link" href="{% url 'core:data_privacy_management' %}">Data Privacy</a>
-                <a class="nav-link" href="{% url 'core:environment_variables' %}">Environment Variables</a>
-                <a class="nav-link" href="{% url 'core:configuration_audit' %}">Configuration Audit</a>
+            <div class="collapse" id="securityMenu">
+                <a class="nav-link {% if request.resolver_match.url_name == 'security_dashboard' %}active{% endif %}"
+                    href="{% url 'core:security_dashboard' %}">Security Dashboard</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'compliance_dashboard' %}active{% endif %}"
+                    href="{% url 'core:compliance_dashboard' %}">Compliance</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'audit_log_list' %}active{% endif %}"
+                    href="{% url 'audit_logs:log_list' %}">Audit Logs</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'ip_whitelist_management' %}active{% endif %}"
+                    href="{% url 'core:ip_whitelist_management' %}">IP Whitelist</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'security_event_monitoring' %}active{% endif %}"
+                    href="{% url 'core:security_event_monitoring' %}">Security Events</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'intrusion_detection' %}active{% endif %}"
+                    href="{% url 'core:intrusion_detection' %}">Intrusion Detection</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'secure_credential_management' %}active{% endif %}"
+                    href="{% url 'core:secure_credential_management' %}">Credentials</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'security_policy_management' %}active{% endif %}"
+                    href="{% url 'core:security_policy_management' %}">Security Policies</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'vulnerability_management' %}active{% endif %}"
+                    href="{% url 'core:vulnerability_management' %}">Vulnerabilities</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'data_privacy_management' %}active{% endif %}"
+                    href="{% url 'core:data_privacy_management' %}">Data Privacy</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'environment_variables' %}active{% endif %}"
+                    href="{% url 'core:environment_variables' %}">Environment Variables</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'configuration_audit' %}active{% endif %}"
+                    href="{% url 'core:configuration_audit' %}">Configuration Audit</a>
             </div>
             {% endif %}
 
-        </div>
-        {% endblock %}
-
-        <!-- Sidebar Footer (User Info & Logout) -->
-        <div class="sidebar-footer">
-            <div class="user-profile">
-                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white"
-                    style="width: 35px; height: 35px; font-size: 0.9rem;">
-                    {{ user.first_name|first|default:user.email|first|upper }}
+            <!-- System Navigation -->
+            <div class="section-title mt-4">SYSTEM</div>
+            <a class="nav-link" href="{% url 'core:app_selection' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-grid nav-icon"></i>
+                    <span>Control Plane</span>
                 </div>
-                <div class="user-info">
-                    <span class="user-name">{{ user.get_full_name|default:user.email }}</span>
-                    <span class="user-role">{{ user.role.name|default:"Standard User" }}</span>
-                </div>
-            </div>
-            <a class="nav-link text-danger mt-1" href="{% url 'core:logout' %}">
-                <i class="bi bi-box-arrow-right"></i> Log Out
             </a>
-        </div>
-    </nav>
 
-    <!-- Main Content Area -->
+            <div class="mt-auto pt-4 border-top">
+                <a class="nav-link text-danger" href="{% url 'core:logout' %}">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-box-arrow-right nav-icon"></i>
+                        <span>Log Out</span>
+                    </div>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
     <div class="main-content" id="mainContent">
-
-        <!-- Messages/Alerts -->
+        <!-- Messages -->
         {% if messages %}
-        <div class="container-fluid mb-4">
+        <div class="container-fluid pt-4">
             {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm border-0" role="alert">
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
                 {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             {% endfor %}
         </div>
         {% endif %}
 
         <!-- Content Block -->
-        {% block content %}
-        {% endblock %}
-
-        <footer class="footer-bar">
-            <span>&copy; 2025 SalesCompass. All rights reserved.</span>
+        {% block content %}{% endblock %}
+        
+        <footer class="footer-bar mt-auto py-3 bg-light border-top">
+            <div class="container-fluid text-center">
+                <span>&copy; 2025 {% if white_label_settings and white_label_settings.copyright_text %}{{white_label_settings.copyright_text }}{% else %}SalesCompass{%endif%}. {% if white_label_settings and white_label_settings.show_tagline %}{{ white_label_settings.tagline }}{%endif%}</span>
+            </div>
         </footer>
     </div>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');
             const mainContent = document.getElementById('mainContent');
             const toggleBtn = document.getElementById('toggleSidebar');
 
-            // Handle Toggle Click
-            toggleBtn.addEventListener('click', function (e) {
-                e.stopPropagation();
-                if (window.innerWidth > 768) {
-                    sidebar.classList.toggle('hidden');
-                    mainContent.classList.toggle('sidebar-hidden');
-                } else {
-                    sidebar.classList.toggle('visible');
-                }
+            toggleBtn.addEventListener('click', function () {
+                sidebar.classList.toggle('hidden');
+                mainContent.classList.toggle('sidebar-hidden');
             });
 
-            // Close sidebar when clicking outside on mobile
-            document.addEventListener('click', function (e) {
-                if (window.innerWidth <= 768) {
-                    if (sidebar.classList.contains('visible') &&
-                        !sidebar.contains(e.target) &&
-                        !toggleBtn.contains(e.target)) {
+            if (window.innerWidth <= 768) {
+                document.addEventListener('click', function (e) {
+                    if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
                         sidebar.classList.remove('visible');
                     }
-                }
-            });
-
-            // Auto-hide sidebar on mobile resize (ensure consistency)
-            window.addEventListener('resize', function () {
-                if (window.innerWidth > 768) {
-                    sidebar.classList.remove('visible'); // Remove mobile class
-                    // Optionally: sidebar.classList.remove('hidden'); // uncomment if you want sidebar to always be visible on desktop resize
-                    // mainContent.classList.remove('sidebar-hidden'); // uncomment if you want content to always be aligned on desktop resize
-                } else {
-                    sidebar.classList.add('hidden'); // Hide by default on mobile switch
-                    mainContent.classList.remove('sidebar-hidden'); // Ensure content takes full width
-                }
-            });
-
-            // Set active link based on current URL
-            const currentPath = window.location.pathname;
-            document.querySelectorAll('.sidebar-nav .nav-link').forEach(link => {
-                if (link.getAttribute('href') === currentPath) {
-                    link.classList.add('active');
-                    // Also expand parent collapse if it's a sub-menu item
-                    let parentCollapse = link.closest('.collapse.sub-menu');
-                    if (parentCollapse) {
-                        new bootstrap.Collapse(parentCollapse, { toggle: false }).show();
-                        let parentLink = document.querySelector(`[href="#${parentCollapse.id}"]`);
-                        if (parentLink) {
-                            parentLink.classList.remove('collapsed');
-                            parentLink.setAttribute('aria-expanded', 'true');
-                        }
-                    }
-                }
-            });
+                });
+            }
         });
     </script>
-    {% block extra_js %}{% endblock %}
 </body>
 
 </html>

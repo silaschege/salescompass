@@ -1,23 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
-    <title>{% block title %}SalesCompass{% endblock %}</title>
+<head> 
+    <title>{% block title %}Reports - SalesCompass{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+
+    {% block extra_head %}
     <style>
         body {
             background: linear-gradient(135deg, #f7f8fc 0%, #e3e6f3 100%);
             font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            display: flex;
             min-height: 100vh;
             overflow-x: hidden;
-            /* Prevent horizontal scroll during slide */
         }
 
-        /* Sidebar - Slides off-screen to the left when hidden */
+        /* --- Sidebar Styling (Matches Dashboard) --- */
         .sidebar {
             width: 250px;
             background: #fff;
@@ -30,21 +33,21 @@
             overflow-y: auto;
             z-index: 1000;
             transition: transform 0.3s ease;
-            /* Smooth slide */
         }
 
-        /* When sidebar is hidden, slide it off-screen */
         .sidebar.hidden {
             transform: translateX(-100%);
         }
 
         .sidebar .navbar-brand {
             color: #6f42c1 !important;
+            /* Purple Brand */
             font-weight: bold;
             font-size: 1.5rem;
             display: flex;
             align-items: center;
             margin-bottom: 2rem;
+            text-decoration: none;
         }
 
         .sidebar .nav-link {
@@ -53,33 +56,63 @@
             padding: 0.5rem 1rem;
             border-radius: 0.5rem;
             transition: all 0.2s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .sidebar .nav-link:hover,
-        .sidebar .nav-link:focus {
+        .sidebar .nav-link:focus,
+        .sidebar .nav-link.active {
             color: #6f42c1;
             background-color: #f0e6ff;
             font-weight: 500;
         }
 
-        .sidebar .dropdown-toggle::after {
-            margin-left: auto;
-            float: right;
+        .sidebar .nav-link i.nav-icon {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
         }
 
-        /* Main content adjusts when sidebar is hidden */
+        .sidebar .collapse .nav-link {
+            padding-left: 2.75rem;
+            font-size: 0.95rem;
+        }
+
+        .sidebar .section-title {
+            color: #6c757d;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 1.5rem 0 0.5rem 1rem;
+        }
+
+        .sidebar .nav-link[aria-expanded="true"] .bi-chevron-down {
+            transform: rotate(180deg);
+        }
+
+        .bi-chevron-down {
+            transition: transform 0.3s ease;
+            font-size: 0.8em;
+        }
+
+        /* --- Main Content --- */
         .main-content {
             margin-left: 250px;
-            padding: 2rem;
-            flex-grow: 1;
+            min-height: 100vh;
             transition: margin-left 0.3s ease;
+            display: flex;
+            flex-direction: column;
         }
 
         .main-content.sidebar-hidden {
             margin-left: 0;
         }
 
-        /* Hamburger button (top-left corner) */
         .toggle-sidebar {
             position: fixed;
             top: 1rem;
@@ -99,62 +132,15 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
-        .header-bar {
-            background: #6f42c1;
-            color: #fff;
-            padding: 2rem 0 1rem 0;
-            border-radius: 0 0 2rem 2rem;
-            box-shadow: 0 4px 24px rgba(111, 66, 193, 0.08);
-            margin-bottom: 2rem;
-        }
-
-        .footer-bar {
-            background: #6f42c1;
-            color: #fff;
-            padding: 1rem 0;
-            border-radius: 2rem 2rem 0 0;
-            box-shadow: 0 -4px 24px rgba(111, 66, 193, 0.08);
-            text-align: center;
-            margin-top: 2rem;
-        }
-
+        /* Helper Classes */
         .btn-primary {
             background-color: #6f42c1;
             border-color: #6f42c1;
         }
 
-        .btn-warning {
-            background-color: #ffd600;
-            border-color: #ffd600;
-            color: #212529;
-        }
-
-        .btn-light {
-            background-color: #fff;
-            border-color: #e3e6f3;
-            color: #6f42c1;
-        }
-
-        .table thead {
-            background: #6f42c1;
-            color: #fff;
-        }
-
-        .card {
-            border-radius: 1rem;
-            box-shadow: 0 2px 16px rgba(111, 66, 193, 0.08);
-        }
-
-        .lead {
-            font-size: 1.1rem;
-        }
-
-        .block-title {
-            color: #6f42c1;
-            font-size: 2rem;
-            letter-spacing: 0.5px;
-            margin-bottom: 0;
-            text-align: center;
+        .btn-primary:hover {
+            background-color: #5a34a0;
+            border-color: #5a34a0;
         }
 
         @media (max-width: 768px) {
@@ -168,161 +154,141 @@
 
             .main-content {
                 margin-left: 0;
-                padding: 2rem 1rem;
-            }
-
-            .toggle-sidebar {
-                display: flex;
-            }
-        }
-
-        /* Always show toggle on desktop for usability */
-        @media (min-width: 769px) {
-            .toggle-sidebar {
-                display: flex;
             }
         }
     </style>
-    {% load static %}
-    {% block extra_head %}{% endblock %}
+    {% endblock %}
 </head>
 
 <body>
-
-    <!-- Hamburger Toggle Button -->
+    <!-- Toggle Button -->
     <button class="toggle-sidebar" id="toggleSidebar">
-        ☰
+        <i class="bi bi-list"></i>
     </button>
-
 
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <a class="navbar-brand" href="{% url 'core:app_selection' %}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#6f42c1" class="me-2"
-                viewBox="0 0 16 16">
-                <circle cx="8" cy="8" r="7" stroke="#6f42c1" stroke-width="2" fill="white" />
-                <polygon points="8,3 10,10 8,13 6,6" fill="#6f42c1" />
-            </svg>
-            SalesCompass
+            <i class="bi bi-compass me-2"></i> SalesCompass
         </a>
+
+        <!-- ... existing code ... -->
         <nav class="nav flex-column">
-            <!-- Dashboard -->
-            {% if perms.reports.read %}
-            <a class="nav-link" href="{% url 'reports:dashboard' %}">
-                <i class="bi bi-speedometer2"></i> Dashboard
-            </a>
-            {% endif %}
+            <div class="section-title">INTELLIGENCE</div>
 
-            <!-- Reports Dropdown -->
-            {% if perms.reports.read or perms.reports.write %}
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#reportsMenu">
-                <i class="bi bi-file-earmark-text"></i> Reports
+            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                href="{% url 'reports:dashboard' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-speedometer2 nav-icon"></i>
+                    <span>Reports Dashboard</span>
+                </div>
             </a>
-            <div class="collapse" id="reportsMenu">
-                {% if perms.reports.read %}
-                <a class="nav-link ms-3" href="{% url 'reports:list' %}">All Reports</a>
-                {% endif %}
-                {% if perms.reports.write %}
-                <a class="nav-link ms-3" href="{% url 'reports:create' %}">Create Report</a>
-                <a class="nav-link ms-3" href="{% url 'reports:builder' %}">Report Builder</a>
-                {% endif %}
+
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#reportsMenu"
+                aria-expanded="{% if 'list' in request.resolver_match.url_name or 'builder' in request.resolver_match.url_name %}true{% else %}false{% endif %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-file-earmark-bar-graph nav-icon"></i>
+                    <span>Analytic Reports</span>
+                </div>
+                <i class="bi bi-chevron-down"></i>
+            </a>
+            <div class="collapse {% if 'list' in request.resolver_match.url_name or 'builder' in request.resolver_match.url_name %}show{% endif %}"
+                id="reportsMenu">
+                <a class="nav-link {% if request.resolver_match.url_name == 'list' %}active{% endif %}"
+                    href="{% url 'reports:list' %}">All Reports</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'builder' %}active{% endif %}"
+                    href="{% url 'reports:builder' %}">Report Builder</a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'sales_analytics' %}active{% endif %}"
+                    href="{% url 'reports:sales_analytics' %}">Sales Metrics</a>
             </div>
-            {% endif %}
 
-            <!-- Dashboard Widgets -->
-            {% if perms.reports.read %}
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#widgetsMenu">
-                <i class="bi bi-grid-3x3-gap"></i> Dashboard
+           <!-- ... existing code ... -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#distroMenu"
+                aria-expanded="{% if 'schedule' in request.resolver_match.url_name or 'export' in request.resolver_match.url_name %}true{% else %}false{% endif %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-share nav-icon"></i>
+                    <span>Distribution</span>
+                </div>
+                <i class="bi bi-chevron-down"></i>
             </a>
-            <div class="collapse" id="widgetsMenu">
-                <a class="nav-link ms-3" href="{% url 'reports:dashboard' %}">Dashboard</a>
-                {% if perms.reports.write %}
-                <a class="nav-link ms-3" href="{% url 'reports:widget_create' %}">Create Widget</a>
-                {% endif %}
+            <div class="collapse {% if 'schedule' in request.resolver_match.url_name or 'export' in request.resolver_match.url_name %}show{% endif %}"
+                id="distroMenu">
+                <a class="nav-link {% if 'schedule' in request.resolver_match.url_name %}active{% endif %}"
+                    href="{% url 'reports:schedule_list' %}">Schedules</a>
+                <a class="nav-link {% if 'export' in request.resolver_match.url_name %}active{% endif %}"
+                    href="{% url 'reports:export_list' %}">Export Logs</a>
             </div>
-            {% endif %}
 
-            <!-- Scheduling Dropdown -->
-            {% if perms.reports.write %}
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#schedulingMenu">
-                <i class="bi bi-calendar-event"></i> Scheduling
+            <div class="section-title mt-4">BUSINESS METRICS</div>
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#metricsMenu"
+                aria-expanded="{% if 'export_clv' in request.resolver_match.url_name or 'export_cac' in request.resolver_match.url_name or 'export_sales_velocity' in request.resolver_match.url_name or 'export_roi' in request.resolver_match.url_name or 'export_conversion_funnel' in request.resolver_match.url_name or 'export_all_metrics' in request.resolver_match.url_name %}true{% else %}false{% endif %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-graph-up nav-icon"></i>
+                    <span>Export Metrics</span>
+                </div>
+                <i class="bi bi-chevron-down"></i>
             </a>
-            <div class="collapse" id="schedulingMenu">
-                <a class="nav-link ms-3" href="{% url 'reports:schedule_list' %}">Scheduled Reports</a>
-                <a class="nav-link ms-3" href="{% url 'reports:schedule_create' %}">Create Schedule</a>
+            <div class="collapse {% if 'export_clv' in request.resolver_match.url_name or 'export_cac' in request.resolver_match.url_name or 'export_sales_velocity' in request.resolver_match.url_name or 'export_roi' in request.resolver_match.url_name or 'export_conversion_funnel' in request.resolver_match.url_name or 'export_all_metrics' in request.resolver_match.url_name %}show{% endif %}"
+                id="metricsMenu">
+                <a class="nav-link" href="{% url 'reports:export_clv_metrics' %}">CLV Metrics</a>
+                <a class="nav-link" href="{% url 'reports:export_cac_metrics' %}">CAC Metrics</a>
+                <a class="nav-link" href="{% url 'reports:export_sales_velocity_metrics' %}">Sales Velocity</a>
+                <a class="nav-link" href="{% url 'reports:export_roi_metrics' %}">ROI Metrics</a>
+                <a class="nav-link" href="{% url 'reports:export_conversion_funnel_metrics' %}">Conversion Funnel</a>
+                <a class="nav-link" href="{% url 'reports:export_all_metrics' %}">All Metrics</a>
             </div>
-            {% endif %}
 
-            <!-- Exports Dropdown -->
-            {% if perms.reports.read %}
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#exportsMenu">
-                <i class="bi bi-download"></i> Exports
-            </a>
-            <div class="collapse" id="exportsMenu">
-                <a class="nav-link ms-3" href="{% url 'reports:export_list' %}">Export History</a>
-                {% if perms.reports.write %}
-                <a class="nav-link ms-3" href="{% url 'reports:schedule_create' %}">Schedule Export</a>
-                {% endif %}
-            </div>
-            {% endif %}
-
-            <!-- Sales Analytics -->
-            {% if perms.reports.read %}
-            <a class="nav-link" href="{% url 'reports:sales_analytics' %}">
-                <i class="bi bi-graph-up-arrow"></i> Sales Analytics
-            </a>
-            {% endif %}
-
-            <!-- Workflow Management -->
-            {% if perms.automation.read %}
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#workflowMenu">
-                <i class="bi bi-diagram-3"></i> Workflow Management
-            </a>
-            <div class="collapse" id="workflowMenu">
-                <a class="nav-link ms-3" href="{% url 'automation:workflow_list' %}">Workflows</a>
-                {% if perms.automation.write %}
-                <a class="nav-link ms-3" href="{% url 'automation:workflow_create' %}">Create Workflow</a>
-                {% endif %}
-                <a class="nav-link ms-3" href="{% url 'automation:workflow_action_list' %}">Actions</a>
-                <a class="nav-link ms-3" href="{% url 'automation:workflow_execution_list' %}">Executions</a>
-                <a class="nav-link ms-3" href="{% url 'automation:workflow_trigger_list' %}">Triggers</a>
-                <a class="nav-link ms-3" href="{% url 'automation:workflow_template_list' %}">Templates</a>
-                <a class="nav-link ms-3" href="{% url 'automation:workflow_builder' %}">Builder</a>
-            </div>
-            {% endif %}
-
-            <!-- Back to Main App -->
+            <div class="section-title mt-4">SYSTEM</div>
             <a class="nav-link" href="{% url 'core:app_selection' %}">
-                <i class="bi bi-house-door"></i> Main App
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-grid nav-icon"></i>
+                    <span>Control Plane</span>
+                </div>
             </a>
-
         </nav>
-
+<!-- ... existing code ... -->
+<!-- ... existing code ... -->
     </div>
 
-    <!-- Main content -->
+    <!-- Main Content -->
     <div class="main-content" id="mainContent">
-        {% block content %}
-        <!-- Page-specific content goes here -->
-        {% endblock %}
+        <!-- Messages -->
+        {% if messages %}
+        <div class="container-fluid pt-4">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
 
+        <!-- Content Block -->
+        {% block content %}{% endblock %}
 
+        <div class="footer-bar mt-auto py-3">
+            <div class="container text-center">
+                <p class="text-muted mb-0 small">&copy; 2025 SalesCompass. All rights reserved.</p>
+            </div>
+        </div>
     </div>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');
             const mainContent = document.getElementById('mainContent');
             const toggleBtn = document.getElementById('toggleSidebar');
 
-            // Toggle sidebar visibility
             toggleBtn.addEventListener('click', function () {
                 sidebar.classList.toggle('hidden');
                 mainContent.classList.toggle('sidebar-hidden');
             });
 
-            // On mobile, clicking outside closes sidebar
             if (window.innerWidth <= 768) {
                 document.addEventListener('click', function (e) {
                     if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {

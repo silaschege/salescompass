@@ -1,109 +1,151 @@
 {% extends "public/base.html" %}
+{% load static %}
 
-{% block title %}Customers | SalesCompass{% endblock %}
+{% block title %}Customers - Trusted by Revenue Leaders | SalesCompass{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-  <div class="text-center mb-5">
-    <h1 class="fw-bold mb-3" style="color: #6f42c1;">Trusted by California's Best</h1>
-    <p class="lead text-muted">From startups to enterprises, sales teams rely on SalesCompass.</p>
-  </div>
+<!-- Customer Hero -->
+<section class="section-large text-center position-relative overflow-hidden">
+  <div class="container position-relative z-1">
+    <h1 class="display-3 fw-extrabold mb-4">Trusted by <br><span class="highlight-handwritten">revenue leaders.</span>
+    </h1>
+    <p class="lead text-muted mb-6 mx-auto" style="max-width: 650px;">
+      From high-growth startups to global enterprises, SalesCompass provides the
+      intelligence to drive consistent results.
+    </p>
 
-  <!-- Logo Grid -->
-  <div class="row justify-content-center mb-5">
-    <div class="col-lg-10">
-      <div class="row row-cols-2 row-cols-md-4 g-4 align-items-center opacity-75 grayscale">
-        <div class="col text-center">
-          <h3 class="text-muted fw-bold">ACME Corp</h3>
-        </div>
-        <div class="col text-center">
-          <h3 class="text-muted fw-bold">Globex</h3>
-        </div>
-        <div class="col text-center">
-          <h3 class="text-muted fw-bold">Soylent</h3>
-        </div>
-        <div class="col text-center">
-          <h3 class="text-muted fw-bold">Initech</h3>
-        </div>
-        <div class="col text-center">
-          <h3 class="text-muted fw-bold">Umbrella</h3>
-        </div>
-        <div class="col text-center">
-          <h3 class="text-muted fw-bold">Stark Ind</h3>
-        </div>
-        <div class="col text-center">
-          <h3 class="text-muted fw-bold">Wayne Ent</h3>
-        </div>
-        <div class="col text-center">
-          <h3 class="text-muted fw-bold">Cyberdyne</h3>
-        </div>
+    <!-- Logo Grid -->
+    <div class="row justify-content-center pt-5 g-5 opacity-50 grayscale align-items-center">
+      <div class="col-4 col-md-2">
+        <h4 class="fw-bold mb-0">GLOBEX</h4>
+      </div>
+      <div class="col-4 col-md-2">
+        <h4 class="fw-bold mb-0">ACME</h4>
+      </div>
+      <div class="col-4 col-md-2">
+        <h4 class="fw-bold mb-0">SOYLENT</h4>
+      </div>
+      <div class="col-4 col-md-2">
+        <h4 class="fw-bold mb-0">INITECH</h4>
+      </div>
+      <div class="col-4 col-md-2">
+        <h4 class="fw-bold mb-0">CYBERDYNE</h4>
       </div>
     </div>
   </div>
+</section>
 
-  <!-- Testimonials -->
-  <div class="row g-4 mb-5">
-    <div class="col-md-4">
-      <div class="card h-100 border-0 shadow-sm p-4">
-        <div class="mb-3 text-warning">
-          <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
-            class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+<!-- Impact Section -->
+<section class="section bg-light border-top border-light">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-5">
+        <h2 class="fw-extrabold mb-4">Proven Impact</h2>
+        <p class="text-muted mb-5">
+          We don't just provide a tool. We provide a competitive advantage.
+          See how our customers are winning.
+        </p>
+        <div class="mb-4">
+          <div class="h2 fw-extrabold text-primary mb-0">2.4x</div>
+          <p class="small text-muted">Average increase in pipeline velocity</p>
         </div>
-        <p class="mb-4">"SalesCompass completely transformed how we manage our pipeline. The Wazo integration is a game
-          changer for our SDRs."</p>
-        <div class="d-flex align-items-center">
-          <div class="bg-secondary rounded-circle" style="width: 40px; height: 40px;"></div>
-          <div class="ms-3">
-            <h6 class="mb-0 fw-bold">Sarah Johnson</h6>
-            <small class="text-muted">VP Sales, TechFlow</small>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card h-100 border-0 shadow-sm p-4">
-        <div class="mb-3 text-warning">
-          <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
-            class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-        </div>
-        <p class="mb-4">"The pricing is transparent and fair. We scaled from 5 to 50 users without breaking the bank.
-          Highly recommended."</p>
-        <div class="d-flex align-items-center">
-          <div class="bg-secondary rounded-circle" style="width: 40px; height: 40px;"></div>
-          <div class="ms-3">
-            <h6 class="mb-0 fw-bold">Michael Chen</h6>
-            <small class="text-muted">CEO, GrowthLabs</small>
-          </div>
+        <div>
+          <div class="h2 fw-extrabold text-primary mb-0">80%</div>
+          <p class="small text-muted">Reduction in manual lead qualification time</p>
         </div>
       </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card h-100 border-0 shadow-sm p-4">
-        <div class="mb-3 text-warning">
-          <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
-            class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
-        </div>
-        <p class="mb-4">"Finally, a CRM that doesn't feel like a spreadsheet. The interface is intuitive and the support
-          team is amazing."</p>
-        <div class="d-flex align-items-center">
-          <div class="bg-secondary rounded-circle" style="width: 40px; height: 40px;"></div>
-          <div class="ms-3">
-            <h6 class="mb-0 fw-bold">Jessica Davis</h6>
-            <small class="text-muted">Sales Manager, BrightSide</small>
+      <div class="col-lg-7">
+        <div class="glass-card p-5 border-primary">
+          <i class="bi bi-quote fs-1 text-primary opacity-25 mb-4"></i>
+          <p class="lead fw-medium mb-5">
+            "SalesCompass is the first CRM that our reps actually enjoy using.
+            The ML-driven lead scoring has completely eliminated the guesswork
+            from our outbound strategy."
+          </p>
+          <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle bg-gray-200" style="width: 56px; height: 56px;"></div>
+            <div>
+              <strong class="d-block">Marcus Thorne</strong>
+              <span class="small text-muted">VP of Sales, TechNova</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+</section>
 
-  <!-- Locations -->
-  <div class="bg-light rounded-4 p-5 text-center">
-    <h3 class="fw-bold mb-4">Serving Teams Across California</h3>
-    <div class="d-flex flex-wrap justify-content-center gap-2">
+<!-- Testimonials Grid -->
+<section class="section bg-white border-top border-light">
+  <div class="container">
+    <div class="text-center mb-10">
+      <h2 class="fw-extrabold mb-3">Don't just take our word for it</h2>
+      <p class="text-muted">Join 15 million users who trust us every day.</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-4">
+        <div class="glass-card p-5 h-100">
+          <div class="mb-3 text-warning"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+              class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+          <p class="mb-4 small text-muted">"The ROI was immediate. We saw a 30% jump in conversion rates in the first
+            quarter alone."</p>
+          <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle bg-gray-200" style="width: 40px; height: 40px;"></div>
+            <div><strong class="d-block small">Sarah Jenkins</strong><span class="extra-small text-muted">CRO,
+                GlobalScale</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="glass-card p-5 h-100">
+          <div class="mb-3 text-warning"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+              class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+          <p class="mb-4 small text-muted">"Modular, scalable, and intelligent. The perfect foundation for our global
+            revenue operations."</p>
+          <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle bg-gray-200" style="width: 40px; height: 40px;"></div>
+            <div><strong class="d-block small">David Chen</strong><span class="extra-small text-muted">Head of RevOps,
+                FinTech Inc</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="glass-card p-5 h-100">
+          <div class="mb-3 text-warning"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+              class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+          <p class="mb-4 small text-muted">"The best CRM interface on the market. It finally feels like software
+            designed for 2025."</p>
+          <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle bg-gray-200" style="width: 40px; height: 40px;"></div>
+            <div><strong class="d-block small">Elena Rodriguez</strong><span class="extra-small text-muted">Founder,
+                Creatively</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Locations Section -->
+<section class="section bg-light border-top border-light">
+  <div class="container text-center">
+    <h2 class="fw-extrabold mb-4">Serving Teams Across California</h2>
+    <div class="d-flex flex-wrap justify-content-center gap-2" style="max-width: 800px; margin: 0 auto;">
       {% for location in california_locations %}
-      <span class="badge bg-white text-dark border rounded-pill px-3 py-2 fw-normal">{{ location }}</span>
+      <span
+        class="badge bg-white text-primary border border-primary border-opacity-10 rounded-pill px-3 py-2 fw-medium shadow-sm">{{
+        location }}</span>
       {% endfor %}
     </div>
   </div>
-</div>
+</section>
+
+<!-- Final CTA -->
+<section class="section-large text-center bg-white border-top border-light">
+  <div class="container">
+    <h2 class="display-4 fw-extrabold mb-4">Join the winners.</h2>
+    <p class="lead text-muted mb-6">Start your transformation today.</p>
+    <a href="{% url 'core:try_free' %}" class="btn btn-primary btn-lg px-5">Start Trial</a>
+  </div>
+</section>
 {% endblock %}

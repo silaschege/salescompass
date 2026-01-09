@@ -17,7 +17,7 @@
             <div class="card text-white bg-primary">
                 <div class="card-body text-center">
                     <h6>NPS Score</h6>
-                    <h2>{{ nps_score }}</h2>
+                    <h2>{{ nps_score|floatformat:"1" }}</h2>
                 </div>
             </div>
         </div>
@@ -56,8 +56,8 @@
         <div class="col-md-2">
             <div class="card text-white bg-dark">
                 <div class="card-body text-center">
-                    <h6>Benchmark</h6>
-                    <h2>Industry Avg</h2>
+                    <h6>Response Rate</h6>
+                    <h2>{{ response_rate }}%</h2>
                 </div>
             </div>
         </div>
@@ -75,40 +75,225 @@
         </div>
     </div>
 
-    <!-- Recent Responses -->
     <div class="row">
-        <div class="col-12">
-            <div class="card">
+        <div class="col-md-8">
+            <!-- Analytics Sections -->
+            <div class="row mb-4">
+                <!-- Segmentation Analysis -->
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>NPS by Role</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if role_segments %}
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Role</th>
+                                                <th>Responses</th>
+                                                <th>NPS</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for role, data in role_segments.items %}
+                                            <tr>
+                                                <td>{{ role }}</td>
+                                                <td>{{ data.count }}</td>
+                                                <td>
+                                                    <span class="badge 
+                                                        {% if data.nps >= 50 %}bg-success
+                                                        {% elif data.nps >= 0 %}bg-warning text-dark
+                                                        {% else %}bg-danger{% endif %}">
+                                                        {{ data.nps|floatformat:"1" }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted">No role-based segmentation data available.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>NPS by Territory</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if territory_segments %}
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Territory</th>
+                                                <th>Responses</th>
+                                                <th>NPS</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for territory, data in territory_segments.items %}
+                                            <tr>
+                                                <td>{{ territory }}</td>
+                                                <td>{{ data.count }}</td>
+                                                <td>
+                                                    <span class="badge 
+                                                        {% if data.nps >= 50 %}bg-success
+                                                        {% elif data.nps >= 0 %}bg-warning text-dark
+                                                        {% else %}bg-danger{% endif %}">
+                                                        {{ data.nps|floatformat:"1" }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted">No territory-based segmentation data available.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Responses -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Recent Responses</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_responses %}
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Account</th>
+                                                <th>Score</th>
+                                                <th>Comment</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for response in recent_responses %}
+                                            <tr>
+                                                <td>{{ response.created_at|date:"M d, Y" }}</td>
+                                                <td>{{ response.account.email }}</td>
+                                                <td>
+                                                    <span class="badge 
+                                                        {% if response.is_promoter %}bg-success
+                                                        {% elif response.is_passive %}bg-warning text-dark
+                                                        {% else %}bg-danger{% endif %}">
+                                                        {{ response.score }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ response.comment|truncatewords:10 }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted">No recent responses available.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
                 <div class="card-header">
-                    <h5>Recent NPS Responses</h5>
+                    <h5>Help</h5>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Account</th>
-                                    <th>Score</th>
-                                    <th>Comment</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for response in recent_responses %}
-                                <tr class="{% if response.is_detractor %}table-danger{% elif response.is_promoter %}table-success{% endif %}">
-                                    <td>{{ response.account.name }}</td>
-                                    <td>
-                                        <span class="badge bg-{% if response.is_detractor %}danger{% elif response.is_promoter %}success{% else %}warning{% endif %}">
-                                            {{ response.score }}
-                                        </span>
-                                    </td>
-                                    <td>{{ response.comment|truncatewords:10 }}</td>
-                                    <td>{{ response.created_at|date:"M d" }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                    <h6>NPS Dashboard Overview:</h6>
+                    <ul>
+                        <li>NPS Score: The overall Net Promoter Score calculated as (% Promoters - % Detractors)</li>
+                        <li>Promoters: Customers who gave a score of 9 or 10</li>
+                        <li>Passives: Customers who gave a score of 7 or 8</li>
+                        <li>Detractors: Customers who gave a score of 0 to 6</li>
+                        <li>Response Rate: Percentage of surveys completed vs. sent</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Interpreting NPS Scores:</h6>
+                    <ul>
+                        <li>Positive scores (>0) indicate more promoters than detractors</li>
+                        <li>Scores above 50 are generally considered excellent</li>
+                        <li>Industry benchmarks vary: Technology (~45), Retail (~35), Healthcare (~52)</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Segmentation Analysis:</h6>
+                    <ul>
+                        <li>Identify performance differences across roles and territories</li>
+                        <li>Focus improvement efforts on low-scoring segments</li>
+                        <li>Replicate successful practices from high-scoring segments</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Survey Stats -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Survey Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Active Surveys
+                            <span class="badge bg-primary rounded-pill">{{ active_surveys }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Scheduled Surveys
+                            <span class="badge bg-warning rounded-pill text-dark">{{ scheduled_surveys }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Expired Surveys
+                            <span class="badge bg-danger rounded-pill">{{ expired_surveys }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Industry Benchmarks -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Industry Benchmarks</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Technology
+                            <span class="badge bg-info rounded-pill">45</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Retail
+                            <span class="badge bg-info rounded-pill">35</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Healthcare
+                            <span class="badge bg-info rounded-pill">52</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Financial Services
+                            <span class="badge bg-info rounded-pill">60</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Telecommunications
+                            <span class="badge bg-info rounded-pill">38</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>

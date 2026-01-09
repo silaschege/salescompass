@@ -1,0 +1,45 @@
+{% extends 'tenants/onboarding/base.html' %}
+
+{% block step_content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <div class="display-6 text-primary mb-2"><i class="bi bi-person-check"></i></div>
+                    <h3>Administrator Account Confirmation</h3>
+                </div>
+
+                <p>Building your organization requires an administrator. As the creator of this organization, your
+                    account (<strong>{{ user.email }}</strong>) will be assigned the <strong>Organization
+                        Administrator</strong> role.</p>
+
+                <div class="alert alert-info">
+                    <h6 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Administrator Permissions:</h6>
+                    <ul class="mb-0">
+                        <li>Manage organization-wide settings</li>
+                        <li>Invite and manage team members</li>
+                        <li>Configure integration and security rules</li>
+                        <li>Access billing and subscription management</li>
+                    </ul>
+                </div>
+
+                <p class="text-muted small">You can delegate or add additional administrators later from the Team
+                    Management settings.</p>
+            </div>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{% url 'tenants:onboarding_welcome' %}" class="btn btn-outline-secondary px-4">
+                    <i class="bi bi-arrow-left me-2"></i>Back
+                </a>
+                <button type="submit" class="btn btn-primary px-4">
+                    Confirm & Continue<i class="bi bi-arrow-right ms-2"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

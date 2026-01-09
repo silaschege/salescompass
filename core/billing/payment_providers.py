@@ -215,7 +215,8 @@ class MPesaProvider(PaymentProvider):
 # ---------------------------------------------------------------------------
 # Provider factory
 # ---------------------------------------------------------------------------
-
+ 
+# ... existing code ...
 def get_provider(provider_name: str = None, tenant_id: str = None) -> PaymentProvider:
     """Factory that returns a configured ``PaymentProvider`` instance.
 
@@ -224,42 +225,49 @@ def get_provider(provider_name: str = None, tenant_id: str = None) -> PaymentPro
     Args:
         provider_name: Name of the provider (stripe, mpesa, etc.)
         tenant_id: Optional tenant ID to load tenant-specific credentials
-    
+     
     Returns:
         Configured PaymentProvider instance
     """
-    from .models import PaymentProviderConfig, TenantPaymentConfig
+    from .models import PaymentProviderConfig
     
     # Load provider config from database
     if provider_name:
         try:
-            provider_config = PaymentProviderConfig.objects.get(
-                name=provider_name,
-                is_active=True
-            )
+            if tenant_id:
+                # Filter by tenant if provided
+                provider_config = PaymentProviderConfig.objects.get(
+                    provider_config_name=provider_name,
+                    config_is_active=True,
+                    tenant_id=tenant_id
+                )
+            else:
+                provider_config = PaymentProviderConfig.objects.get(
+                    provider_config_name=provider_name,
+                    config_is_active=True
+                )
         except PaymentProviderConfig.DoesNotExist:
             raise ValueError(f"Payment provider '{provider_name}' not found or not active")
     else:
         # Get default active provider
-        provider_config = PaymentProviderConfig.objects.filter(is_active=True).first()
+        if tenant_id:
+            provider_config = PaymentProviderConfig.objects.filter(
+                config_is_active=True, 
+                tenant_id=tenant_id
+            ).first()
+        else:
+            provider_config = PaymentProviderConfig.objects.filter(config_is_active=True).first()
+        
         if not provider_config:
             raise ValueError("No active payment providers configured")
     
     # Get effective configuration
-    config = provider_config.config.copy()
-    
-    # If tenant_id provided, check for tenant-specific credentials
-    if tenant_id:
-        try:
-            tenant_config = TenantPaymentConfig.objects.get(
-                tenant_id=tenant_id,
-                provider=provider_config
-            )
-            # Override with tenant credentials if available
-            if tenant_config.tenant_credentials:
-                config.update(tenant_config.tenant_credentials)
-        except TenantPaymentConfig.DoesNotExist:
-            pass  # Use platform credentials
+    config = {
+        'api_key': provider_config.api_key,
+        'secret_key': provider_config.secret_key,
+        'webhook_secret': provider_config.webhook_secret,
+        'display_name': provider_config.display_name
+    }
     
     # Instantiate appropriate provider class
     provider_classes = {
@@ -268,12 +276,12 @@ def get_provider(provider_name: str = None, tenant_id: str = None) -> PaymentPro
         # Add more providers here as needed
     }
     
-    provider_class = provider_classes.get(provider_config.name)
+    provider_class = provider_classes.get(provider_config.provider_config_name)
     if not provider_class:
-        raise ValueError(f"No implementation found for provider: {provider_config.name}")
+        raise ValueError(f"No implementation found for provider: {provider_config.provider_config_name}")
     
     return provider_class(config)
-
+# ... existing code ...
 
 def get_available_providers(tenant_id: str = None, for_customers: bool = False) -> list:
     """Get list of available payment providers.

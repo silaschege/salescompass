@@ -1,0 +1,105 @@
+{% extends "tasks/base.html" %}
+{% block title %}{% if object %}Edit Dependency{% else %}Create Dependency{% endif %} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">{% if object %}Edit Task Dependency{% else %}Create Task Dependency{% endif %}</h1>
+        <p class="text-white text-center lead">
+            {% if object %}Update task dependency{% else %}Create dependency between tasks{% endif %}
+        </p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.predecessor.id_for_label }}" class="form-label fw-bold text-primary">
+                                Predecessor Task <span class="text-danger">*</span>
+                            </label>
+                            {{ form.predecessor }}
+                            {% if form.predecessor.errors %}
+                                <div class="text-danger mt-1">{{ form.predecessor.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.successor.id_for_label }}" class="form-label fw-bold text-primary">
+                                Successor Task <span class="text-danger">*</span>
+                            </label>
+                            {{ form.successor }}
+                            {% if form.successor.errors %}
+                                <div class="text-danger mt-1">{{ form.successor.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.dependency_type.id_for_label }}" class="form-label fw-bold text-primary">
+                                Dependency Type
+                            </label>
+                            {{ form.dependency_type }}
+                            {% if form.dependency_type.errors %}
+                                <div class="text-danger mt-1">{{ form.dependency_type.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.lag_time.id_for_label }}" class="form-label fw-bold text-primary">
+                                Lag Time (hours)
+                            </label>
+                            {{ form.lag_time }}
+                            {% if form.lag_time.errors %}
+                                <div class="text-danger mt-1">{{ form.lag_time.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <div>
+                                {% if object %}
+                                <a href="{% url 'tasks:detail' object.predecessor.pk %}" class="btn btn-outline-primary">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 0 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                                    </svg>
+                                    Back to Task
+                                </a>
+                                {% endif %}
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'tasks:detail' task_id %}" class="btn btn-light">Cancel</a>
+                                <button type="submit" class="btn btn-primary">
+                                    {% if object %}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle me-1" viewBox="0 0 16 16">
+                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                        <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
+                                    </svg>
+                                    Update Dependency
+                                    {% else %}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle me-1" viewBox="0 0 16 16">
+                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3a.5.5 0 0 1 .5-.5z"/>
+                                    </svg>
+                                    Create Dependency
+                                    {% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}

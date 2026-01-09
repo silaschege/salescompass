@@ -74,6 +74,9 @@ class DashboardWidget(TenantModel):
         help_text="Dynamic category (replaces category_old field)"
     )
     template_path = models.CharField(max_length=255)
+    position = models.CharField(max_length=50, default='main', choices=[('main', 'Main'), ('sidebar', 'Sidebar'), ('footer', 'Footer')])
+    order = models.IntegerField(default=0)
+    report = models.ForeignKey('reports.Report', on_delete=models.CASCADE, related_name='widgets', null=True, blank=True)
     widget_is_active = models.BooleanField(default=True) # Renamed from 'is_active' to avoid conflict with base class
     widget_created_at = models.DateTimeField(auto_now_add=True)  # Renamed from 'created_at' to avoid conflict with base class
     widget_updated_at = models.DateTimeField(auto_now=True)  # Renamed from 'updated_at' to avoid conflict with base class

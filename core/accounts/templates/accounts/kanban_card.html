@@ -2,8 +2,8 @@
     <div class="card-body p-2">
         <div class="d-flex justify-content-between align-items-start">
             <h6 class="card-title mb-1">
-                <a href="{% url 'accounts:detail' account.pk %}" class="text-decoration-none">
-                    {{ account.name }}
+                <a href="{% url 'accounts:account_detail' account.pk %}" class="text-decoration-none">
+                    {{ account.account_name }}
                 </a>
             </h6>
             <span class="health-badge 
@@ -21,9 +21,9 @@
             Owner: {{ account.owner.email|default:"Unassigned" }}
         </p>
         {% if account.esg_engagement != 'low' %}
-            <span class="badge bg-success">
-                🌱 {{ account.get_esg_engagement_display }}
-            </span>
+        <span class="badge bg-success">
+            🌱 {{ account.get_esg_engagement_display }}
+        </span>
         {% endif %}
     </div>
 </div>

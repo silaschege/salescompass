@@ -1,0 +1,120 @@
+{% extends 'tenants/base.html' %}
+
+{% block title %}Tenant Clone History - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col">
+      <h2><i class="bi bi-clock-history me-2"></i>Tenant Clone History</h2>
+      <p class="text-muted">View the history of tenant cloning operations</p>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <a href="{% url 'tenants:clone_tenant' %}" class="btn btn-primary w-100">
+        <i class="bi bi-plus-circle me-1"></i>New Clone
+      </a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0">Clone Operations</h5>
+    </div>
+    <div class="card-body">
+      {% if clones %}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Original Tenant</th>
+              <th>Cloned Tenant</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Progress</th>
+              <th>Started</th>
+              <th>Completed</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for clone in clones %}
+            <tr>
+              <td>{{ clone.original_tenant.name }}</td>
+              <td>{{ clone.cloned_tenant.name }}</td>
+              <td>
+                <span class="badge bg-secondary">{{ clone.clone_type|title }}</span>
+              </td>
+              <td>
+                {% if clone.status == 'completed' %}
+                <span class="badge bg-success">{{ clone.status|title }}</span>
+                {% elif clone.status == 'in_progress' %}
+                <span class="badge bg-warning">{{ clone.status|title }}</span>
+                {% elif clone.status == 'failed' %}
+                <span class="badge bg-danger">{{ clone.status|title }}</span>
+                {% else %}
+                <span class="badge bg-info">{{ clone.status|title }}</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="progress" style="height: 20px;">
+                  <div class="progress-bar" 
+                       role="progressbar" 
+                       style="width: {{ clone.progress_percentage }}%" 
+                       aria-valuenow="{{ clone.progress_percentage }}" 
+                       aria-valuemin="0" 
+                       aria-valuemax="100">
+                    {{ clone.progress_percentage|floatformat:0 }}%
+                  </div>
+                </div>
+              </td>
+              <td>{{ clone.started_at|date:"M d, Y H:i" }}</td>
+              <td>
+                {% if clone.completed_at %}
+                  {{ clone.completed_at|date:"M d, Y H:i" }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>
+                <a href="{% url 'tenants:clone_status' clone.pk %}" class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-eye"></i> View
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      
+      {% if is_paginated %}
+      <nav aria-label="Clone history pagination">
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+          </li>
+          {% endif %}
+
+          <li class="page-item disabled">
+            <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          </li>
+
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+      
+      {% else %}
+      <p class="text-muted">No clone operations found.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

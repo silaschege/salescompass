@@ -1,4 +1,5 @@
 {% extends "leads/base.html" %}
+{% load task_tags %}
 
 
 {% block title %}{{ lead.full_name }} - Lead Details{% endblock %}
@@ -13,6 +14,16 @@
                     lead.company }}{% endif %}</p>
             </div>
             <div>
+                {% if lead.phone %}
+                <a href="{% url 'communication:whatsapp_conversation' %}?phone={{ lead.phone }}"
+                    class="btn btn-success me-2">
+                    <i class="bi bi-whatsapp"></i> WhatsApp
+                </a>
+                {% else %}
+                <a href="{% url 'communication:whatsapp_send' %}?lead_id={{ lead.pk }}" class="btn btn-success me-2">
+                    <i class="bi bi-whatsapp"></i> WhatsApp
+                </a>
+                {% endif %}
                 <a href="{% url 'leads:update' lead.pk %}" class="btn btn-light">
                     <i class="bi bi-pencil"></i> Edit
                 </a>
@@ -99,27 +110,48 @@
             </div>
 
             <!-- Tasks/Activities -->
+            <div class="mb-4">
+                {% render_object_tasks lead %}
+            </div>
+
+            <!-- Unified Engagement Timeline -->
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Upcoming Tasks</h5>
-                    <a href="#" class="btn btn-sm btn-outline-primary">Add Task</a>
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Engagement Timeline</h5>
                 </div>
-                <div class="card-body p-0">
-                    {% if lead_tasks %}
-                    <div class="list-group list-group-flush">
-                        {% for task in lead_tasks %}
-                        <div class="list-group-item border-0">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">{{ task.title }}</h6>
-                                <small class="text-muted">{{ task.due_date|date:"M d" }}</small>
+                <div class="card-body">
+                    {% if timeline_events %}
+                    <div class="timeline">
+                        {% for event in timeline_events %}
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                {% if 'mail' in event.event_type %}
+                                <i class="bi bi-envelope text-primary"></i>
+                                {% elif 'call' in event.event_type %}
+                                <i class="bi bi-telephone text-success"></i>
+                                {% elif 'task' in event.event_type %}
+                                <i class="bi bi-check2-square text-info"></i>
+                                {% elif 'whatsapp' in event.event_type %}
+                                <i class="bi bi-whatsapp text-success"></i>
+                                {% elif 'linkedin' in event.event_type %}
+                                <i class="bi bi-linkedin text-primary"></i>
+                                {% else %}
+                                <i class="bi bi-dot text-muted"></i>
+                                {% endif %}
                             </div>
-                            <p class="mb-1 small text-muted">{{ task.description|truncatechars:50 }}</p>
+                            <div class="timeline-content">
+                                <div class="d-flex justify-content-between">
+                                    <h6 class="mb-1">{{ event.title|default:event.get_event_type_display }}</h6>
+                                    <small class="text-muted">{{ event.created_at|timesince }} ago</small>
+                                </div>
+                                <p class="mb-0 small text-muted">{{ event.engagement_event_description }}</p>
+                            </div>
                         </div>
                         {% endfor %}
                     </div>
                     {% else %}
-                    <div class="text-center p-4">
-                        <p class="text-muted mb-0">No upcoming tasks</p>
+                    <div class="text-center p-3">
+                        <p class="text-muted mb-0">No engagement history yet.</p>
                     </div>
                     {% endif %}
                 </div>
@@ -182,6 +214,50 @@
         justify-content: center;
         font-size: 18px;
         font-weight: bold;
+    }
+
+    .timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+
+    .timeline:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e9ecef;
+        left: 20px;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+        padding-left: 60px;
+    }
+
+    .timeline-icon {
+        position: absolute;
+        left: 2px;
+        top: 0;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: white;
+        border: 2px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2em;
+        z-index: 1;
+    }
+
+    .timeline-content {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 0.5rem;
+        border-left: 3px solid #6f42c1;
     }
 </style>
 {% endblock %}

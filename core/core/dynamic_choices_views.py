@@ -7,7 +7,7 @@ from core.models import (
     SystemConfigType, SystemConfigCategory, SystemEventType, SystemEventSeverity,
     HealthCheckType, HealthCheckStatus, MaintenanceStatus, MaintenanceType,
     PerformanceMetricType, PerformanceEnvironment, NotificationType, NotificationPriority
-)
+) 
 # Dynamic Choices Dashboard
 class DynamicChoicesDashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'core/dynamic_choices_dashboard.html'

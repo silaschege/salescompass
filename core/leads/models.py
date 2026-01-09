@@ -205,7 +205,7 @@ class Lead(TenantModel):
     
     # Association - when lead is for an existing account (upsell/cross-sell)
     account = models.ForeignKey(
-        'core.User',
+        'accounts.Account',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

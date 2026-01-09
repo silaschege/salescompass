@@ -1,0 +1,63 @@
+{% extends 'tenants/onboarding/base.html' %}
+
+{% block step_content %}
+<form method="post">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label for="companyName" class="form-label">Company Name</label>
+    <input type="text" class="form-control" id="companyName" name="company_name" required>
+    <div class="form-text">The name of your organization that will appear throughout the CRM.</div>
+  </div>
+
+  <div class="mb-3">
+    <label for="companyDescription" class="form-label">Company Description</label>
+    <textarea class="form-control" id="companyDescription" name="company_description" rows="3"></textarea>
+    <div class="form-text">Brief description of your business (optional).</div>
+  </div>
+
+  <div class="mb-3">
+    <label for="industry" class="form-label">Industry</label>
+    <select class="form-select" id="industry" name="industry">
+      <option value="">Select your industry</option>
+      <option value="technology">Technology</option>
+      <option value="healthcare">Healthcare</option>
+      <option value="finance">Finance</option>
+      <option value="retail">Retail</option>
+      <option value="manufacturing">Manufacturing</option>
+      <option value="consulting">Consulting</option>
+      <option value="education">Education</option>
+      <option value="other">Other</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="companySize" class="form-label">Company Size</label>
+    <select class="form-select" id="companySize" name="company_size">
+      <option value="">Select company size</option>
+      <option value="1-10">1-10 employees</option>
+      <option value="11-50">11-50 employees</option>
+      <option value="51-200">51-200 employees</option>
+      <option value="201-500">201-500 employees</option>
+      <option value="501-1000">501-1000 employees</option>
+      <option value="1000+">1000+ employees</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="primaryEmail" class="form-label">Primary Contact Email</label>
+    <input type="email" class="form-control" id="primaryEmail" name="primary_email" required>
+    <div class="form-text">This will be used for important notifications.</div>
+  </div>
+  <div class="d-flex justify-content-between mt-4">
+    <a href="{% url 'tenants:onboarding_admin_setup' %}" class="btn btn-outline-secondary px-4">
+      <i class="bi bi-arrow-left me-2"></i>Back
+    </a>
+    <button type="submit" class="btn btn-primary px-4">
+      Next <i class="bi bi-arrow-right ms-2"></i>
+    </button>
+  </div>
+</form>
+{% endblock %}
+
+{% block next_button %}
+{% endblock %}

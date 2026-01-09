@@ -1,0 +1,119 @@
+{% extends 'tenants/base.html' %}
+
+{% block title %}{{ title }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col">
+      <h2><i class="bi bi-collection me-2"></i>{{ title }}</h2>
+      <p class="text-muted">{{ subtitle }}</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Bulk Feature Management</h5>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+              <label class="form-label">Select Features</label>
+              {{ form.features }}
+              {% if form.features.errors %}
+              <div class="text-danger">{{ form.features.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-3">
+              <label for="{{ form.is_enabled.id_for_label }}" class="form-label">Status</label>
+              <div class="form-check">
+                {{ form.is_enabled }}
+                <label class="form-check-label" for="{{ form.is_enabled.id_for_label }}">
+                  {{ form.is_enabled.label }}
+                </label>
+              </div>
+              <div class="form-text">{{ form.is_enabled.help_text }}</div>
+              {% if form.is_enabled.errors %}
+              <div class="text-danger">{{ form.is_enabled.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-3">
+              <label for="{{ form.entitlement_type.id_for_label }}" class="form-label">Entitlement Type</label>
+              {{ form.entitlement_type }}
+              <div class="form-text">{{ form.entitlement_type.help_text }}</div>
+              {% if form.entitlement_type.errors %}
+              <div class="text-danger">{{ form.entitlement_type.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="{{ form.trial_start_date.id_for_label }}" class="form-label">Trial Start Date</label>
+                  {{ form.trial_start_date }}
+                  <div class="form-text">{{ form.trial_start_date.help_text }}</div>
+                  {% if form.trial_start_date.errors %}
+                  <div class="text-danger">{{ form.trial_start_date.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="{{ form.trial_end_date.id_for_label }}" class="form-label">Trial End Date</label>
+                  {{ form.trial_end_date }}
+                  <div class="form-text">{{ form.trial_end_date.help_text }}</div>
+                  {% if form.trial_end_date.errors %}
+                  <div class="text-danger">{{ form.trial_end_date.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+              {{ form.notes }}
+              <div class="form-text">{{ form.notes.help_text }}</div>
+              {% if form.notes.errors %}
+              <div class="text-danger">{{ form.notes.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save me-1"></i>Apply Changes
+            </button>
+            <a href="{% url 'tenants:feature_entitlements' %}" class="btn btn-secondary">Cancel</a>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Bulk Management Help</h5>
+        </div>
+        <div class="card-body">
+          <p>Use this form to manage multiple features at once:</p>
+          <ul>
+            <li>Select one or more features to update</li>
+            <li>Choose whether to enable or disable them</li>
+            <li>Set the entitlement type for all selected features</li>
+            <li>Add notes if needed</li>
+          </ul>
+          
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle me-1"></i>
+            Features that don't exist yet will be created. Existing features will be updated.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

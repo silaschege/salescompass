@@ -43,21 +43,9 @@ MODULE_CHOICES = [
     ('commissions', 'Commissions'),
 ]
 
-TEAM_ROLE_CHOICES = [
-    ('sales_rep', 'Sales Representative'),
-    ('sales_manager', 'Sales Manager'),
-    ('account_manager', 'Account Manager'),
-    ('sales_director', 'Sales Director'),
-    ('ceo', 'CEO'),
-    ('admin', 'Administrator'),
-]
+# TEAM_ROLE_CHOICES removed as TeamRole model is removed
 
-TERRITORY_CHOICES = [
-    ('north_america', 'North America'),
-    ('emea', 'EMEA'),
-    ('apac', 'APAC'),
-    ('latam', 'Latin America'),
-]
+# TERRITORY_CHOICES removed as Territory model is removed
 
 STATUS_CHOICES = [
     ('active', 'Active'),
@@ -198,42 +186,18 @@ class ModuleChoice(TenantModel):
         return self.label
 
 
-class TeamRole(TenantModel):
-    """
-    Dynamic team role values - allows tenant-specific team role tracking.
-    """
-    role_name = models.CharField(max_length=50, db_index=True, help_text="e.g., 'sales_rep', 'sales_manager'")  # Renamed from 'name' to avoid conflict
-    label = models.CharField(max_length=100)  # e.g., 'Sales Representative', 'Sales Manager'
-    order = models.IntegerField(default=0)
-    role_is_active = models.BooleanField(default=True, help_text="Whether this role is active")  # Renamed from 'is_active' to avoid conflict
-    is_system = models.BooleanField(default=False)
-    
-    class Meta:
-        ordering = ['order', 'role_name']
-        unique_together = [('tenant_id', 'role_name')]
-        verbose_name_plural = 'Team Roles'
-    
-    def __str__(self):
-        return self.label
+# TeamRole model removed
+
+# Territory model removed
+
+# TeamMember model removed
 
 
-class Territory(TenantModel):
-    """
-    Dynamic territory values - allows tenant-specific territory tracking.
-    """
-    territory_name = models.CharField(max_length=100, db_index=True, help_text="e.g., 'north_america', 'emea'")  # Renamed from 'name' to avoid conflict
-    label = models.CharField(max_length=100)  # e.g., 'North America', 'EMEA'
-    order = models.IntegerField(default=0)
-    territory_is_active = models.BooleanField(default=True, help_text="Whether this territory is active")  # Renamed from 'is_active' to avoid conflict
-    is_system = models.BooleanField(default=False)
-    
-    class Meta:
-        ordering = ['order', 'territory_name']
-        unique_together = [('tenant_id', 'territory_name')]
-        verbose_name_plural = 'Territories'
-    
-    def __str__(self):
-        return self.label
+
+
+
+
+
 
 
 class AssignmentRuleType(TenantModel):
@@ -434,66 +398,7 @@ class ModuleLabel(TenantModel):
         return f"{self.module_key}: {self.custom_label}"
 
 
-class TeamMember(TenantModel):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='team_member')
-    role = models.CharField(max_length=50, choices=TEAM_ROLE_CHOICES)
-    # New dynamic field
-    role_ref = models.ForeignKey(
-        TeamRole,
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-        related_name='team_members',
-        help_text="Dynamic role (replaces role field)"
-    )
-    territory = models.CharField(max_length=100, choices=TERRITORY_CHOICES, blank=True)
-    # New dynamic field
-    territory_ref = models.ForeignKey(
-        Territory,
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-        related_name='team_members',
-        help_text="Dynamic territory (replaces territory field)"
-    )
-    manager = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='reports')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='onboarding')
-    # New dynamic field
-    status_ref = models.ForeignKey(
-        'self',  # Self reference for status - this might need to be a separate model
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='team_members_by_status',
-        help_text="Dynamic status (replaces status field)"
-    )
-    hire_date = models.DateField(null=True, blank=True)
-    termination_date = models.DateField(null=True, blank=True)
-    quota_amount = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
-    quota_period = models.CharField(max_length=20, choices=QUOTA_PERIOD_CHOICES, default='quarterly')
-    # New dynamic field
-    quota_period_ref = models.ForeignKey(
-        'self',  # Self reference for period - this might need to be a separate model
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='team_members_by_period',
-        help_text="Dynamic quota period (replaces quota_period field)"
-    )
-    commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.0, help_text="Commission rate (e.g. 10.0 for 10%)")
 
-    # Territory Performance Metrics (added for territory optimization)
-    territory_performance_score = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, 
-                                                     help_text="Performance score within assigned territory (0-100)")
-    territory_quota_attainment = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, 
-                                                    help_text="Percentage of territory quota attained")
-    territory_conversion_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, 
-                                                   help_text="Lead to opportunity conversion rate in territory (%)")
-    territory_revenue_contribution = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, 
-                                                        help_text="Revenue contribution to assigned territory")
-
-    def __str__(self):
-        return f"{self.user.email} - {self.role}"
 
 
 class AssignmentRule(TenantModel):

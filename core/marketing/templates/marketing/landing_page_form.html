@@ -1,25 +1,27 @@
 {% extends "marketing/base.html" %}
 
-{% block title %}{% if object %}Edit {{ object.title }}{% else %}New Landing Page{% endif %} - SalesCompass{% endblock %}
+{% block title %}{% if object %}Edit {{ object.title }}{% else %}New Landing Page{% endif %} - SalesCompass{% endblock
+%}
 
 {% block content %}
 <div class="header-bar mb-4">
     <div class="container">
         <h1 class="block-title">{% if object %}Edit Landing Page{% else %}Create New Landing Page{% endif %}</h1>
         <p class="text-white text-center lead">
-            {% if object %}Update your landing page settings{% else %}Configure your new marketing landing page{% endif %}
+            {% if object %}Update your landing page settings{% else %}Configure your new marketing landing page{% endif
+            %}
         </p>
     </div>
 </div>
 
 <div class="container">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
+    <div class="row">
+        <div class="col-lg-8">
             <div class="card shadow-sm border-0">
                 <div class="card-body p-4">
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
-                        
+
                         <div class="row">
                             <div class="col-md-6">
                                 <!-- Title -->
@@ -29,11 +31,8 @@
                                     </label>
                                     {{ form.title }}
                                     {% if form.title.errors %}
-                                        <div class="text-danger mt-1">{{ form.title.errors }}</div>
+                                    <div class="text-danger mt-1">{{ form.title.errors }}</div>
                                     {% endif %}
-                                    <div class="form-text text-muted small">
-                                        Give your landing page a descriptive title (e.g., "Q4 Product Launch", "ESG Webinar Registration")
-                                    </div>
                                 </div>
 
                                 <!-- Slug -->
@@ -43,24 +42,19 @@
                                     </label>
                                     {{ form.slug }}
                                     {% if form.slug.errors %}
-                                        <div class="text-danger mt-1">{{ form.slug.errors }}</div>
+                                    <div class="text-danger mt-1">{{ form.slug.errors }}</div>
                                     {% endif %}
-                                    <div class="form-text text-muted small">
-                                        The URL path for this landing page (e.g., "product-launch-2025" will create /marketing/landing/product-launch-2025/)
-                                    </div>
                                 </div>
 
                                 <!-- Campaign Association -->
                                 <div class="mb-4">
-                                    <label for="{{ form.campaign.id_for_label }}" class="form-label fw-bold text-primary">
+                                    <label for="{{ form.campaign.id_for_label }}"
+                                        class="form-label fw-bold text-primary">
                                         Associated Campaign
                                     </label>
                                     {{ form.campaign }}
-                                    <div class="form-text text-muted small">
-                                        Link this landing page to a specific marketing campaign for tracking and analytics
-                                    </div>
                                     {% if form.campaign.errors %}
-                                        <div class="text-danger mt-1">{{ form.campaign.errors }}</div>
+                                    <div class="text-danger mt-1">{{ form.campaign.errors }}</div>
                                     {% endif %}
                                 </div>
 
@@ -70,69 +64,63 @@
                                         {{ form.is_published }}
                                         <span class="form-check-label fw-bold text-primary">Published</span>
                                     </label>
-                                    <div class="form-text text-muted small">
-                                        Published landing pages are live and accessible to visitors
-                                    </div>
-                                    {% if form.is_published.errors %}
-                                        <div class="text-danger mt-1">{{ form.is_published.errors }}</div>
-                                    {% endif %}
                                 </div>
                             </div>
 
                             <div class="col-md-6">
                                 <!-- HTML Content -->
                                 <div class="mb-4">
-                                    <label for="{{ form.html_content.id_for_label }}" class="form-label fw-bold text-primary">
+                                    <label for="{{ form.html_content.id_for_label }}"
+                                        class="form-label fw-bold text-primary">
                                         HTML Content
                                     </label>
                                     {{ form.html_content }}
-                                    <div class="form-text text-muted small">
-                                        <p>Full HTML content for your landing page. For advanced layouts, use the Landing Page Builder instead.</p>
-                                        <p><strong>Tip:</strong> Include merge tags like <code>{{ company }}</code>, <code>{{ contact.first_name }}</code> for personalization.</p>
-                                    </div>
                                     {% if form.html_content.errors %}
-                                        <div class="text-danger mt-1">{{ form.html_content.errors }}</div>
+                                    <div class="text-danger mt-1">{{ form.html_content.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
                         </div>
 
                         <!-- Action Buttons -->
-                        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-4 pt-3 border-top">
-                            <div>
-                                {% if object %}
-                                <a href="{% url 'marketing:landing_page_list' %}" class="btn btn-outline-primary">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
-                                        <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
-                                    </svg>
-                                    Back to Landing Pages
-                                </a>
-                                {% endif %}
-                            </div>
-                            <div class="d-flex gap-2">
-                                <a href="{% url 'marketing:landing_page_list' %}" class="btn btn-light">Cancel</a>
-                                <button type="submit" class="btn btn-primary">
-                                    {% if object %}
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle me-1" viewBox="0 0 16 16">
-                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                                        <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
-                                    </svg>
-                                    Update Landing Page
-                                    {% else %}
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle me-1" viewBox="0 0 16 16">
-                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-                                    </svg>
-                                    Create Landing Page
-                                    {% endif %}
-                                </button>
-                            </div>
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <a href="{% url 'marketing:landing_page_list' %}" class="btn btn-light">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if object %}Update Page{% else %}Create Page{% endif %}
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 text-primary">Page Settings Guide</h5>
+                </div>
+                <div class="card-body">
+                    <h6>URL Slugs:</h6>
+                    <p class="small text-muted">A slug is the URL-friendly version of your title. Use hyphens to
+                        separate words (e.g., <code>free-trial-signup</code>).</p>
+
+                    <h6 class="mt-4">Campaign Context:</h6>
+                    <p class="small text-muted">Linking to a campaign allows you to track conversions and ROI
+                        specifically for this landing page.</p>
+
+                    <h6 class="mt-4">HTML vs Builder:</h6>
+                    <p class="small text-muted">Use the HTML content field for quick, custom pages. For complex,
+                        responsive designs, use the "Landing Page Blocks" feature after creating the page.</p>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
+</form>
+</div>
+</div>
+</div>
+</div>
 </div>
 
 <div class="footer-bar mt-5">
@@ -140,7 +128,7 @@
         <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
     </div>
 </div>
-{%  endblock %}
+{% endblock %}
 {% block extra_head %}
 <style>
     /* Form-specific styling */
@@ -148,71 +136,74 @@
         font-size: 0.95rem;
         margin-bottom: 0.5rem;
     }
-    
-    .form-control, .form-select {
+
+    .form-control,
+    .form-select {
         border: 1px solid #e3e6f3;
         border-radius: 0.5rem;
         padding: 0.75rem 1rem;
         font-size: 0.95rem;
         transition: all 0.2s ease;
     }
-    
-    .form-control:focus, .form-select:focus {
+
+    .form-control:focus,
+    .form-select:focus {
         border-color: #6f42c1;
         box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
     }
-    
-    .form-control:focus-visible, .form-select:focus-visible {
+
+    .form-control:focus-visible,
+    .form-select:focus-visible {
         outline: none;
     }
-    
+
     textarea.form-control {
         min-height: 300px;
         resize: vertical;
     }
-    
+
     .text-danger {
         font-size: 0.875rem;
         margin-top: 0.25rem;
     }
-    
+
     .form-text {
         font-size: 0.8125rem;
         margin-top: 0.25rem;
     }
-    
+
     .badge {
         font-size: 0.75rem;
         padding: 0.3em 0.6em;
     }
-    
+
     .btn {
         padding: 0.5rem 1.25rem;
         font-weight: 600;
         border-radius: 0.5rem;
         transition: all 0.2s ease;
     }
-    
+
     .btn-primary:hover {
         background-color: #5a32a3;
         border-color: #5a32a3;
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
     }
-    
+
     .btn-light:hover {
         background-color: #f8f9fa;
         border-color: #d1c5e6;
         color: #5a32a3;
     }
-    
+
     /* Card styling */
     .card {
         border: none;
         border-radius: 1rem;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     }
-    
+
     code {
         background-color: #f8f9fa;
         padding: 0.1rem 0.25rem;
@@ -220,23 +211,23 @@
         font-size: 0.875rem;
         color: #6f42c1;
     }
-    
+
     /* Responsive adjustments */
     @media (max-width: 768px) {
         .card {
             margin: 0 -1rem;
             border-radius: 0;
         }
-        
+
         .header-bar {
             border-radius: 0;
         }
-        
+
         .footer-bar {
             border-radius: 0;
         }
-        
-        .row > [class*="col-"] {
+
+        .row>[class*="col-"] {
             margin-bottom: 1rem;
         }
     }

@@ -1,0 +1,133 @@
+{% extends "communication/base.html" %}
+{% load static task_tags %}
+
+{% block title %}Call Details - Communication{% endblock %}
+
+{% block comm_title %}📞 Call Details{% endblock %}
+{% block comm_subtitle %}Analysis of interaction with {{ call.contact_name|default:call.phone_number }}{% endblock %}
+
+{% block comm_actions %}
+<a href="{% url 'communication:call_log_list' %}" class="btn btn-light fw-bold px-4 shadow-sm">
+    <i class="bi bi-arrow-left me-1"></i> Back to History
+</a>
+{% endblock %}
+
+{% block comm_content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="comm-card p-4">
+            <h5 class="fw-bold mb-4 border-bottom pb-3">Interaction Summary</h5>
+
+            <div class="row g-4 mb-5">
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Call Started</div>
+                        <div class="fw-bold">{{ call.call_started_at|date:"F d, Y @ H:i:s" }}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Duration</div>
+                        <div class="fw-bold">{{ call.duration_seconds }} seconds</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Outcome</div>
+                        <div class="fw-bold">
+                            <span
+                                class="badge {% if call.outcome == 'answered' or call.outcome == 'completed' %}bg-success{% else %}bg-secondary{% endif %} rounded-pill px-3">
+                                {{ call.outcome|upper }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Agent</div>
+                        <div class="fw-bold">{{ call.user.get_full_name|default:call.user.username }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-5">
+                <h6 class="fw-bold mb-3"><i class="bi bi-journal-text me-2 text-comm"></i> Notes & Observations</h6>
+                <div class="p-4 border rounded-3 bg-white shadow-sm" style="min-height: 150px;">
+                    {{ call.notes|linebreaks|default:"<span class='text-muted italic'>No notes recorded for this
+                        call.</span>" }}
+                </div>
+            </div>
+
+            {% if call.transcript %}
+            <div class="mb-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-blockquote-left me-2 text-comm"></i> AI Transcript</h6>
+                <div class="p-4 border rounded-3 bg-light-subtle small overflow-auto" style="max-height: 400px;">
+                    {{ call.transcript|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Generic Task List Widget -->
+        <div class="mb-4">
+            {% render_object_tasks call %}
+        </div>
+        <div class="comm-card p-4 mb-4">
+            <h5 class="fw-bold mb-4 border-bottom pb-2">Related Entities</h5>
+            {% if call.account %}
+            <div class="mb-3">
+                <div class="text-muted small fw-bold">Account</div>
+                <div class="fw-bold text-comm">{{ call.account.name }}</div>
+            </div>
+            {% endif %}
+            {% if call.contact %}
+            <div class="mb-3">
+                <div class="text-muted small fw-bold">Contact</div>
+                <div class="fw-bold text-comm">{{ call.contact.get_full_name }}</div>
+                <div class="small text-muted">{{ call.contact.email }}</div>
+            </div>
+            {% endif %}
+            <div class="mb-3">
+                <div class="text-muted small fw-bold">Phone Number</div>
+                <div class="fw-bold">{{ call.phone_number }}</div>
+            </div>
+        </div>
+
+        {% if call.recording_url %}
+        <div class="comm-card p-4 border-comm">
+            <h5 class="fw-bold mb-3"><i class="bi bi-play-circle-fill text-comm me-2"></i> Call Recording</h5>
+            <audio controls class="w-100 mt-2 shadow-sm rounded-pill">
+                <source src="{{ call.recording_url }}" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+            <div class="text-center mt-3">
+                <a href="{{ call.recording_url }}" class="btn btn-sm btn-link text-comm text-decoration-none" download>
+                    <i class="bi bi-download me-1"></i> Download Recording
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="comm-card p-4 mt-4 bg-light">
+            <h6 class="fw-bold small text-muted text-uppercase mb-3">Call Quality Flags</h6>
+            <div class="d-flex flex-column gap-2 small">
+                <div class="d-flex justify-content-between">
+                    <span>Sentiment Analysis</span>
+                    <span class="text-success fw-bold">N/A</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Talk/Listen Ratio</span>
+                    <span class="fw-bold">N/A</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Follow-up Tag</span>
+                    <span>{% if call.follow_up_required %}<span class="text-danger">REQUIRED</span>{% else %}None{%
+                        endif %}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

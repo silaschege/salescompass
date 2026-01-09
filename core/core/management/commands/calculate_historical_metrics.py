@@ -3,7 +3,7 @@ Management command to calculate historical business metrics
 """
 from django.core.management.base import BaseCommand
 from core.services.business_metrics_service import BusinessMetricsService
-from core.models import Tenant
+from tenants.models import Tenant
 from datetime import datetime, timedelta
 
 

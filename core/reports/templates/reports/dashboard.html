@@ -19,7 +19,7 @@
         </div>
         {% endfor %}
     </div>
-    
+
     <!-- Sidebar Area -->
     <div class="row">
         <div class="col-md-4">
@@ -31,6 +31,34 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.widget-chart-canvas').forEach(canvas => {
+            const widgetId = canvas.dataset.widgetId;
+            const dataElement = document.getElementById(`widget-data-${widgetId}`);
+            if (dataElement) {
+                const data = JSON.parse(dataElement.textContent);
+                if (data && !data.error) {
+                    new Chart(canvas.getContext('2d'), {
+                        type: data.chart_type || 'bar',
+                        data: data,
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                }
+            }
+        });
+    });
+</script>
+
+{% for widget in widgets %}
+{% if widget.report_data %}
+<script type="application/json" id="widget-data-{{ widget.pk }}">
+            {{ widget.report_data|safe }}
+        </script>
+{% endif %}
+{% endfor %}
 
 <div class="footer-bar mt-5">
     <div class="container">

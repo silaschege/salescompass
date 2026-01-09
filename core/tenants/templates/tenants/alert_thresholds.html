@@ -1,0 +1,83 @@
+{% extends 'tenants/base.html' %}
+
+{% block title %}{{ title }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col">
+      <h2><i class="bi bi-bar-chart me-2"></i>{{ title }}</h2>
+      <p class="text-muted">{{ subtitle }}</p>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <a href="{% url 'tenants:alert_threshold_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i>New Alert Threshold
+      </a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Alert Thresholds</h5>
+        </div>
+        <div class="card-body">
+          {% if alert_thresholds %}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Metric Type</th>
+                  <th>Threshold (%)</th>
+                  <th>Level</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for threshold in alert_thresholds %}
+                <tr>
+                  <td>
+                    <span class="badge bg-secondary">{{ threshold.get_metric_type_display }}</span>
+                  </td>
+                  <td>{{ threshold.threshold_percentage }}%</td>
+                  <td>
+                    {% if threshold.alert_level == 'warning' %}
+                    <span class="badge bg-warning">Warning</span>
+                    {% else %}
+                    <span class="badge bg-danger">Critical</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if threshold.is_active %}
+                    <span class="badge bg-success">Active</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ threshold.created_at|date:"M d, Y" }}</td>
+                  <td>
+                    <a href="{% url 'tenants:alert_threshold_update' threshold.pk %}" class="btn btn-sm btn-outline-primary">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          
+          {% else %}
+          <p class="text-muted">No alert thresholds found. <a href="{% url 'tenants:alert_threshold_create' %}">Create your first alert threshold</a>.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

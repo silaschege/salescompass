@@ -5,7 +5,7 @@ from tenants.models import Tenant as TenantModel
 class DashboardWidgetForm(forms.ModelForm):
     class Meta:
         model = DashboardWidget
-        fields = ['widget_type_ref', 'widget_name', 'widget_description', 'category_ref', 'template_path', 'widget_is_active']
+        fields = ['widget_type_ref', 'widget_name', 'widget_description', 'category_ref', 'template_path', 'report', 'widget_is_active']
     
     def __init__(self, *args, **kwargs):
         self.tenant = kwargs.pop('tenant', None)
@@ -24,9 +24,19 @@ class WidgetTypeForm(forms.ModelForm):
     class Meta:
         model = WidgetType
         fields = ['widget_name', 'label', 'order', 'widget_type_is_active', 'is_system']
+    
+    def __init__(self, *args, **kwargs):
+        # Pop the user argument if it exists, but we don't actually need to use it in this form
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
 
 
 class WidgetCategoryForm(forms.ModelForm):
     class Meta:
         model = WidgetCategory
         fields = ['category_name', 'label', 'order', 'widget_category_is_active', 'is_system']
+    
+    def __init__(self, *args, **kwargs):
+        # Pop the user argument if it exists, but we don't actually need to use it in this form
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)

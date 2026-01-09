@@ -1,0 +1,124 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 text-gray-800">
+            {% if form.instance.pk %}
+                Edit Widget Category
+            {% else %}
+                Create Widget Category
+            {% endif %}
+        </hh1>
+        <a href="{% url 'dashboard:widget_category_list' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to List
+        </a>
+    </div>
+
+    <!-- Widget Category Form -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                {% if form.instance.pk %}
+                    Update Widget Category
+                {% else %}
+                    New Widget Category
+                {% endif %}
+            </h6>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.category_name.id_for_label }}" class="form-label">Name</label>
+                            {{ form.category_name }}
+                            {% if form.category_name.help_text %}
+                                <div class="form-text">{{ form.category_name.help_text }}</div>
+                            {% endif %}
+                            {% if form.category_name.errors %}
+                                <div class="text-danger">{{ form.category_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.label.id_for_label }}" class="form-label">Label</label>
+                            {{ form.label }}
+                            {% if form.label.help_text %}
+                                <div class="form-text">{{ form.label.help_text }}</div>
+                            {% endif %}
+                            {% if form.label.errors %}
+                                <div class="text-danger">{{ form.label.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.order.id_for_label }}" class="form-label">Order</label>
+                            {{ form.order }}
+                            {% if form.order.help_text %}
+                                <div class="form-text">{{ form.order.help_text }}</div>
+                            {% endif %}
+                            {% if form.order.errors %}
+                                <div class="text-danger">{{ form.order.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.widget_category_is_active.id_for_label }}" class="form-label">Active</label>
+                            <div class="form-check">
+                                {{ form.widget_category_is_active }}
+                                <label class="form-check-label" for="{{ form.widget_category_is_active.id_for_label }}">
+                                    Is Active
+                                </label>
+                            </div>
+                            {% if form.widget_category_is_active.help_text %}
+                                <div class="form-text">{{ form.widget_category_is_active.help_text }}</div>
+                            {% endif %}
+                            {% if form.widget_category_is_active.errors %}
+                                <div class="text-danger">{{ form.widget_category_is_active.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check">
+                        {{ form.is_system }}
+                        <label class="form-check-label" for="{{ form.is_system.id_for_label }}">
+                            Is System
+                        </label>
+                    </div>
+                    {% if form.is_system.help_text %}
+                        <div class="form-text">{{ form.is_system.help_text }}</div>
+                    {% endif %}
+                    {% if form.is_system.errors %}
+                        <div class="text-danger">{{ form.is_system.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'dashboard:widget_category_list' %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        {% if form.instance.pk %}
+                            Update Widget Category
+                        {% else %}
+                            Create Widget Category
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

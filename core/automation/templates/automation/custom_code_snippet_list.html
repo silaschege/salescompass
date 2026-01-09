@@ -1,0 +1,88 @@
+{% extends 'automation/base.html' %}
+
+{% block title %}Custom Code Snippets - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar">
+    <div class="container">
+        <h1 class="block-title">🔧 Custom Code Snippets</h1>
+        <p class="text-center text-light opacity-75 mb-0">Create and manage reusable code for workflows</p>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{% url 'automation:workflow_list' %}" class="btn btn-light">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+    <a href="{% url 'automation:custom_code_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Create New
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Language</th>
+                        <th>Status</th>
+                        <th>Created By</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for snippet in snippets %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'automation:custom_code_detail' pk=snippet.pk %}">
+                                <strong>{{ snippet.name }}</strong>
+                            </a>
+                        </td>
+                        <td>{{ snippet.description|truncatewords:15|default:"-" }}</td>
+                        <td><span class="badge bg-info">{{ snippet.language }}</span></td>
+                        <td>
+                            {% if snippet.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ snippet.created_by.get_full_name|default:snippet.created_by.username|default:"-" }}</td>
+                        <td>
+                            <a href="{% url 'automation:custom_code_update' pk=snippet.pk %}"
+                                class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'automation:custom_code_delete' pk=snippet.pk %}"
+                                class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            <i class="bi bi-code-slash display-4"></i>
+                            <p class="mt-2">No custom code snippets yet</p>
+                            <a href="{% url 'automation:custom_code_create' %}" class="btn btn-primary btn-sm">Create
+                                Your First</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'automation:custom_code_logs' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-journal-text"></i> View Execution Logs
+    </a>
+</div>
+{% endblock %}

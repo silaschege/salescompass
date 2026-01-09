@@ -1,19 +1,61 @@
 {% extends 'core/base_module.html' %}
 
+{% block extra_css %}{% endblock %}
+
 {% block module_nav %}
-<!-- Customers Dropdown -->
-<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#accountsMenu">
-    <i class="bi bi-people"></i> Account
+<!-- Accounts Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#accountsMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-people nav-icon"></i>
+        <span>Accounts</span>
+    </div>
 </a>
-<div class="collapse show" id="accountsMenu">
-    <a class="nav-link ms-3" href="{% url 'accounts:accounts_list' %}">List</a>
-    <a class="nav-link ms-3" href="{% url 'accounts:accounts_create' %}">Create</a>
-    <a class="nav-link ms-3" href="{% url 'accounts:accounts_kanban' %}">Dashboard</a>
-    <a class="nav-link ms-3" href="{% url 'accounts:bulk_import_upload' %}">Upload Account</a>
-    <a class="nav-link ms-3" href="{% url 'accounts:account_kanban' %}">Kanban Board</a>
-    <a class="nav-link ms-3" href="{% url 'accounts:account_list' %}">Accounts List</a>
-    <a class="nav-link ms-3" href="{% url 'accounts:account_create' %}">Create Account</a>
-    <a class="nav-link ms-3" href="{% url 'accounts:contact_list' %}">Contacts</a>
-    <a class="nav-link ms-3" href="{% url 'accounts:member_list' %}">Team Members</a>
-    <a class="nav-link ms-3" href="{% url 'accounts:territory_list' %}">Territories</a>
-    {% endblock %}
+<div class="collapse" id="accountsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'account_list' %}active{% endif %}" 
+       href="{% url 'accounts:account_list' %}">
+        Account List
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'account_create' %}active{% endif %}" 
+       href="{% url 'accounts:account_create' %}">
+        Create Account
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'account_kanban' %}active{% endif %}" 
+       href="{% url 'accounts:account_kanban' %}">
+        Kanban Board
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'bulk_import_upload' %}active{% endif %}" 
+       href="{% url 'accounts:bulk_import_upload' %}">
+        Upload Accounts
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'accounts_dashboard' %}active{% endif %}" 
+       href="{% url 'accounts:accounts_dashboard' %}">
+        Accounts Dashboard
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'account_analytics' %}active{% endif %}" 
+       href="{% url 'accounts:accounts_dashboard' %}">
+        Account Analytics
+    </a>
+</div>
+
+<!-- Contacts Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#contactsMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-person-lines-fill nav-icon"></i>
+        <span>Contacts</span>
+    </div>
+</a>
+<div class="collapse" id="contactsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'contact_list' %}active{% endif %}" 
+       href="{% url 'accounts:contact_list' %}">
+        Contact List
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'contact_create' %}active{% endif %}" 
+       href="{% url 'accounts:contact_create' %}">
+        Create Contact
+    </a>
+    <a class="nav-link" 
+       href="{% url 'accounts:contact_list' %}">
+        Account Contacts
+    </a>
+</div>
+{% endblock %}

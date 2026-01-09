@@ -1,26 +1,43 @@
 {% extends "engagement/base.html" %}
 
+<!-- ... existing code ... -->
 {% block content %}
 <div class="container-fluid">
     <div class="row mb-4 align-items-center">
         <div class="col-md-6">
             <h2 class="fw-bold text-primary">Disengaged Accounts</h2>
-            <p class="text-muted">Accounts requiring attention due to low scores or inactivity.</p>
+            <p class="text-muted">
+                Showing {{ disengaged_count }} of {{ total_accounts }} accounts ({{ disengaged_percentage }}%) 
+                requiring attention due to low scores or inactivity.
+            </p>
         </div>
         <div class="col-md-6 text-end">
-            <form class="d-inline-flex gap-2" method="get">
-                <div class="input-group input-group-sm">
-                    <span class="input-group-text">Score &lt;</span>
-                    <input type="number" name="score_threshold" class="form-control" value="{{ score_threshold }}"
-                        style="width: 70px;">
+            <div class="d-flex gap-2 justify-content-end">
+                <form class="d-inline-flex gap-2" method="get">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">Score &lt;</span>
+                        <input type="number" name="score_threshold" class="form-control" value="{{ score_threshold }}"
+                            style="width: 70px;">
+                    </div>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">Inactive Days &gt;</span>
+                        <input type="number" name="days_inactive" class="form-control" value="{{ days_inactive }}"
+                            style="width: 70px;">
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-outline-primary">Filter</button>
+                </form>
+                
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown">
+                        <i class="bi bi-download"></i> Export
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                        {% for format in export_formats %}
+                        <li><a class="dropdown-item" href="?format={{ format }}">{{ format|upper }}</a></li>
+                        {% endfor %}
+                    </ul>
                 </div>
-                <div class="input-group input-group-sm">
-                    <span class="input-group-text">Inactive Days &gt;</span>
-                    <input type="number" name="days_inactive" class="form-control" value="{{ days_inactive }}"
-                        style="width: 70px;">
-                </div>
-                <button type="submit" class="btn btn-sm btn-outline-primary">Filter</button>
-            </form>
+            </div>
         </div>
     </div>
 
@@ -32,7 +49,9 @@
                         <tr>
                             <th class="ps-4">Account</th>
                             <th>Last Engaged</th>
+                            <th>Days Inactive</th>
                             <th>Engagement Score</th>
+                            <th>Status</th>
                             <th class="text-end pe-4">Actions</th>
                         </tr>
                     </thead>
@@ -60,6 +79,13 @@
                                 {% endif %}
                             </td>
                             <td>
+                                {% if status.last_engaged_at %}
+                                {{ status.last_engaged_at|timesince }}
+                                {% else %}
+                                N/A
+                                {% endif %}
+                            </td>
+                            <td>
                                 <div class="d-flex align-items-center">
                                     <div class="progress flex-grow-1 me-2" style="height: 6px; width: 100px;">
                                         <div class="progress-bar {% if status.engagement_score < 30 %}bg-danger{% elif status.engagement_score < 60 %}bg-warning{% else %}bg-success{% endif %}"
@@ -68,6 +94,13 @@
                                     <span class="fw-bold {% if status.engagement_score < 30 %}text-danger{% endif %}">{{
                                         status.engagement_score }}</span>
                                 </div>
+                            </td>
+                            <td>
+                                {% if status.engagement_score < score_threshold|add:0 %}
+                                <span class="badge bg-danger">Low Score</span>
+                                {% else %}
+                                <span class="badge bg-warning">Inactive</span>
+                                {% endif %}
                             </td>
                             <td class="text-end pe-4">
                                 <a href="{% url 'engagement:feed' %}?account_id={{ status.account.id }}"
@@ -82,7 +115,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="4" class="text-center py-5">
+                            <td colspan="6" class="text-center py-5">
                                 <div class="text-muted">
                                     <i class="bi bi-check-circle display-4 mb-3 d-block"></i>
                                     <p class="mb-0">Great job! No accounts match the disengaged criteria.</p>

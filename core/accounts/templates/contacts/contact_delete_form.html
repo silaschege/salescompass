@@ -18,19 +18,20 @@
                     <div class="mb-4">
                         <i class="bi bi-exclamation-triangle text-warning display-1"></i>
                     </div>
-                    
+
                     <h3 class="mb-3">Delete Contact</h3>
-                    
+
                     <div class="alert alert-warning">
                         <p><strong>This action cannot be undone.</strong></p>
                         <p>You are about to permanently delete the contact:</p>
                         <p><strong>{{ contact.first_name }} {{ contact.last_name }}</strong></p>
-                        <p>from account <strong>{{ contact.account.name }}</strong>.</p>
+                        <p>from account <strong>{{ contact.account.account_name }}</strong>.</p>
                         {% if contact.is_primary %}
-                            <p class="text-danger"><strong>Warning:</strong> This is the primary contact for this account.</p>
+                        <p class="text-danger"><strong>Warning:</strong> This is the primary contact for this account.
+                        </p>
                         {% endif %}
                     </div>
-                    
+
                     <div class="d-flex gap-2 justify-content-center">
                         <form method="post" class="d-inline">
                             {% csrf_token %}

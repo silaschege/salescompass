@@ -1,8 +1,6 @@
 from django import forms
 from core.models import User
-from core.models import User as Account
-from accounts.models import  Contact
-from accounts.models import  Contact
+from accounts.models import Account, Contact
 from .models import Case, AssignmentRule
 from settings_app.models import AssignmentRuleType
 
@@ -20,7 +18,7 @@ class CaseForm(forms.ModelForm):
     """
     # Account field with dynamic queryset
     account = forms.ModelChoiceField(
-        queryset=Account.objects.none(),
+        queryset=Account.objects.all(),
         help_text="Select the customer account for this case"
     )
     

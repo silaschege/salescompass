@@ -5,8 +5,8 @@
 {% block content %}
 <div class="header-bar mb-4">
     <div class="container">
-        <h1 class="block-title">My Tasks</h1>
-        <p class="text-white text-center lead">Tasks assigned to you</p>
+        <h1 class="block-title text-center">My Tasks</h1>
+        <p class="text-center lead">Tasks assigned to you</p>
     </div>
 </div>
 
@@ -17,20 +17,28 @@
             <a href="{% url 'tasks:create' %}" class="btn btn-primary">+ New Task</a>
         </div>
         <div class="col-md-6">
-            <form method="get" class="d-flex gap-2">
-                <select name="task_type" class="form-select" style="width: auto;">
+            <form method="get" class="d-flex gap-2 flex-wrap">
+                <select name="task_type" class="form-select me-2" style="width: auto; flex: 1; min-width: 120px;">
                     <option value="">All Types</option>
-                    {% for value, label in task_types %}
-                        <option value="{{ value }}" {% if request.GET.task_type == value %}selected{% endif %}>
-                            {{ label }}
+                    {% for type_obj in dynamic_task_types %}
+                        <option value="{{ type_obj.type_name }}" {% if request.GET.task_type == type_obj.type_name %}selected{% endif %}>
+                            {{ type_obj.label }}
                         </option>
                     {% endfor %}
                 </select>
-                <select name="priority" class="form-select" style="width: auto;">
+                <select name="priority" class="form-select me-2" style="width: auto; flex: 1; min-width: 120px;">
                     <option value="">All Priorities</option>
-                    {% for value, label in priorities %}
-                        <option value="{{ value }}" {% if request.GET.priority == value %}selected{% endif %}>
-                            {{ label }}
+                    {% for priority_obj in dynamic_priorities %}
+                        <option value="{{ priority_obj.priority_name }}" {% if request.GET.priority == priority_obj.priority_name %}selected{% endif %}>
+                            {{ priority_obj.label }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <select name="status" class="form-select me-2" style="width: auto; flex: 1; min-width: 120px;">
+                    <option value="">All Statuses</option>
+                    {% for status_obj in dynamic_statuses %}
+                        <option value="{{ status_obj.status_name }}" {% if request.GET.status == status_obj.status_name %}selected{% endif %}>
+                            {{ status_obj.label }}
                         </option>
                     {% endfor %}
                 </select>
@@ -61,7 +69,7 @@
                                 {{ task.title }}
                             </a>
                             <br>
-                            <small class="text-muted">{{ task.description|truncatewords:6 }}</small>
+                            <small class="text-muted">{{ task.task_description|truncatewords:6 }}</small>
                         </td>
                         <td>
                             {% if task.get_related_object_url %}
@@ -70,8 +78,8 @@
                                         {{ task.account.name }}
                                     {% elif task.opportunity %}
                                         {{ task.opportunity.name }}
-                                    {% elif task.related_lead %}
-                                        {{ task.related_lead.full_name }}
+                                    {% elif task.lead %}
+                                        {{ task.lead.full_name }}
                                     {% elif task.case %}
                                         {{ task.case.subject }}
                                     {% endif %}
@@ -87,14 +95,26 @@
                             {% endif %}
                         </td>
                         <td>
-                            <span class="badge bg-{% if task.status == 'completed' %}success{% elif task.status == 'cancelled' %}secondary{% elif task.status == 'overdue' %}danger{% else %}warning{% endif %}">
-                                {{ task.get_status_display }}
-                            </span>
+                            {% if task.status_ref %}
+                                <span class="badge" style="background-color: {{ task.status_ref.color }}; color: white;">
+                                    {{ task.status_ref.label }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-{% if task.status == 'completed' %}success{% elif task.status == 'cancelled' %}secondary{% elif task.status == 'overdue' %}danger{% else %}warning{% endif %}">
+                                    {{ task.get_status_display }}
+                                </span>
+                            {% endif %}
                         </td>
                         <td>
-                            <span class="badge bg-{% if task.priority == 'high' %}danger{% elif task.priority == 'medium' %}warning{% elif task.priority == 'low' %}secondary{% else %}info{% endif %}">
-                                {{ task.get_priority_display }}
-                            </span>
+                            {% if task.priority_ref %}
+                                <span class="badge" style="background-color: {{ task.priority_ref.color }}; color: white;">
+                                    {{ task.priority_ref.label }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-{% if task.priority == 'high' %}danger{% elif task.priority == 'medium' %}warning{% elif task.priority == 'low' %}secondary{% else %}info{% endif %}">
+                                    {{ task.get_priority_display }}
+                                </span>
+                            {% endif %}
                         </td>
                         <td>
                             <div class="d-flex gap-1">
@@ -166,7 +186,7 @@
 
 <div class="footer-bar mt-5">
     <div class="container">
-        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+        <p class="mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
     </div>
 </div>
 {% endblock %}

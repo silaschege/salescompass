@@ -14,9 +14,9 @@
     <form method="post" id="report-builder-form">
         {% csrf_token %}
 
-        <!-- Hidden Config Field -->
+        <!-- Hidden Query Config Field -->
         <div class="d-none">
-            {{ form.config }}
+            {{ form.query_config }}
         </div>
 
         <div class="row">
@@ -28,21 +28,21 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label for="id_name" class="form-label">Report Name</label>
-                            {{ form.name }}
+                            <label for="id_report_name" class="form-label">Report Name</label>
+                            {{ form.report_name }}
                         </div>
                         <div class="mb-3">
-                            <label for="id_description" class="form-label">Description</label>
-                            {{ form.description }}
+                            <label for="id_report_description" class="form-label">Description</label>
+                            {{ form.report_description }}
                         </div>
                         <div class="mb-3">
-                            <label for="id_report_type" class="form-label">Report Type</label>
-                            {{ form.report_type }}
+                            <label for="id_report_type_ref" class="form-label">Report Type</label>
+                            {{ form.report_type_ref }}
                         </div>
                         <div class="mb-3">
                             <div class="form-check">
-                                {{ form.is_active }}
-                                <label class="form-check-label" for="id_is_active">Active</label>
+                                {{ form.report_is_active }}
+                                <label class="form-check-label" for="id_report_is_active">Active</label>
                             </div>
                         </div>
                     </div>
@@ -96,12 +96,42 @@
                         </div>
 
                         <div id="field-selection-area" class="d-none">
-                            <div class="mb-3">
-                                <label class="form-label">Fields to Include</label>
-                                <div id="fields-container" class="border rounded p-3"
-                                    style="max-height: 200px; overflow-y: auto;">
-                                    <!-- Checkboxes populated via JS -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Available Fields</label>
+                                    <div id="available-fields" class="border rounded p-3 bg-light"
+                                        style="max-height: 300px; overflow-y: auto;">
+                                        <!-- Fields populated via JS -->
+                                    </div>
                                 </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Selected Fields (Drag to reorder)</label>
+                                    <div id="selected-fields" class="border rounded p-3 bg-white"
+                                        style="max-height: 300px; min-height: 100px; overflow-y: auto;">
+                                        <!-- Fields dropped here -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Custom Formulas</label>
+                                <div id="formulas-container">
+                                    <p class="text-muted small">Add calculated fields (e.g., amount * 1.1)</p>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-success mt-1" id="add-formula-btn">
+                                    <i class="bi bi-plus-circle"></i> Add Formula
+                                </button>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Conditional Formatting</label>
+                                <div id="formatting-container">
+                                    <p class="text-muted small">Highlight data based on rules (e.g., amount > 5000: Red)
+                                    </p>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-warning mt-1" id="add-format-btn">
+                                    <i class="bi bi-palette"></i> Add Rule
+                                </button>
                             </div>
 
                             <div class="mb-3">
@@ -137,10 +167,57 @@
                                     <option value="bar">Bar Chart</option>
                                     <option value="line">Line Chart</option>
                                     <option value="pie">Pie Chart</option>
+                                    <option value="doughnut">Doughnut Chart</option>
+                                    <option value="radar">Radar Chart</option>
+                                    <option value="polarArea">Polar Area Chart</option>
+                                    <option value="scatter">Scatter Plot</option>
                                     <option value="conversion">Conversion Funnel</option>
+                                    <option value="pivot">Pivot Table</option>
                                 </select>
                             </div>
                         </div>
+
+                        <!-- Pivot Table Configuration (Hidden by default) -->
+                        <div id="pivot-config-area" class="d-none">
+                            <hr>
+                            <h6>Pivot Table Configuration</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Pivot Rows (Y-Axis)</label>
+                                    <select class="form-select" id="pivot-rows-select">
+                                        <option value="">Select Field...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Pivot Columns (X-Axis)</label>
+                                    <select class="form-select" id="pivot-cols-select">
+                                        <option value="">Select Field...</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Drill-down Configuration -->
+                        <div class="mb-3">
+                            <hr>
+                            <h6>Drill-down Settings</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Drill-down Type</label>
+                                    <select class="form-select" id="drilldown-type-select">
+                                        <option value="none">None</option>
+                                        <option value="report">Target Report</option>
+                                        <option value="record">Single Record</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3 d-none" id="drilldown-target-area">
+                                    <label class="form-label">Target ID (Report or Field)</label>
+                                    <input type="text" class="form-control" id="drilldown-target-input"
+                                        placeholder="e.g. 123 or field_name">
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Date Range Field</label>
@@ -155,8 +232,10 @@
                             <button type="button" class="btn btn-outline-secondary w-100" id="preview-btn">
                                 <i class="bi bi-eye"></i> Preview Report
                             </button>
-                            <div class="mt-3 border rounded p-3 bg-white" style="min-height: 300px;">
+                            <div id="preview-container" class="mt-3 border rounded p-3 bg-white"
+                                style="min-height: 300px; overflow-x: auto;">
                                 <canvas id="preview-chart"></canvas>
+                                <div id="preview-table-container" class="d-none"></div>
                             </div>
                         </div>
                     </div>
@@ -200,6 +279,60 @@
     </div>
 </template>
 
+<!-- Template for Formula Row -->
+<template id="formula-row-template">
+    <div class="row g-2 mb-2 align-items-center formula-row">
+        <div class="col-md-4">
+            <input type="text" class="form-control formula-name" placeholder="Field Name (e.g. Total + Tax)">
+        </div>
+        <div class="col-md-7">
+            <input type="text" class="form-control formula-expression" placeholder="Expression (e.g. amount * 1.1)">
+        </div>
+        <div class="col-md-1">
+            <button type="button" class="btn btn-outline-danger btn-sm remove-formula">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    </div>
+</template>
+
+<!-- Template for Formatting Rule -->
+<template id="format-row-template">
+    <div class="row g-2 mb-2 align-items-center format-row">
+        <div class="col-md-3">
+            <select class="form-select format-field">
+                <!-- Populated via JS -->
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select class="form-select format-operator">
+                <option value="gt">></option>
+                <option value="lt">
+                    << /option>
+                <option value="eq">=</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <input type="text" class="form-control format-value" placeholder="Val">
+        </div>
+        <div class="col-md-4">
+            <select class="form-select format-color">
+                <option value="red">Red</option>
+                <option value="green">Green</option>
+                <option value="blue">Blue</option>
+                <option value="yellow">Yellow</option>
+            </select>
+        </div>
+        <div class="col-md-1">
+            <button type="button" class="btn btn-outline-danger btn-sm remove-format">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    </div>
+</template>
+
+<!-- Sortable.js for Drag-and-Drop -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -207,17 +340,33 @@
     document.addEventListener('DOMContentLoaded', function () {
         // Elements
         const entitySelect = document.getElementById('entity-select');
-        const fieldsContainer = document.getElementById('fields-container');
+        const availableFieldsContainer = document.getElementById('available-fields');
+        const selectedFieldsContainer = document.getElementById('selected-fields');
         const fieldSelectionArea = document.getElementById('field-selection-area');
         const filtersContainer = document.getElementById('filters-container');
         const addFilterBtn = document.getElementById('add-filter-btn');
+        const formulasContainer = document.getElementById('formulas-container');
+        const addFormulaBtn = document.getElementById('add-formula-btn');
+        const formattingContainer = document.getElementById('formatting-container');
+        const addFormatBtn = document.getElementById('add-format-btn');
+        const pivotConfigArea = document.getElementById('pivot-config-area');
+        const pivotRowsSelect = document.getElementById('pivot-rows-select');
+        const pivotColsSelect = document.getElementById('pivot-cols-select');
+        const drilldownTypeSelect = document.getElementById('drilldown-type-select');
+        const drilldownTargetArea = document.getElementById('drilldown-target-area');
+        const drilldownTargetInput = document.getElementById('drilldown-target-input');
+
         const groupBySelect = document.getElementById('group-by-select');
         const dateFieldSelect = document.getElementById('date-field-select');
         const chartTypeSelect = document.getElementById('chart-type-select');
-        const configInput = document.getElementById('id_config');
+        const configInput = document.getElementById('id_query_config');
         const form = document.getElementById('report-builder-form');
         const noFiltersMsg = document.getElementById('no-filters-msg');
+
         const filterTemplate = document.getElementById('filter-row-template');
+        const formulaTemplate = document.getElementById('formula-row-template');
+        const formatTemplate = document.getElementById('format-row-template');
+
         const previewBtn = document.getElementById('preview-btn');
         const previewChartCanvas = document.getElementById('preview-chart');
         const presetBtns = document.querySelectorAll('.preset-btn');
@@ -227,20 +376,16 @@
         let availableFields = [];
         let chartInstance = null;
 
-        // Load initial config if editing (parse from hidden field)
-        let config = {};
-        try {
-            if (configInput.value) {
-                // Replace single quotes with double quotes for valid JSON if needed
-                let val = configInput.value;
-                if (val.includes("'")) val = val.replace(/'/g, '"');
-                config = JSON.parse(val);
+        // Initialize Sortable
+        new Sortable(availableFieldsContainer, {
+            group: 'fields',
+            animation: 150
+        });
 
-                // TODO: Pre-populate UI from config (omitted for brevity in this sprint, focus on creation)
-            }
-        } catch (e) {
-            console.error("Error parsing config", e);
-        }
+        new Sortable(selectedFieldsContainer, {
+            group: 'fields',
+            animation: 150
+        });
 
         // Event Listeners
         entitySelect.addEventListener('change', function () {
@@ -248,9 +393,7 @@
             currentEntity = this.value;
 
             if (currentEntity) {
-                // Parse fields from data attribute (Django template renders python list string)
                 let fieldsStr = selectedOption.dataset.fields;
-                // Simple parse for python list string representation ['a', 'b'] -> JSON
                 fieldsStr = fieldsStr.replace(/'/g, '"');
                 try {
                     availableFields = JSON.parse(fieldsStr);
@@ -264,13 +407,16 @@
 
                 fieldSelectionArea.classList.remove('d-none');
                 addFilterBtn.disabled = false;
-                noFiltersMsg.classList.add('d-none');
+                if (noFiltersMsg) noFiltersMsg.classList.add('d-none');
             } else {
                 fieldSelectionArea.classList.add('d-none');
                 addFilterBtn.disabled = true;
-                noFiltersMsg.classList.remove('d-none');
+                if (noFiltersMsg) noFiltersMsg.classList.remove('d-none');
+                availableFieldsContainer.innerHTML = '';
+                selectedFieldsContainer.innerHTML = '';
                 filtersContainer.innerHTML = '';
-                filtersContainer.appendChild(noFiltersMsg);
+                formulasContainer.innerHTML = '';
+                formattingContainer.innerHTML = '';
                 groupBySelect.innerHTML = '<option value="">None</option>';
                 groupBySelect.disabled = true;
                 dateFieldSelect.innerHTML = '<option value="">None</option>';
@@ -278,176 +424,155 @@
             }
         });
 
-        // Preset Buttons
-        presetBtns.forEach(btn => {
-            btn.addEventListener('click', function () {
-                const entity = this.dataset.entity;
-                const group = this.dataset.group;
-                const chart = this.dataset.chart;
-
-                // Select Entity
-                entitySelect.value = entity;
-                // Trigger change event manually
-                entitySelect.dispatchEvent(new Event('change'));
-
-                // Wait for fields to populate then set other values
-                setTimeout(() => {
-                    // Set Group By
-                    // If group contains date lookup (e.g. close_date__month), we need to add it dynamically if not present
-                    // Or just select it if we added logic to populate date groupings
-
-                    // Check if group exists in options
-                    let groupOption = groupBySelect.querySelector(`option[value="${group}"]`);
-                    if (!groupOption) {
-                        // If it's a date grouping, add it
-                        if (group.includes('__')) {
-                            const option = document.createElement('option');
-                            option.value = group;
-                            option.textContent = formatLabel(group);
-                            groupBySelect.appendChild(option);
-                        }
-                    }
-                    groupBySelect.value = group;
-
-                    // Set Chart Type
-                    chartTypeSelect.value = chart;
-
-                    // Auto Preview?
-                    generatePreview();
-                }, 100);
-            });
+        chartTypeSelect.addEventListener('change', function () {
+            if (this.value === 'pivot') {
+                pivotConfigArea.classList.remove('d-none');
+            } else {
+                pivotConfigArea.classList.add('d-none');
+            }
         });
 
-        addFilterBtn.addEventListener('click', function () {
-            addFilterRow();
+        drilldownTypeSelect.addEventListener('change', function () {
+            if (this.value !== 'none') {
+                drilldownTargetArea.classList.remove('d-none');
+            } else {
+                drilldownTargetArea.classList.add('d-none');
+            }
         });
 
-        previewBtn.addEventListener('click', function () {
-            generatePreview();
-        });
+        addFilterBtn.addEventListener('click', () => addRow(filterTemplate, filtersContainer, '.filter-field', '.remove-filter'));
+        addFormulaBtn.addEventListener('click', () => addRow(formulaTemplate, formulasContainer, null, '.remove-formula'));
+        addFormatBtn.addEventListener('click', () => addRow(formatTemplate, formattingContainer, '.format-field', '.remove-format'));
 
-        // Form Submit
+        previewBtn.addEventListener('click', generatePreview);
+
         form.addEventListener('submit', function (e) {
-            // Build Config JSON
             const newConfig = {
                 entity: currentEntity,
                 fields: getSelectedFields(),
                 filters: getFilters(),
+                formulas: getFormulas(),
+                formatting: getFormatting(),
                 group_by: groupBySelect.value,
                 date_field: dateFieldSelect.value,
-                chart_type: chartTypeSelect.value
+                chart_type: chartTypeSelect.value,
+                pivot_config: {
+                    rows: pivotRowsSelect.value,
+                    cols: pivotColsSelect.value
+                },
+                drilldown: {
+                    type: drilldownTypeSelect.value,
+                    target: drilldownTargetInput.value
+                }
             };
-
             configInput.value = JSON.stringify(newConfig);
         });
 
         // Helpers
         function renderFields() {
-            fieldsContainer.innerHTML = '';
+            availableFieldsContainer.innerHTML = '';
+            selectedFieldsContainer.innerHTML = '';
             availableFields.forEach(field => {
                 const div = document.createElement('div');
-                div.className = 'form-check';
-                div.innerHTML = `
-                    <input class="form-check-input field-checkbox" type="checkbox" value="${field}" id="field-${field}">
-                    <label class="form-check-label" for="field-${field}">
-                        ${formatLabel(field)}
-                    </label>
-                `;
-                fieldsContainer.appendChild(div);
+                div.className = 'p-2 mb-1 border rounded bg-white field-item';
+                div.dataset.field = field;
+                div.style.cursor = 'move';
+                div.textContent = formatLabel(field);
+                availableFieldsContainer.appendChild(div);
             });
         }
 
-        function updateDropdowns() {
-            // Group By
-            groupBySelect.innerHTML = '<option value="">None</option>';
-            availableFields.forEach(field => {
-                const option = document.createElement('option');
-                option.value = field;
-                option.textContent = formatLabel(field);
-                groupBySelect.appendChild(option);
-            });
+        function addRow(template, container, fieldSelectSelector, removeSelector) {
+            const clone = template.content.cloneNode(true);
 
-            // Add Date Groupings if date fields exist
-            const dateFields = availableFields.filter(f => f.includes('date') || f.includes('_at'));
-            dateFields.forEach(f => {
-                const monthOpt = document.createElement('option');
-                monthOpt.value = `${f}__month`;
-                monthOpt.textContent = `${formatLabel(f)} (Month)`;
-                groupBySelect.appendChild(monthOpt);
-            });
-
-            groupBySelect.disabled = false;
-
-            // Date Fields (heuristic: contains 'date' or 'at')
-            dateFieldSelect.innerHTML = '<option value="">None</option>';
-            availableFields.forEach(field => {
-                if (field.includes('date') || field.includes('_at')) {
+            if (fieldSelectSelector) {
+                const select = clone.querySelector(fieldSelectSelector);
+                availableFields.forEach(field => {
                     const option = document.createElement('option');
                     option.value = field;
                     option.textContent = formatLabel(field);
-                    dateFieldSelect.appendChild(option);
-                }
-            });
-            dateFieldSelect.disabled = false;
-        }
+                    select.appendChild(option);
+                });
+            }
 
-        function addFilterRow() {
-            const clone = filterTemplate.content.cloneNode(true);
-            const select = clone.querySelector('.filter-field');
-
-            availableFields.forEach(field => {
-                const option = document.createElement('option');
-                option.value = field;
-                option.textContent = formatLabel(field);
-                select.appendChild(option);
+            clone.querySelector(removeSelector).addEventListener('click', function () {
+                this.closest('.row').remove();
             });
 
-            clone.querySelector('.remove-filter').addEventListener('click', function () {
-                this.closest('.filter-row').remove();
-                if (filtersContainer.children.length === 0) { // Only msg left?
-                    // Check if only msg is hidden
-                }
-            });
-
-            filtersContainer.appendChild(clone);
+            container.appendChild(clone);
         }
 
         function getSelectedFields() {
-            const selected = [];
-            document.querySelectorAll('.field-checkbox:checked').forEach(cb => {
-                selected.push(cb.value);
-            });
-            return selected;
+            return Array.from(selectedFieldsContainer.querySelectorAll('.field-item')).map(item => item.dataset.field);
         }
 
         function getFilters() {
-            const filters = [];
-            document.querySelectorAll('.filter-row').forEach(row => {
-                const field = row.querySelector('.filter-field').value;
-                const operator = row.querySelector('.filter-operator').value;
-                const value = row.querySelector('.filter-value').value;
-                if (field && value) {
-                    filters.push({ field, operator, value });
-                }
-            });
-            return filters;
+            return Array.from(filtersContainer.querySelectorAll('.filter-row')).map(row => ({
+                field: row.querySelector('.filter-field').value,
+                operator: row.querySelector('.filter-operator').value,
+                value: row.querySelector('.filter-value').value
+            })).filter(f => f.field && f.value);
         }
 
-        function formatLabel(str) {
-            return str.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        function getFormulas() {
+            return Array.from(formulasContainer.querySelectorAll('.formula-row')).map(row => ({
+                name: row.querySelector('.formula-name').value,
+                expression: row.querySelector('.formula-expression').value
+            })).filter(f => f.name && f.expression);
+        }
+
+        function getFormatting() {
+            return Array.from(formattingContainer.querySelectorAll('.format-row')).map(row => ({
+                field: row.querySelector('.format-field').value,
+                operator: row.querySelector('.format-operator').value,
+                value: row.querySelector('.format-value').value,
+                color: row.querySelector('.format-color').value
+            })).filter(f => f.field && f.value);
+        }
+
+        function updateDropdowns() {
+            groupBySelect.innerHTML = '<option value="">None</option>';
+            dateFieldSelect.innerHTML = '<option value="">None</option>';
+
+            availableFields.forEach(field => {
+                const opt = new Option(formatLabel(field), field);
+                groupBySelect.add(opt.cloneNode(true));
+                if (field.includes('date') || field.includes('_at')) {
+                    dateFieldSelect.add(opt.cloneNode(true));
+                    const monthOpt = new Option(`${formatLabel(field)} (Month)`, `${field}__month`);
+                    groupBySelect.add(monthOpt);
+                }
+            });
+            groupBySelect.disabled = false;
+            dateFieldSelect.disabled = false;
+
+            // Populate pivot selects
+            pivotRowsSelect.innerHTML = '<option value="">Select Field...</option>';
+            pivotColsSelect.innerHTML = '<option value="">Select Field...</option>';
+            availableFields.forEach(field => {
+                const opt = new Option(formatLabel(field), field);
+                pivotRowsSelect.add(opt.cloneNode(true));
+                pivotColsSelect.add(opt.cloneNode(true));
+            });
         }
 
         function generatePreview() {
-            if (!currentEntity) {
-                alert('Please select an entity first.');
-                return;
-            }
-
+            if (!currentEntity) return;
             const payload = {
                 entity: currentEntity,
+                fields: getSelectedFields(),
                 filters: getFilters(),
+                formulas: getFormulas(),
                 group_by: groupBySelect.value,
-                chart_type: chartTypeSelect.value
+                chart_type: chartTypeSelect.value,
+                pivot_config: {
+                    rows: pivotRowsSelect.value,
+                    cols: pivotColsSelect.value
+                },
+                drilldown: {
+                    type: drilldownTypeSelect.value,
+                    target: drilldownTargetInput.value
+                }
             };
 
             fetch("{% url 'reports:generate' %}", {
@@ -458,46 +583,42 @@
                 },
                 body: JSON.stringify(payload)
             })
-                .then(response => response.json())
+                .then(res => res.json())
                 .then(data => {
-                    if (data.error) {
-                        alert('Error generating preview: ' + data.error);
-                        return;
+                    if (chartInstance) chartInstance.destroy();
+                    const ctx = previewChartCanvas.getContext('2d');
+
+                    if (data.is_pivot) {
+                        previewChartCanvas.classList.add('d-none');
+                        const tableContainer = document.getElementById('preview-table-container');
+                        tableContainer.classList.remove('d-none');
+
+                        let html = '<table class="table table-bordered table-sm"><thead><tr><th>Rows \\ Cols</th>';
+                        data.labels.forEach(label => html += `<th>${label}</th>`);
+                        html += '</tr></thead><tbody>';
+
+                        data.datasets.forEach(dataset => {
+                            html += `<tr><td><strong>${dataset.label}</strong></td>`;
+                            dataset.data.forEach(val => html += `<td>${val}</td>`);
+                            html += '</tr>';
+                        });
+                        html += '</tbody></table>';
+                        tableContainer.innerHTML = html;
+                    } else {
+                        previewChartCanvas.classList.remove('d-none');
+                        document.getElementById('preview-table-container').classList.add('d-none');
+
+                        chartInstance = new Chart(ctx, {
+                            type: chartTypeSelect.value === 'table' ? 'bar' : chartTypeSelect.value,
+                            data: data,
+                            options: { responsive: true, maintainAspectRatio: false }
+                        });
                     }
-                    renderChart(data);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while generating the preview.');
                 });
         }
 
-        function renderChart(data) {
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
-
-            const ctx = previewChartCanvas.getContext('2d');
-            let chartType = chartTypeSelect.value;
-            if (chartType === 'table' || chartType === 'conversion') chartType = 'bar'; // Fallback
-
-            chartInstance = new Chart(ctx, {
-                type: chartType,
-                data: data,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                        title: {
-                            display: true,
-                            text: 'Report Preview'
-                        }
-                    }
-                }
-            });
+        function formatLabel(str) {
+            return str.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
         }
     });
 </script>

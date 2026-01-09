@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col">
+      <h2><i class="bi bi-bell me-2"></i>{{ title }}</h2>
+      <p class="text-muted">{{ subtitle }}</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Usage Limits & Alerts</h5>
+        </div>
+        <div class="card-body">
+          <form>
+            <div class="mb-3">
+              <label class="form-label">Storage Limit</label>
+              <div class="input-group">
+                <input type="number" class="form-control" value="{{ tenant.storage_limit_mb }}" min="0" readonly>
+                <span class="input-group-text">MB</span>
+              </div>
+              <div class="form-text">Current usage: {{ current_storage|default:0 }} MB ({{ tenant.storage_limit_mb|div:100|floatformat:0 }}%)</div>
+              <div class="progress mt-2" style="height: 20px;">
+                <div class="progress-bar bg-success" role="progressbar" 
+                     style="width: {% widthratio current_storage tenant.storage_limit_mb 100 %}%;" 
+                     aria-valuenow="{% widthratio current_storage tenant.storage_limit_mb 100 %}" 
+                     aria-valuemin="0" 
+                     aria-valuemax="100">
+                  {% widthratio current_storage tenant.storage_limit_mb 100 %}%
+                </div>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">API Calls Limit</label>
+              <div class="input-group">
+                <input type="number" class="form-control" value="{{ tenant.api_call_limit }}" min="0" readonly>
+                <span class="input-group-text">calls/month</span>
+              </div>
+              <div class="form-text">Current usage: {{ current_api_calls|default:0 }} calls ({{ tenant.api_call_limit|div:100|floatformat:0 }}%)</div>
+              <div class="progress mt-2" style="height: 20px;">
+                <div class="progress-bar bg-warning" role="progressbar" 
+                     style="width: {% widthratio current_api_calls tenant.api_call_limit 100 %}%;" 
+                     aria-valuenow="{% widthratio current_api_calls tenant.api_call_limit 100 %}" 
+                     aria-valuemin="0" 
+                     aria-valuemax="100">
+                  {% widthratio current_api_calls tenant.api_call_limit 100 %}%
+                </div>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">User Limit</label>
+              <div class="input-group">
+                <input type="number" class="form-control" value="{{ tenant.user_limit }}" min="0" readonly>
+                <span class="input-group-text">users</span>
+              </div>
+              <div class="form-text">Current usage: {{ current_users|default:0 }} users ({{ tenant.user_limit|div:100|floatformat:0 }}%)</div>
+              <div class="progress mt-2" style="height: 20px;">
+                <div class="progress-bar bg-success" role="progressbar" 
+                     style="width: {% widthratio current_users tenant.user_limit 100 %}%;" 
+                     aria-valuenow="{% widthratio current_users tenant.user_limit 100 %}" 
+                     aria-valuemin="0" 
+                     aria-valuemax="100">
+                  {% widthratio current_users tenant.user_limit 100 %}%
+                </div>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">Alert Thresholds</label>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="storageAlert" checked>
+                <label class="form-check-label" for="storageAlert">
+                  Alert when storage reaches 80%
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="apiAlert" checked>
+                <label class="form-check-label" for="apiAlert">
+                  Alert when API calls reach 90%
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="userAlert">
+                <label class="form-check-label" for="userAlert">
+                  Alert when user count reaches 95%
+                </label>
+              </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save me-1"></i>Save Settings
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Recent Alerts</h5>
+        </div>
+        <div class="card-body">
+          {% if alerts %}
+            {% for alert in alerts %}
+            <div class="alert alert-{{ alert.type }}">
+              <i class="bi bi-exclamation-triangle me-1"></i>
+              <strong>{{ alert.message }}</strong>
+            </div>
+            {% endfor %}
+          {% else %}
+            <p class="text-muted">No recent alerts</p>
+          {% endif %}
+          
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle me-1"></i>
+            <strong>No alerts currently active</strong>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card mt-4">
+        <div class="card-header">
+          <h5 class="mb-0">Usage Overview</h5>
+        </div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between mb-2">
+            <span>Storage:</span>
+            <span class="text-end">{{ current_storage|default:0 }}/{{ tenant.storage_limit_mb }} MB</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span>API Calls:</span>
+            <span class="text-end">{{ current_api_calls|default:0 }}/{{ tenant.api_call_limit }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span>Users:</span>
+            <span class="text-end">{{ current_users|default:0 }}/{{ tenant.user_limit }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span>Records:</span>
+            <span class="text-end">{{ tenant.get_current_usage:'records_created'|default:0 }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

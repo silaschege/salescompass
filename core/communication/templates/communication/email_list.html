@@ -1,0 +1,116 @@
+{% extends "communication/base.html" %}
+{% load static %}
+
+{% block title %}Emails - Communication{% endblock %}
+
+{% block comm_title %}✉️ Email Center{% endblock %}
+{% block comm_subtitle %}Manage your outgoing and incoming email communications{% endblock %}
+
+{% block comm_actions %}
+<a href="{% url 'communication:email_compose' %}" class="btn btn-comm fw-bold px-4 shadow-sm">
+    <i class="bi bi-pencil-square me-1"></i> Compose Email
+</a>
+{% endblock %}
+
+{% block comm_content %}
+<div class="comm-card">
+    <div class="card-header bg-transparent border-bottom p-4 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold">Recent Emails</h5>
+        <div class="d-flex gap-2">
+            <input type="text" class="form-control form-control-sm" placeholder="Search emails...">
+            <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-filter"></i></button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 table-comm">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Recipient</th>
+                        <th>Subject</th>
+                        <th>Status</th>
+                        <th>Sent At</th>
+                        <th>Tracking</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for email in emails %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold">{{ email.recipients }}</div>
+                            <small class="text-muted">ID: {{ email.tracking_id|default:"N/A" }}</small>
+                        </td>
+                        <td>
+                            <div class="text-truncate" style="max-width: 300px;">{{ email.subject }}</div>
+                        </td>
+                        <td>
+                            {% if email.status == 'sent' %}
+                            <span
+                                class="badge bg-success-subtle text-success border border-success-subtle rounded-pill badge-comm">Sent</span>
+                            {% elif email.status == 'queued' %}
+                            <span
+                                class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill badge-comm">Queued</span>
+                            {% elif email.status == 'failed' %}
+                            <span
+                                class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill badge-comm">Failed</span>
+                            {% elif email.status == 'opened' %}
+                            <span
+                                class="badge bg-info-subtle text-info border border-info-subtle rounded-pill badge-comm">Opened</span>
+                            {% else %}
+                            <span
+                                class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill badge-comm">{{
+                                email.status|title }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ email.sent_at|date:"M d, Y H:i"|default:"Pending" }}</td>
+                        <td>
+                            {% if email.tracking_enabled %}
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-eye{% if email.opened_at %}-fill text-info{% else %} text-muted{% endif %}"
+                                    title="Opened: {{ email.opened_at|default:'Never' }}"></i>
+                                <i class="bi bi-cursor{% if email.clicked_at %}-fill text-primary{% else %} text-muted{% endif %}"
+                                    title="Clicked: {{ email.clicked_at|default:'Never' }}"></i>
+                            </div>
+                            {% else %}
+                            <span class="text-muted small">Disabled</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group">
+                                <a href="#" class="btn btn-sm btn-light border"><i class="bi bi-eye"></i></a>
+                                <button type="button"
+                                    class="btn btn-sm btn-light border dropdown-toggle dropdown-toggle-split"
+                                    data-bs-toggle="dropdown"></button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                    <li><a class="dropdown-item" href="#"><i class="bi bi-arrow-repeat me-2"></i>
+                                            Resend</a></li>
+                                    <li><a class="dropdown-item" href="#"><i class="bi bi-trash me-2 text-danger"></i>
+                                            Delete</a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="bi bi-envelope-x display-4 mb-3 d-block"></i>
+                                <p>No emails found</p>
+                                <a href="{% url 'communication:email_compose' %}" class="btn btn-comm btn-sm">Sent your
+                                    first email</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% if is_paginated %}
+    <div class="card-footer bg-transparent border-top p-3 text-center">
+        {% include "communication/includes/pagination.html" %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -3,59 +3,74 @@
 {% block title %}CAC Analytics{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
         <div class="col-12">
-            <h1>Customer Acquisition Cost (CAC) Analytics</h1>
-            
-            <!-- Summary Cards -->
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="card bg-primary text-white">
-                        <div class="card-body">
-                            <h5>Total Leads</h5>
-                            <h2>{{ total_leads }}</h2>
-                        </div>
-                    </div>
+            <h1 class="h2">Customer Acquisition Cost (CAC) Analytics</h1>
+        </div>
+    </div>
+    
+    <!-- Summary Cards -->
+    <div class="row mb-4 g-3">
+        <!-- Card 1: Total Leads -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Total Leads</h5>
+                    <h2 class="display-6">{{ total_leads }}</h2>
                 </div>
-                <div class="col-md-3">
-                    <div class="card bg-success text-white">
-                        <div class="card-body">
-                            <h5>Total CAC</h5>
-                            <h2>${{ total_cac|floatformat:2 }}</h2>
-                        </div>
-                    </div>
-                <div class="col-md-3">
-                    <div class="card bg-info text-white">
-                        <div class="card-body">
-                            <h5>Average CAC</h5>
-                            <h2>${{ average_cac|floatformat:2 }}</h2>
-                        </div>
-                    </div>
+            </div>
+        </div>
+        
+        <!-- Card 2: Total CAC -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Total CAC</h5>
+                    <h2 class="display-6">${{ total_cac|floatformat:2 }}</h2>
                 </div>
-                <div class="col-md-3">
-                    <div class="card bg-warning text-dark">
-                        <div class="card-body">
-                            <h5>Channels</h5>
-                            <h2>{{ cac_by_channel|length }}</h2>
-                        </div>
-                    </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Average CAC -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Average CAC</h5>
+                    <h2 class="display-6">${{ average_cac|floatformat:2 }}</h2>
                 </div>
-            
-            <!-- CAC by Channel Table (Legacy) -->
-            <div class="card">
-                <div class="card-header">
-                    <h3>CAC by Marketing Channel (Legacy)</h3>
+            </div>
+        </div>
+
+        <!-- Card 4: Channels -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Active Channels</h5>
+                    <h2 class="display-6">{{ cac_by_channel|length }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comparison Tables Section -->
+    <div class="row mb-4">
+        <!-- CAC by Channel Table (Legacy) -->
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-light">
+                    <h3 class="h5 mb-0">CAC by Marketing Channel (Legacy)</h3>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
+                        <table class="table table-striped table-hover align-middle">
+                            <thead class="table-light">
                                 <tr>
                                     <th>Channel</th>
                                     <th>Total Cost</th>
-                                    <th>Lead Count</th>
-                                    <th>Average CAC</th>
+                                    <th>Count</th>
+                                    <th>Avg CAC</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -67,33 +82,36 @@
                                     <td>{{ data.count }}</td>
                                     <td>${{ data.average_cac|floatformat:2 }}</td>
                                     <td>
-                                        <a href="{% url 'leads:channel_metrics' channel=channel %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                        <a href="{% url 'leads:channel_metrics' channel=channel %}" class="btn btn-sm btn-outline-primary">View</a>
                                     </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="5">No CAC data available.</td>
+                                    <td colspan="5" class="text-center text-muted">No CAC data available.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
                 </div>
-            
-            <!-- CAC by Channel Table (New Reference) -->
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h3>CAC by Marketing Channel (Dynamic)</h3>
+            </div>
+        </div>
+    
+        <!-- CAC by Channel Table (New Reference) -->
+        <div class="col-lg-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-light">
+                    <h3 class="h5 mb-0">CAC by Marketing Channel (Dynamic)</h3>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
+                        <table class="table table-striped table-hover align-middle">
+                            <thead class="table-light">
                                 <tr>
                                     <th>Channel</th>
                                     <th>Total Cost</th>
-                                    <th>Lead Count</th>
-                                    <th>Average CAC</th>
+                                    <th>Count</th>
+                                    <th>Avg CAC</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -105,12 +123,12 @@
                                     <td>{{ data.total_leads }}</td>
                                     <td>${{ data.average_cac|floatformat:2 }}</td>
                                     <td>
-                                        <a href="{% url 'leads:channel_metrics' channel=data.channel %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                        <a href="{% url 'leads:channel_metrics' channel=data.channel %}" class="btn btn-sm btn-outline-primary">View</a>
                                     </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="5">No dynamic CAC data available.</td>
+                                    <td colspan="5" class="text-center text-muted">No dynamic CAC data available.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -118,16 +136,20 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Lead List with CAC Data -->
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h3>Leads with CAC Data</h3>
+        </div>
+    </div>
+    
+    <!-- Lead List with CAC Data -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h3 class="h5 mb-0">Leads with CAC Data</h3>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
+                        <table class="table table-striped table-hover align-middle">
+                            <thead class="table-dark">
                                 <tr>
                                     <th>Name</th>
                                     <th>Company</th>
@@ -141,17 +163,21 @@
                             <tbody>
                                 {% for lead in leads %}
                                 <tr>
-                                    <td><a href="{% url 'leads:lead_detail' pk=lead.pk %}">{{ lead.full_name }}</a></td>
+                                    <td>
+                                        <a href="{% url 'leads:lead_detail' pk=lead.pk %}" class="text-decoration-none fw-bold">
+                                            {{ lead.full_name }}
+                                        </a>
+                                    </td>
                                     <td>{{ lead.company }}</td>
-                                    <td>{{ lead.marketing_channel }}</td>
+                                    <td><span class="badge bg-secondary">{{ lead.marketing_channel }}</span></td>
                                     <td>{{ lead.campaign_source }}</td>
-                                    <td>${{ lead.cac_cost|floatformat:2 }}</td>
+                                    <td class="text-success fw-bold">${{ lead.cac_cost|floatformat:2 }}</td>
                                     <td>{{ lead.lead_acquisition_date|date:"M d, Y" }}</td>
                                     <td>{{ lead.status }}</td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="7">No leads found.</td>
+                                    <td colspan="7" class="text-center py-4 text-muted">No leads found.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

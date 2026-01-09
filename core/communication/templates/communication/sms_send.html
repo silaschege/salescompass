@@ -1,0 +1,119 @@
+{% extends "communication/base.html" %}
+{% load static %}
+
+{% block title %}Send SMS - Communication{% endblock %}
+
+{% block comm_title %}💬 Send SMS{% endblock %}
+{% block comm_subtitle %}Reach your contacts instantly on their mobile devices{% endblock %}
+
+{% block comm_actions %}
+<a href="{% url 'communication:sms_list' %}" class="btn btn-light fw-bold px-4 shadow-sm">
+    <i class="bi bi-arrow-left me-1"></i> Back to Log
+</a>
+{% endblock %}
+
+{% block comm_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="comm-card p-4">
+            <h5 class="fw-bold mb-4 border-bottom pb-3">New SMS Message</h5>
+
+            <form method="post" id="sms-send-form">
+                {% csrf_token %}
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Recipient Phone Number</label>
+                    {{ form.recipient_phone }}
+                    {% if form.recipient_phone.errors %}
+                    <div class="text-danger small mt-1">{{ form.recipient_phone.errors }}</div>
+                    {% endif %}
+                    <div class="form-text">Include country code (e.g., +1234567890)</div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Message Content</label>
+                    {{ form.message }}
+                    {% if form.message.errors %}
+                    <div class="text-danger small mt-1">{{ form.message.errors }}</div>
+                    {% endif %}
+                    <div class="d-flex justify-content-between mt-2">
+                        <div class="form-text" id="char-counter">0 / 160 characters</div>
+                        <div class="form-text" id="parts-counter">1 segment</div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info py-2 d-flex align-items-center gap-2 mb-4">
+                    <i class="bi bi-info-circle"></i>
+                    <small>Standard SMS rates apply. Messages over 160 characters will be sent as multiple
+                        parts.</small>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-comm btn-lg fw-bold shadow-sm">
+                        <i class="bi bi-send-fill me-2"></i> Send Message Now
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="comm-card p-4 h-100 bg-light-subtle">
+            <h6 class="fw-bold text-uppercase text-muted small mb-3">SMS Best Practices</h6>
+            <ul class="list-unstyled d-flex flex-column gap-3 small">
+                <li class="d-flex gap-2">
+                    <i class="bi bi-check2-circle text-success"></i>
+                    <span>Keep it concise and clear.</span>
+                </li>
+                <li class="d-flex gap-2">
+                    <i class="bi bi-check2-circle text-success"></i>
+                    <span>Always include a clear call to action.</span>
+                </li>
+                <li class="d-flex gap-2">
+                    <i class="bi bi-check2-circle text-success"></i>
+                    <span>Verify numbers are in E.164 format.</span>
+                </li>
+                <li class="d-flex gap-2">
+                    <i class="bi bi-check2-circle text-success"></i>
+                    <span>Respect quiet hours and local regulations.</span>
+                </li>
+            </ul>
+
+            <div class="mt-5 text-center">
+                <div class="mb-2 text-muted small fw-bold">MOBILE PREVIEW</div>
+                <div class="border rounded-4 p-3 bg-white shadow-sm mx-auto" style="max-width: 250px; height: 180px;">
+                    <div class="bg-light rounded-3 p-2 text-start small border border-primary-subtle" id="sms-preview">
+                        Your message will appear here...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const messageTextarea = document.querySelector('textarea[name="message"]');
+    const charCounter = document.getElementById('char-counter');
+    const partsCounter = document.getElementById('parts-counter');
+    const smsPreview = document.getElementById('sms-preview');
+
+    messageTextarea.addEventListener('input', function () {
+        const len = this.value.length;
+        charCounter.textContent = `${len} / 160 characters`;
+
+        const segments = Math.ceil(len / 160) || 1;
+        partsCounter.textContent = `${segments} segment${segments > 1 ? 's' : ''}`;
+
+        smsPreview.textContent = this.value || "Your message will appear here...";
+
+        if (len > 160) {
+            charCounter.classList.add('text-warning');
+        } else {
+            charCounter.classList.remove('text-warning');
+        }
+    });
+
+    // Auto-expand textarea
+    messageTextarea.style.height = '120px';
+</script>
+{% endblock %}

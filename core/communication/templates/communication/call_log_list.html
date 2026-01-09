@@ -1,0 +1,98 @@
+{% extends "communication/base.html" %}
+{% load static %}
+
+{% block title %}Call Logs - Communication{% endblock %}
+
+{% block comm_title %}📞 Call History{% endblock %}
+{% block comm_subtitle %}Detailed record of your voice communications and results{% endblock %}
+
+{% block comm_actions %}
+<a href="{% url 'communication:call_analytics' %}" class="btn btn-light fw-bold px-4 shadow-sm border">
+    <i class="bi bi-bar-chart-line me-1"></i> Analytics
+</a>
+<a href="{% url 'communication:call_log_create' %}" class="btn btn-comm fw-bold px-4 shadow-sm">
+    <i class="bi bi-telephone-plus me-1"></i> Log Call
+</a>
+{% endblock %}
+
+{% block comm_content %}
+<div class="comm-card">
+    <div class="card-header bg-transparent border-bottom p-4">
+        <h5 class="mb-0 fw-bold">Recent Calls</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 table-comm">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Contact/Number</th>
+                        <th>Type</th>
+                        <th>Duration</th>
+                        <th>Outcome</th>
+                        <th>Date & Time</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for call in calls %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold">{{ call.contact_name|default:call.phone_number }}</div>
+                            {% if call.contact %}
+                            <small class="text-muted"><i class="bi bi-person me-1"></i> {{ call.contact }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if call.call_type == 'incoming' %}
+                            <span class="badge bg-info-subtle text-info rounded-pill px-3">Incoming</span>
+                            {% elif call.call_type == 'outgoing' %}
+                            <span class="badge bg-primary-subtle text-primary rounded-pill px-3">Outgoing</span>
+                            {% elif call.call_type == 'missed' %}
+                            <span class="badge bg-danger-subtle text-danger rounded-pill px-3">Missed</span>
+                            {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3">{{
+                                call.call_type|title }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ call.duration_seconds }}s</td>
+                        <td>
+                            {% if call.outcome == 'answered' or call.outcome == 'completed' %}
+                            <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> {{
+                                call.outcome|title }}</span>
+                            {% elif call.outcome == 'busy' or call.outcome == 'no_answer' %}
+                            <span class="text-warning"><i class="bi bi-exclamation-circle-fill me-1"></i> {{
+                                call.outcome|title }}</span>
+                            {% else %}
+                            <span class="text-secondary">{{ call.outcome|title }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ call.call_started_at|date:"M d, Y H:i" }}</td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group">
+                                <a href="{% url 'communication:call_log_detail' call.pk %}"
+                                    class="btn btn-sm btn-light border" title="View Details">
+                                    <i class="bi bi-info-circle"></i>
+                                </a>
+                                {% if call.recording_url %}
+                                <a href="{{ call.recording_url }}" class="btn btn-sm btn-light border" target="_blank"
+                                    title="Listen Recording">
+                                    <i class="bi bi-play-circle-fill text-primary"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-telephone-x display-4 mb-3 d-block"></i>
+                            <p>No call logs found</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -81,3 +81,20 @@ def pprint(value):
     if isinstance(value, dict):
         return json.dumps(value, indent=2, default=str)
     return str(value)
+
+@register.filter
+def get_item(value, arg):
+    """
+    Get an item from a list/dict by index/key.
+    
+    Usage: {{ list|get_item:0 }} or {{ dict|get_item:"key_name" }}
+    """
+    try:
+        if isinstance(value, dict):
+            return value.get(arg)
+        elif isinstance(value, (list, tuple)):
+            return value[int(arg)]
+        else:
+            return ''
+    except (KeyError, IndexError, ValueError, TypeError):
+        return ''

@@ -1,5 +1,6 @@
 <!-- sales/templates/sales/sale_detail.html -->
 {% extends 'sales/base.html' %}
+{% load task_tags %}
 
 {% block title %}{{ sale.product_name }} | SalesCompass{% endblock %}
 
@@ -20,6 +21,9 @@
             </li>
             {% endif %}
         </ul>
+        <div class="mt-4">
+            {% render_object_tasks sale %}
+        </div>
         <div class="mt-3">
             <a href="{% url 'sales:sale_update' sale.pk %}" class="btn btn-warning">Edit</a>
             <a href="{% url 'sales:sale_list' %}" class="btn btn-secondary">Back to Sales</a>

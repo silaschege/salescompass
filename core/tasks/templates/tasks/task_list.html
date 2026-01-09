@@ -5,58 +5,80 @@
 {% block content %}
 <div class="header-bar mb-4">
     <div class="container">
-        <h1 class="block-title">Tasks</h1>
-        <p class="text-white text-center lead">Manage your tasks and follow-ups</p>
+        <div class="container">
+            <h1 class="block-title">{{ page_title|default:"Tasks" }}</h1>
+            <p class="text-white text-center lead">{{ page_subtitle|default:"Manage and track all your team's tasks" }}
+            </p>
+        </div>
     </div>
 </div>
 
 <div class="container">
-    <!-- Action Buttons and Filters -->
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <div class="d-flex gap-2">
-                <a href="{% url 'tasks:create' %}" class="btn btn-primary">+ New Task</a>
-                <a href="{% url 'tasks:dashboard' %}" class="btn btn-outline-secondary">Dashboard</a>
-                <a href="{% url 'tasks:calendar' %}" class="btn btn-outline-secondary">Calendar</a>
-                <a href="{% url 'tasks:kanban' %}" class="btn btn-outline-secondary">Kanban</a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex gap-2">
+            <a href="{% url 'tasks:create' %}" class="btn btn-primary shadow-sm">
+                <i class="bi bi-plus-lg"></i> New Task
+            </a>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-filter"></i> Filters
+                </button>
+                <form class="dropdown-menu p-3 shadow" style="min-width: 300px;">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Search</label>
+                        <input type="text" name="search" class="form-control form-control-sm"
+                            placeholder="Title or description..." value="{{ request.GET.search }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Assignee</label>
+                        <select name="assigned_to" class="form-select form-select-sm">
+                            <option value="">All Assignees</option>
+                            {% for member in team_members %}
+                            <option value="{{ member.id }}" {% if request.GET.assigned_to == member.id|to_string%}selected{% endif %}>
+                                {{ member.email }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Status</label>
+                        <select name="status" class="form-select form-select-sm">
+                            <option value="">All Statuses</option>
+                            {% for status in statuses %}
+                            <option value="{{ status.id }}" {% if request.GET.status == status.id|stringformat:"s"%}selected{% endif %}>
+                                {{ status.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm w-100">Apply Filters</button>
+                    <a href="{% url 'tasks:list' %}" class="btn btn-link btn-sm w-100 mt-1 text-decoration-none">Clear
+                        All</a>
+                </form>
             </div>
+            <a href="{% url 'tasks:dashboard' %}" class="btn btn-outline-secondary">Dashboard</a>
         </div>
-        <div class="col-md-6">
-            <form method="get" class="d-flex gap-2">
-                <select name="assigned_to" class="form-select" style="width: auto;">
-                    <option value="">All Assignees</option>
-                    {% for member in team_members %}
-                        <option value="{{ member.id }}" {% if request.GET.assigned_to == member.id|to_string %}selected{% endif %}>
-                            {{ member.email }}
-                        </option>
-                    {% endfor %}
-                </select>
-                <select name="status" class="form-select" style="width: auto;">
-                    <option value="">All Statuses</option>
-                    {% for value, label in statuses %}
-                        <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>
-                            {{ label }}
-                        </option>
-                    {% endfor %}
-                </select>
-                <select name="priority" class="form-select" style="width: auto;">
-                    <option value="">All Priorities</option>
-                    {% for value, label in priorities %}
-                        <option value="{{ value }}" {% if request.GET.priority == value %}selected{% endif %}>
-                            {{ label }}
-                        </option>
-                    {% endfor %}
-                </select>
-                <input type="text" name="search" class="form-control" placeholder="Search tasks..." value="{{ request.GET.search }}">
-                <button type="submit" class="btn btn-outline-primary">Filter</button>
-            </form>
+        <div class="d-flex gap-2">
+            <div class="btn-group">
+                <a href="{% url 'tasks:list' %}" class="btn btn-primary active" title="List View">
+                    <i class="bi bi-list-ul"></i>
+                </a>
+                <a href="{% url 'tasks:kanban' %}" class="btn btn-outline-primary" title="Kanban View">
+                    <i class="bi bi-grid-3x3-gap"></i>
+                </a>
+                <a href="{% url 'tasks:calendar' %}" class="btn btn-outline-primary" title="Calendar View">
+                    <i class="bi bi-calendar3"></i>
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- Tasks Table -->
-    {% if tasks %}
-        <div class="table-responsive">
-            <table class="table table-hover">
+    <div class="container-fluid mt-3">
+
+        <!-- Tasks Table -->
+        {% if tasks %}
+        <div class="o_list_view">
+            <table class="table o_list_table table-hover">
                 <thead>
                     <tr>
                         <th>Task</th>
@@ -70,69 +92,85 @@
                 </thead>
                 <tbody>
                     {% for task in tasks %}
-                    <tr class="{% if task.is_overdue %}table-danger{% elif task.status == 'completed' %}table-success{% endif %}">
+                    <tr data-id="{{ task.id }}">
                         <td>
-                            <a href="{% url 'tasks:detail' task.pk %}">
+                            <a href="{% url 'tasks:detail' task.pk %}" class="fw-bold text-dark text-decoration-none">
                                 {{ task.title }}
                             </a>
                             <br>
-                            <small class="text-muted">{{ task.description|truncatewords:8 }}</small>
+                            <small class="text-muted">{{ task.task_description|truncatewords:8 }}</small>
                         </td>
                         <td>
                             {% if task.get_related_object_url %}
-                                <a href="{{ task.get_related_object_url }}">
-                                    {% if task.account %}
-                                        {{ task.account.name }}
-                                    {% elif task.opportunity %}
-                                        {{ task.opportunity.name }}
-                                    {% elif task.related_lead %}
-                                        {{ task.related_lead.full_name }}
-                                    {% elif task.case %}
-                                        {{ task.case.subject }}
-                                    {% endif %}
-                                </a>
+                            <a href="{{ task.get_related_object_url }}">
+                                {% if task.account %}
+                                {{ task.account.name }}
+                                {% elif task.opportunity %}
+                                {{ task.opportunity.name }}
+                                {% elif task.lead %}
+                                {{ task.lead.full_name }}
+                                {% elif task.case %}
+                                {{ task.case.subject }}
+                                {% endif %}
+                            </a>
                             {% else %}
-                                <span class="text-muted">—</span>
+                            <span class="text-muted">—</span>
                             {% endif %}
                         </td>
                         <td>
                             {% if task.assigned_to %}
-                                {{ task.assigned_to.email }}
+                            {{ task.assigned_to.email }}
                             {% else %}
-                                <span class="text-muted">Unassigned</span>
+                            <span class="text-muted">Unassigned</span>
                             {% endif %}
                         </td>
                         <td>
                             {% if task.due_date %}
-                                {{ task.due_date|date:"M d, Y H:i" }}
-                                {% if task.is_overdue %}
-                                    <span class="badge bg-danger">Overdue</span>
-                                {% endif %}
+                            {{ task.due_date|date:"M d, Y H:i" }}
+                            {% if task.is_overdue %}
+                            <span class="badge bg-danger">Overdue</span>
+                            {% endif %}
                             {% else %}
-                                <span class="text-muted">—</span>
+                            <span class="text-muted">—</span>
                             {% endif %}
                         </td>
                         <td>
-                            <span class="badge bg-{% if task.status == 'completed' %}success{% elif task.status == 'cancelled' %}secondary{% elif task.status == 'overdue' %}danger{% else %}warning{% endif %}">
+                            {% if task.status_ref %}
+                            <span class="badge" style="background-color: {{ task.status_ref.color }}; color: white;">
+                                {{ task.status_ref.label }}
+                            </span>
+                            {% else %}
+                            <span
+                                class="badge bg-{% if task.status == 'completed' %}success{% elif task.status == 'cancelled' %}secondary{% elif task.status == 'overdue' %}danger{% else %}warning{% endif %}">
                                 {{ task.get_status_display }}
                             </span>
+                            {% endif %}
                         </td>
                         <td>
-                            <span class="badge bg-{% if task.priority == 'high' %}danger{% elif task.priority == 'medium' %}warning{% elif task.priority == 'low' %}secondary{% else %}info{% endif %}">
+                            {% if task.priority_ref %}
+                            <span class="badge" style="background-color: {{ task.priority_ref.color }}; color: white;">
+                                {{ task.priority_ref.label }}
+                            </span>
+                            {% else %}
+                            <span
+                                class="badge bg-{% if task.priority == 'high' %}danger{% elif task.priority == 'medium' %}warning{% elif task.priority == 'low' %}secondary{% else %}info{% endif %}">
                                 {{ task.get_priority_display }}
                             </span>
+                            {% endif %}
                         </td>
                         <td>
                             <div class="d-flex gap-1">
                                 {% if task.status != 'completed' %}
-                                    <form method="post" action="{% url 'tasks:complete_task' %}" class="d-inline">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="task_id" value="{{ task.id }}">
-                                        <button type="submit" class="btn btn-sm btn-success">Complete</button>
-                                    </form>
+                                <form method="post" action="{% url 'tasks:complete_task' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="task_id" value="{{ task.id }}">
+                                    <button type="submit" class="btn btn-sm btn-success">Complete</button>
+                                </form>
                                 {% endif %}
-                                <a href="{% url 'tasks:detail' task.pk %}" class="btn btn-sm btn-outline-primary">View</a>
-                                <a href="{% url 'tasks:update' task.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                <a href="{% url 'tasks:detail' task.pk %}"
+                                    class="btn btn-sm btn-outline-primary">View</a>
+                                <a href="{% url 'tasks:update' task.pk %}"
+                                    class="btn btn-sm btn-outline-secondary">Edit</a>
                             </div>
                         </td>
                     </tr>
@@ -143,43 +181,50 @@
 
         <!-- Pagination -->
         {% if is_paginated %}
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center">
-                    {% if page_obj.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}" aria-label="First">
-                                <span aria-hidden="true">&laquo;&laquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
-                            </a>
-                        </li>
-                    {% endif %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
+                        aria-label="First">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
+                        aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% endif %}
 
-                    <li class="page-item active">
-                        <span class="page-link">
-                            {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-                        </span>
-                    </li>
+                <li class="page-item active">
+                    <span class="page-link">
+                        {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
 
-                    {% if page_obj.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}" aria-label="Last">
-                                <span aria-hidden="true">&raquo;&raquo;</span>
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </nav>
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
+                        aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
+                        aria-label="Last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
         {% endif %}
-    {% else %}
+        {% else %}
         <div class="text-center">
             <div class="mb-4">
                 <i class="bi bi-check2-square display-1 text-muted"></i>
@@ -188,8 +233,8 @@
             <p class="text-muted mb-4">Create your first task to get started.</p>
             <a href="{% url 'tasks:create' %}" class="btn btn-primary">Create Task</a>
         </div>
-    {% endif %}
-</div>
+        {% endif %}
+    </div>
 
 
-{% endblock %}
+    {% endblock %}

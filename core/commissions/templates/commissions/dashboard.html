@@ -1,4 +1,5 @@
 {% extends "commissions/base.html" %}
+{% load filters_extras %}
 
 {% block title %}Commissions Dashboard | SalesCompass{% endblock %}
 
@@ -58,6 +59,12 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Attainment
+                                <span
+                                    class="badge badge-pill badge-{% if pace.status == 'ahead' %}success{% else %}warning{% endif %} ml-2"
+                                    title="{% if pace.status == 'ahead' %}Ahead of schedule{% else %}Behind schedule{% endif %}"
+                                    data-toggle="tooltip">
+                                    {{ pace.diff|floatformat:0 }}% {{ pace.status }}
+                                </span>
                             </div>
                             <div class="row no-gutters align-items-center">
                                 <div class="col-auto">
@@ -104,7 +111,7 @@
 
     <!-- Forecast Section -->
     <div class="row mb-4">
-        <div class="col-12">
+        <div class="col-lg-8">
             <div class="card shadow h-100 py-2 border-left-primary">
                 <div class="card-body">
                     <div class="row align-items-center">
@@ -124,6 +131,30 @@
                                 forecast.weighted_forecast_amount|floatformat:2 }}</div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Earnings Trend (Last 12 Mos)</h6>
+                </div>
+                <div class="card-body">
+                    {% if trend %}
+                    <div class="chart-bar"
+                        style="height: 120px; display: flex; align-items: flex-end; justify-content: space-between;">
+                        {% for month in trend %}
+                        <div style="flex: 1; margin: 0 2px; background-color: #4e73df; height: {{ month.amount|floatformat:0 }}px; max-height: 100%; min-height: 1px;"
+                            title="{{ month.month }}: ${{ month.amount|floatformat:2 }}" data-toggle="tooltip">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center small mt-2 text-muted">
+                        {{ trend.0.month }} - {{ trend|last|dictsort:"sort_date"|last|get_item:"month" }}
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted my-4">No historical data available.</p>
+                    {% endif %}
                 </div>
             </div>
         </div>

@@ -5,8 +5,8 @@
 {% block content %}
 <div class="header-bar mb-4">
     <div class="container">
-        <h1 class="block-title">Task Templates</h1>
-        <p class="text-white text-center lead">Manage reusable task templates</p>
+        <h1 class="block-title  text-center ">Task Templates</h1>
+        <p class=" text-center lead">Manage reusable task templates</p>
     </div>
 </div>
 
@@ -41,16 +41,28 @@
                     <tr>
                         <td>
                             <a href="{% url 'tasks:template_update' template.pk %}">
-                                {{ template.name }}
+                                {{ template.template_name }}
                             </a>
                             <br>
-                            <small class="text-muted">{{ template.description|truncatewords:8 }}</small>
+                            <small class="text-muted">{{ template.template_description|truncatewords:8 }}</small>
                         </td>
-                        <td>{{ template.get_task_type_display }}</td>
                         <td>
-                            <span class="badge bg-{% if template.priority == 'high' %}danger{% elif template.priority == 'medium' %}warning{% else %}secondary{% endif %}">
-                                {{ template.get_priority_display }}
-                            </span>
+                            {% if template.task_type_ref %}
+                                {{ template.task_type_ref.label }}
+                            {% else %}
+                                {{ template.get_task_type_display }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if template.priority_ref %}
+                                <span class="badge" style="background-color: {{ template.priority_ref.color }}; color: white;">
+                                    {{ template.priority_ref.label }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-{% if template.priority == 'high' %}danger{% elif template.priority == 'medium' %}warning{% else %}secondary{% endif %}">
+                                    {{ template.get_priority_display }}
+                                </span>
+                            {% endif %}
                         </td>
                         <td>
                             {% if template.estimated_hours %}
@@ -59,9 +71,9 @@
                                 <span class="text-muted">—</span>
                             {% endif %}
                         </td>
-                        <td>{{ template.default_due_offset }} days</td>
+                        <td>{{ template.due_date_offset_days }} days</td>
                         <td>
-                            {% if template.is_active %}
+                            {% if template.template_is_active %}
                                 <span class="badge bg-success">Active</span>
                             {% else %}
                                 <span class="badge bg-secondary">Inactive</span>

@@ -1,0 +1,110 @@
+{% extends "communication/base.html" %}
+
+{% block title %}Interaction Detail - Communication{% endblock %}
+
+{% block comm_title %}🔍 Interaction Insight{% endblock %}
+{% block comm_subtitle %}Detailed view of communication record #{{ history.id }}{% endblock %}
+
+{% block comm_actions %}
+<a href="{% url 'communication:history_list' %}" class="btn btn-light fw-bold px-4 shadow-sm">
+    <i class="bi bi-arrow-left me-1"></i> Back to History
+</a>
+{% endblock %}
+
+{% block comm_content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="comm-card p-4">
+            <h5 class="fw-bold mb-4">Metadata</h5>
+
+            <div class="mb-4">
+                <label class="text-muted small text-uppercase fw-bold d-block mb-1">Channel Type</label>
+                <span class="badge bg-light text-dark border fs-6">
+                    {{ history.communication_type|upper }}
+                </span>
+            </div>
+
+            <div class="mb-4">
+                <label class="text-muted small text-uppercase fw-bold d-block mb-1">Direction</label>
+                <div class="fw-bold">
+                    {% if history.direction == 'outgoing' %}
+                    <i class="bi bi-arrow-up-right text-primary me-2"></i> Outgoing
+                    {% else %}
+                    <i class="bi bi-arrow-down-left text-success me-2"></i> Incoming
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="text-muted small text-uppercase fw-bold d-block mb-1">Status</label>
+                <div>
+                    {% if history.status == 'sent' or history.status == 'completed' %}
+                    <span class="text-success"><i class="bi bi-check-circle-fill me-2"></i> Success</span>
+                    {% elif history.status == 'failed' %}
+                    <span class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Failed</span>
+                    {% else %}
+                    <span class="text-warning"><i class="bi bi-clock-history me-2"></i> {{ history.status|title
+                        }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="text-muted small text-uppercase fw-bold d-block mb-1">Date & Time</label>
+                <div class="fw-bold">{{ history.created_at|date:"F d, Y @ H:i" }}</div>
+            </div>
+
+            <div class="mb-0">
+                <label class="text-muted small text-uppercase fw-bold d-block mb-1">Sender/User</label>
+                <div class="fw-bold">{{ history.sender|default:"System Engine" }}</div>
+            </div>
+        </div>
+
+        {% if history.metadata %}
+        <div class="comm-card p-4 mt-4">
+            <h5 class="fw-bold mb-4">System Details</h5>
+            <pre class="bg-light p-3 rounded small mb-0 overflow-auto"
+                style="max-height: 300px;">{{ history.metadata|json_script:"metadata"|safe }}</pre>
+            <div id="metadata-display" class="small mt-2"></div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const data = JSON.parse(document.getElementById('metadata').textContent);
+                    const container = document.getElementById('metadata-display');
+                    let html = '<ul class="list-unstyled mb-0">';
+                    for (const [key, value] of Object.entries(data)) {
+                        html += `<li><strong>${key}:</strong> <span class="text-muted">${value}</span></li>`;
+                    }
+                    html += '</ul>';
+                    container.innerHTML = html;
+                });
+            </script>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-8">
+        <div class="comm-card overflow-hidden">
+            <div class="card-header bg-transparent border-bottom p-4">
+                <h5 class="mb-0 fw-bold">Message Content</h5>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <div class="mb-4">
+                    <label class="text-muted small text-uppercase fw-bold d-block mb-1">Recipient</label>
+                    <h5 class="fw-bold">{{ history.recipient }}</h5>
+                </div>
+
+                <div class="mb-5">
+                    <label class="text-muted small text-uppercase fw-bold d-block mb-1">Subject</label>
+                    <h4 class="fw-bold">{{ history.subject|default:"(No Subject)" }}</h4>
+                </div>
+
+                <hr class="my-5">
+
+                <div class="message-body lh-lg">
+                    {{ history.message|linebreaks }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

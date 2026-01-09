@@ -74,3 +74,8 @@ def count_enabled(queryset):
     return len([item for item in queryset if getattr(item, 'enabled', False)])
 
 
+
+
+
+
+

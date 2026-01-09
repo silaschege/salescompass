@@ -1,0 +1,121 @@
+{% extends "automation/base.html" %}
+{% load core_extras %}
+
+{% block title %}Webhook Delivery Logs - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Webhook Delivery Logs</h1>
+        <p class="text-white text-center lead">Monitor and troubleshoot external webhook deliveries</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Filters and Actions -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <a href="{% url 'automation:list' %}" class="btn btn-outline-secondary">← Back to Automations</a>
+        </div>
+    </div>
+
+    <!-- Logs Table -->
+    {% if logs %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Endpoint</th>
+                    <th>Event</th>
+                    <th>Status</th>
+                    <th>HTTP Code</th>
+                    <th>Time</th>
+                    <th>Duration</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr
+                    class="{% if log.status == 'failed' %}table-danger{% elif log.status == 'delivered' %}table-success{% elif log.status == 'retrying' %}table-warning{% endif %}">
+                    <td>
+                        <span title="{{ log.webhook_delivery_url }}">
+                            {{ log.webhook_endpoint.webhook_endpoint_name|truncatechars:20 }}
+                        </span>
+                    </td>
+                    <td><code>{{ log.event_type }}</code></td>
+                    <td>
+                        <span
+                            class="badge bg-{% if log.status == 'failed' %}danger{% elif log.status == 'delivered' %}success{% elif log.status == 'retrying' %}warning{% else %}secondary{% endif %}">
+                            {{ log.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if log.response_status_code %}
+                        <span
+                            class="badge border {% if log.response_status_code >= 200 and log.response_status_code < 300 %}text-success border-success{% else %}text-danger border-danger{% endif %}">
+                            {{ log.response_status_code }}
+                        </span>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ log.webhook_delivery_created_at|date:"M d, H:i:s" }}</td>
+                    <td>{{ log.execution_time_ms|floatformat:0 }}ms</td>
+                    <td>
+                        <a href="{% url 'automation:webhook_log_detail' log.pk %}"
+                            class="btn btn-sm btn-outline-primary">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">
+                    {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-link-45deg display-1 text-muted"></i>
+        <h3 class="text-muted mt-3">No webhook logs found</h3>
+        <p class="text-muted">Webhooks will create logs when they are triggered by workflows.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -46,3 +46,23 @@ def task_post_save(sender, instance, created, **kwargs):
         'tenant_id': instance.tenant_id,
     }
     emit_event(trigger_type, payload)
+
+
+
+
+@receiver(post_save, sender='engagement.EngagementEvent')
+def engagement_event_post_save(sender, instance, created, **kwargs):
+    if created:
+        trigger_type = 'engagement.event_logged'
+        payload = {
+            'event_id': instance.id,
+            'event_type': instance.event_type,
+            'account_id': instance.account_id,
+            'engagement_score': instance.engagement_score,
+            'tenant_id': instance.tenant_id,
+        }
+        emit_event(trigger_type, payload)
+
+
+
+

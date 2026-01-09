@@ -1,14 +1,258 @@
-{% extends "core/patterns/form_view.html" %}
+{% extends 'leads/base.html' %}
 
-{% block module_nav %}
-{% include "leads/includes/module_nav.html" %}
+{% block title %}
+    {% if form.instance.pk %}Edit Lead{% else %}New Lead{% endif %}
 {% endblock %}
 
-{% block page_title %}{% if form.instance.pk %}Edit Lead{% else %}New Lead{% endif %}{% endblock %}
+{% block content %}
+<div class="container-fluid">
 
-{% block page_subtitle %}
-{% if form.instance.pk %}Update lead information{% else %}Add a new potential customer{% endif %}
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                {% if form.instance.pk %}Edit Lead{% else %}New Lead{% endif %}
+            </h1>
+            <p class="text-muted mb-0 mt-1 small">
+                {% if form.instance.pk %}Update lead information{% else %}Add a new potential customer{% endif %}
+            </p>
+        </div>
+      
+    </div>
+
+    <!-- Form Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Lead Information Form</h6>
+        </div>
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger mb-4">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- SECTION 1: IDENTITY -->
+                <h6 class="text-secondary text-uppercase text-xs font-weight-bold border-bottom pb-2 mb-3">
+                    Identity Details
+                </h6>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.first_name.id_for_label }}" class="form-label font-weight-bold small">First Name *</label>
+                        {{ form.first_name }}
+                        <div class="text-danger small mt-1">{{ form.first_name.errors }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.last_name.id_for_label }}" class="form-label font-weight-bold small">Last Name *</label>
+                        {{ form.last_name }}
+                        <div class="text-danger small mt-1">{{ form.last_name.errors }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label font-weight-bold small">Title (Honorific)</label>
+                        {{ form.title }}
+                        <div class="text-danger small mt-1">{{ form.title.errors }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.job_title.id_for_label }}" class="form-label font-weight-bold small">Job Title</label>
+                        {{ form.job_title }}
+                        <div class="text-danger small mt-1">{{ form.job_title.errors }}</div>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: CONTACT & COMPANY -->
+                <h6 class="text-secondary text-uppercase text-xs font-weight-bold border-bottom pb-2 mb-3 mt-2">
+                    Contact & Company
+                </h6>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.email.id_for_label }}" class="form-label font-weight-bold small">Email Address</label>
+                        {{ form.email }}
+                        <div class="text-danger small mt-1">{{ form.email.errors }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.phone.id_for_label }}" class="form-label font-weight-bold small">Phone Number</label>
+                        {{ form.phone }}
+                        <div class="text-danger small mt-1">{{ form.phone.errors }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.company.id_for_label }}" class="form-label font-weight-bold small">Company Name</label>
+                        {{ form.company }}
+                        <div class="text-danger small mt-1">{{ form.company.errors }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.account.id_for_label }}" class="form-label font-weight-bold small">Linked Account</label>
+                        {{ form.account }}
+                        <div class="text-danger small mt-1">{{ form.account.errors }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.country.id_for_label }}" class="form-label font-weight-bold small">Country</label>
+                        {{ form.country }}
+                        <div class="text-danger small mt-1">{{ form.country.errors }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.owner.id_for_label }}" class="form-label font-weight-bold small">Lead Owner</label>
+                        {{ form.owner }}
+                        <div class="text-danger small mt-1">{{ form.owner.errors }}</div>
+                    </div>
+                </div>
+
+                <!-- SECTION 3: CLASSIFICATION -->
+                <h6 class="text-secondary text-uppercase text-xs font-weight-bold border-bottom pb-2 mb-3 mt-2">
+                    Classification
+                </h6>
+                <div class="row">
+                    <!-- Status Group -->
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.status.id_for_label }}" class="form-label font-weight-bold small">Status (Legacy)</label>
+                        {{ form.status }}
+                        <div class="text-danger small mt-1">{{ form.status.errors }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.status_ref.id_for_label }}" class="form-label font-weight-bold small">Dynamic Status</label>
+                        {{ form.status_ref }}
+                        <div class="text-danger small mt-1">{{ form.status_ref.errors }}</div>
+                    </div>
+
+                    <!-- Source Group -->
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.lead_source.id_for_label }}" class="form-label font-weight-bold small">Lead Source (Legacy)</label>
+                        {{ form.lead_source }}
+                        <div class="text-danger small mt-1">{{ form.lead_source.errors }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.source_ref.id_for_label }}" class="form-label font-weight-bold small">Dynamic Source</label>
+                        {{ form.source_ref }}
+                        <div class="text-danger small mt-1">{{ form.source_ref.errors }}</div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.marketing_channel_ref.id_for_label }}" class="form-label font-weight-bold small">Marketing Channel</label>
+                        {{ form.marketing_channel_ref }}
+                        <div class="text-danger small mt-1">{{ form.marketing_channel_ref.errors }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.industry_ref.id_for_label }}" class="form-label font-weight-bold small">Industry</label>
+                        {{ form.industry_ref }}
+                        <div class="text-danger small mt-1">{{ form.industry_ref.errors }}</div>
+                    </div>
+                </div>
+
+                <!-- SECTION 4: METRICS & BUSINESS DATA -->
+                <h6 class="text-secondary text-uppercase text-xs font-weight-bold border-bottom pb-2 mb-3 mt-2">
+                    Business Metrics
+                </h6>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.lead_score.id_for_label }}" class="form-label font-weight-bold small">Lead Score</label>
+                        {{ form.lead_score }}
+                        <div class="text-danger small mt-1">{{ form.lead_score.errors }}</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.annual_revenue.id_for_label }}" class="form-label font-weight-bold small">Annual Revenue</label>
+                        {{ form.annual_revenue }}
+                        <div class="text-danger small mt-1">{{ form.annual_revenue.errors }}</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.cac_cost.id_for_label }}" class="form-label font-weight-bold small">CAC Cost</label>
+                        {{ form.cac_cost }}
+                        <div class="text-danger small mt-1">{{ form.cac_cost.errors }}</div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.company_size.id_for_label }}" class="form-label font-weight-bold small">Company Size</label>
+                        {{ form.company_size }}
+                        <div class="text-danger small mt-1">{{ form.company_size.errors }}</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.business_type.id_for_label }}" class="form-label font-weight-bold small">Business Type</label>
+                        {{ form.business_type }}
+                        <div class="text-danger small mt-1">{{ form.business_type.errors }}</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.funding_stage.id_for_label }}" class="form-label font-weight-bold small">Funding Stage</label>
+                        {{ form.funding_stage }}
+                        <div class="text-danger small mt-1">{{ form.funding_stage.errors }}</div>
+                    </div>
+                </div>
+
+                <!-- SECTION 5: CAMPAIGN INFO -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.campaign_source.id_for_label }}" class="form-label font-weight-bold small">Campaign Source</label>
+                        {{ form.campaign_source }}
+                        <div class="text-danger small mt-1">{{ form.campaign_source.errors }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.lead_acquisition_date.id_for_label }}" class="form-label font-weight-bold small">Acquisition Date</label>
+                        {{ form.lead_acquisition_date }}
+                        <div class="text-danger small mt-1">{{ form.lead_acquisition_date.errors }}</div>
+                    </div>
+                </div>
+
+                <!-- SECTION 6: NOTES -->
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <label for="{{ form.lead_description.id_for_label }}" class="form-label font-weight-bold small">Lead Description / Notes</label>
+                        {{ form.lead_description }}
+                        <div class="text-danger small mt-1">{{ form.lead_description.errors }}</div>
+                    </div>
+                </div>
+
+                <!-- ACTION BUTTONS -->
+                <hr class="mt-4 mb-4">
+                <div class="d-flex justify-content-end">
+                    <a href="{% url 'leads:lead_list' %}" class="btn btn-secondary mr-2">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        {% if form.instance.pk %}Save Changes{% else %}Create Lead{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Styling to ensure plain Django form widgets look like Bootstrap inputs */
+    form input[type="text"],
+    form input[type="email"],
+    form input[type="number"],
+    form input[type="url"],
+    form input[type="date"],
+    form input[type="datetime-local"],
+    form select,
+    form textarea {
+        display: block;
+        width: 100%;
+        height: calc(1.5em + .75rem + 2px);
+        padding: .375rem .75rem;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #6e707e;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #d1d3e2;
+        border-radius: .35rem;
+        transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    }
+    
+    /* Fix for textareas having fixed height */
+    form textarea {
+        height: auto;
+        min-height: 100px;
+    }
+
+    /* Fix for checkboxes */
+    form input[type="checkbox"] {
+        width: auto;
+        height: auto;
+        margin-right: 0.5rem;
+    }
+</style>
+
 {% endblock %}
-
-{% block cancel_url %}{% url 'leads:lead_list' %}{% endblock %}
-{% block submit_button_text %}{% if form.instance.pk %}Save Changes{% else %}Create Lead{% endif %}{% endblock %}

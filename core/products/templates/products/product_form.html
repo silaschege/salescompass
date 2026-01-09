@@ -1,126 +1,222 @@
 {% extends "products/base.html" %}
 
-{% block title %}{% if object %}Edit {{ object.name }}{% else %}New Product{% endif %} - SalesCompass{% endblock %}
+{% block title %}
+    {% if object %}Edit {{ object.name }}{% else %}New Product{% endif %} - SalesCompass
+{% endblock %}
 
 {% block content %}
-<h1 class="block-title fw-bold mb-0">{% if object %}Edit Product{% else %}New Product{% endif %}</h1>
-
-<form method="post">
-    {% csrf_token %}
-    <div class="row">
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label for="{{ form.name.id_for_label }}" class="form-label">Product Name *</label>
-                {{ form.name }}
-                {% if form.name.errors %}
-                    <div class="text-danger">{{ form.name.errors }}</div>
-                {% endif %}
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.sku.id_for_label }}" class="form-label">SKU *</label>
-                {{ form.sku }}
-                <div class="form-text">Stock Keeping Unit (e.g., TECH-LAPTOP-001)</div>
-                {% if form.sku.errors %}
-                    <div class="text-danger">{{ form.sku.errors }}</div>
-                {% endif %}
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.upc.id_for_label }}" class="form-label">UPC</label>
-                {{ form.upc }}
-                <div class="form-text">Universal Product Code (12 digits)</div>
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
-                {{ form.category }}
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.tags.id_for_label }}" class="form-label">Tags</label>
-                {{ form.tags }}
-                <div class="form-text">Comma-separated (e.g., laptop, tech, business)</div>
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
-                {{ form.description }}
-            </div>
+<div class="container-fluid">
+    
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                {% if object %}Edit Product{% else %}New Product{% endif %}
+            </h1>
+            <p class="text-muted mb-0 mt-1 small">
+                {% if object %}Update product details and specifications{% else %}Add a new item to your catalog{% endif %}
+            </p>
         </div>
+        <div>
+            <a href="{% url 'products:product_list' %}" class="btn btn-sm btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to List
+            </a>
+        </div>
+    </div>
 
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label for="{{ form.base_price.id_for_label }}" class="form-label">Base Price *</label>
-                {{ form.base_price }}
-            </div>
+    <!-- Form Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Product Information</h6>
+        </div>
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
 
-            <div class="mb-3">
-                <label for="{{ form.currency.id_for_label }}" class="form-label">Currency</label>
-                {{ form.currency }}
-            </div>
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger mb-4">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
 
-            <div class="mb-3">
-                <label for="{{ form.pricing_model.id_for_label }}" class="form-label">Pricing Model</label>
-                {{ form.pricing_model }}
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">ESG Certified</label>
-                <div class="form-check">
-                    {{ form.esg_certified }}
-                    <label class="form-check-label">This product is ESG certified</label>
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.carbon_footprint.id_for_label }}" class="form-label">Carbon Footprint</label>
-                {{ form.carbon_footprint }}
-                <div class="form-text">kg CO2e per unit</div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">ESG Certifications</label>
-                {{ form.esg_certifications }}
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.sustainability_notes.id_for_label }}" class="form-label">Sustainability Notes</label>
-                {{ form.sustainability_notes }}
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.tco2e_saved.id_for_label }}" class="form-label">tCO2e Saved</label>
-                {{ form.tco2e_saved }}
-                <div class="form-text">Tonnes of CO2e saved by customer</div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Availability</label>
+                <!-- SECTION 1: GENERAL INFO -->
+                <h6 class="text-secondary text-uppercase text-xs font-weight-bold border-bottom pb-2 mb-3">
+                    General Information
+                </h6>
                 <div class="row">
-                    <div class="col-md-6">
-                        {{ form.available_from }}
-                        <label for="{{ form.available_from.id_for_label }}" class="form-label">Available From</label>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.product_name.id_for_label }}" class="form-label font-weight-bold small">Product Name *</label>
+                        {{ form.product_name }}
+                        {% if form.product_name.errors %}
+                            <div class="text-danger small mt-1">{{ form.product_name.errors }}</div>
+                        {% endif %}
                     </div>
-                    <div class="col-md-6">
-                        {{ form.available_to }}
-                        <label for="{{ form.available_to.id_for_label }}" class="form-label">Available To</label>
+                    <div class="col-md-3 mb-3">
+                        <label for="{{ form.sku.id_for_label }}" class="form-label font-weight-bold small">SKU *</label>
+                        {{ form.sku }}
+                        {% if form.sku.errors %}
+                            <div class="text-danger small mt-1">{{ form.sku.errors }}</div>
+                        {% endif %}
+                        <small class="text-muted">Stock Keeping Unit</small>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="{{ form.upc.id_for_label }}" class="form-label font-weight-bold small">UPC</label>
+                        {{ form.upc }}
+                        <small class="text-muted">Universal Product Code</small>
                     </div>
                 </div>
-            </div>
 
-            <div class="mb-3 form-check">
-                {{ form.is_active }}
-                <label class="form-check-label">Active</label>
-            </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.category.id_for_label }}" class="form-label font-weight-bold small">Category</label>
+                        {{ form.category }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.tags.id_for_label }}" class="form-label font-weight-bold small">Tags</label>
+                        {{ form.tags }}
+                        <small class="text-muted">Comma-separated (e.g., tech, hardware)</small>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label font-weight-bold small">Description</label>
+                        {{ form.description }}
+                    </div>
+                </div>
+
+                <!-- SECTION 2: PRICING -->
+                <h6 class="text-secondary text-uppercase text-xs font-weight-bold border-bottom pb-2 mb-3 mt-3">
+                    Pricing Strategy
+                </h6>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.base_price.id_for_label }}" class="form-label font-weight-bold small">Base Price *</label>
+                        {{ form.base_price }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.currency.id_for_label }}" class="form-label font-weight-bold small">Currency</label>
+                        {{ form.currency }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.pricing_model.id_for_label }}" class="form-label font-weight-bold small">Pricing Model</label>
+                        {{ form.pricing_model }}
+                    </div>
+                </div>
+
+                <!-- SECTION 3: SUSTAINABILITY (ESG) -->
+                <h6 class="text-secondary text-uppercase text-xs font-weight-bold border-bottom pb-2 mb-3 mt-3">
+                    Sustainability & ESG
+                </h6>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <div class="form-check">
+                            {{ form.esg_certified }}
+                            <label class="form-check-label font-weight-bold small text-success" for="{{ form.esg_certified.id_for_label }}">
+                                <i class="fas fa-leaf mr-1"></i> This product is ESG Certified
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.carbon_footprint.id_for_label }}" class="form-label font-weight-bold small">Carbon Footprint</label>
+                        {{ form.carbon_footprint }}
+                        <small class="text-muted">kg CO2e per unit</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.tco2e_saved.id_for_label }}" class="form-label font-weight-bold small">tCO2e Saved</label>
+                        {{ form.tco2e_saved }}
+                        <small class="text-muted">Tonnes saved by customer</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.esg_certifications.id_for_label }}" class="form-label font-weight-bold small">Certifications</label>
+                        {{ form.esg_certifications }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.sustainability_notes.id_for_label }}" class="form-label font-weight-bold small">Sustainability Notes</label>
+                        {{ form.sustainability_notes }}
+                    </div>
+                </div>
+
+                <!-- SECTION 4: AVAILABILITY -->
+                <h6 class="text-secondary text-uppercase text-xs font-weight-bold border-bottom pb-2 mb-3 mt-3">
+                    Availability & Status
+                </h6>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.available_from.id_for_label }}" class="form-label font-weight-bold small">Available From</label>
+                        {{ form.available_from }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.available_to.id_for_label }}" class="form-label font-weight-bold small">Available To</label>
+                        {{ form.available_to }}
+                    </div>
+                    <div class="col-md-4 mb-3 d-flex align-items-end">
+                        <div class="form-group mb-2">
+                             <div class="custom-control custom-switch">
+                                {{ form.is_active }}
+                                <label class="custom-control-label font-weight-bold text-primary" for="{{ form.is_active.id_for_label }}">
+                                    Active Product
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ACTIONS -->
+                <hr class="mt-4 mb-4">
+                <div class="d-flex justify-content-end">
+                    <a href="{% url 'products:product_list' %}" class="btn btn-secondary mr-2">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        {% if object %}Save Changes{% else %}Create Product{% endif %}
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
-    <div class="d-flex gap-2 mt-3">
-        <button type="submit" class="btn btn-primary">
-            {% if object %}Update Product{% else %}Create Product{% endif %}
-        </button>
-        <a href="{% url 'products:product_list' %}" class="btn btn-secondary">Cancel</a>
-    </div>
-</form>
+<style>
+    /* Styling to ensure plain Django form widgets look like Bootstrap inputs */
+    form input[type="text"],
+    form input[type="email"],
+    form input[type="number"],
+    form input[type="url"],
+    form input[type="date"],
+    form input[type="datetime-local"],
+    form select,
+    form textarea {
+        display: block;
+        width: 100%;
+        height: calc(1.5em + .75rem + 2px);
+        padding: .375rem .75rem;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #6e707e;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #d1d3e2;
+        border-radius: .35rem;
+        transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    }
+    
+    /* Textarea height fix */
+    form textarea {
+        height: auto;
+        min-height: 100px;
+    }
+
+    /* Checkbox alignment */
+    form input[type="checkbox"] {
+        width: auto;
+        height: auto;
+        margin-right: 0.5rem;
+        vertical-align: middle;
+    }
+    
+    /* Specific fix for custom switch if standard checkbox is used */
+    .custom-control-input {
+        width: 1rem !important;
+        height: 1.2rem !important;
+    }
+</style>
 {% endblock %}

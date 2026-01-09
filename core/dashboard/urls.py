@@ -43,4 +43,20 @@ urlpatterns = [
     path('bi/api/chart/<str:chart_type>/', ChartDataAPIView.as_view(), name='chart_data_api'),
     path('bi/api/comparative/', ComparativeAnalysisAPIView.as_view(), name='comparative_analysis_api'),
     path('bi/api/streaming/', StreamingDataAPIView.as_view(), name='streaming_data_api'),
+    
+    # Widget Type CRUD URLs
+    path('widget-types/', views.WidgetTypeListView.as_view(), name='widget_type_list'),
+    path('widget-types/create/', views.WidgetTypeCreateView.as_view(), name='widget_type_create'),
+    path('widget-types/<int:pk>/update/', views.WidgetTypeUpdateView.as_view(), name='widget_type_update'),
+    path('widget-types/<int:pk>/delete/', views.WidgetTypeDeleteView.as_view(), name='widget_type_delete'),
+
+    # Widget Category CRUD URLs
+    path('widget-categories/', views.WidgetCategoryListView.as_view(), name='widget_category_list'),
+    path('widget-categories/create/', views.WidgetCategoryCreateView.as_view(), name='widget_category_create'),
+    path('widget-categories/<int:pk>/update/', views.WidgetCategoryUpdateView.as_view(), name='widget_category_update'),
+    path('widget-categories/<int:pk>/delete/', views.WidgetCategoryDeleteView.as_view(), name='widget_category_delete'),
+
+    # Dynamic choices dashboard
+    path('dynamic-choices/', views.dynamic_choices_dashboard, name='dynamic_choices_dashboard'),
+    path('api/dynamic-choices/<str:model_name>/', views.get_dynamic_choices_api, name='dynamic_choices_api'),
 ]

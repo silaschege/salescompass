@@ -1,0 +1,157 @@
+{% extends "proposals/base.html" %}
+
+{% block title %}Proposal Approvals Dashboard - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="block-title fw-bold mb-0">Proposal Approvals Dashboard</h1>
+        <a href="{% url 'proposals:proposal_dashboard' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Proposals
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>Pending Approvals</h5>
+                            <h2>{{ pending_approvals_count }}</h2>
+                        </div>
+                        <div class="fs-1">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>Recently Approved</h5>
+                            <h2>{{ recently_approved.count }}</h2>
+                        </div>
+                        <div class="fs-1">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>Proposals Needing Review</h5>
+                            <h2>{{ proposals_needing_approval|length }}</h2>
+                        </div>
+                        <div class="fs-1">
+                            <i class="bi bi-clipboard-check"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Proposals Needing Approval -->
+    {% if proposals_needing_approval %}
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Proposals Needing Your Approval</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Proposal Title</th>
+                            <th>Opportunity</th>
+                            <th>Account</th>
+                            <th>Pending Steps</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in proposals_needing_approval %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'proposals:proposal_approval' item.proposal.pk %}" class="fw-bold text-decoration-none">
+                                    {{ item.proposal.title }}
+                                </a>
+                            </td>
+                            <td>{{ item.proposal.opportunity.name }}</td>
+                            <td>{{ item.proposal.opportunity.account.name }}</td>
+                            <td>
+                                {% for approval in item.approvals %}
+                                <span class="badge bg-warning">{{ approval.step.name }}</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <a href="{% url 'proposals:proposal_approval' item.proposal.pk %}" class="btn btn-sm btn-primary">
+                                    Review
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card mb-4">
+        <div class="card-body text-center">
+            <i class="bi bi-check-circle-fill text-success fs-1 mb-3"></i>
+            <h4>No Proposals Needing Your Approval</h4>
+            <p class="text-muted">You have no pending proposal approvals at this time.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recently Approved -->
+    {% if recently_approved %}
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Recently Approved Proposals</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Proposal Title</th>
+                            <th>Approved By</th>
+                            <th>Approved At</th>
+                            <th>Comments</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for approval in recently_approved %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'proposals:detail' approval.proposal.pk %}" class="fw-bold text-decoration-none">
+                                    {{ approval.proposal.title }}
+                                </a>
+                            </td>
+                            <td>{{ approval.approved_by.get_full_name|default:approval.approved_by.username }}</td>
+                            <td>{{ approval.approved_at|date:"M d, Y H:i" }}</td>
+                            <td>{{ approval.comments|default:"-"|truncatechars:50 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

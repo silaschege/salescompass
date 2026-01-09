@@ -9,7 +9,82 @@ PROPOSAL_STATUS_CHOICES = [
     ('viewed', 'Viewed'),
     ('accepted', 'Accepted'),
     ('rejected', 'Rejected'),
-]
+] 
+
+class ApprovalStep(TenantModel):
+    """
+    Represents a step in the approval workflow.
+    """
+    name = models.CharField(max_length=255)
+    order = models.PositiveIntegerField(default=0)
+    is_required = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"{self.order + 1}. {self.name}"
+
+class ApprovalTemplate(TenantModel):
+    """
+    Template for approval workflows that can be applied to proposals.
+    """
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    steps = models.ManyToManyField(
+        ApprovalStep,
+        through='ApprovalTemplateStep',
+        related_name='approval_templates'
+    )
+    is_active = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return self.name
+
+
+
+class ApprovalTemplateStep(TenantModel):
+    """
+    Through model to order steps in an approval template.
+    """
+    template = models.ForeignKey(ApprovalTemplate, on_delete=models.CASCADE)
+    step = models.ForeignKey(ApprovalStep, on_delete=models.CASCADE)
+    order = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        ordering = ['order']
+    
+    def __str__(self):
+        return f"{self.template.name} - Step {self.order + 1}: {self.step.name}"
+
+
+class ProposalApproval(TenantModel):
+    """
+    Tracks the approval status of a proposal through the workflow.
+    """
+    proposal = models.ForeignKey(
+        'Proposal', 
+        on_delete=models.CASCADE, 
+        related_name='approvals'
+    )
+    step = models.ForeignKey(
+        ApprovalStep, 
+        on_delete=models.CASCADE,
+        related_name='proposal_approvals'
+    )
+    approved_by = models.ForeignKey(
+        'core.User', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='approved_proposals'
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    comments = models.TextField(blank=True)
+    is_approved = models.BooleanField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['step__order']
+    
+    def __str__(self):
+        return f"{self.proposal.title} - {self.step.name}"
 
 class Proposal(TenantModel):
     """
@@ -27,7 +102,15 @@ class Proposal(TenantModel):
     # Content (in prod, use FileField or HTML template system)
     content = models.TextField(help_text="HTML or Markdown content of the proposal")
     esg_section_content = models.TextField(blank=True, help_text="ESG-specific content")
-    
+       # Approval workflow
+    approval_template = models.ForeignKey(
+        ApprovalTemplate,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='proposals',
+        help_text="Optional approval template to use for this proposal"
+    )
     # Engagement tracking
     view_count = models.IntegerField(default=0)
     last_viewed = models.DateTimeField(null=True, blank=True)
@@ -131,3 +214,25 @@ class ProposalPDF(TenantModel):
 
     def __str__(self):
         return f"PDF for {self.proposal.title}"
+
+
+class ProposalSignature(models.Model):
+    """
+    Stores digital signature information for proposals
+    """
+    proposal = models.OneToOneField(
+        Proposal, 
+        on_delete=models.CASCADE, 
+        related_name='signature',
+        unique=True
+    )
+    
+    signature_data = models.TextField()
+    signer_name = models.CharField(max_length=255)
+    signer_title = models.CharField(max_length=255)
+    signed_at = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    
+    def __str__(self):
+        return f"Signature for {self.proposal.title} by {self.signer_name}"

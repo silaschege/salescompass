@@ -64,4 +64,30 @@ urlpatterns = [
     path('workflow-template/<int:pk>/', views.WorkflowTemplateDetailView.as_view(), name='workflow_template_detail'),
     path('workflow-template/<int:pk>/edit/', views.WorkflowTemplateUpdateView.as_view(), name='workflow_template_update'),
     path('workflow-template/<int:pk>/delete/', views.WorkflowTemplateDeleteView.as_view(), name='workflow_template_delete'),
+    # Webhook Logs
+    path('webhook-logs/', views.WebhookDeliveryLogListView.as_view(), name='webhook_log_list'),
+    path('webhook-logs/<int:pk>/', views.WebhookDeliveryLogDetailView.as_view(), name='webhook_log_detail'),
+    
+    # Workflow Approvals
+    path('approvals/', views.WorkflowApprovalListView.as_view(), name='approval_list'),
+    path('approvals/<int:approval_id>/respond/', views.respond_to_workflow_approval, name='approval_respond'),
+    
+    # Analytics Dashboard
+    path('analytics/', views.WorkflowAnalyticsDashboardView.as_view(), name='analytics_dashboard'),
+    path('api/analytics/', views.WorkflowAnalyticsAPIView.as_view(), name='analytics_api'),
+    
+    # Execution Replay
+    path('workflow-execution/<int:pk>/replay/', views.ReplayWorkflowExecutionView.as_view(), name='execution_replay'),
+    
+    # Version History
+    path('workflow/<int:workflow_id>/versions/', views.WorkflowVersionListView.as_view(), name='version_list'),
+    path('workflow/<int:workflow_id>/versions/<int:version_id>/rollback/', views.WorkflowRollbackView.as_view(), name='version_rollback'),
+    
+    # Custom Code Snippets
+    path('custom-code-snippets/', views.CustomCodeSnippetListView.as_view(), name='custom_code_list'),
+    path('custom-code-snippets/<int:pk>/', views.CustomCodeSnippetDetailView.as_view(), name='custom_code_detail'),
+    path('custom-code-snippets/create/', views.CustomCodeSnippetCreateView.as_view(), name='custom_code_create'),
+    path('custom-code-snippets/<int:pk>/edit/', views.CustomCodeSnippetUpdateView.as_view(), name='custom_code_update'),
+    path('custom-code-snippets/<int:pk>/delete/', views.CustomCodeSnippetDeleteView.as_view(), name='custom_code_delete'),
+    path('custom-code-logs/', views.CustomCodeExecutionLogListView.as_view(), name='custom_code_logs'),
 ]

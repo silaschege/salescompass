@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from core.permissions import ObjectPermissionRequiredMixin
-from .models import Case, KnowledgeBaseArticle, CsatResponse, CsatDetractorAlert, AssignmentRule
+from .models import Case, KnowledgeBaseArticle, CsatResponse, CsatDetractorAlert, AssignmentRule,CaseAttachment, CaseComment, SlaPolicy
 from .forms import CaseForm, AssignmentRuleForm
 from .utils import get_overdue_cases
 from .utils import calculate_sla_due_date
@@ -15,7 +15,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import CsatDetractorAlert
 from core.object_permissions import CaseObjectPolicy
-from core.object_permissions import CaseObjectPolicy
+
 from django.utils import timezone
 from tenants.models import Tenant as TenantModel
 from django.urls import reverse_lazy
@@ -272,6 +272,9 @@ class AssignmentRuleUpdateView(UpdateView):
         return super().form_valid(form)
 
 
+
+
+
 class AssignmentRuleDeleteView(DeleteView):
     model = AssignmentRule
     template_name = 'cases/assignment_rule_confirm_delete.html'
@@ -280,3 +283,247 @@ class AssignmentRuleDeleteView(DeleteView):
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Assignment rule deleted successfully.')
         return super().delete(request, *args, **kwargs)
+
+
+# === Assignment Rule Views ===
+class AssignmentRuleDetailView(ObjectPermissionRequiredMixin, DetailView):
+    model = AssignmentRule
+    template_name = 'cases/assignment_rule_detail.html'
+    context_object_name = 'assignment_rule'
+
+
+# === Knowledge Base Article Views ===
+class KnowledgeBaseArticleListView(ListView):
+    model = KnowledgeBaseArticle
+    template_name = 'cases/knowledge_base_article_list.html'
+    context_object_name = 'articles'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class KnowledgeBaseArticleCreateView(ObjectPermissionRequiredMixin, CreateView):
+    model = KnowledgeBaseArticle
+    fields = ['title', 'content', 'category', 'tags', 'is_published']
+    template_name = 'cases/knowledge_base_article_form.html'
+    success_url = reverse_lazy('cases:knowledge_base_article_list')
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Knowledge base article created successfully.')
+        return super().form_valid(form)
+
+
+class KnowledgeBaseArticleDetailView(ObjectPermissionRequiredMixin, DetailView):
+    model = KnowledgeBaseArticle
+    template_name = 'cases/knowledge_base_article_detail.html'
+    context_object_name = 'article'
+
+
+class KnowledgeBaseArticleUpdateView(ObjectPermissionRequiredMixin, UpdateView):
+    model = KnowledgeBaseArticle
+    fields = ['title', 'content', 'category', 'tags', 'is_published']
+    template_name = 'cases/knowledge_base_article_form.html'
+    success_url = reverse_lazy('cases:knowledge_base_article_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Knowledge base article updated successfully.')
+        return super().form_valid(form)
+
+
+class KnowledgeBaseArticleDeleteView(ObjectPermissionRequiredMixin, DeleteView):
+    model = KnowledgeBaseArticle
+    template_name = 'cases/knowledge_base_article_confirm_delete.html'
+    success_url = reverse_lazy('cases:knowledge_base_article_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Knowledge base article deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+# === CSAT Response Views ===
+class CsatResponseListView(ObjectPermissionRequiredMixin, ListView):
+    model = CsatResponse
+    template_name = 'cases/csat_response_list.html'
+    context_object_name = 'csat_responses'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant and prefetch related objects
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('case')
+
+
+class CsatResponseDetailView(ObjectPermissionRequiredMixin, DetailView):
+    model = CsatResponse
+    template_name = 'cases/csat_response_detail.html'
+    context_object_name = 'response'
+
+
+# === Case Comment Views ===
+class CaseCommentListView(ObjectPermissionRequiredMixin, ListView):
+    model = CaseComment
+    template_name = 'cases/case_comment_list.html'
+    context_object_name = 'comments'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant and prefetch related objects
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('case', 'author')
+
+
+class CaseCommentCreateView(ObjectPermissionRequiredMixin, CreateView):
+    model = CaseComment
+    fields = ['case', 'content', 'is_internal']
+    template_name = 'cases/case_comment_form.html'
+    success_url = reverse_lazy('cases:case_comment_list')
+    
+    def form_valid(self, form):
+        # Set author and tenant automatically
+        form.instance.author = self.request.user
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Case comment created successfully.')
+        return super().form_valid(form)
+
+
+class CaseCommentUpdateView(ObjectPermissionRequiredMixin, UpdateView):
+    model = CaseComment
+    fields = ['content', 'is_internal']
+    template_name = 'cases/case_comment_form.html'
+    success_url = reverse_lazy('cases:case_comment_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Case comment updated successfully.')
+        return super().form_valid(form)
+
+
+class CaseCommentDeleteView(ObjectPermissionRequiredMixin, DeleteView):
+    model = CaseComment
+    template_name = 'cases/case_comment_confirm_delete.html'
+    success_url = reverse_lazy('cases:case_comment_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Case comment deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+# === Case Attachment Views ===
+class CaseAttachmentListView(ObjectPermissionRequiredMixin, ListView):
+    model = CaseAttachment
+    template_name = 'cases/case_attachment_list.html'
+    context_object_name = 'attachments'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant and prefetch related objects
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset.select_related('case', 'uploaded_by')
+
+
+class CaseAttachmentCreateView(ObjectPermissionRequiredMixin, CreateView):
+    model = CaseAttachment
+    fields = ['case', 'file']
+    template_name = 'cases/case_attachment_form.html'
+    success_url = reverse_lazy('cases:case_attachment_list')
+    
+    def form_valid(self, form):
+        # Set uploaded_by and tenant automatically
+        form.instance.uploaded_by = self.request.user
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'Case attachment created successfully.')
+        return super().form_valid(form)
+
+
+class CaseAttachmentUpdateView(ObjectPermissionRequiredMixin, UpdateView):
+    model = CaseAttachment
+    fields = ['case', 'file']
+    template_name = 'cases/case_attachment_form.html'
+    success_url = reverse_lazy('cases:case_attachment_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Case attachment updated successfully.')
+        return super().form_valid(form)
+
+
+class CaseAttachmentDeleteView(ObjectPermissionRequiredMixin, DeleteView):
+    model = CaseAttachment
+    template_name = 'cases/case_attachment_confirm_delete.html'
+    success_url = reverse_lazy('cases:case_attachment_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Case attachment deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+# === SLA Policy Views ===
+class SlaPolicyListView(ObjectPermissionRequiredMixin, ListView):
+    model = SlaPolicy
+    template_name = 'cases/sla_policy_list.html'
+    context_object_name = 'sla_policies'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter by current tenant
+        if hasattr(self.request.user, 'tenant_id'):
+            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        return queryset
+
+
+class SlaPolicyCreateView(ObjectPermissionRequiredMixin, CreateView):
+    model = SlaPolicy
+    fields = ['sla_policy_name', 'priority', 'response_hours', 'resolution_hours', 'business_hours_only']
+    template_name = 'cases/sla_policy_form.html'
+    success_url = reverse_lazy('cases:sla_policy_list')
+    
+    def form_valid(self, form):
+        # Set tenant automatically
+        if hasattr(self.request.user, 'tenant_id'):
+            form.instance.tenant_id = self.request.user.tenant_id
+        messages.success(self.request, 'SLA policy created successfully.')
+        return super().form_valid(form)
+
+
+class SlaPolicyDetailView(ObjectPermissionRequiredMixin, DetailView):
+    model = SlaPolicy
+    template_name = 'cases/sla_policy_detail.html'
+    context_object_name = 'sla_policy'
+
+
+class SlaPolicyUpdateView(ObjectPermissionRequiredMixin, UpdateView):
+    model = SlaPolicy
+    fields = ['sla_policy_name', 'priority', 'response_hours', 'resolution_hours', 'business_hours_only']
+    template_name = 'cases/sla_policy_form.html'
+    success_url = reverse_lazy('cases:sla_policy_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'SLA policy updated successfully.')
+        return super().form_valid(form)
+
+
+class SlaPolicyDeleteView(ObjectPermissionRequiredMixin, DeleteView):
+    model = SlaPolicy
+    template_name = 'cases/sla_policy_confirm_delete.html'
+    success_url = reverse_lazy('cases:sla_policy_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'SLA policy deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+

@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     SettingGroup, Setting, SettingType,
     CustomField, ModuleLabel,
-    TeamRole, Territory, TeamMember, AssignmentRule, PipelineStage,
+    AssignmentRule, PipelineStage,
     EmailIntegration, ActionType, OperatorType
 )
 
@@ -26,10 +26,7 @@ class ModuleLabelAdmin(admin.ModelAdmin):
     list_display = ('module_key', 'custom_label')
     list_filter = ('module_key',)
 
-@admin.register(TeamMember)
-class TeamMemberAdmin(admin.ModelAdmin):
-    list_display = ('user', 'role', 'manager', 'status')
-    list_filter = ('status', 'role')
+
 
 @admin.register(AssignmentRule)
 class AssignmentRuleAdmin(admin.ModelAdmin):

@@ -1,0 +1,109 @@
+{% extends "communication/base.html" %}
+{% load static %}
+
+{% block title %}Log Call - Communication{% endblock %}
+
+{% block comm_title %}📞 Log Interaction{% endblock %}
+{% block comm_subtitle %}Document your voice conversation for team visibility{% endblock %}
+
+{% block comm_actions %}
+<a href="{% url 'communication:call_log_list' %}" class="btn btn-light fw-bold px-4 shadow-sm">
+    <i class="bi bi-arrow-left me-1"></i> Back to History
+</a>
+{% endblock %}
+
+{% block comm_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="comm-card p-4">
+            <h5 class="fw-bold mb-4 border-bottom pb-3">Call Information</h5>
+
+            <form method="post" id="call-log-form">
+                {% csrf_token %}
+
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold">Phone Number</label>
+                        {{ form.phone_number }}
+                        {% if form.phone_number.errors %}
+                        <div class="text-danger small mt-1">{{ form.phone_number.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold">Contact Name (Optional)</label>
+                        {{ form.contact_name }}
+                        {% if form.contact_name.errors %}
+                        <div class="text-danger small mt-1">{{ form.contact_name.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold">Call Type</label>
+                        {{ form.call_type }}
+                        {% if form.call_type.errors %}
+                        <div class="text-danger small mt-1">{{ form.call_type.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold">Direction</label>
+                        {{ form.direction }}
+                        {% if form.direction.errors %}
+                        <div class="text-danger small mt-1">{{ form.direction.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row border-top pt-4 mt-2">
+                    <div class="col-md-4 mb-4">
+                        <label class="form-label fw-bold">Outcome</label>
+                        {{ form.outcome }}
+                        {% if form.outcome.errors %}
+                        <div class="text-danger small mt-1">{{ form.outcome.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <label class="form-label fw-bold">Duration (seconds)</label>
+                        {{ form.duration_seconds }}
+                        {% if form.duration_seconds.errors %}
+                        <div class="text-danger small mt-1">{{ form.duration_seconds.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <label class="form-label fw-bold">Started At</label>
+                        {{ form.call_started_at }}
+                        {% if form.call_started_at.errors %}
+                        <div class="text-danger small mt-1">{{ form.call_started_at.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Call Notes</label>
+                    {{ form.notes }}
+                    {% if form.notes.errors %}
+                    <div class="text-danger small mt-1">{{ form.notes.errors }}</div>
+                    {% endif %}
+                    <div class="form-text">Summarize the key takeaways and outcomes of the conversation.</div>
+                </div>
+
+                <div class="mb-4 p-3 bg-light rounded-3 d-flex align-items-center gap-3">
+                    <div class="form-check form-switch">
+                        {{ form.follow_up_required }}
+                        <label class="form-check-label fw-bold ms-2"
+                            for="{{ form.follow_up_required.id_for_label }}">Follow-up Required</label>
+                    </div>
+                    <i class="bi bi-bell text-warning"></i>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end border-top pt-4">
+                    <button type="submit" class="btn btn-comm btn-lg px-5 shadow-sm">
+                        <i class="bi bi-save me-2"></i> Save Call Log
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

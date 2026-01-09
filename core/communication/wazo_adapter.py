@@ -284,29 +284,41 @@ class WazoCallService:
         Returns the ID of the created Call record.
         """
         try:
-            from communication.models import Call
-            from core.models import User
+            from communication.models import CallLog
+            from tenants.models import Tenant
             
             outcome_map = {
-                CallStatus.ANSWERED: 'connected',
-                CallStatus.COMPLETED: 'connected',
+                CallStatus.ANSWERED: 'answered',
+                CallStatus.COMPLETED: 'completed',
                 CallStatus.VOICEMAIL: 'voicemail',
                 CallStatus.NO_ANSWER: 'no_answer',
-                CallStatus.BUSY: 'no_answer',
-                CallStatus.FAILED: 'wrong_number',
+                CallStatus.BUSY: 'busy',
+                CallStatus.FAILED: 'failed',
             }
             
-            crm_call = Call.objects.create(
-                tenant_id=call.metadata.get('tenant_id') if call.metadata else None,
-                owner_id=call.metadata.get('user_id') if call.metadata else None,
+            tenant_id = call.metadata.get('tenant_id') if call.metadata else None
+            tenant = None
+            if tenant_id:
+                try:
+                    tenant = Tenant.objects.get(id=tenant_id)
+                except (Tenant.DoesNotExist, ValueError):
+                    pass
+
+            crm_call = CallLog.objects.create(
+                tenant=tenant,
+                user_id=call.metadata.get('user_id') if call.metadata else None,
                 account_id=account_id,
                 contact_id=contact_id,
                 lead_id=lead_id,
-                duration=call.duration if call.duration else None,
-                outcome=outcome_map.get(call.status, 'connected'),
+                duration_seconds=call.duration if call.duration else 0,
+                outcome=outcome_map.get(call.status, 'completed'),
                 recording_url=call.recording_url or '',
                 phone_number=call.callee_id if call.direction == CallDirection.OUTBOUND else call.caller_id,
+                direction='outbound' if call.direction == CallDirection.OUTBOUND else 'inbound',
+                call_type='outgoing' if call.direction == CallDirection.OUTBOUND else 'incoming',
                 notes=notes,
+                call_started_at=call.started_at or timezone.now(),
+                call_ended_at=call.ended_at
             )
             
             return crm_call.id

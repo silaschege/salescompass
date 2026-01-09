@@ -7,22 +7,28 @@
             <h2><i class="bi bi-collection me-2"></i>All Subscriptions</h2>
             <p class="text-muted">Manage all customer subscriptions</p>
         </div>
+        <div class="col-auto">
+            <a href="{% url 'billing:subscription_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Create Subscription
+            </a>
+        </div>
     </div>
 
     <div class="card mb-3">
         <div class="card-body">
             <form method="get" class="row g-3">
                 <div class="col-md-4">
-                    <input type="text" name="search" class="form-control" placeholder="Search by Tenant ID"
+                    <input type="text" name="search" class="form-control" placeholder="Search by User Email"
                         value="{{ search_query }}">
                 </div>
                 <div class="col-md-3">
                     <select name="status" class="form-select">
                         <option value="">All Statuses</option>
-                        {% for value, label in status_choices %}
-                        <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}
-                        </option>
-                        {% endfor %}
+                        <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="trialing" {% if current_status == 'trialing' %}selected{% endif %}>Trialing</option>
+                        <option value="canceled" {% if current_status == 'canceled' %}selected{% endif %}>Canceled</option>
+                        <option value="past_due" {% if current_status == 'past_due' %}selected{% endif %}>Past Due</option>
+                        <option value="incomplete" {% if current_status == 'incomplete' %}selected{% endif %}>Incomplete</option>
                     </select>
                 </div>
                 <div class="col-auto">
@@ -43,20 +49,20 @@
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>Tenant ID</th>
+                            <th>User</th>
                             <th>Plan</th>
                             <th>Status</th>
-                            <th>MRR</th>
-                            <th>Period Start</th>
-                            <th>Period End</th>
+                            <th>Amount</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for sub in subscriptions %}
                         <tr>
-                            <td><code>{{ sub.tenant_id }}</code></td>
-                            <td>{{ sub.plan.name }}</td>
+                            <td>{{ sub.user.email }}</td>
+                            <td>{{ sub.subscription_plan.name }}</td>
                             <td>
                                 {% if sub.status == 'active' %}
                                 <span class="badge bg-success">Active</span>
@@ -64,16 +70,22 @@
                                 <span class="badge bg-info">Trial</span>
                                 {% elif sub.status == 'canceled' %}
                                 <span class="badge bg-danger">Canceled</span>
+                                {% elif sub.status == 'past_due' %}
+                                <span class="badge bg-warning">Past Due</span>
+                                {% elif sub.status == 'incomplete' %}
+                                <span class="badge bg-secondary">Incomplete</span>
                                 {% else %}
                                 <span class="badge bg-secondary">{{ sub.status|title }}</span>
                                 {% endif %}
                             </td>
-                            <td>${{ sub.plan.price_monthly }}</td>
-                            <td>{{ sub.current_period_start|date:"Y-m-d"|default:"N/A" }}</td>
-                            <td>{{ sub.current_period_end|date:"Y-m-d"|default:"N/A" }}</td>
+                            <td>${{ sub.subscription_plan.price }}</td>
+                            <td>{{ sub.start_date|date:"Y-m-d"|default:"N/A" }}</td>
+                            <td>{{ sub.end_date|date:"Y-m-d"|default:"N/A" }}</td>
                             <td>
                                 <a href="{% url 'billing:subscription_detail' subscription_id=sub.id %}"
                                     class="btn btn-sm btn-outline-primary">View</a>
+                                <a href="{% url 'billing:subscription_update' subscription_id=sub.id %}"
+                                    class="btn btn-sm btn-outline-secondary">Edit</a>
                             </td>
                         </tr>
                         {% endfor %}

@@ -1,9 +1,10 @@
+
 """
 Central registry of available applications for the App Permissons system.
 Used to populate the App Settings page and validate permissions.
 """
 # Define which categories are superuser-only
-SUPERUSER_ONLY_CATEGORIES = ['core','control','feature','learning']
+SUPERUSER_ONLY_CATEGORIES = ['control']
 
 AVAILABLE_APPS = [
     # Core Apps
@@ -27,7 +28,7 @@ AVAILABLE_APPS = [
         'id': 'accounts',
         'name': 'Accounts',
         'icon': 'bi-briefcase',
-        'url_name': 'accounts:accounts_list',
+        'url_name': 'accounts:account_list',
         'category': 'core',
         'description': 'Manage customer accounts'
     },
@@ -35,7 +36,7 @@ AVAILABLE_APPS = [
         'id': 'tenants',
         'name': 'Tenants',
         'icon': 'bi-building',
-        'url_name': 'tenants:list',
+        'url_name': 'tenants:tenant_list',
         'category': 'core', # User listed under Core
         'description': 'Manage tenants'
     },
@@ -47,7 +48,14 @@ AVAILABLE_APPS = [
         'category': 'core',
         'description': 'Billing and revenue management'
     },
-
+    {
+        'id': 'access_control',
+        'name': 'Access Control',
+        'icon': 'bi-shield-lock',
+        'url_name': 'access_control:dashboard',
+        'category': 'feature',  # Changed to 'feature' so regular users can see it
+        'description': 'Manage permissions, feature toggles, and entitlements'
+    },
     # Feature Apps
     {
         'id': 'sales',
@@ -77,7 +85,7 @@ AVAILABLE_APPS = [
         'id': 'opportunities',
         'name': 'Opportunities',
         'icon': 'bi-lightbulb',
-        'url_name': 'opportunities:sales_velocity_dashboard', # Best verified entry
+        'url_name': 'opportunities:sales_velocity_dashboard',
         'category': 'feature',
         'description': 'Opportunity tracking and forecasting'
     },
@@ -85,7 +93,7 @@ AVAILABLE_APPS = [
         'id': 'proposals',
         'name': 'Proposals',
         'icon': 'bi-file-text',
-        'url_name': 'proposals:list', # Assumed standard
+        'url_name': 'proposals:proposal_dashboard',
         'category': 'feature',
         'description': 'Quote and proposal management'
     },
@@ -93,11 +101,10 @@ AVAILABLE_APPS = [
         'id': 'cases',
         'name': 'Support Cases',
         'icon': 'bi-headset',
-        'url_name': 'cases:list',
+        'url_name': 'cases:case_list',
         'category': 'feature',
         'description': 'Customer support ticketing'
     },
-
     {
         'id': 'engagement',
         'name': 'Engagement',
@@ -134,7 +141,7 @@ AVAILABLE_APPS = [
         'id': 'automation',
         'name': 'Automation',
         'icon': 'bi-robot',
-        'url_name': 'automation:workflow_builder', # Known valid URL
+        'url_name': 'automation:workflow_builder',
         'category': 'feature',
         'description': 'Workflow automation builder'
     },
@@ -142,7 +149,7 @@ AVAILABLE_APPS = [
         'id': 'settings_app',
         'name': 'Settings',
         'icon': 'bi-gear-wide-connected',
-        'url_name': 'settings:home',
+        'url_name': 'settings_app:dashboard',
         'category': 'feature',
         'description': 'System configuration'
     },
@@ -150,7 +157,7 @@ AVAILABLE_APPS = [
         'id': 'learn',
         'name': 'Learning',
         'icon': 'bi-book',
-        'url_name': 'learn:list',
+        'url_name': 'learn:dashboard',
         'category': 'feature',
         'description': 'LMS and training'
     },
@@ -178,9 +185,16 @@ AVAILABLE_APPS = [
         'category': 'feature',
         'description': 'Developer tools and API access'
     },
-
+    {
+        'id':'communication',
+        'name':'Communications',
+        'icon':'bi-chat-dots',
+        'url_name':'communication:dashboard',
+        'category':'feature',
+        'description':'Email and messaging management'
+    },
     # Control Plane Apps
-      {
+    {
         'id': 'core',
         'name': 'Core',
         'icon': 'bi-gear',
@@ -188,7 +202,6 @@ AVAILABLE_APPS = [
         'category': 'control',
         'description': 'Core system management'
     },
-    
     {
         'id': 'infrastructure',
         'name': 'Infrastructure',
@@ -201,7 +214,7 @@ AVAILABLE_APPS = [
         'id': 'audit_logs',
         'name': 'Audit Logs',
         'icon': 'bi-journal-text',
-        'url_name': 'audit_logs:list',
+        'url_name': 'audit_logs:dashboard',
         'category': 'control',
         'description': 'Security and activity logs'
     },
@@ -209,7 +222,7 @@ AVAILABLE_APPS = [
         'id': 'feature_flags',
         'name': 'Feature Flags',
         'icon': 'bi-flag',
-        'url_name': 'feature_flags:dashboard', # Assumed
+        'url_name': 'feature_flags:dashboard',
         'category': 'control',
         'description': 'Feature toggles and management'
     },

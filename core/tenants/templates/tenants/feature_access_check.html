@@ -1,0 +1,111 @@
+{% extends 'tenants/base.html' %}
+
+{% block title %}{{ title }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col">
+      <h2><i class="bi bi-shield-check me-2"></i>{{ title }}</h2>
+      <p class="text-muted">{{ subtitle }}</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Check Feature Access</h5>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              {{ form.feature_key.label_tag }}
+              {{ form.feature_key }}
+              <div class="form-text">{{ form.feature_key.help_text }}</div>
+              {% if form.feature_key.errors %}
+              <div class="text-danger">{{ form.feature_key.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-search me-1"></i>Check Access
+            </button>
+          </form>
+        </div>
+      </div>
+      
+      {% if feature_key %}
+      <div class="card mt-4">
+        <div class="card-header">
+          <h5 class="mb-0">Feature Access Result</h5>
+        </div>
+        <div class="card-body">
+          {% if feature_exists %}
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>Feature Key:</strong> <code>{{ feature_key }}</code></p>
+              <p><strong>Feature Name:</strong> {{ feature_entitlement.feature_name }}</p>
+              <p><strong>Status:</strong> 
+                {% if is_enabled %}
+                <span class="badge bg-success">ENABLED</span>
+                {% else %}
+                <span class="badge bg-danger">DISABLED</span>
+                {% endif %}
+              </p>
+              <p><strong>Entitlement Type:</strong> {{ feature_entitlement.get_entitlement_type_display }}</p>
+            </div>
+            <div class="col-md-6">
+              {% if feature_entitlement.entitlement_type == 'trial' %}
+              <p><strong>Trial Period:</strong></p>
+              <ul>
+                <li>Start: {{ feature_entitlement.trial_start_date|date:"M d, Y H:i" }}</li>
+                <li>End: {{ feature_entitlement.trial_end_date|date:"M d, Y H:i" }}</li>
+                {% if feature_entitlement.trial_end_date and feature_entitlement.trial_end_date < now|default:feature_entitlement.trial_end_date %}
+                <li class="text-danger"><i class="bi bi-exclamation-triangle"></i> Trial has expired</li>
+                {% elif feature_entitlement.trial_end_date %}
+                <li class="text-success"><i class="bi bi-check-circle"></i> Trial is active</li>
+                {% endif %}
+              </ul>
+              {% endif %}
+              {% if feature_entitlement.notes %}
+              <p><strong>Notes:</strong> {{ feature_entitlement.notes }}</p>
+              {% endif %}
+            </div>
+          </div>
+          {% else %}
+          <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            <strong>Feature not found:</strong> {{ error }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Common Feature Keys</h5>
+        </div>
+        <div class="card-body">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item"><code>advanced_reporting</code></li>
+            <li class="list-group-item"><code>custom_fields</code></li>
+            <li class="list-group-item"><code>api_access</code></li>
+            <li class="list-group-item"><code>data_export</code></li>
+            <li class="list-group-item"><code>advanced_analytics</code></li>
+            <li class="list-group-item"><code>email_integrations</code></li>
+            <li class="list-group-item"><code>file_attachments</code></li>
+            <li class="list-group-item"><code>automation_rules</code></li>
+            <li class="list-group-item"><code>custom_dashboards</code></li>
+            <li class="list-group-item"><code>user_roles</code></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

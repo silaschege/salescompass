@@ -1,0 +1,82 @@
+{% extends "communication/base.html" %}
+{% load static %}
+
+{% block title %}Create Feedback - Communication{% endblock %}
+
+{% block comm_title %}📊 Capture Feedback{% endblock %}
+{% block comm_subtitle %}Record customer sentiment and product feedback{% endblock %}
+
+{% block comm_actions %}
+<a href="{% url 'communication:feedback_list' %}" class="btn btn-light fw-bold px-4 shadow-sm border">
+    <i class="bi bi-arrow-left me-1"></i> Back to Center
+</a>
+{% endblock %}
+
+{% block comm_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="comm-card p-4">
+            <h5 class="fw-bold mb-4 border-bottom pb-3">Feedback Details</h5>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Title / Purpose</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                    <div class="text-danger small mt-1">{{ form.title.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold">Feedback Type</label>
+                        {{ form.feedback_type }}
+                        {% if form.feedback_type.errors %}
+                        <div class="text-danger small mt-1">{{ form.feedback_type.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold">Rating (1-5)</label>
+                        {{ form.rating }}
+                        {% if form.rating.errors %}
+                        <div class="text-danger small mt-1">{{ form.rating.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Net Promoter Score (0-10)</label>
+                    {{ form.nps_score }}
+                    {% if form.nps_score.errors %}
+                    <div class="text-danger small mt-1">{{ form.nps_score.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Comments & Feedback</label>
+                    {{ form.content }}
+                    {% if form.content.errors %}
+                    <div class="text-danger small mt-1">{{ form.content.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-4 p-3 bg-light rounded-3">
+                    <div class="form-check form-switch">
+                        {{ form.is_completed }}
+                        <label class="form-check-label fw-bold ms-2" for="{{ form.is_completed.id_for_label }}">Mark as
+                            Completed</label>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end border-top pt-4">
+                    <button type="submit" class="btn btn-comm btn-lg px-5 shadow-sm">
+                        <i class="bi bi-save me-2"></i> Save Feedback
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

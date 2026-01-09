@@ -143,27 +143,50 @@ class PaymentType(TenantModel):
         return self.label
 
 
-class Plan(TenantModel):
-    plan_name = models.CharField(max_length=100)
-    tier = models.CharField(max_length=20, choices=TIER_CHOICES, default='starter')
-    # New dynamic field
-    tier_ref = models.ForeignKey(
-        PlanTier,
-        on_delete=models.PROTECT,
-        null=True,
+class Plan(models.Model):
+    """Billing plan model - referenced in Tenant model"""
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    max_users = models.IntegerField(default=1)
+    storage_limit = models.IntegerField(default=1, help_text="Storage limit in GB")
+    api_calls_limit = models.IntegerField(default=1000, help_text="Monthly API call limit")
+    has_reports = models.BooleanField(default=False)
+    has_custom_fields = models.BooleanField(default=False)
+    has_integrations = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    is_featured = models.BooleanField(default=False)
+    features_config = models.JSONField(
+        default=dict, 
         blank=True,
-        related_name='plans',
-        help_text="Dynamic tier (replaces tier field)"
+        help_text="Structured configuration of modules and features for this plan"
     )
-    price_monthly = models.DecimalField(max_digits=10, decimal_places=2)
-    price_annually = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    features = models.JSONField(default=list, blank=True, help_text="List of features included in the plan")
-    plan_is_active = models.BooleanField(default=True)  # Renamed from 'is_active' to avoid conflict with base class
-    plan_created_at = models.DateTimeField(auto_now_add=True)  # Renamed from 'created_at' to avoid conflict with base class
-    plan_updated_at = models.DateTimeField(auto_now=True)  # Renamed from 'updated_at' to avoid conflict with base class
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Plan"
+        verbose_name_plural = "Plans"
+        ordering = ['name']
+    
 
+    
     def __str__(self):
-        return f"{self.plan_name} ({self.tier})"
+        return self.name
+
+    @property
+    def price_monthly(self):
+        """Monthly price for the plan."""
+        return self.price
+
+    @property
+    def price_yearly(self):
+        """Yearly price for the plan (monthly price * 12)."""
+        return self.price * 12
+
+
+
 
 
 class Subscription(TenantModel):
@@ -188,11 +211,48 @@ class Subscription(TenantModel):
     subscription_created_at = models.DateTimeField(auto_now_add=True)  # Renamed from 'created_at' to avoid conflict with base class
     subscription_updated_at = models.DateTimeField(auto_now=True)  # Renamed from 'updated_at' to avoid conflict with base class
 
-    def __str__(self):
-        return f"{self.user.email} - {self.subscription_plan.plan_name}"
 
+
+
+
+
+    def __str__(self):
+        return f"{self.user.email} - {self.subscription_plan.name if self.subscription_plan else 'No Plan'}"
+
+    @property
+    def plan(self):
+        """Property to access the subscription plan for template compatibility."""
+        return self.subscription_plan
+
+    @property
+    def current_period_start(self):
+        """Property to provide current period start date."""
+        # Return the start date of the subscription
+        return self.start_date
+
+    @property
+    def current_period_end(self):
+        """Property to provide current period end date."""
+        # Return the end date if set, otherwise calculate based on start date
+        if self.end_date:
+            return self.end_date
+        # If no end date, return start date + 30 days as default period
+        from django.utils import timezone
+        from datetime import timedelta
+        return self.start_date + timedelta(days=30)
+
+    @property
+    def price_monthly(self):
+        """Monthly price of the subscription based on the plan."""
+        if self.subscription_plan:
+            return self.subscription_plan.price
+        return 0
+
+
+ 
 
 class Invoice(TenantModel):
+
     STATUS_CHOICES = [
         ('draft', 'Draft'),
         ('open', 'Open'),
@@ -310,3 +370,52 @@ class Payment(TenantModel):
 
     def __str__(self):
         return f"Payment for {self.invoice.invoice_number} - {self.status}"
+
+
+
+class PlanFeatureAccess(models.Model):
+    """
+    Model for defining which features are available for each plan
+    """
+    plan = models.ForeignKey('billing.Plan', on_delete=models.CASCADE, related_name='feature_access')
+    feature_key = models.CharField(max_length=255, help_text="Unique identifier for the feature (e.g., leads_basic, sales_reports)")
+    feature_name = models.CharField(max_length=255, help_text="Display name for the feature")
+    is_available = models.BooleanField(default=True, help_text="Whether this feature is available for this plan")
+    feature_category = models.CharField(max_length=100, help_text="Category of the feature (e.g., leads, sales, engagement)")
+    notes = models.TextField(blank=True, help_text="Additional notes about this feature access")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Plan Feature Access"
+        verbose_name_plural = "Plan Feature Accesses"
+        unique_together = ['plan', 'feature_key']
+        ordering = ['feature_category', 'feature_name']
+    
+    def __str__(self):
+        return f"{self.feature_name} for {self.plan.name} - {'Available' if self.is_available else 'Not Available'}"
+    
+    
+
+
+class PlanModuleAccess(models.Model):
+    """
+    Model for defining which modules are available for each plan
+    """
+    plan = models.ForeignKey('billing.Plan', on_delete=models.CASCADE, related_name='module_access')
+    module_name = models.CharField(max_length=100, help_text="Name of the module (e.g., leads, sales, engagement)")
+    module_display_name = models.CharField(max_length=255, help_text="Display name for the module")
+    is_available = models.BooleanField(default=True, help_text="Whether this module is available for this plan")
+    notes = models.TextField(blank=True, help_text="Additional notes about this module access")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Plan Module Access"
+        verbose_name_plural = "Plan Module Accesses"
+        unique_together = ['plan', 'module_name']
+        ordering = ['module_display_name']
+    
+    def __str__(self):
+        return f"{self.module_display_name} for {self.plan.name} - {'Available' if self.is_available else 'Not Available'}"
+

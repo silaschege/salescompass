@@ -1,3 +1,4 @@
+
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Sum
@@ -12,16 +13,13 @@ from core.models import (
     SystemConfigType, SystemConfigCategory, SystemEventType, SystemEventSeverity,
     HealthCheckType, HealthCheckStatus, MaintenanceStatus, MaintenanceType,
     PerformanceMetricType, PerformanceEnvironment, NotificationType, NotificationPriority
-)
+) 
 from core.forms import (
     ModuleLabelForm, ModuleChoiceForm, ModelChoiceForm, FieldTypeForm, AssignmentRuleTypeForm
 )
 from tenants.models import Tenant as TenantModel
 from leads.models import Lead
 from opportunities.models import Opportunity
-
-
-
 
 
 class TenantAwareViewMixin:
@@ -106,6 +104,17 @@ class SalesCompassDeleteView(LoginRequiredMixin, TenantAwareViewMixin, DeleteVie
     pass
 
 
+# --- Authentication Views ---
+
+def logout_view(request):
+    """
+    Custom logout view that logs out the user and redirects to the home page.
+    """
+    from django.contrib.auth import logout
+    from django.shortcuts import redirect
+    
+    logout(request)
+    return redirect('core:home')
 
 def home(request):
     """
@@ -113,6 +122,8 @@ def home(request):
     """
     return render(request, 'public/index.html')
 
+
+# --- Dashboard Views ---
 
 @login_required
 def clv_dashboard(request):
@@ -161,90 +172,11 @@ def calculate_clv_simple(request):
     # This would typically be called from a model method
     pass
 
-from django.views.generic import TemplateView
 
-
-
+# --- Application Selection Views ---
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-
-# class AppSelectionView(LoginRequiredMixin, TemplateView):
-#     template_name = 'logged_in/app_selection.html'
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         user = self.request.user
-        
-#         # Initialize groups
-#         # Note: Keys match the 'category' strings in AVAILABLE_APPS
-#         grouped_apps = {
-#             'core': [],
-#             'feature': [], # Changed from 'features' to match registry value 'feature'
-#             'control': []
-#         }
-        
-#         has_any_apps = False
-        
-#         # 1. Determine Hidden Apps based on User Role (Standard Users)
-#         hidden_apps_ids = set()
-#         if user.role and not user.is_superuser:
-#             permissions = RoleAppPermission.objects.filter(role=user.role)
-#             for perm in permissions:
-#                 if not perm.is_visible:
-#                     hidden_apps_ids.add(perm.app_identifier)
-
-#         for app in AVAILABLE_APPS:
-#             app_id = app['id']
-#             app_category = app['category']
-
-#             # --- CHECK 1: Role based visibility (Database) ---
-#             if app_id in hidden_apps_ids:
-#                 continue
-
-#             # --- CHECK 2: Superuser Only Restrictions ---
-#             # Check if this specific App ID or its Category is in the restricted list
-#             is_restricted = (app_category in SUPERUSER_ONLY_CATEGORIES) or (app_id in SUPERUSER_ONLY_CATEGORIES)
-            
-#             # If the app is restricted AND the user is NOT a superuser, hide it.
-#             if is_restricted and not user.is_superuser:
-#                 continue
-                
-#             # --- CHECK 3: Add to group if URL resolves ---
-#             try:
-#                 # Resolve URL
-#                 url = reverse(app['url_name'])
-                
-#                 app_data = {
-#                     'name': app['name'],
-#                     'icon': app['icon'],
-#                     'url': url,
-#                     'id': app_id,
-#                     'description': app.get('description', '')
-#                 }
-                
-#                 # Ensure the category key exists in grouped_apps
-#                 if app_category in grouped_apps:
-#                     grouped_apps[app_category].append(app_data)
-#                     has_any_apps = True
-                    
-#             except Exception:
-#                 # Skip if URL reversal fails (e.g. app not installed/configured yet)
-#                 pass
-
-#         context['grouped_apps'] = grouped_apps
-#         context['has_any_apps'] = has_any_apps
-#         context['user_info'] = {
-#             'name': user.get_full_name() or user.email,
-#             'company': user.tenant.name if getattr(user, 'tenant', None) else 'SalesCompass Internal',
-#             'role': 'Superuser' if user.is_superuser else (user.role.name if user.role else 'Standard User')
-#         }
-            
-#         return context
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
-from django.urls import reverse
-from core.apps_registry import AVAILABLE_APPS
-from accounts.models import RoleAppPermission
 
 class AppSelectionView(LoginRequiredMixin, TemplateView):
     template_name = 'logged_in/app_selection.html'
@@ -385,8 +317,11 @@ class AppSettingsView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         messages.success(request, "App permissions updated successfully.")
         return self.get(request, *args, **kwargs)
 
+
+# --- Module Management Views ---
+
 # Module Label Views
-class ModuleLabelListView(LoginRequiredMixin, ListView):
+class ModuleLabelListView(SalesCompassListView):
     model = ModuleLabel
     template_name = 'core/module_label_list.html'
     context_object_name = 'modules'
@@ -395,7 +330,7 @@ class ModuleLabelListView(LoginRequiredMixin, ListView):
         return ModuleLabel.objects.filter(tenant_id=self.request.user.tenant_id)
 
 
-class ModuleLabelCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class ModuleLabelCreateView(SalesCompassCreateView):
     model = ModuleLabel
     form_class = ModuleLabelForm
     template_name = 'core/module_label_form.html'
@@ -408,13 +343,8 @@ class ModuleLabelCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView)
             kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
         return kwargs
 
-    def form_valid(self, form):
-        if hasattr(self.request.user, 'tenant_id'):
-            form.instance.tenant_id = self.request.user.tenant_id
-        return super().form_valid(form)
 
-
-class ModuleLabelUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class ModuleLabelUpdateView(SalesCompassUpdateView):
     model = ModuleLabel
     form_class = ModuleLabelForm
     template_name = 'core/module_label_form.html'
@@ -431,7 +361,7 @@ class ModuleLabelUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
         return kwargs
 
 
-class ModuleLabelDeleteView(LoginRequiredMixin, DeleteView):
+class ModuleLabelDeleteView(SalesCompassDeleteView):
     model = ModuleLabel
     template_name = 'core/module_label_confirm_delete.html'
     success_url = reverse_lazy('core:module_label_list')
@@ -441,7 +371,7 @@ class ModuleLabelDeleteView(LoginRequiredMixin, DeleteView):
 
 
 # Module Choice Views
-class ModuleChoiceListView(LoginRequiredMixin, ListView):
+class ModuleChoiceListView(SalesCompassListView):
     model = ModuleChoice
     template_name = 'core/module_choice_list.html'
     context_object_name = 'choices'
@@ -450,20 +380,15 @@ class ModuleChoiceListView(LoginRequiredMixin, ListView):
         return ModuleChoice.objects.filter(tenant_id=self.request.user.tenant_id)
 
 
-class ModuleChoiceCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class ModuleChoiceCreateView(SalesCompassCreateView):
     model = ModuleChoice
     form_class = ModuleChoiceForm
     template_name = 'core/module_choice_form.html'
     success_message = "Module Choice created successfully."
     success_url = reverse_lazy('core:module_choice_list')
 
-    def form_valid(self, form):
-        if hasattr(self.request.user, 'tenant_id'):
-            form.instance.tenant_id = self.request.user.tenant_id
-        return super().form_valid(form)
 
-
-class ModuleChoiceUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class ModuleChoiceUpdateView(SalesCompassUpdateView):
     model = ModuleChoice
     form_class = ModuleChoiceForm
     template_name = 'core/module_choice_form.html'
@@ -474,7 +399,7 @@ class ModuleChoiceUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView
         return ModuleChoice.objects.filter(tenant_id=self.request.user.tenant_id)
 
 
-class ModuleChoiceDeleteView(LoginRequiredMixin, DeleteView):
+class ModuleChoiceDeleteView(SalesCompassDeleteView):
     model = ModuleChoice
     template_name = 'core/module_choice_confirm_delete.html'
     success_url = reverse_lazy('core:module_choice_list')
@@ -484,7 +409,7 @@ class ModuleChoiceDeleteView(LoginRequiredMixin, DeleteView):
 
 
 # Model Choice Views
-class ModelChoiceListView(LoginRequiredMixin, ListView):
+class ModelChoiceListView(SalesCompassListView):
     model = ModelChoice
     template_name = 'core/model_choice_list.html'
     context_object_name = 'choices'
@@ -493,20 +418,15 @@ class ModelChoiceListView(LoginRequiredMixin, ListView):
         return ModelChoice.objects.filter(tenant_id=self.request.user.tenant_id)
 
 
-class ModelChoiceCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class ModelChoiceCreateView(SalesCompassCreateView):
     model = ModelChoice
     form_class = ModelChoiceForm
     template_name = 'core/model_choice_form.html'
     success_message = "Model Choice created successfully."
     success_url = reverse_lazy('core:model_choice_list')
 
-    def form_valid(self, form):
-        if hasattr(self.request.user, 'tenant_id'):
-            form.instance.tenant_id = self.request.user.tenant_id
-        return super().form_valid(form)
 
-
-class ModelChoiceUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class ModelChoiceUpdateView(SalesCompassUpdateView):
     model = ModelChoice
     form_class = ModelChoiceForm
     template_name = 'core/model_choice_form.html'
@@ -517,7 +437,7 @@ class ModelChoiceUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
         return ModelChoice.objects.filter(tenant_id=self.request.user.tenant_id)
 
 
-class ModelChoiceDeleteView(LoginRequiredMixin, DeleteView):
+class ModelChoiceDeleteView(SalesCompassDeleteView):
     model = ModelChoice
     template_name = 'core/model_choice_confirm_delete.html'
     success_url = reverse_lazy('core:model_choice_list')
@@ -527,7 +447,7 @@ class ModelChoiceDeleteView(LoginRequiredMixin, DeleteView):
 
 
 # Field Type Views
-class FieldTypeListView(LoginRequiredMixin, ListView):
+class FieldTypeListView(SalesCompassListView):
     model = FieldType
     template_name = 'core/field_type_list.html'
     context_object_name = 'types'
@@ -536,20 +456,15 @@ class FieldTypeListView(LoginRequiredMixin, ListView):
         return FieldType.objects.filter(tenant_id=self.request.user.tenant_id)
 
 
-class FieldTypeCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class FieldTypeCreateView(SalesCompassCreateView):
     model = FieldType
     form_class = FieldTypeForm
     template_name = 'core/field_type_form.html'
     success_message = "Field Type created successfully."
     success_url = reverse_lazy('core:field_type_list')
 
-    def form_valid(self, form):
-        if hasattr(self.request.user, 'tenant_id'):
-            form.instance.tenant_id = self.request.user.tenant_id
-        return super().form_valid(form)
 
-
-class FieldTypeUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class FieldTypeUpdateView(SalesCompassUpdateView):
     model = FieldType
     form_class = FieldTypeForm
     template_name = 'core/field_type_form.html'
@@ -560,7 +475,7 @@ class FieldTypeUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         return FieldType.objects.filter(tenant_id=self.request.user.tenant_id)
 
 
-class FieldTypeDeleteView(LoginRequiredMixin, DeleteView):
+class FieldTypeDeleteView(SalesCompassDeleteView):
     model = FieldType
     template_name = 'core/field_type_confirm_delete.html'
     success_url = reverse_lazy('core:field_type_list')
@@ -570,7 +485,7 @@ class FieldTypeDeleteView(LoginRequiredMixin, DeleteView):
 
 
 # Assignment Rule Type Views
-class AssignmentRuleTypeListView(LoginRequiredMixin, ListView):
+class AssignmentRuleTypeListView(SalesCompassListView):
     model = AssignmentRuleType
     template_name = 'core/assignment_rule_type_list.html'
     context_object_name = 'types'
@@ -579,20 +494,15 @@ class AssignmentRuleTypeListView(LoginRequiredMixin, ListView):
         return AssignmentRuleType.objects.filter(tenant_id=self.request.user.tenant_id)
 
 
-class AssignmentRuleTypeCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class AssignmentRuleTypeCreateView(SalesCompassCreateView):
     model = AssignmentRuleType
     form_class = AssignmentRuleTypeForm
     template_name = 'core/assignment_rule_type_form.html'
     success_message = "Assignment Rule Type created successfully."
     success_url = reverse_lazy('core:assignment_rule_type_list')
 
-    def form_valid(self, form):
-        if hasattr(self.request.user, 'tenant_id'):
-            form.instance.tenant_id = self.request.user.tenant_id
-        return super().form_valid(form)
 
-
-class AssignmentRuleTypeUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class AssignmentRuleTypeUpdateView(SalesCompassUpdateView):
     model = AssignmentRuleType
     form_class = AssignmentRuleTypeForm
     template_name = 'core/assignment_rule_type_form.html'
@@ -603,7 +513,7 @@ class AssignmentRuleTypeUpdateView(LoginRequiredMixin, SuccessMessageMixin, Upda
         return AssignmentRuleType.objects.filter(tenant_id=self.request.user.tenant_id)
 
 
-class AssignmentRuleTypeDeleteView(LoginRequiredMixin, DeleteView):
+class AssignmentRuleTypeDeleteView(SalesCompassDeleteView):
     model = AssignmentRuleType
     template_name = 'core/assignment_rule_type_confirm_delete.html'
     success_url = reverse_lazy('core:assignment_rule_type_list')

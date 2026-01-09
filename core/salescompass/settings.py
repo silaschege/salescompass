@@ -112,12 +112,17 @@ INSTALLED_APPS = [
     'tasks',
     'commissions',
     'developer',
+    'access_control',
+    
     
     # Control Plane apps
     'infrastructure',
     'audit_logs',
     'feature_flags',
     'global_alerts',
+    
+    # Telephony Integration
+    'wazo',
 
     # Third party
     'rest_framework',
@@ -125,17 +130,39 @@ INSTALLED_APPS = [
     'channels',
     'django_celery_beat',
     'drf_spectacular',
+    'drf_spectacular_sidecar',  # for front-end
+    'django_filters',
+    'crispy_forms',
 ]
+
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
+# Configure Spectacular settings
+
 SPECTACULAR_SETTINGS = {
     'TITLE': 'SalesCompass API',
+    'DESCRIPTION': 'API for SalesCompass CRM',
     'VERSION': '1.0.0',
-    'DESCRIPTION': 'Multi-tenant B2B CRM API',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SWAGGER_UI_DIST': 'SIDECAR',
+    'SWAGGER_UI_FAVICON': True,
+    'SWAGGER_UI_CUSTOM_OPTIONS': {
+        'deepLinking': True,
+        'displayOperationId': True,
+        'defaultModelsExpandDepth': -1,  # Hide default models
+    },
+    'EXTENSIONS': [
+        'drf_spectacular.extensions.OAuth2Extension',
+    ],
 }
+
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -147,12 +174,21 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.ThreadLocalUserMiddleware',
     'core.middleware.DataVisibilityMiddleware',
+    'core.middleware.ForbiddenAccessMiddleware',
+    'tenants.middleware.CrossTenantAccessLoggingMiddleware',  # Added cross-tenant access logging
     'core.audit_middleware.AuditLoggingMiddleware',
     'core.feature_flag_middleware.FeatureFlagMiddleware',
     'infrastructure.metrics.MetricsMiddleware',
+    'tenants.middleware.UsageTrackingMiddleware',  # Add usage tracking middleware
+    'tenants.middleware.OverageCheckMiddleware',  # Add overage check middleware
 ]
 
+
+
+
+
 ROOT_URLCONF = 'salescompass.urls'
+
 
 TEMPLATES = [
     {
@@ -166,10 +202,12 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'dashboard.context_processors.user_dashboards',
                 'core.feature_flag_middleware.feature_flag_context_processor',
+                'tenants.context_processor.white_label_context',
             ],
         },
     },
 ]
+
 
 WSGI_APPLICATION = 'salescompass.wsgi.application'
 
@@ -355,6 +393,17 @@ WAZO_API_URL = os.getenv('WAZO_API_URL', None)
 WAZO_API_KEY = os.getenv('WAZO_API_KEY', None)
 WAZO_TENANT_UUID = os.getenv('WAZO_TENANT_UUID', None)
 
+# Wazo Service URLs
+WAZO_AUTH_URL = os.getenv('WAZO_AUTH_URL', None)
+WAZO_CALLD_URL = os.getenv('WAZO_CALLD_URL', None)
+WAZO_CHATD_URL = os.getenv('WAZO_CHATD_URL', None)
+WAZO_CONFD_URL = os.getenv('WAZO_CONFD_URL', None)
+WAZO_AGENTD_URL = os.getenv('WAZO_AGENTD_URL', None)
+WAZO_CALL_LOG_URL = os.getenv('WAZO_CALL_LOG_URL', None)
+WAZO_WEBHOOKD_URL = os.getenv('WAZO_WEBHOOKD_URL', None)
+WAZO_WEBHOOK_SECRET = os.getenv('WAZO_WEBHOOK_SECRET', None)
+WAZO_DEFAULT_SMS_NUMBER = os.getenv('WAZO_DEFAULT_SMS_NUMBER', None)
+
 # =============================================================================
 # EVENT BUS CONFIGURATION
 # =============================================================================
@@ -421,3 +470,7 @@ LOGGING = {
         },
     },
 }
+
+
+# ML Service Configuration (Decoupled API)
+ML_SERVICE_URL = os.getenv('ML_SERVICE_URL', 'http://localhost:8001/api/v1/ml/')

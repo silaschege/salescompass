@@ -1,0 +1,103 @@
+{% extends "communication/base.html" %}
+
+{% block title %}Service Configurations - Communication{% endblock %}
+
+{% block comm_title %}⚙️ Service Connections{% endblock %}
+{% block comm_subtitle %}Configure providers for Email and SMS delivery{% endblock %}
+
+{% block comm_actions %}
+<a href="{% url 'communication:config_create' %}" class="btn btn-gold fw-bold px-4 shadow-sm">
+    <i class="bi bi-plus-circle me-1"></i> Add Provider
+</a>
+<a href="{% url 'communication:dashboard' %}" class="btn btn-light fw-bold px-4 shadow-sm">
+    <i class="bi bi-arrow-left me-1"></i> Dashboard
+</a>
+{% endblock %}
+
+{% block comm_content %}
+<div class="row g-4">
+    {% for config in configs %}
+    <div class="col-md-6 col-lg-4">
+        <div class="comm-card p-4 h-100 position-relative">
+            {% if config.is_primary %}
+            <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-comm">
+                PRIMARY
+            </span>
+            {% endif %}
+
+            <div class="d-flex align-items-center mb-4">
+                <div class="comm-icon-box mb-0 me-3">
+                    {% if config.service_type == 'email' %}
+                    <i class="bi bi-envelope-at"></i>
+                    {% else %}
+                    <i class="bi bi-phone-vibrate"></i>
+                    {% endif %}
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-0">{{ config.name }}</h5>
+                    <span class="text-muted small">{{ config.provider|title }}</span>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="small mb-1">
+                    <span class="text-muted">Sender:</span>
+                    <span class="fw-bold">{{ config.sender_email|default:config.sender_name }}</span>
+                </div>
+                {% if config.rate_limit %}
+                <div class="small">
+                    <span class="text-muted">Rate Limit:</span>
+                    <span class="fw-bold">{{ config.rate_limit }} / hr</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
+                <div>
+                    {% if config.is_active %}
+                    <span class="badge bg-success-subtle text-success small">Active</span>
+                    {% else %}
+                    <span class="badge bg-secondary-subtle text-secondary small">Disabled</span>
+                    {% endif %}
+                </div>
+                <div class="btn-group">
+                    <a href="{% url 'communication:config_edit' config.id %}" class="btn btn-sm btn-outline-comm">
+                        <i class="bi bi-pencil me-1"></i> Edit
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="comm-card p-5 text-center text-muted">
+            <i class="bi bi-gear-wide-connected display-1 d-block mb-3 opacity-25"></i>
+            <h3>No services configured</h3>
+            <p>You need to configure at least one email or SMS provider to start sending messages.</p>
+            <a href="{% url 'communication:config_create' %}" class="btn btn-comm mt-2">Set Up First Provider</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="mt-5 p-4 rounded-3 border bg-white shadow-sm">
+    <h5 class="fw-bold mb-3"><i class="bi bi-lightbulb text-warning me-2"></i> Configuration Tips</h5>
+    <div class="row text-muted small">
+        <div class="col-md-4 mb-3 mb-md-0">
+            <h6 class="text-dark fw-bold">Email Providers</h6>
+            <p class="mb-0">Support for SendGrid, AWS SES, and SMTP. Primary configurations will be used for system-wide
+                notifications.</p>
+        </div>
+        <div class="col-md-4 mb-3 mb-md-0">
+            <h6 class="text-dark fw-bold">SMS Providers</h6>
+            <p class="mb-0">Integrated with Africa's Talking, Twilio, and Vonage. Use E.164 phone formats for best
+                delivery results.</p>
+        </div>
+        <div class="col-md-4">
+            <h6 class="text-dark fw-bold">Security</h6>
+            <p class="mb-0">API keys are stored securely. Rotate keys every 90 days to maintain high security standards.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

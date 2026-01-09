@@ -1,0 +1,57 @@
+{% extends "communication/base.html" %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit Signature{% else %}New Signature{% endif %} - Communication{% endblock %}
+
+{% block comm_title %}✍️ {% if form.instance.pk %}Edit Signature{% else %}Create Signature{% endif %}{% endblock %}
+{% block comm_subtitle %}Personalize your electronic communications{% endblock %}
+
+{% block comm_actions %}
+<a href="{% url 'communication:signature_list' %}" class="btn btn-light fw-bold px-4 shadow-sm border">
+    <i class="bi bi-arrow-left me-1"></i> Back to List
+</a>
+{% endblock %}
+
+{% block comm_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="comm-card p-4">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Signature Name</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                    <div class="text-danger small mt-1">{{ form.name.errors }}</div>
+                    {% endif %}
+                    <div class="form-text">e.g., "Professional", "Personal", "Sales Support"</div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">HTML Content</label>
+                    {{ form.content_html }}
+                    {% if form.content_html.errors %}
+                    <div class="text-danger small mt-1">{{ form.content_html.errors }}</div>
+                    {% endif %}
+                    <div class="form-text">You can use basic HTML tags for styling (links, bold, images).</div>
+                </div>
+
+                <div class="mb-4 p-3 bg-light rounded-3">
+                    <div class="form-check form-switch">
+                        {{ form.is_default }}
+                        <label class="form-check-label fw-bold ms-2" for="{{ form.is_default.id_for_label }}">Set as
+                            Default Signature</label>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end border-top pt-4">
+                    <button type="submit" class="btn btn-comm btn-lg px-5 shadow-sm">
+                        <i class="bi bi-save me-2"></i> Save Signature
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

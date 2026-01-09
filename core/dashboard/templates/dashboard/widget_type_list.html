@@ -1,0 +1,73 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 text-gray-800">Widget Categories</h1>
+        <a href="{% url 'dashboard:widget_category_create' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Add Widget Category
+        </a>
+    </div>
+
+    <!-- Widget Categories Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Available Widget Categories</h6>
+        </div>
+        <div class="card-body">
+            {% if widget_categories %}
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Label</th>
+                            <th>Order</th>
+                            <th>Active</th>
+                            <th>System</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for widget_category in widget_categories %}
+                        <tr>
+                            <td>{{ widget_category.category_name }}</td>
+                            <td>{{ widget_category.label }}</td>
+                            <td>{{ widget_category.order }}</td>
+                            <td>
+                                {% if widget_category.widget_category_is_active %}
+                                <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                <span class="badge bg-secondary">No</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if widget_category.is_system %}
+                                <span class="badge bg-info">System</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Custom</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'dashboard:widget_category_update' widget_category.pk %}" class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <a href="{% url 'dashboard:widget_category_delete' widget_category.pk %}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <p>No widget categories found.</p>
+                <a href="{% url 'dashboard:widget_category_create' %}" class="btn btn-primary">Create Your First Widget Category</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

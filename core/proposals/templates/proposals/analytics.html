@@ -1,0 +1,177 @@
+{% extends "proposals/base.html" %}
+
+{% block title %}Proposal Analytics - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="block-title mb-4">Proposal Analytics</h1>
+    
+    <!-- Key Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body text-center">
+                    <h6>Email Open Rate</h6>
+                    <h3>{{ open_rate }}%</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                    <h6>Email Click Rate</h6>
+                    <h3>{{ click_rate }}%</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body text-center">
+                    <h6>Emails Sent</h6>
+                    <h3>{{ total_emails }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body text-center">
+                    <h6>Total Events</h6>
+                    <h3>{{ total_events }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Top Proposals by Engagement -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Top Proposals by Engagement Score</h5>
+                </div>
+                <div class="card-body">
+                    {% if top_proposals %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Proposal</th>
+                                    <th>Opportunity</th>
+                                    <th>Status</th>
+                                    <th>Views</th>
+                                    <th>View Time</th>
+                                    <th>Engagement Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for proposal in top_proposals %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'proposals:detail' proposal.pk %}">
+                                            {{ proposal.title|truncatechars:30 }}
+                                        </a>
+                                    </td>
+                                    <td>{{ proposal.opportunity.name|truncatechars:20 }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if proposal.status == 'accepted' %}success{% elif proposal.status == 'rejected' %}danger{% elif proposal.status == 'viewed' %}info{% elif proposal.status == 'sent' %}warning{% else %}secondary{% endif %}">
+                                            {{ proposal.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ proposal.view_count }}</td>
+                                    <td>{{ proposal.total_view_time_sec }}s</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-primary" style="width: {{ proposal.engagement_score }}%;">
+                                                {{ proposal.engagement_score|floatformat:0 }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No proposals with engagement scores found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Status Distribution -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Proposal Status Distribution</h5>
+                </div>
+                <div class="card-body">
+                    {% if status_distribution %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in status_distribution %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-{% if item.status == 'accepted' %}success{% elif item.status == 'rejected' %}danger{% elif item.status == 'viewed' %}info{% elif item.status == 'sent' %}warning{% else %}secondary{% endif %}">
+                                            {{ item.status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ item.count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No status distribution data available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Email Tracking Stats</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="text-center p-3 bg-info bg-opacity-10 rounded mb-3">
+                                <h4>{{ total_emails }}</h4>
+                                <p class="mb-0">Emails Sent</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-center p-3 bg-success bg-opacity-10 rounded mb-3">
+                                <h4>{{ opened_emails }}</h4>
+                                <p class="mb-0">Emails Opened</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-center p-3 bg-warning bg-opacity-10 rounded">
+                                <h4>{{ open_rate }}%</h4>
+                                <p class="mb-0">Open Rate</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-center p-3 bg-dark bg-opacity-10 rounded">
+                                <h4>{{ click_rate }}%</h4>
+                                <p class="mb-0">Click Rate</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -31,21 +31,25 @@ class ReportForm(forms.ModelForm):
 class ReportScheduleForm(forms.ModelForm):
     class Meta:
         model = ReportSchedule
-        fields = ['report', 'schedule_name', 'schedule_description', 'frequency_ref', 'recipients', 'schedule_is_active', 
+        fields = ['report', 'schedule_name', 'schedule_description', 'frequency_ref', 'export_format_ref', 'recipients', 'schedule_is_active', 
                   'next_run', 'last_run']
         widgets = {
             'frequency_ref': DynamicChoiceWidget(choice_model=ReportScheduleFrequency),
+            'export_format_ref': DynamicChoiceWidget(choice_model=ExportFormat),
         }
     
     def __init__(self, *args, **kwargs):
         self.tenant = kwargs.pop('tenant', None)
+        self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         
         # Load dynamic choices based on tenant
         if self.tenant:
             self.fields['frequency_ref'].queryset = ReportScheduleFrequency.objects.filter(tenant_id=self.tenant.id)
+            self.fields['export_format_ref'].queryset = ExportFormat.objects.filter(tenant_id=self.tenant.id)
         else:
             self.fields['frequency_ref'].queryset = ReportScheduleFrequency.objects.none()
+            self.fields['export_format_ref'].queryset = ExportFormat.objects.none()
 
 
 class ReportExportForm(forms.ModelForm):

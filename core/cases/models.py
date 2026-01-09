@@ -34,7 +34,7 @@ class Case(TenantModel):
     """
     subject = models.CharField(max_length=255)
     case_description = models.TextField()
-    account = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cases')
+    account = models.ForeignKey('accounts.Account', on_delete=models.CASCADE, related_name='cases')
     contact = models.ForeignKey(Contact, on_delete=models.SET_NULL, null=True, blank=True)
     
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='medium')

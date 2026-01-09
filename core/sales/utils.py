@@ -1,7 +1,7 @@
 from decimal import Decimal
 from django.utils import timezone
 from django.db import models
-from .models import CommissionRule, Commission
+from .models import SalesCommissionRule, SalesCommission
 
 def calculate_commission(sale):
     """
@@ -13,7 +13,7 @@ def calculate_commission(sale):
     # Find applicable rules
     # Priority: Specific Product > Product Type > Default (if any)
     
-    rules = CommissionRule.objects.filter(
+    rules = SalesCommissionRule.objects.filter(
         is_active=True,
         start_date__lte=sale.sale_date.date()
     ).filter(
@@ -52,7 +52,7 @@ def calculate_commission(sale):
         commission_amount += (sale.amount * (applicable_rule.percentage / Decimal('100.0')))
 
     # Create Commission record
-    commission = Commission.objects.create(
+    commission = SalesCommission.objects.create(
         sale=sale,
         sales_rep=sale.sales_rep,
         rule_applied=applicable_rule,

@@ -1,0 +1,248 @@
+NEW_FILE_CODE
+{% extends "developer/base.html" %}
+{% load static %}
+{% block title %}API Documentation - Developer Portal{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>API Documentation</h1>
+        <div class="d-flex gap-2">
+            <a href="{% url 'developer:api_explorer' %}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-play-circle me-1"></i> API Explorer
+            </a>
+            <a href="{% url 'developer:analytics' %}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-graph-up me-1"></i> Analytics
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Introduction -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Welcome to SalesCompass API</h5>
+                    <p class="card-text">Our API provides a powerful interface for integrating with SalesCompass CRM.
+                        This documentation will help you understand how to interact with our API endpoints.</p>
+                    
+                    <div class="alert alert-info d-flex align-items-center" role="alert">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <div>
+                            All API requests require an <code>Authorization</code> header with your API key.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Getting Started -->
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Getting Started</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-muted mb-3">Base URL</h6>
+                    <pre class="bg-light p-3 rounded mb-3">
+https://api.salescompass.com/v1/
+                    </pre>
+                    
+                    <h6 class="text-muted mb-3">Authentication</h6>
+                    <p>Include your API key in the Authorization header:</p>
+                    <pre class="bg-light p-3 rounded mb-3">
+Authorization: Bearer YOUR_API_KEY
+                    </pre>
+                    
+                    <h6 class="text-muted mb-3">Rate Limits</h6>
+                    <p>Our API has the following rate limits:</p>
+                    <ul>
+                        <li>120 requests per minute per API key</li>
+                        <li>1000 requests per hour per API key</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- API Endpoints -->
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Available Endpoints</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Contacts</h6>
+                            <ul class="list-unstyled">
+                                <li><code class="text-primary">GET</code> <code>/contacts/</code> - List contacts</li>
+                                <li><code class="text-primary">POST</code> <code>/contacts/</code> - Create contact</li>
+                                <li><code class="text-primary">GET</code> <code>/contacts/{id}/</code> - Get contact</li>
+                                <li><code class="text-primary">PUT</code> <code>/contacts/{id}/</code> - Update contact</li>
+                                <li><code class="text-primary">DELETE</code> <code>/contacts/{id}/</code> - Delete contact</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Opportunities</h6>
+                            <ul class="list-unstyled">
+                                <li><code class="text-primary">GET</code> <code>/opportunities/</code> - List opportunities</li>
+                                <li><code class="text-primary">POST</code> <code>/opportunities/</code> - Create opportunity</li>
+                                <li><code class="text-primary">GET</code> <code>/opportunities/{id}/</code> - Get opportunity</li>
+                                <li><code class="text-primary">PUT</code> <code>/opportunities/{id}/</code> - Update opportunity</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <h6>Accounts</h6>
+                            <ul class="list-unstyled">
+                                <li><code class="text-primary">GET</code> <code>/accounts/</code> - List accounts</li>
+                                <li><code class="text-primary">POST</code> <code>/accounts/</code> - Create account</li>
+                                <li><code class="text-primary">GET</code> <code>/accounts/{id}/</code> - Get account</li>
+                                <li><code class="text-primary">PUT</code> <code>/accounts/{id}/</code> - Update account</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Webhooks</h6>
+                            <ul class="list-unstyled">
+                                <li><code class="text-primary">GET</code> <code>/webhooks/</code> - List webhooks</li>
+                                <li><code class="text-primary">POST</code> <code>/webhooks/</code> - Create webhook</li>
+                                <li><code class="text-primary">GET</code> <code>/webhooks/{id}/</code> - Get webhook</li>
+                                <li><code class="text-primary">PUT</code> <code>/webhooks/{id}/</code> - Update webhook</li>
+                                <li><code class="text-primary">DELETE</code> <code>/webhooks/{id}/</code> - Delete webhook</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Response Format -->
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Response Format</h5>
+                </div>
+                <div class="card-body">
+                    <p>Our API returns JSON responses. Successful requests return a 200 status code:</p>
+                    <pre class="bg-light p-3 rounded mb-3">
+{
+  "success": true,
+  "data": {
+    // Response data here
+  }
+}
+                    </pre>
+                    
+                    <p>Errors return appropriate HTTP status codes with error details:</p>
+                    <pre class="bg-light p-3 rounded mb-0">
+{
+  "success": false,
+  "error": {
+    "code": "invalid_request",
+    "message": "The request was invalid"
+  }
+}
+                    </pre>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Quick Links -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Quick Links</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'schema-swagger-ui' %}" class="btn btn-primary">
+                            <i class="bi bi-play-circle me-2"></i> Interactive API
+                        </a>
+                        <a href="{% url 'schema-redoc' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-file-earmark-text me-2"></i> ReDoc Format
+                        </a>
+                        <a href="{% url 'developer:api_explorer' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-play-circle me-2"></i> API Explorer
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Authentication -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Authentication</h5>
+                    <p class="small text-muted">All API requests require an API key in the Authorization header</p>
+                    <pre class="bg-light p-3 rounded">
+Authorization: Bearer your_api_key_here
+                    </pre>
+                    
+                    <div class="mt-3">
+                        <a href="{% url 'developer:api_keys' %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-key me-1"></i> Manage API Keys
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Code Examples -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Code Examples</h5>
+                    <ul class="nav nav-tabs" id="codeTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="curl-tab" data-bs-toggle="tab" data-bs-target="#curl" type="button" role="tab">cURL</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="python-tab" data-bs-toggle="tab" data-bs-target="#python" type="button" role="tab">Python</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content mt-3">
+                        <div class="tab-pane fade show active" id="curl" role="tabpanel">
+                            <pre class="bg-light p-3 rounded">
+curl -X GET \
+  https://api.salescompass.com/v1/contacts/ \
+  -H 'Authorization: Bearer YOUR_API_KEY' \
+  -H 'Content-Type: application/json'
+                            </pre>
+                        </div>
+                        <div class="tab-pane fade" id="python" role="tabpanel">
+                            <pre class="bg-light p-3 rounded">
+import requests
+
+headers = {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+}
+
+response = requests.get(
+    'https://api.salescompass.com/v1/contacts/',
+    headers=headers
+)
+
+print(response.json())
+                            </pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Support -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Need Help?</h5>
+                    <p class="small text-muted">If you have questions about the API, please check our resources:</p>
+                    <ul class="list-unstyled small mb-3">
+                        <li class="mb-2">
+                            <i class="bi bi-file-earmark-text text-primary me-2"></i>
+                            <a href="#">API Reference Guide</a>
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-question-circle text-primary me-2"></i>
+                            <a href="#">FAQ</a>
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-envelope text-primary me-2"></i>
+                            <a href="#">Contact Support</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

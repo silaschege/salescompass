@@ -17,7 +17,7 @@ from core.models import User
 import json
 from .query_builder import get_widget_data
 from .bi_services import DataAggregationService, AdvancedVisualizationService, RealTimeProcessor
-
+from billing.models import Subscription, Plan  # Added import for billing models
 
 
 
@@ -57,9 +57,27 @@ class AdminDashboardView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         # Get system-wide stats
         context['active_tenants_count'] = TenantModel.objects.filter(is_active=True).count()
         context['total_users_count'] = User.objects.filter(is_active=True).count()
-        context['mrr'] = 0  # Would calculate from billing
+        
+        # Calculate MRR (Monthly Recurring Revenue) from active subscriptions
+        active_subscriptions = Subscription.objects.filter(status='active')
+        mrr = 0
+        for sub in active_subscriptions:
+            if hasattr(sub, 'subscription_plan') and sub.subscription_plan:
+                mrr += float(sub.subscription_plan.price)
+            elif hasattr(sub, 'plan') and sub.plan:
+                mrr += float(sub.plan.price)
+        
+        context['mrr'] = mrr
         context['recent_users'] = User.objects.order_by('-date_joined')[:5]
-        context['recent_subscriptions'] = []  # Would get from billing
+        
+        # Get recent subscriptions - try both possible field names
+        try:
+            context['recent_subscriptions'] = Subscription.objects.order_by('-subscription_created_at')[:5]
+        except AttributeError:
+            try:
+                context['recent_subscriptions'] = Subscription.objects.order_by('-created_at')[:5]
+            except AttributeError:
+                context['recent_subscriptions'] = Subscription.objects.order_by('-id')[:5]
         
         return context
 

@@ -2,80 +2,65 @@ from django.test import TestCase
 from django.utils import timezone
 from datetime import timedelta
 from core.models import User
-from engagement.models import EngagementEvent, EngagementStatus
+from tenants.models import Tenant
+from engagement.models import EngagementEvent, EngagementStatus, EngagementScoringConfig, ScoringRule
 from engagement.utils import calculate_engagement_score
 
 class EngagementScoringTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(email='test@example.com', password='password')
+        self.tenant = Tenant.objects.create(name="Test Tenant", slug="test-tenant")
+        self.user = User.objects.create_user(username='testuser', email='test@example.com', password='password')
+        self.user.tenant = self.tenant
+        self.user.save()
+        self.tenant_id = str(self.tenant.id)
         self.status = EngagementStatus.objects.create(account=self.user)
+        # Create default config for tenant
+        self.config = EngagementScoringConfig.objects.create(
+            tenant_id=self.tenant_id,
+            decay_rate=0.1, # 10% decay
+            decay_period_days=5,
+            inactivity_threshold_days=10
+        )
 
-    def test_calculate_base_score(self):
-        """Verify recent events increase score."""
-        EngagementEvent.objects.create(
-            account=self.user,
-            event_type='proposal_viewed', # Worth 5
-            title='Test Event',
-            engagement_score=5.0
+    def test_calculate_base_score_with_custom_weights(self):
+        """Verify dynamic weights from ScoringRule are applied."""
+        ScoringRule.objects.create(
+            tenant_id=self.tenant_id,
+            event_type='proposal_viewed',
+            weight=10.0
         )
         
-        score = calculate_engagement_score(self.user)
-        # Base logic: 5 (from map) + 5 (from event) = 10
+        EngagementEvent.objects.create(
+            account=self.user,
+            tenant_id=self.tenant_id,
+            event_type='proposal_viewed',
+            title='Test Event',
+            engagement_score=0.0
+        )
+        
+        score = calculate_engagement_score(self.user, tenant_id=self.tenant_id)
+        # Base logic: 10 (weight) + 0 (event score * 0.1) = 10
         self.assertEqual(score, 10.0)
 
-    def test_decay_application(self):
-        """Verify score decreases after inactivity."""
-        # 1. Create an old event (30 days ago - borderline for base calculation, 
-        # but let's assume we set activity date manually to trigger decay)
-        
-        # Manually set last engaged to 3 weeks ago (21 days)
-        # Threshold is 14 days. 21 - 14 = 7 days = 1 decay period.
-        # Decay rate is 0.05.
-        
+    def test_dynamic_decay_application(self):
+        """Verify dynamic decay settings are applied."""
         today = timezone.now()
-        last_active = today - timedelta(days=21)
+        # threshold 10, period 5. 20 days inactive -> (20-10)/5 = 2 periods.
+        last_active = today - timedelta(days=20)
         
         self.status.last_engaged_at = last_active
         self.status.save()
         
-        # Create an event JUST within the 30 day window so base score > 0
-        event_time = today - timedelta(days=21)
         EngagementEvent.objects.create(
             account=self.user,
-            event_type='demo_completed', # Worth 10
+            tenant_id=self.tenant_id,
+            event_type='demo_completed', # Default weight 10
             title='Old Demo',
-            created_at=event_time,
-            engagement_score=10.0
+            created_at=today - timedelta(days=19),
+            engagement_score=0
         )
-        # Base score should be 10 (map) + 10 (event) = 20.
         
-        score = calculate_engagement_score(self.user)
+        score = calculate_engagement_score(self.user, tenant_id=self.tenant_id)
         
-        # Exptected: 20 * (1 - 0.05)^1 = 19.0
-        self.assertEqual(score, 19.0)
-
-    def test_multiple_decay_periods(self):
-        """Verify score decreases more for longer inactivity."""
-        # 30 days inactive.
-        # Threshold 14. 30 - 14 = 16 days. 16 // 7 = 2 periods.
-        
-        today = timezone.now()
-        last_active = today - timedelta(days=30)
-        
-        self.status.last_engaged_at = last_active
-        self.status.save()
-        
-        # Event 29 days ago (still in window)
-        event_time = today - timedelta(days=29)
-        EngagementEvent.objects.create(
-            account=self.user,
-            event_type='demo_completed',
-            title='Old Demo',
-            created_at=event_time,
-            engagement_score=10.0
-        ) # Base 20
-        
-        score = calculate_engagement_score(self.user)
-        
-        # Expected: 20 * (0.95)^2 = 20 * 0.9025 = 18.05
-        self.assertEqual(score, 18.05)
+        # Expected: 10 * (1 - 0.1)^2 = 10 * 0.81 = 8.1
+        self.assertEqual(score, 8.1)

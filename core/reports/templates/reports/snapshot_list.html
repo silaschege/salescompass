@@ -1,0 +1,161 @@
+{% extends "reports/base.html" %}
+
+{% block title %}Report Snapshots: {{ report.report_name }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Historical Snapshots: {{ report.report_name }}</h1>
+        <a href="{% url 'reports:detail' report.pk %}" class="btn btn-secondary btn-sm">Back to Report</a>
+    </div>
+
+    <div class="row">
+        <!-- Snapshot List -->
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Available Snapshots</h6>
+                </div>
+                <div class="list-group list-group-flush" style="max-height: 600px; overflow-y: auto;">
+                    {% for snap in snapshots %}
+                    <a href="?snapshot={{ snap.pk }}"
+                        class="list-group-item list-group-item-action {% if current_snapshot.pk == snap.pk %}active{% endif %}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ snap.snapshot_date|date:"Y-m-d" }}</h6>
+                            <small>{{ snap.snapshot_date|date:"H:i" }}</small>
+                        </div>
+                        <p class="mb-1 small">By: {{ snap.created_by.get_full_name|default:snap.created_by.email }}</p>
+                    </a>
+                    {% empty %}
+                    <div class="list-group-item text-muted">No snapshots recorded yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">Comparison</h6>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">Select two snapshots to compare values side-by-side.</p>
+                    <form action="" method="get">
+                        <div class="mb-2">
+                            <label class="small">Snapshot A</label>
+                            <select name="snap_a" class="form-select form-select-sm">
+                                {% for snap in snapshots %}
+                                <option value="{{ snap.pk }}">{{ snap.snapshot_date|date:"Y-m-d H:i" }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small">Snapshot B</label>
+                            <select name="snap_b" class="form-select form-select-sm">
+                                {% for snap in snapshots %}
+                                <option value="{{ snap.pk }}">{{ snap.snapshot_date|date:"Y-m-d H:i" }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm w-100">Compare</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Snapshot Content / Comparison -->
+        <div class="col-md-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">
+                        {% if is_comparison %}
+                        Comparison View
+                        {% else %}
+                        Snapshot View: {{ current_snapshot.snapshot_date|date:"Y-m-d H:i" }}
+                        {% endif %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if is_comparison %}
+                    <div id="comparison-container" style="min-height: 400px;">
+                        <canvas id="comparison-chart"></canvas>
+                    </div>
+                    {% elif current_snapshot %}
+                    <div id="snapshot-preview-container" style="min-height: 400px;">
+                        <canvas id="snapshot-chart"></canvas>
+                        <div id="snapshot-table-container" class="d-none"></div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-history fa-4x text-gray-200 mb-3"></i>
+                        <p class="text-muted">Select a snapshot from the list to view its data.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        {% if is_comparison %}
+        const ctx = document.getElementById('comparison-chart').getContext('2d');
+        const dataA = {{ data_a| safe
+    }};
+    const dataB = {{ data_b| safe }};
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: dataA.labels,
+            datasets: [
+                {
+                    label: 'Snapshot A' + ' ({{ date_a }})',
+                    data: dataA.datasets[0].data,
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Snapshot B' + ' ({{ date_b }})',
+                    data: dataB.datasets[0].data,
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+    {% elif current_snapshot %}
+    const ctx = document.getElementById('snapshot-chart').getContext('2d');
+    const tableContainer = document.getElementById('snapshot-table-container');
+    const data = {{ current_snapshot.snapshot_data| safe }};
+    const chartType = '{{ report.query_config.chart_type }}';
+
+    if (data.is_pivot) {
+        document.getElementById('snapshot-chart').classList.add('d-none');
+        tableContainer.classList.remove('d-none');
+
+        let html = '<table class="table table-bordered table-sm"><thead><tr><th>Rows \\ Cols</th>';
+        data.labels.forEach(label => html += `<th>${label}</th>`);
+        html += '</tr></thead><tbody>';
+
+        data.datasets.forEach(dataset => {
+            html += `<tr><td><strong>${dataset.label}</strong></td>`;
+            dataset.data.forEach(val => html += `<td>${val}</td>`);
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+        tableContainer.innerHTML = html;
+    } else {
+        new Chart(ctx, {
+            type: chartType === 'table' ? 'bar' : chartType,
+            data: data,
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+    {% endif %}
+    });
+</script>
+{% endblock %}

@@ -92,7 +92,7 @@ class OpportunityStage(TenantModel):
 
 class Opportunity(TenantModel, TimeStampedModel):
     opportunity_name = models.CharField(max_length=255)
-    account = models.ForeignKey(User, on_delete=models.CASCADE, related_name='opportunities')
+    account = models.ForeignKey('accounts.Account', on_delete=models.CASCADE, related_name='opportunities')
     amount = models.DecimalField(max_digits=14, decimal_places=2)
     stage = models.ForeignKey(OpportunityStage, on_delete=models.PROTECT, related_name='opportunities')
     close_date = models.DateField()
@@ -197,7 +197,7 @@ class Opportunity(TenantModel, TimeStampedModel):
             return None
 
     def __str__(self):
-        return f"{self.opportunity_name} ({self.account.email})"
+        return f"{self.opportunity_name} ({self.account.account_name})"
 
     def calculate_sales_velocity(self):
         """

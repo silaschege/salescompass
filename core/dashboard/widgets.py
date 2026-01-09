@@ -79,6 +79,37 @@ def sales_velocity_widget():
     return context
 
 
+@register.inclusion_tag('dashboard/widgets/ml_win_probability_widget.html')
+def ml_win_probability_widget():
+    """
+    Display ML-based win probability insights.
+    """
+    opportunities = Opportunity.objects.all()
+    avg_ml_prob = opportunities.aggregate(avg_prob=Avg('probability'))['avg_prob'] or 0
+    high_prob_count = opportunities.filter(probability__gt=0.7).count()
+    
+    return {
+        'avg_ml_prob': int(avg_ml_prob * 100),
+        'high_prob_count': high_prob_count,
+        'total_count': opportunities.count(),
+    }
+
+@register.inclusion_tag('dashboard/widgets/ml_lead_quality_widget.html')
+def ml_lead_quality_widget():
+    """
+    Display ML-based lead quality metrics.
+    """
+    leads = Lead.objects.all()
+    avg_score = leads.aggregate(avg_score=Avg('lead_score'))['avg_score'] or 0
+    hot_leads = leads.filter(lead_score__gt=80).count()
+    
+    return {
+        'avg_ml_score': int(avg_score),
+        'hot_leads_count': hot_leads,
+        'total_leads': leads.count(),
+    }
+
+
 # Helper functions for metrics calculation
 from django.db.models import Avg, Sum
 

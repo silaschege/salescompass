@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col">
+      <h2><i class="bi bi-file-earmark-bar-graph me-2"></i>{{ title }}</h2>
+      <p class="text-muted">{{ subtitle }}</p>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Generate Usage Report</h5>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            <div class="row">
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="{{ form.metric_type.id_for_label }}" class="form-label">Metric Type</label>
+                  {{ form.metric_type }}
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="{{ form.start_date.id_for_label }}" class="form-label">Start Date</label>
+                  {{ form.start_date }}
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="{{ form.end_date.id_for_label }}" class="form-label">End Date</label>
+                  {{ form.end_date }}
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3 form-check">
+                  {{ form.include_trend }}
+                  <label class="form-check-label" for="{{ form.include_trend.id_for_label }}">
+                    {{ form.include_trend.label }}
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3 form-check">
+                  {{ form.include_comparison }}
+                  <label class="form-check-label" for="{{ form.include_comparison.id_for_label }}">
+                    {{ form.include_comparison.label }}
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-bar-chart me-1"></i>Generate Report
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if chart_data %}
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Usage Trend: {{ chart_data.metric_type|title }}</h5>
+        </div>
+        <div class="card-body">
+          <div id="usage-chart" style="height: 400px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h5>Total Usage</h5>
+          <h3>{{ statistics.total_usage }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h5>Average Usage</h5>
+          <h3>{{ statistics.avg_usage|floatformat:2 }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h5>Max Usage</h5>
+          <h3>{{ statistics.max_usage }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h5>Record Count</h5>
+          <h3>{{ statistics.count }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Detailed Metrics</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Metric Type</th>
+                  <th>Value</th>
+                  <th>Unit</th>
+                  <th>Period</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for metric in metrics %}
+                <tr>
+                  <td>
+                    <span class="badge bg-secondary">{{ metric.get_metric_type_display }}</span>
+                  </td>
+                  <td>{{ metric.value }}</td>
+                  <td>{{ metric.unit }}</td>
+                  <td>{{ metric.period_start|date:"M d, Y H:i" }} - {{ metric.period_end|date:"M d, Y H:i" }}</td>
+                  <td>{{ metric.timestamp|date:"M d, Y H:i" }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% if chart_data %}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var options = {
+    chart: {
+      type: 'line',
+      height: 400
+    },
+    series: [{
+      name: '{{ chart_data.metric_type|title }}',
+      data: {{ chart_data.values|safe }}
+    }],
+    xaxis: {
+      categories: {{ chart_data.timestamps|safe }},
+      labels: {
+        rotate: -45
+      }
+    },
+    stroke: {
+      curve: 'smooth'
+    },
+    markers: {
+      size: 6
+    },
+    tooltip: {
+      x: {
+        format: 'dd/MM/yy HH:mm'
+      },
+    },
+    dataLabels: {
+      enabled: false
+    },
+    grid: {
+      borderColor: '#f1f1f1',
+    }
+  }
+
+  var chart = new ApexCharts(document.querySelector("#usage-chart"), options);
+  chart.render();
+});
+</script>
+{% endif %}
+{% endblock %}

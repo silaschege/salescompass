@@ -10,7 +10,7 @@
             {% if object %}Update task template{% else %}Create a reusable task template{% endif %}
         </p>
     </div>
-</div>
+</div> 
 
 <div class="container">
     <div class="row justify-content-center">
@@ -21,25 +21,29 @@
                         {% csrf_token %}
                         
                         <div class="mb-4">
-                            <label for="{{ form.name.id_for_label }}" class="form-label fw-bold text-primary">
+                            <label for="{{ form.template_name.id_for_label }}" class="form-label fw-bold text-primary">
                                 Template Name <span class="text-danger">*</span>
                             </label>
-                            {{ form.name }}
-                            {% if form.name.errors %}
-                                <div class="text-danger mt-1">{{ form.name.errors }}</div>
+                            {{ form.template_name }}
+                            {% if form.template_name.errors %}
+                                <div class="text-danger mt-1">{{ form.template_name.errors }}</div>
                             {% endif %}
                         </div>
 
                         <div class="mb-4">
-                            <label for="{{ form.description.id_for_label }}" class="form-label fw-bold text-primary">
+                            <label for="{{ form.template_description.id_for_label }}" class="form-label fw-bold text-primary">
                                 Description
                             </label>
-                            {{ form.description }}
-                            {% if form.description.errors %}
-                                <div class="text-danger mt-1">{{ form.description.errors }}</div>
+                            {{ form.template_description }}
+                            {% if form.template_description.errors %}
+                                <div class="text-danger mt-1">{{ form.template_description.errors }}</div>
                             {% endif %}
                         </div>
 
+
+
+                 
+                        
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-4">
@@ -66,25 +70,15 @@
                         </div>
 
                         <div class="row">
+         
                             <div class="col-md-6">
                                 <div class="mb-4">
-                                    <label for="{{ form.estimated_hours.id_for_label }}" class="form-label fw-bold text-primary">
-                                        Estimated Hours
-                                    </label>
-                                    {{ form.estimated_hours }}
-                                    {% if form.estimated_hours.errors %}
-                                        <div class="text-danger mt-1">{{ form.estimated_hours.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-4">
-                                    <label for="{{ form.default_due_offset.id_for_label }}" class="form-label fw-bold text-primary">
+                                    <label for="{{ form.due_date_offset_days.id_for_label }}" class="form-label fw-bold text-primary">
                                         Default Due Date Offset (days)
                                     </label>
-                                    {{ form.default_due_offset }}
-                                    {% if form.default_due_offset.errors %}
-                                        <div class="text-danger mt-1">{{ form.default_due_offset.errors }}</div>
+                                    {{ form.due_date_offset_days }}
+                                    {% if form.due_date_offset_days.errors %}
+                                        <div class="text-danger mt-1">{{ form.due_date_offset_days.errors }}</div>
                                     {% endif %}
                                     <div class="form-text text-muted small">
                                         Number of days from creation to set as due date
@@ -93,18 +87,6 @@
                             </div>
                         </div>
 
-                        <div class="mb-4">
-                            <label for="{{ form.is_active.id_for_label }}" class="form-check">
-                                {{ form.is_active }}
-                                <span class="form-check-label fw-bold text-primary">Active</span>
-                            </label>
-                            <div class="form-text text-muted small">
-                                Inactive templates won't be available for use
-                            </div>
-                            {% if form.is_active.errors %}
-                                <div class="text-danger mt-1">{{ form.is_active.errors }}</div>
-                            {% endif %}
-                        </div>
 
                         <!-- Action Buttons -->
                         <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-4 pt-3 border-top">

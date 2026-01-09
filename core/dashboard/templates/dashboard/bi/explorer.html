@@ -285,15 +285,29 @@
                                             <option value="tasks">Tasks</option>
                                         </select>
                                     </div>
-                                    
+{% comment %}                                     
                                     <div class="col-md-8">
                                         <label>Selected Fields</label>
                                         <div class="border rounded p-2 mb-2" id="selectedFieldsContainer">
                                             <p class="text-muted mb-0">No fields selected</p>
+                                            
                                         </div>
                                         <div>
                                             <button class="btn btn-sm btn-outline-secondary" id="clearFieldsBtn">Clear All</button>
                                         </div>
+                                    </div> {% endcomment %}
+
+                                    <div class="col-md-8">
+                                        <label>Selected Fields</label>
+                                        <div>
+                                        <select class="form-control" id="selectedFieldsContainer">
+                                            <option value="">None</option>
+                                        </select>
+                                        </div>
+                                        <div>
+                                            <button class="btn btn-sm btn-outline-secondary" id="clearFieldsBtn">Clear All</button>
+                                        </div>
+                                   
                                     </div>
                                 </div>
                                 

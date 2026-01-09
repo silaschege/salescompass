@@ -1,0 +1,106 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 text-gray-800">Dynamic Choices Dashboard</h1>
+        <a href="{% url 'dashboard:cockpit' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to Cockpit
+        </a>
+    </div>
+
+    <!-- Dynamic Choices Overview -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Widget Types</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ widget_types_count|default:0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-window-maximize fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Widget Categories</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ widget_categories_count|default:0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tags fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Active Widgets</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ dashboard_widgets_count|default:0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-th-large fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation to Management Sections -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Widget Management</h6>
+                </div>
+                <div class="card-body">
+                    <p>Manage widget types and categories used in dashboard configurations.</p>
+                    <a href="{% url 'dashboard:widget_type_list' %}" class="btn btn-primary btn-icon-split mb-2">
+                        <span class="icon text-white-50">
+                            <i class="fas fa-window-maximize"></i>
+                        </span>
+                        <span class="text">Manage Widget Types</span>
+                    </a>
+                    <a href="{% url 'dashboard:widget_category_list' %}" class="btn btn-success btn-icon-split">
+                        <span class="icon text-white-50">
+                            <i class="fas fa-tags"></i>
+                        </span>
+                        <span class="text">Manage Widget Categories</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Dashboard Configuration</h6>
+                </div>
+                <div class="card-body">
+                    <p>Configure and customize dashboard widgets and layouts.</p>
+                    <a href="{% url 'dashboard:bi_builder' %}" class="btn btn-info btn-icon-split">
+                        <span class="icon text-white-50">
+                            <i class="fas fa-tools"></i>
+                        </span>
+                        <span class="text">Dashboard Builder</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

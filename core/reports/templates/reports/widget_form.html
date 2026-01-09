@@ -1,49 +1,52 @@
 {% extends "reports/base.html" %}
 
-{% block title %}{% if object %}Edit {{ object.name }}{% else %}New Dashboard Widget{% endif %} - SalesCompass{% endblock %}
+{% block title %}{% if object %}Edit {{ object.widget_name }}{% else %}New Dashboard Widget{% endif %} - SalesCompass{%
+endblock %}
 
 {% block content %}
 <div class="header-bar mb-4">
     <div class="container">
         <h1 class="block-title">{% if object %}Edit Widget{% else %}Create Widget{% endif %}</h1>
-        <p class="text-white text-center lead">
-            {% if object %}Update your dashboard widget configuration{% else %}Configure a new widget for your reports dashboard{% endif %}
-        </p>
+        <p class="text-white text-center lead">{% if object %}Update your dashboard widget settings{% else %}Add a new
+            widget to your report dashboard{% endif %}</p>
     </div>
 </div>
 
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-lg-10">
             <div class="card shadow-sm border-0">
                 <div class="card-body p-4">
-                    <form method="post" enctype="multipart/form-data">
+                    <form method="post">
                         {% csrf_token %}
-                        
+
                         <div class="row">
                             <div class="col-md-6">
                                 <!-- Widget Name -->
                                 <div class="mb-4">
-                                    <label for="{{ form.name.id_for_label }}" class="form-label fw-bold text-primary">
+                                    <label for="{{ form.widget_name.id_for_label }}"
+                                        class="form-label fw-bold text-primary">
                                         Widget Name <span class="text-danger">*</span>
                                     </label>
-                                    {{ form.name }}
-                                    {% if form.name.errors %}
-                                        <div class="text-danger mt-1">{{ form.name.errors }}</div>
+                                    {{ form.widget_name }}
+                                    {% if form.widget_name.errors %}
+                                    <div class="text-danger mt-1">{{ form.widget_name.errors }}</div>
                                     {% endif %}
                                     <div class="form-text text-muted small">
-                                        Give your widget a descriptive name (e.g., "Sales Performance KPI", "ESG Impact Chart")
+                                        Give your widget a descriptive name (e.g., "Sales Performance KPI", "ESG Impact
+                                        Chart")
                                     </div>
                                 </div>
 
                                 <!-- Widget Type -->
                                 <div class="mb-4">
-                                    <label for="{{ form.widget_type.id_for_label }}" class="form-label fw-bold text-primary">
+                                    <label for="{{ form.widget_type_ref.id_for_label }}"
+                                        class="form-label fw-bold text-primary">
                                         Widget Type <span class="text-danger">*</span>
                                     </label>
-                                    {{ form.widget_type }}
-                                    {% if form.widget_type.errors %}
-                                        <div class="text-danger mt-1">{{ form.widget_type.errors }}</div>
+                                    {{ form.widget_type_ref }}
+                                    {% if form.widget_type_ref.errors %}
+                                    <div class="text-danger mt-1">{{ form.widget_type_ref.errors }}</div>
                                     {% endif %}
                                     <div class="form-text text-muted small">
                                         <div class="row">
@@ -57,7 +60,8 @@
                                                 <span class="badge bg-info text-dark">Data Table</span> - Tabular data
                                             </div>
                                             <div class="col-6">
-                                                <span class="badge bg-warning text-dark">Trend Chart</span> - Time-series data
+                                                <span class="badge bg-warning text-dark">Trend Chart</span> -
+                                                Time-series data
                                             </div>
                                         </div>
                                     </div>
@@ -70,7 +74,7 @@
                                     </label>
                                     {{ form.report }}
                                     {% if form.report.errors %}
-                                        <div class="text-danger mt-1">{{ form.report.errors }}</div>
+                                    <div class="text-danger mt-1">{{ form.report.errors }}</div>
                                     {% endif %}
                                     <div class="form-text text-muted small">
                                         Select the report that will provide data for this widget
@@ -81,17 +85,19 @@
                             <div class="col-md-6">
                                 <!-- Position -->
                                 <div class="mb-4">
-                                    <label for="{{ form.position.id_for_label }}" class="form-label fw-bold text-primary">
+                                    <label for="{{ form.position.id_for_label }}"
+                                        class="form-label fw-bold text-primary">
                                         Dashboard Position
                                     </label>
                                     {{ form.position }}
                                     {% if form.position.errors %}
-                                        <div class="text-danger mt-1">{{ form.position.errors }}</div>
+                                    <div class="text-danger mt-1">{{ form.position.errors }}</div>
                                     {% endif %}
                                     <div class="form-text text-muted small">
                                         <div class="row">
                                             <div class="col-6">
-                                                <span class="badge bg-light text-dark">Main</span> - Primary content area
+                                                <span class="badge bg-light text-dark">Main</span> - Primary content
+                                                area
                                             </div>
                                             <div class="col-6">
                                                 <span class="badge bg-light text-dark">Sidebar</span> - Right sidebar
@@ -110,7 +116,7 @@
                                     </label>
                                     {{ form.order }}
                                     {% if form.order.errors %}
-                                        <div class="text-danger mt-1">{{ form.order.errors }}</div>
+                                    <div class="text-danger mt-1">{{ form.order.errors }}</div>
                                     {% endif %}
                                     <div class="form-text text-muted small">
                                         Lower numbers appear first in each position section
@@ -119,46 +125,29 @@
 
                                 <!-- Status -->
                                 <div class="mb-4">
-                                    <label for="{{ form.is_active.id_for_label }}" class="form-check">
-                                        {{ form.is_active }}
+                                    <label for="{{ form.widget_is_active.id_for_label }}" class="form-check">
+                                        {{ form.widget_is_active }}
                                         <span class="form-check-label fw-bold text-primary">Active</span>
                                     </label>
                                     <div class="form-text text-muted small">
                                         Inactive widgets won't be displayed on the dashboard
                                     </div>
-                                    {% if form.is_active.errors %}
-                                        <div class="text-danger mt-1">{{ form.is_active.errors }}</div>
+                                    {% if form.widget_is_active.errors %}
+                                    <div class="text-danger mt-1">{{ form.widget_is_active.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Action Buttons -->
-                        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-4 pt-3 border-top">
-                            <div>
-                                <a href="{% url 'reports:dashboard' %}" class="btn btn-outline-primary">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
-                                        <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
-                                    </svg>
-                                    Back to Dashboard
-                                </a>
-                            </div>
+                        <div
+                            class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <a href="{% url 'reports:dashboard' %}" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-left"></i> Back to Dashboard
+                            </a>
                             <div class="d-flex gap-2">
                                 <a href="{% url 'reports:dashboard' %}" class="btn btn-light">Cancel</a>
                                 <button type="submit" class="btn btn-primary">
-                                    {% if object %}
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle me-1" viewBox="0 0 16 16">
-                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                                        <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
-                                    </svg>
-                                    Update Widget
-                                    {% else %}
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle me-1" viewBox="0 0 16 16">
-                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-                                    </svg>
-                                    Create Widget
-                                    {% endif %}
+                                    {% if object %}Update{% else %}Create{% endif %} Widget
                                 </button>
                             </div>
                         </div>
@@ -168,105 +157,4 @@
         </div>
     </div>
 </div>
-
-<div class="footer-bar mt-5">
-    <div class="container">
-        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
-    </div>
-</div>
-{% endblock %}
-
-
-{% block extra_head %}
-<style>
-    /* Form-specific styling */
-    .form-label {
-        font-size: 0.95rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .form-control, .form-select {
-        border: 1px solid #e3e6f3;
-        border-radius: 0.5rem;
-        padding: 0.75rem 1rem;
-        font-size: 0.95rem;
-        transition: all 0.2s ease;
-    }
-    
-    .form-control:focus, .form-select:focus {
-        border-color: #6f42c1;
-        box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
-    }
-    
-    .form-control:focus-visible, .form-select:focus-visible {
-        outline: none;
-    }
-    
-    textarea.form-control {
-        min-height: 150px;
-        resize: vertical;
-    }
-    
-    .text-danger {
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
-    }
-    
-    .form-text {
-        font-size: 0.8125rem;
-        margin-top: 0.25rem;
-    }
-    
-    .badge {
-        font-size: 0.75rem;
-        padding: 0.3em 0.6em;
-    }
-    
-    .btn {
-        padding: 0.5rem 1.25rem;
-        font-weight: 600;
-        border-radius: 0.5rem;
-        transition: all 0.2s ease;
-    }
-    
-    .btn-primary:hover {
-        background-color: #5a32a3;
-        border-color: #5a32a3;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
-    }
-    
-    .btn-light:hover {
-        background-color: #f8f9fa;
-        border-color: #d1c5e6;
-        color: #5a32a3;
-    }
-    
-    /* Card styling */
-    .card {
-        border: none;
-        border-radius: 1rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .card {
-            margin: 0 -1rem;
-            border-radius: 0;
-        }
-        
-        .header-bar {
-            border-radius: 0;
-        }
-        
-        .footer-bar {
-            border-radius: 0;
-        }
-        
-        .row > [class*="col-"] {
-            margin-bottom: 1rem;
-        }
-    }
-</style>
 {% endblock %}

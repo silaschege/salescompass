@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Review Approval - SalesCompass CRM{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="d-flex align-items-center mb-4">
+                <a href="{% url 'automation:approval_list' %}" class="btn btn-link pr-3">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+                <h1 class="h3 mb-0 text-gray-800">Review Approval Request</h1>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">Workflow Details</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-4 font-weight-bold">Workflow Name:</div>
+                        <div class="col-sm-8">{{ approval.workflow_execution.workflow.workflow_name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 font-weight-bold">Workflow Description:</div>
+                        <div class="col-sm-8">{{ approval.workflow_execution.workflow.workflow_description|default:"No description" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 font-weight-bold">Status:</div>
+                        <div class="col-sm-8">
+                            <span class="badge badge-warning">Waiting for Approval</span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 font-weight-bold">Created At:</div>
+                        <div class="col-sm-8">{{ approval.approval_created_at|date:"M d, Y H:i" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 font-weight-bold">Trigger Event:</div>
+                        <div class="col-sm-8">{{ approval.workflow_execution.workflow.workflow_trigger_type }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-info text-white">
+                    <h6 class="m-0 font-weight-bold">Action Details</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-4 font-weight-bold">Action Type:</div>
+                        <div class="col-sm-8">{{ approval.workflow_action.get_workflow_action_type_display }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 font-weight-bold">Action Parameters:</div>
+                        <div class="col-sm-8">
+                            <pre class="bg-light p-3 rounded"><code>{{ approval.workflow_action.workflow_action_parameters|pprint }}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-secondary text-white">
+                    <h6 class="m-0 font-weight-bold">Trigger Payload</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-12">
+                            <pre class="bg-light p-3 rounded"><code>{{ approval.workflow_execution.workflow_execution_trigger_payload|pprint }}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-white">
+                    <h6 class="m-0 font-weight-bold text-primary">Your Decision</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="form-group mb-4">
+                            <label for="comments" class="font-weight-bold">Comments (Optional)</label>
+                            <textarea name="comments" id="comments" class="form-control" rows="3"
+                                placeholder="Add any notes about your decision..."></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between gap-2">
+                            <button type="submit" name="action" value="reject" class="btn btn-danger">
+                                <i class="fas fa-times mr-1"></i> Reject Workflow
+                            </button>
+                            <button type="submit" name="action" value="approve" class="btn btn-success">
+                                <i class="fas fa-check mr-1"></i> Approve & Resume
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

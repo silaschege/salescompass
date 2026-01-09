@@ -1,91 +1,107 @@
-{% extends 'leads/base.html' %}
+{% extends "leads/base.html" %}
 
-{% block title %}{% if object %}Edit{% else %}Add{% endif %} Marketing Channel{% endblock %}
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Marketing Channel - SalesCompass{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <h1>{% if object %}Edit{% else %}Add{% endif %} Marketing Channel</h1>
-            
-            <div class="card">
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.channel_name.id_for_label }}" class="form-label">Channel Name</label>
-                            {{ form.channel_name }}
-                            <div class="form-text">Unique identifier for the channel (e.g., 'email', 'social')</div>
-                            {% if form.channel_name.errors %}
-                                <div class="text-danger">{{ form.channel_name.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.label.id_for_label }}" class="form-label">Label</label>
-                            {{ form.label }}
-                            <div class="form-text">Display name for the channel (e.g., 'Email Marketing', 'Social Media')</div>
-                            {% if form.label.errors %}
-                                <div class="text-danger">{{ form.label.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.order.id_for_label }}" class="form-label">Order</label>
-                            {{ form.order }}
-                            <div class="form-text">Order in which this channel appears in lists</div>
-                            {% if form.order.errors %}
-                                <div class="text-danger">{{ form.order.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.color.id_for_label }}" class="form-label">Color</label>
-                            {{ form.color }}
-                            <div class="form-text">Color code to represent this channel (e.g., #6c757d)</div>
-                            {% if form.color.errors %}
-                                <div class="text-danger">{{ form.color.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.icon.id_for_label }}" class="form-label">Icon</label>
-                            {{ form.icon }}
-                            <div class="form-text">Icon class for this channel (e.g., 'bi-envelope', 'bi-facebook')</div>
-                            {% if form.icon.errors %}
-                                <div class="text-danger">{{ form.icon.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3 form-check">
-                            {{ form.channel_is_active }}
-                            <label for="{{ form.channel_is_active.id_for_label }}" class="form-check-label">
-                                Active
-                            </label>
-                            {% if form.channel_is_active.errors %}
-                                <div class="text-danger">{{ form.channel_is_active.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3 form-check">
-                            {{ form.is_system }}
-                            <label for="{{ form.is_system.id_for_label }}" class="form-check-label">
-                                System Channel
-                            </label>
-                            <div class="form-text">Check if this is a system-provided channel that can't be modified</div>
-                            {% if form.is_system.errors %}
-                                <div class="text-danger">{{ form.is_system.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">
-                            {% if object %}Update{% else %}Create{% endif %} Marketing Channel
-                        </button>
-                        <a href="{% url 'leads:marketingchannel_list' %}" class="btn btn-secondary">Cancel</a>
-                    </form>
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">{% if form.instance.pk %}Edit{% else %}Create{% endif %} Marketing Channel</h1>
+        <p class="text-white text-center lead">Define a new marketing channel for lead tracking</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card shadow" style="max-width: 600px; margin: 0 auto;">
+        <div class="card-body p-4">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="form-group mb-3">
+                    <label for="{{ form.channel_name.id_for_label }}" class="form-label">{{ form.channel_name.label }}</label>
+                    {{ form.channel_name }}
+                    {% if form.channel_name.errors %}
+                        <div class="text-danger mt-1">{{ form.channel_name.errors }}</div>
+                    {% endif %}
+                    {% if form.channel_name.help_text %}
+                        <small class="form-text text-muted">{{ form.channel_name.help_text }}</small>
+                    {% endif %}
                 </div>
-            </div>
+
+                <div class="form-group mb-3">
+                    <label for="{{ form.label.id_for_label }}" class="form-label">{{ form.label.label }}</label>
+                    {{ form.label }}
+                    {% if form.label.errors %}
+                        <div class="text-danger mt-1">{{ form.label.errors }}</div>
+                    {% endif %}
+                    {% if form.label.help_text %}
+                        <small class="form-text text-muted">{{ form.label.help_text }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="{{ form.order.id_for_label }}" class="form-label">{{ form.order.label }}</label>
+                    {{ form.order }}
+                    {% if form.order.errors %}
+                        <div class="text-danger mt-1">{{ form.order.errors }}</div>
+                    {% endif %}
+                    {% if form.order.help_text %}
+                        <small class="form-text text-muted">{{ form.order.help_text }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="{{ form.color.id_for_label }}" class="form-label">{{ form.color.label }}</label>
+                    {{ form.color }}
+                    {% if form.color.errors %}
+                        <div class="text-danger mt-1">{{ form.color.errors }}</div>
+                    {% endif %}
+                    {% if form.color.help_text %}
+                        <small class="form-text text-muted">{{ form.color.help_text }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="{{ form.icon.id_for_label }}" class="form-label">{{ form.icon.label }}</label>
+                    {{ form.icon }}
+                    {% if form.icon.errors %}
+                        <div class="text-danger mt-1">{{ form.icon.errors }}</div>
+                    {% endif %}
+                    {% if form.icon.help_text %}
+                        <small class="form-text text-muted">{{ form.icon.help_text }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                    <div class="form-check">
+                        {{ form.channel_is_active }}
+                        <label class="form-check-label" for="{{ form.channel_is_active.id_for_label }}">{{ form.channel_is_active.label }}</label>
+                    </div>
+                    {% if form.channel_is_active.errors %}
+                        <div class="text-danger mt-1">{{ form.channel_is_active.errors }}</div>
+                    {% endif %}
+                    {% if form.channel_is_active.help_text %}
+                        <small class="form-text text-muted">{{ form.channel_is_active.help_text }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                    <div class="form-check">
+                        {{ form.is_system }}
+                        <label class="form-check-label" for="{{ form.is_system.id_for_label }}">{{ form.is_system.label }}</label>
+                    </div>
+                    {% if form.is_system.errors %}
+                        <div class="text-danger mt-1">{{ form.is_system.errors }}</div>
+                    {% endif %}
+                    {% if form.is_system.help_text %}
+                        <small class="form-text text-muted">{{ form.is_system.help_text }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="mt-4 border-top pt-3 d-flex justify-content-between">
+                    <a href="{% url 'leads:marketingchannel_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-4">Save Marketing Channel</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

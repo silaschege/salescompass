@@ -1,74 +1,163 @@
 {% extends "nps/base.html" %}
-{% load auth_extras filters_extras %}
-{% block title %}Detractor Alert Kanban - SalesCompass{% endblock %}
+
+{% block title %}Detractor Alerts - SalesCompass{% endblock %}
 
 {% block content %}
 <div class="header-bar mb-4">
     <div class="container">
-        <h1 class="block-title">NPS Detractor Alert Kanban</h1>
-        <p class="text-white text-center lead">
-            Manage customer satisfaction detractors requiring immediate follow-up
-        </p>
+        <h1 class="block-title">Detractor Alert Management</h1>
+        <p class="text-white text-center lead">Manage and resolve detractor feedback</p>
     </div>
 </div>
 
 <div class="container">
-    <div class="alert alert-info mb-4">
-        <strong>Detractor Alert:</strong> NPS scores of 6 or below automatically create alerts that require follow-up.
-        <span class="badge bg-danger">Action Required</span>
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-danger">
+                <div class="card-body text-center">
+                    <h6>Open Alerts</h6>
+                    <h2>{{ open_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body text-center">
+                    <h6>In Progress</h6>
+                    <h2>{{ in_progress_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                    <h6>Resolved</h6>
+                    <h2>{{ resolved_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body text-center">
+                    <h6>Total Alerts</h6>
+                    <h2>{{ total_alerts }}</h2>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div id="kanban-board" class="d-flex flex-wrap gap-3">
-        <!-- Open Column -->
-        <div class="kanban-column" data-status="open">
-            <div class="card bg-light">
-                <div class="card-header bg-danger text-white">
-                    <h5 class="mb-0">🔴 Open Alerts
-                        <span class="badge bg-white text-danger ms-2">{{ alerts|status_count:"open" }}</span>
-                    </h5>
+    <!-- Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex gap-2">
+                <a href="{% url 'nps:nps_dashboard' %}" class="btn btn-outline-primary">Dashboard</a>
+                <a href="{% url 'nps:nps_trend_charts' %}" class="btn btn-outline-primary">Trend Charts</a>
+                <a href="{% url 'nps:nps_responses' %}" class="btn btn-outline-primary">All Responses</a>
+                <a href="{% url 'nps:promoter_advocacy' %}" class="btn btn-outline-success">Promoter Advocacy</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Kanban Board -->
+            <div class="row">
+                <!-- Open Column -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-danger text-white">
+                            <h5>Open ({{ open_count }})</h5>
+                        </div>
+                        <div class="card-body p-2 bg-light" id="open-column" data-status="open">
+                            {% for alert in open_alerts %}
+                                {% include 'nps/detractor_kanban_card.html' with alert=alert %}
+                            {% empty %}
+                                <div class="text-center text-muted py-3">No open alerts</div>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body p-2">
-                    {% for alert in alerts %}
-                        {% if alert.status == 'open' %}
-                            {% include "nps/detractor_kanban_card.html" with alert=alert %}
-                        {% endif %}
-                    {% endfor %}
+
+                <!-- In Progress Column -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5>In Progress ({{ in_progress_count }})</h5>
+                        </div>
+                        <div class="card-body p-2 bg-light" id="in-progress-column" data-status="in_progress">
+                            {% for alert in in_progress_alerts %}
+                                {% include 'nps/detractor_kanban_card.html' with alert=alert %}
+                            {% empty %}
+                                <div class="text-center text-muted py-3">No alerts in progress</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resolved Column -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5>Resolved ({{ resolved_count }})</h5>
+                        </div>
+                        <div class="card-body p-2 bg-light" id="resolved-column" data-status="resolved">
+                            {% for alert in resolved_alerts %}
+                                {% include 'nps/detractor_kanban_card.html' with alert=alert %}
+                            {% empty %}
+                                <div class="text-center text-muted py-3">No resolved alerts</div>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- In Progress Column -->
-        <div class="kanban-column" data-status="in_progress">
-            <div class="card bg-light">
-                <div class="card-header bg-warning text-dark">
-                    <h5 class="mb-0">🟡 In Progress
-                        <span class="badge bg-white text-warning ms-2">{{ alerts|status_count:"in_progress" }}</span>
-                    </h5>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Help</h5>
                 </div>
-                <div class="card-body p-2">
-                    {% for alert in alerts %}
-                        {% if alert.status == 'in_progress' %}
-                            {% include "nps/detractor_kanban_card.html" with alert=alert %}
-                        {% endif %}
-                    {% endfor %}
+                <div class="card-body">
+                    <h6>Detractor Alert Management:</h6>
+                    <ul>
+                        <li>Open: New detractor feedback requiring attention</li>
+                        <li>In Progress: Alerts being actively worked on</li>
+                        <li>Resolved: Successfully addressed detractor concerns</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Best Practices:</h6>
+                    <ul>
+                        <li>Respond to detractors within 4 hours for critical issues</li>
+                        <li>Assign alerts to appropriate team members based on expertise</li>
+                        <li>Document resolution steps in the notes section</li>
+                        <li>Follow up with customers to confirm satisfaction</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Resolution Process:</h6>
+                    <ul>
+                        <li>Review the customer's NPS score and feedback</li>
+                        <li>Investigate the root cause of dissatisfaction</li>
+                        <li>Develop and implement a resolution plan</li>
+                        <li>Communicate resolution to the customer</li>
+                        <li>Mark alert as resolved in the system</li>
+                    </ul>
                 </div>
             </div>
-        </div>
-
-        <!-- Resolved Column -->
-        <div class="kanban-column" data-status="resolved">
-            <div class="card bg-light">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">🟢 Resolved
-                        <span class="badge bg-white text-success ms-2">{{ alerts|status_count:"resolved" }}</span>
-                    </h5>
+            
+            <!-- Team Members -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Team Members</h5>
                 </div>
-                <div class="card-body p-2">
-                    {% for alert in alerts %}
-                        {% if alert.status == 'resolved' %}
-                            {% include "nps/detractor_kanban_card.html" with alert=alert %}
-                        {% endif %}
-                    {% endfor %}
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for member in team_members %}
+                        <li class="list-group-item">{{ member.user.get_full_name|default:member.user.email }}</li>
+                        {% empty %}
+                        <li class="list-group-item">No team members available</li>
+                        {% endfor %}
+                    </ul>
                 </div>
             </div>
         </div>
@@ -81,94 +170,72 @@
     </div>
 </div>
 
-<style>
-.kanban-column { min-width: 300px; flex: 1; }
-.kanban-card { cursor: move; background: white; border-left: 4px solid #dc3545; margin-bottom: 8px; }
-.kanban-card.dragging { opacity: 0.5; }
-.nps-badge { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; color: white; }
-.nps-low { background-color: #dc3545; }
-</style>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Make cards draggable
     const cards = document.querySelectorAll('.kanban-card');
+    const columns = document.querySelectorAll('.card-body');
+    
     cards.forEach(card => {
-        card.addEventListener('dragstart', handleDragStart);
-        card.addEventListener('dragend', handleDragEnd);
-    });
-
-    // Make columns droppable
-    const columns = document.querySelectorAll('.kanban-column');
-    columns.forEach(col => {
-        col.addEventListener('dragover', handleDragOver);
-        col.addEventListener('dragenter', handleDragEnter);
-        col.addEventListener('dragleave', handleDragLeave);
-        col.addEventListener('drop', handleDrop);
-    });
-
-    let draggedCard = null;
-
-    function handleDragStart(e) {
-        draggedCard = this;
-        setTimeout(() => this.classList.add('dragging'), 0);
-        e.dataTransfer.effectAllowed = 'move';
-    }
-
-    function handleDragEnd() {
-        this.classList.remove('dragging');
-        draggedCard = null;
-    }
-
-    function handleDragOver(e) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        return false;
-    }
-
-    function handleDragEnter(e) {
-        this.classList.add('bg-light');
-    }
-
-    function handleDragLeave() {
-        this.classList.remove('bg-light');
-    }
-
-    function handleDrop(e) {
-        e.preventDefault();
-        this.classList.remove('bg-light');
+        card.setAttribute('draggable', true);
         
-        if (draggedCard) {
-            const cardContainer = this.querySelector('.card-body');
-            cardContainer.appendChild(draggedCard);
-            
-            const targetStatus = this.dataset.status;
-            const alertId = draggedCard.dataset.alertId;
-            
-            // Update status via AJAX
-            updateDetractorStatus(alertId, targetStatus);
-        }
-    }
-
-    function updateDetractorStatus(alertId, status) {
-        fetch('{% url "nps:update_detractor_status" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({ alert_id: alertId, status: status })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (!data.success) {
-                alert('Failed to update status: ' + (data.error || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            alert('Network error: ' + error);
+        card.addEventListener('dragstart', function(e) {
+            e.dataTransfer.setData('text/plain', card.dataset.alertId);
+            card.classList.add('dragging');
         });
-    }
+        
+        card.addEventListener('dragend', function() {
+            card.classList.remove('dragging');
+        });
+    });
+    
+    columns.forEach(column => {
+        column.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            column.classList.add('drag-over');
+        });
+        
+        column.addEventListener('dragleave', function() {
+            column.classList.remove('drag-over');
+        });
+        
+        column.addEventListener('drop', function(e) {
+            e.preventDefault();
+            column.classList.remove('drag-over');
+            
+            const alertId = e.dataTransfer.getData('text/plain');
+            const draggedCard = document.querySelector(`[data-alert-id="${alertId}"]`);
+            const newStatus = column.dataset.status;
+            
+            if (draggedCard && newStatus) {
+                // Move card to new column
+                column.appendChild(draggedCard);
+                
+                // Update status via AJAX
+                fetch('{% url "nps:update_detractor_status" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({
+                        alert_id: alertId,
+                        status: newStatus
+                    })
+                }).then(response => {
+                    if (!response.ok) {
+                        console.error('Failed to update status');
+                        // Revert the move if the update failed
+                        location.reload();
+                    }
+                }).catch(error => {
+                    console.error('Error:', error);
+                    // Revert the move if there was an error
+                    location.reload();
+                });
+            }
+        });
+    });
 });
 </script>
 {% endblock %}

@@ -1,4 +1,4 @@
-{% extends "logged_in/base.html" %}
+{% comment %} {% extends "logged_in/base.html" %}
 
 {% block sidebar_nav %}
 <!-- Module Navigation Override -->
@@ -22,3 +22,267 @@
 {% block extra_js %}
 <!-- Add any module specific JS here if needed -->
 {% endblock %}
+ {% endcomment %}
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{% block title %}SalesCompass{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #f7f8fc 0%, #e3e6f3 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- Sidebar Styling (Matches Billing) --- */
+        .sidebar {
+            width: 250px;
+            background: #fff;
+            border-right: 1px solid #e3e6f3;
+            padding: 1.5rem 1rem;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
+        .sidebar .navbar-brand {
+            color: #6f42c1 !important; /* Purple Brand */
+            font-weight: bold;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+            text-decoration: none;
+        }
+
+        .sidebar .nav-link {
+            color: #333;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* Ensures chevron aligns right */
+        }
+
+        /* Navigation Hover & Active States */
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link:focus,
+        .sidebar .nav-link.active {
+            color: #6f42c1;
+            background-color: #f0e6ff; /* Light Purple Background */
+            font-weight: 500;
+        }
+
+        /* Icon Styling */
+        .sidebar .nav-link i.nav-icon {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Submenu items indentation */
+        .sidebar .collapse .nav-link {
+            padding-left: 2.75rem; /* Indent children */
+            font-size: 0.95rem;
+        }
+
+        /* Section Dividers */
+        .sidebar .section-title {
+            color: #6c757d;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 1.5rem 0 0.5rem 1rem;
+        }
+
+        /* Chevron Rotation */
+        .sidebar .nav-link[aria-expanded="true"] .bi-chevron-down {
+            transform: rotate(180deg);
+            transition: transform 0.3s ease;
+        }
+        .bi-chevron-down {
+            transition: transform 0.3s ease;
+            font-size: 0.8em;
+        }
+
+        /* --- Main Content --- */
+        .main-content {
+            margin-left: 250px;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content.sidebar-hidden {
+            margin-left: 0;
+        }
+
+        /* Toggle Button */
+        .toggle-sidebar {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: #6f42c1;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Dashboard Specific: Cards */
+        .widget-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding: 1.5rem;
+        }
+
+        .widget-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 2px 16px rgba(111, 66, 193, 0.08); /* Purple shadow hint */
+            transition: transform 0.2s, box-shadow 0.2s;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            border: none;
+        }
+
+        .widget-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(111, 66, 193, 0.15);
+        }
+
+        /* Helper Classes */
+        .btn-primary {
+            background-color: #6f42c1;
+            border-color: #6f42c1;
+        }
+        .btn-primary:hover {
+            background-color: #5a34a0;
+            border-color: #5a34a0;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.visible { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .main-content > .container-fluid { padding-left: 1rem; padding-right: 1rem; }
+        }
+    </style>
+    {% load static %}
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+
+
+    <!-- Toggle Button -->
+    <button class="toggle-sidebar" id="toggleSidebar">
+        <i class="bi bi-list"></i>
+    </button>
+    {% block sidebar_nav %}
+<!-- Module Navigation Override -->
+<div class="sidebar-nav">
+    <div class="sidebar" id="sidebar">
+        <a class="navbar-brand" href="{% url 'core:app_selection' %}">
+            <i class="bi bi-compass me-2"></i> SalesCompass
+        </a>
+    {% block module_nav %}
+    <!-- Module Links Injected Here -->
+    {% endblock %}
+</div>
+{% endblock %}
+
+
+    
+
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Messages -->
+        {% if messages %}
+        <div class="container-fluid pt-4">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Content Block -->
+        {% block content %}
+        <!-- Page-specific content goes here -->
+        {% endblock %}
+
+    </div>
+  
+
+
+      
+
+
+
+    
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const toggleBtn = document.getElementById('toggleSidebar');
+
+            // Toggle sidebar visibility
+            toggleBtn.addEventListener('click', function () {
+                sidebar.classList.toggle('hidden');
+                mainContent.classList.toggle('sidebar-hidden');
+            });
+
+            // On mobile, clicking outside closes sidebar
+            if (window.innerWidth <= 768) {
+                document.addEventListener('click', function (e) {
+                    if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+                        sidebar.classList.remove('visible');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

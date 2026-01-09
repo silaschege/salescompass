@@ -1,240 +1,134 @@
 {% extends "public/base.html" %}
 {% load static %}
 
-{% block title %}Solutions - Sales Teams That Win | SalesCompass{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'core/css/public-design-system.css' %}">
-<style>
-    .role-icon {
-        width: 3.5rem;
-        height: 3.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        font-size: 1.5rem;
-        margin: 0 auto 1rem;
-        background-color: var(--color-primary-light);
-        color: var(--color-primary);
-    }
-</style>
-{% endblock %}
+{% block title %}Solutions - Scale Your Revenue with SalesCompass{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="py-5 text-center bg-white border-bottom">
-    <div class="container py-5">
-        <h1 class="display-4 fw-bold mb-4 text-dark">Built for teams that sell</h1>
-        <p class="lead text-muted mb-4 mx-auto" style="max-width: 700px;">
-            From startups to enterprises, SalesCompass adapts to how you work—no matter your industry or sales motion.
+<!-- Solutions Hero -->
+<section class="section-large text-center position-relative overflow-hidden">
+    <div class="container position-relative z-1">
+        <h1 class="display-3 fw-extrabold mb-4">Scalable solutions for <br><span class="highlight-handwritten">every
+                business.</span></h1>
+        <p class="lead text-muted mb-6 mx-auto" style="max-width: 650px;">
+            Whether you are a scaling startup or a global enterprise, SalesCompass provides
+            the intelligence and governance to win at every stage.
         </p>
         <div class="d-flex justify-content-center gap-3">
-            <a href="{% url 'core:try_free' %}" class="btn btn-primary px-5 rounded-pill shadow-sm">Get Started</a>
+            <a href="{% url 'core:try_free' %}" class="btn btn-primary px-5">Get Started</a>
+            <a href="{% url 'core:pricing' %}" class="btn btn-outline-primary px-5">See Pricing</a>
         </div>
     </div>
 </section>
 
-<!-- By Team Size -->
-<section class="py-5 bg-light">
-    <div class="container py-4">
-        <div class="text-center mb-5">
-            <h6 class="text-uppercase fw-bold letter-spacing-2 text-primary">Scalability</h6>
-            <h2 class="fw-bold">For teams of any size</h2>
-        </div>
-
-        <div class="row g-4 text-center">
+<!-- Scalability Tiers -->
+<section class="section bg-light border-top border-light">
+    <div class="container">
+        <div class="row g-4">
             <!-- Startups -->
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm p-4">
-                    <div class="card-body">
-                        <div class="d-inline-flex p-3 rounded-circle bg-primary-light text-primary mb-3">
-                            <i class="bi bi-lightning-fill fs-3"></i>
-                        </div>
-                        <h3 class="h4 fw-bold mb-3">Startups</h3>
-                        <p class="text-muted mb-4">Move fast without sacrificing organization. Get up and running in
-                            minutes.</p>
-                        <ul class="list-unstyled text-start small text-muted">
-                            <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Quick setup, no training
-                                needed</li>
-                            <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Affordable per-user pricing
-                            </li>
-                            <li><i class="bi bi-check2 text-success me-2"></i>Scales as you grow</li>
-                        </ul>
+            <div class="col-lg-4">
+                <div class="glass-card p-5 h-100 border-top border-4 border-warning">
+                    <div class="app-icon app-automation app-icon-sm mb-4"><i class="bi bi-rocket-takeoff-fill"></i>
                     </div>
+                    <h3 class="fw-bold mb-3">Scaling Startups</h3>
+                    <p class="text-muted small mb-4">Move at the speed of light. All-in-one platform to consolidate your
+                        stack and automate your hustle.</p>
+                    <ul class="list-unstyled space-y-2 small mb-0">
+                        <li><i class="bi bi-check2 text-warning me-2"></i>Out-of-the-box Automations</li>
+                        <li><i class="bi bi-check2 text-warning me-2"></i>Unified Lead & Deal Pipeline</li>
+                        <li><i class="bi bi-check2 text-warning me-2"></i>Instant Setup & Onboarding</li>
+                    </ul>
                 </div>
             </div>
-
-            <!-- Growing Businesses -->
-            <div class="col-md-4">
-                <div class="card h-100 border-primary shadow p-4 transform-scale-sm">
-                    <div class="card-body">
-                        <div class="d-inline-flex p-3 rounded-circle bg-primary text-white mb-3">
-                            <i class="bi bi-graph-up-arrow fs-3"></i>
-                        </div>
-                        <h3 class="h4 fw-bold mb-3">Growing Businesses</h3>
-                        <p class="text-muted mb-4">Professionalize your sales process without enterprise complexity.</p>
-                        <ul class="list-unstyled text-start small text-muted">
-                            <li class="mb-2"><i class="bi bi-check2 text-primary me-2"></i>Advanced automation</li>
-                            <li class="mb-2"><i class="bi bi-check2 text-primary me-2"></i>Custom dashboards</li>
-                            <li><i class="bi bi-check2 text-primary me-2"></i>Team collaboration tools</li>
-                        </ul>
-                    </div>
+            <!-- Mid-Market -->
+            <div class="col-lg-4">
+                <div class="glass-card p-5 h-100 border-top border-4 border-primary">
+                    <div class="app-icon app-crm app-icon-sm mb-4"><i class="bi bi-shield-check"></i></div>
+                    <h3 class="fw-bold mb-3">Mid-Market</h3>
+                    <p class="text-muted small mb-4">Add depth without complexity. Advanced intelligence and forecasting
+                        for teams ready to dominate.</p>
+                    <ul class="list-unstyled space-y-2 small mb-0">
+                        <li><i class="bi bi-check2 text-primary me-2"></i>Predictive Forecasting</li>
+                        <li><i class="bi bi-check2 text-primary me-2"></i>Multi-touch Attribution</li>
+                        <li><i class="bi bi-check2 text-primary me-2"></i>Territory Optimization</li>
+                    </ul>
                 </div>
             </div>
-
             <!-- Enterprise -->
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm p-4">
-                    <div class="card-body">
-                        <div class="d-inline-flex p-3 rounded-circle bg-primary-light text-primary mb-3">
-                            <i class="bi bi-building-fill fs-3"></i>
-                        </div>
-                        <h3 class="h4 fw-bold mb-3">Enterprise</h3>
-                        <p class="text-muted mb-4">Enterprise-grade features with consumer-grade simplicity.</p>
-                        <ul class="list-unstyled text-start small text-muted">
-                            <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>SSO & advanced security</li>
-                            <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Custom integrations</li>
-                            <li><i class="bi bi-check2 text-success me-2"></i>Dedicated support</li>
-                        </ul>
-                    </div>
+            <div class="col-lg-4">
+                <div class="glass-card p-5 h-100 border-top border-4 border-indigo">
+                    <div class="app-icon app-ml app-icon-sm mb-4"><i class="bi bi-building-fill-lock"></i></div>
+                    <h3 class="fw-bold mb-3">Enterprise</h3>
+                    <p class="text-muted small mb-4">Deep governance and global scale. Unleash the power of the Sales
+                        Ontology across divisions.</p>
+                    <ul class="list-unstyled space-y-2 small mb-0">
+                        <li><i class="bi bi-check2 text-indigo me-2"></i>Multi-Tenant Governance</li>
+                        <li><i class="bi bi-check2 text-indigo me-2"></i>ESG Performance Metrics</li>
+                        <li><i class="bi bi-check2 text-indigo me-2"></i>Advanced ML Orchestration</li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- By Use Case -->
-<section class="py-5 bg-white">
-    <div class="container py-4">
-        <div class="text-center mb-5">
-            <h6 class="text-uppercase fw-bold letter-spacing-2 text-primary">Industries</h6>
-            <h2 class="fw-bold">Common use cases</h2>
+<!-- Industry Solutions -->
+<section class="section bg-white">
+    <div class="container">
+        <div class="text-center mb-10">
+            <h2 class="fw-extrabold mb-3">Tailored for your industry</h2>
+            <p class="text-muted">Specific blueprints designed for your unique business motion.</p>
         </div>
 
         <div class="row g-5">
-            <!-- B2B SaaS -->
+            <!-- SaaS -->
             <div class="col-md-6">
-                <div class="d-flex align-items-start">
-                    <div class="flex-shrink-0 me-3">
-                        <div class="bg-primary-light p-3 rounded-3 text-primary">
-                            <i class="bi bi-cloud-check-fill fs-4"></i>
-                        </div>
-                    </div>
+                <div class="d-flex gap-4 p-4 rounded-4 hover-bg-light transition-base">
+                    <div class="app-icon app-sales m-0"><i class="bi bi-cloud-check-fill"></i></div>
                     <div>
-                        <h3 class="h4 fw-bold mb-3">B2B SaaS Sales</h3>
-                        <p class="text-muted mb-4">
-                            Manage complex sales cycles with multiple touchpoints. Track demos, trials, and negotiations
-                            in one place.
-                        </p>
-                        <div class="row g-2">
-                            <div class="col-12 d-flex align-items-center mb-2">
-                                <i class="bi bi-check-circle-fill text-success me-3"></i>
-                                <span><strong>Demo Connect:</strong> Schedule & record auto-magically</span>
-                            </div>
-                            <div class="col-12 d-flex align-items-center mb-2">
-                                <i class="bi bi-check-circle-fill text-success me-3"></i>
-                                <span><strong>Trial Monitor:</strong> Usage based triggers</span>
-                            </div>
-                            <div class="col-12 d-flex align-items-center">
-                                <i class="bi bi-check-circle-fill text-success me-3"></i>
-                                <span><strong>Stakeholders:</strong> Map buying committees</span>
-                            </div>
-                        </div>
+                        <h4 class="fw-bold mb-2">Modern SaaS</h4>
+                        <p class="text-muted small mb-3">Optimize for recurring revenue with PLG triggers and deep
+                            subscription intelligence.</p>
+                        <a href="#" class="text-primary fw-bold small text-decoration-none">Explore SaaS Blueprint
+                            &rarr;</a>
                     </div>
                 </div>
             </div>
-
-            <!-- Professional Services -->
+            <!-- Services -->
             <div class="col-md-6">
-                <div class="d-flex align-items-start">
-                    <div class="flex-shrink-0 me-3">
-                        <div class="bg-secondary-light p-3 rounded-3 text-secondary">
-                            <i class="bi bi-briefcase-fill fs-4"></i>
-                        </div>
-                    </div>
+                <div class="d-flex gap-4 p-4 rounded-4 hover-bg-light transition-base">
+                    <div class="app-icon app-marketing m-0"><i class="bi bi-briefcase-fill"></i></div>
                     <div>
-                        <h3 class="h4 fw-bold mb-3">Professional Services</h3>
-                        <p class="text-muted mb-4">
-                            Convert prospects into clients. Manage proposals, contracts, and project kickoffs
-                            seamlessly.
-                        </p>
-                        <div class="row g-2">
-                            <div class="col-12 d-flex align-items-center mb-2">
-                                <i class="bi bi-check-circle-fill text-secondary me-3"></i>
-                                <span><strong>Proposals:</strong> Track views and sign-offs</span>
-                            </div>
-                            <div class="col-12 d-flex align-items-center mb-2">
-                                <i class="bi bi-check-circle-fill text-secondary me-3"></i>
-                                <span><strong>Client Comms:</strong> Centralized timeline</span>
-                            </div>
-                            <div class="col-12 d-flex align-items-center">
-                                <i class="bi bi-check-circle-fill text-secondary me-3"></i>
-                                <span><strong>Referrals:</strong> Source tracking built-in</span>
-                            </div>
-                        </div>
+                        <h4 class="fw-bold mb-2">Professional Services</h4>
+                        <p class="text-muted small mb-3">Bridge the gap between sales and delivery with integrated
+                            project resource tracking.</p>
+                        <a href="#" class="text-primary fw-bold small text-decoration-none">Explore Services Blueprint
+                            &rarr;</a>
                     </div>
                 </div>
             </div>
-
-            <!-- Real Estate -->
+            <!-- High Tech -->
             <div class="col-md-6">
-                <div class="d-flex align-items-start">
-                    <div class="flex-shrink-0 me-3">
-                        <div class="bg-success-light p-3 rounded-3 text-success">
-                            <i class="bi bi-house-door-fill fs-4"></i>
-                        </div>
-                    </div>
+                <div class="d-flex gap-4 p-4 rounded-4 hover-bg-light transition-base">
+                    <div class="app-icon app-reports m-0"><i class="bi bi-cpu-fill"></i></div>
                     <div>
-                        <h3 class="h4 fw-bold mb-3">Real Estate</h3>
-                        <p class="text-muted mb-4">
-                            Manage properties, buyers, and sellers. Keep track of showings, offers, and closings.
-                        </p>
-                        <div class="row g-2">
-                            <div class="col-12 d-flex align-items-center mb-2">
-                                <i class="bi bi-check-circle-fill text-success me-3"></i>
-                                <span><strong>Property Match:</strong> Auto-suggest listings</span>
-                            </div>
-                            <div class="col-12 d-flex align-items-center mb-2">
-                                <i class="bi bi-check-circle-fill text-success me-3"></i>
-                                <span><strong>Scheduler:</strong> Automated reminders</span>
-                            </div>
-                            <div class="col-12 d-flex align-items-center">
-                                <i class="bi bi-check-circle-fill text-success me-3"></i>
-                                <span><strong>Closing:</strong> Pipeline from offer to keys</span>
-                            </div>
-                        </div>
+                        <h4 class="fw-bold mb-2">High Tech Manufacturing</h4>
+                        <p class="text-muted small mb-3">Complex supply chains and long sales cycles managed with
+                            precision forecasting.</p>
+                        <a href="#" class="text-primary fw-bold small text-decoration-none">Explore High Tech Blueprint
+                            &rarr;</a>
                     </div>
                 </div>
             </div>
-
-            <!-- Insurance -->
+            <!-- Finance -->
             <div class="col-md-6">
-                <div class="d-flex align-items-start">
-                    <div class="flex-shrink-0 me-3">
-                        <div class="bg-primary-light p-3 rounded-3 text-dark">
-                            <i class="bi bi-shield-check-fill fs-4"></i>
-                        </div>
-                    </div>
+                <div class="d-flex gap-4 p-4 rounded-4 hover-bg-light transition-base">
+                    <div class="app-icon app-commissions m-0"><i class="bi bi-bank2"></i></div>
                     <div>
-                        <h3 class="h4 fw-bold mb-3">Insurance</h3>
-                        <p class="text-muted mb-4">
-                            Sell policies faster. Manage quotes, renewals, and claims in one system.
-                        </p>
-                        <div class="row g-2">
-                            <div class="col-12 d-flex align-items-center mb-2">
-                                <i class="bi bi-check-circle-fill text-dark me-3"></i>
-                                <span><strong>Fast Quotes:</strong> Generate instantly</span>
-                            </div>
-                            <div class="col-12 d-flex align-items-center mb-2">
-                                <i class="bi bi-check-circle-fill text-dark me-3"></i>
-                                <span><strong>Renewals:</strong> Automated alerts</span>
-                            </div>
-                            <div class="col-12 d-flex align-items-center">
-                                <i class="bi bi-check-circle-fill text-dark me-3"></i>
-                                <span><strong>Policies:</strong> Full portfolio view</span>
-                            </div>
-                        </div>
+                        <h4 class="fw-bold mb-2">Financial Services</h4>
+                        <p class="text-muted small mb-3">Highest standards of security and compliance for sensitive
+                            revenue management.</p>
+                        <a href="#" class="text-primary fw-bold small text-decoration-none">Explore Finance Blueprint
+                            &rarr;</a>
                     </div>
                 </div>
             </div>
@@ -242,74 +136,57 @@
     </div>
 </section>
 
-<!-- By Role -->
-<section class="py-5 bg-light border-top border-bottom">
-    <div class="container py-4">
-        <div class="text-center mb-5">
-            <h6 class="text-uppercase fw-bold letter-spacing-2 text-primary">Roles</h6>
-            <h2 class="fw-bold">For every role on your team</h2>
-        </div>
-
-        <div class="row g-4 justify-content-center">
-            <div class="col-6 col-md-3">
-                <div class="text-center p-3">
-                    <div class="role-icon">
-                        <i class="bi bi-person-fill"></i>
-                    </div>
-                    <h5 class="fw-bold">Sales Reps</h5>
-                    <p class="small text-muted">Spend more time selling, less time on data entry.</p>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="text-center p-3">
-                    <div class="role-icon">
-                        <i class="bi bi-people-fill"></i>
-                    </div>
-                    <h5 class="fw-bold">Managers</h5>
-                    <p class="small text-muted">Real-time visibility into performance and coaching.</p>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="text-center p-3">
-                    <div class="role-icon">
-                        <i class="bi bi-tools"></i>
-                    </div>
-                    <h5 class="fw-bold">RevOps</h5>
-                    <p class="small text-muted">Build scalable processes that automate themselves.</p>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="text-center p-3">
-                    <div class="role-icon">
-                        <i class="bi bi-bar-chart-fill"></i>
-                    </div>
-                    <h5 class="fw-bold">Executives</h5>
-                    <p class="small text-muted">Accurate forecasting and key metric tracking.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- CTA Section -->
-<section class="py-5 bg-primary text-center text-white">
-    <div class="container py-4">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <h2 class="mb-4 display-5 fw-bold text-white">See how SalesCompass fits your team</h2>
-                <p class="lead mb-5 text-white-50">
-                    Schedule a personalized demo or start your free trial today.
+<!-- Outcome Section -->
+<section class="section bg-gray-900 ">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h2 class="display-5 fw-extrabold mb-4 ">Real solutions. <br><span
+                        class="highlight-handwritten">Real outcomes.</span></h2>
+                <p class="-50 mb-5">
+                    SalesCompass isn't just a database. It's the nervous system of your revenue organization.
+                    See how we transform productivity across every department.
                 </p>
-                <div class="d-flex justify-content-center gap-3">
-                    <a href="{% url 'core:try_free' %}"
-                        class="btn btn-light btn-lg px-5 rounded-pill text-primary fw-bold">
-                        Start free trial
-                    </a>
-                    <a href="{% url 'core:support' %}" class="btn btn-outline-light btn-lg px-5 rounded-pill fw-bold">
-                        Schedule demo
-                    </a>
+                <div class="row g-4">
+                    <div class="col-6">
+                        <div class="h2 fw-extrabold text-primary mb-0">85%</div>
+                        <p class="small -50">Reduction in manual data entry</p>
+                    </div>
+                    <div class="col-6">
+                        <div class="h2 fw-extrabold text-primary mb-0">34%</div>
+                        <p class="small -50">Increase in pipeline velocity</p>
+                    </div>
                 </div>
             </div>
+            <div class="col-lg-6 mt-6 mt-lg-0">
+                <div class="p-5 bg-white bg-opacity-5 rounded-4 border border-white border-opacity-10">
+                    <i class="bi bi-quote fs-1 text-primary opacity-50 mb-4"></i>
+                    <p class="lead mb-4">
+                        "SalesCompass allowed us to unify three different legacy systems into one single source of
+                        truth.
+                        The ML insights alone paid for the platform in the first month."
+                    </p>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-primary" style="width: 48px; height: 48px;"></div>
+                        <div>
+                            <strong class="d-block">Sarah Jenkins</strong>
+                            <span class="small-50">CRO at Technova Global</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Final CTA -->
+<section class="section-large text-center bg-white">
+    <div class="container">
+        <h2 class="display-4 fw-extrabold mb-4">Ready to find your solution?</h2>
+        <p class="lead text-muted mb-6">Join 15 million users who trust SalesCompass every day.</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'core:try_free' %}" class="btn btn-primary px-5">Get Started Free</a>
+            <a href="{% url 'core:support' %}" class="btn btn-outline-primary px-5">Contact an Expert</a>
         </div>
     </div>
 </section>

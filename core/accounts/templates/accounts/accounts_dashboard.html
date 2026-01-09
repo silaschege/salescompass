@@ -1,0 +1,287 @@
+{% extends "accounts/base.html" %}
+{% load account_filters %}
+
+{% block title %}Accounts Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="block-title fw-bold mb-0">Accounts Dashboard</h1>
+            <p class="text-muted">Overview of your account portfolio</p>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Accounts
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ accounts_summary.total_accounts }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-building fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Active Accounts
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ accounts_summary.active_accounts }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                At Risk Accounts
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ accounts_summary.at_risk_accounts }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Recent Engagement
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ accounts_summary.recent_engagement }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-comments fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Performing Accounts -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Top Performing Accounts</h6>
+                </div>
+                <div class="card-body">
+                    {% if top_accounts %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Account Name</th>
+                                    <th>Owner</th>
+                                    <th>Industry</th>
+                                    <th>Status</th>
+                                    <th>Health Score</th>
+                                    <th>Engagement</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                                {% for account_data in top_accounts %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'accounts:account_detail' account_data.account.id %}">
+                                            {{ account_data.account.account_name }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {% if account_data.account.owner %}
+                                        {{
+                                        account_data.account.owner.get_full_name|default:account_data.account.owner.email
+                                        }}
+                                        {% else %}
+                                        <span class="text-muted">No Owner</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ account_data.account.industry }}</td>
+                                    <td>
+                                        <span class="badge 
+                                                    {% if account_data.account.status == 'active' %}badge-success
+                                                    {% elif account_data.account.status == 'at_risk' %}badge-warning
+                                                    {% elif account_data.account.status == 'churned' %}badge-danger
+                                                    {% else %}badge-secondary{% endif %}">
+                                            {{ account_data.account.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ account_data.revenue|floatformat:2|default:0 }}</td>
+                                    <td>{{ account_data.engagement_score|default:0 }}</td>
+                                </tr>
+                                {% endfor %}
+
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No top performing accounts to display.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Status Distribution -->
+    <div class="row mb-4">
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Account Status Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4 pb-2">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small">
+                        <span><i class="fas fa-circle text-success mr-1"></i> Active</span>
+                        <span><i class="fas fa-circle text-warning mr-1"></i> At Risk</span>
+                        <span><i class="fas fa-circle text-danger mr-1"></i> Churned</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <a href="{% url 'accounts:account_create' %}" class="btn btn-primary btn-block">
+                                <i class="fas fa-plus"></i> New Account
+                            </a>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <a href="{% url 'accounts:bulk_import_upload' %}" class="btn btn-success btn-block">
+                                <i class="fas fa-file-import"></i> Import Accounts
+                            </a>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <a href="{% url 'accounts:account_list' %}" class="btn btn-info btn-block">
+                                <i class="fas fa-list"></i> View All
+                            </a>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <a href="#" class="btn btn-secondary btn-block">
+                                <i class="fas fa-chart-bar"></i> Reports
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Account Activity</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">You have {{ accounts_summary.open_leads }} open leads and {{
+                        accounts_summary.open_cases }} open cases across all accounts.</p>
+                    <div class="progress mb-4">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: 30%" aria-valuenow="30"
+                            aria-valuemin="0" aria-valuemax="100"></div>
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: 20%" aria-valuenow="20"
+                            aria-valuemin="0" aria-valuemax="100"></div>
+                        <div class="progress-bar bg-danger" role="progressbar" style="width: 10%" aria-valuenow="10"
+                            aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <p class="mb-0 text-success">Active (30%)</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <p class="mb-0 text-warning">At Risk (20%)</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <p class="mb-0 text-danger">Churned (10%)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Chart for account status distribution
+    document.addEventListener('DOMContentLoaded', function () {
+        // Get account data from the context
+        const activeCount = {{ accounts_summary.active_accounts|default:0}};
+    const atRiskCount = {{ accounts_summary.at_risk_accounts|default:0 }};
+    const churnedCount = {{ accounts_summary.churned_accounts|default:0 }};
+
+    // Get the canvas element
+    const ctx = document.getElementById('statusChart').getContext('2d');
+
+    // Create the chart
+    const statusChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Active', 'At Risk', 'Churned'],
+            datasets: [{
+                data: [activeCount, atRiskCount, churnedCount],
+                backgroundColor: [
+                    '#28a745',  // green for active
+                    '#ffc107',  // yellow for at risk
+                    '#dc3545'   // red for churned
+                ],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,170 +1,101 @@
 {% extends "reports/base.html" %}
-{% load auth_extras %}
+{% load auth_extras core_extras filters_extras math %}
 {% block title %}Reports - SalesCompass{% endblock %}
 
 {% block content %}
 <div class="header-bar mb-4">
     <div class="container">
-        <h1 class="block-title">Reports</h1>
-        <p class="text-white text-center lead">Create, manage, and analyze your custom reports</p>
+        <h1 class="block-title">Analytic Reports</h1>
+        <p class="text-white text-center lead">Access all your business intelligence reports</p>
     </div>
 </div>
 
 <div class="container">
-    <!-- Action Buttons and Filters -->
-    <div class="row mb-3">
+    <div class="row mb-4 align-items-center">
         <div class="col-md-6">
             <div class="d-flex gap-2">
-                <a href="{% url 'reports:create' %}" class="btn btn-primary">+ New Report</a>
-                <a href="{% url 'reports:dashboard' %}" class="btn btn-outline-secondary">
-                    <i class="bi bi-speedometer2"></i> Dashboard
-                </a>
+                <a href="{% url 'reports:builder' %}" class="btn btn-primary">+ New Report</a>
             </div>
         </div>
         <div class="col-md-6">
             <div class="d-flex gap-2">
                 <select name="report_type" class="form-select" onchange="this.form.submit()">
                     <option value="">All Report Types</option>
-                    {% for value, label in report_types %}
-                        <option value="{{ value }}" {% if report_type == value %}selected{% endif %}>
-                            {{ label }}
-                        </option>
+                    {% for type in report_type_options %}
+                    <option value="{{ type.type_name }}" {% if report_type == type.type_name %}selected{% endif %}>
+                        {{ type.label }}
+                    </option>
                     {% endfor %}
                 </select>
                 <form method="get" class="d-flex">
-                    <input type="text" name="search" class="form-control me-2" 
-                           placeholder="Search reports..." value="{{ search_term }}">
+                    <input type="text" name="search" class="form-control me-2" placeholder="Search reports..."
+                        value="{{ search_term }}">
                     <button type="submit" class="btn btn-outline-primary">Search</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Reports Table -->
     {% if reports %}
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Report Name</th>
-                        <th>Type</th>
-                        <th>Owner</th>
-                        <th>Status</th>
-                        <th>Created</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for report in reports %}
-                    <tr>
-                        <td>
-                            <a href="{% url 'reports:detail' report.pk %}" class="text-decoration-none">
-                                <strong>{{ report.name }}</strong>
-                            </a>
-                            <br>
-                            <small class="text-muted">{{ report.description|truncatewords:8 }}</small>
-                        </td>
-                        <td>
-                            <span class="badge bg-primary">{{ report.get_report_type_display }}</span>
-                        </td>
-                        <td>
-                            {% if report.owner %}
-                                {{ report.owner.email }}
-                            {% else %}
-                                <span class="text-muted">Unassigned</span>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Report Name</th>
+                    <th>Type</th>
+                    <th>Owner</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in reports %}
+                <tr>
+                    <td>
+                        <a href="{% url 'reports:detail' report.pk %}" class="text-decoration-none">
+                            <strong>{{ report.report_name }}</strong>
+                        </a>
+                        <br>
+                        <small class="text-muted">{{ report.report_description|truncatewords:8 }}</small>
+                    </td>
+                    <td>
+                        <span class="badge bg-primary">{{ report.report_type_ref.label }}</span>
+                    </td>
+                    <td>
+                        {% if report.created_by %}
+                        {{ report.created_by.email }}
+                        {% else %}
+                        <span class="text-muted">Unassigned</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if report.report_is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ report.report_created_at|date:"M d, Y" }}</td>
+                    <td>
+                        <div class="d-flex flex-column gap-1">
+                            <a href="{% url 'reports:detail' report.pk %}"
+                                class="btn btn-sm btn-outline-primary">View</a>
+                            <a href="{% url 'reports:export_report' report.pk %}?format=csv"
+                                class="btn btn-sm btn-outline-secondary">Export</a>
+                            {% if report.created_by == request.user or request.user|has_perm:"reports:write" %}
+                            <a href="{% url 'reports:schedule_create' %}?report={{ report.pk }}"
+                                class="btn btn-sm btn-outline-info">Schedule</a>
                             {% endif %}
-                        </td>
-                        <td>
-                            {% if report.is_active %}
-                                <span class="badge bg-success">Active</span>
-                            {% else %}
-                                <span class="badge bg-secondary">Inactive</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ report.created_at|date:"M d, Y" }}</td>
-                        <td>
-                            <div class="d-flex flex-column gap-1">
-                                <a href="{% url 'reports:detail' report.pk %}" class="btn btn-sm btn-outline-primary">View</a>
-                                <a href="{% url 'reports:export_report' report.pk %}?format=csv" class="btn btn-sm btn-outline-secondary">Export</a>
-                                {% if report.owner == request.user or request.user|has_perm:"reports:write" %}
-                                    <a href="{% url 'reports:schedule_create' %}?report={{ report.pk }}" class="btn btn-sm btn-outline-info">Schedule</a>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        {% if is_paginated %}
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center">
-                    {% if page_obj.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}" aria-label="First">
-                                <span aria-hidden="true">&laquo;&laquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
-                            </a>
-                        </li>
-                    {% endif %}
-
-                    <li class="page-item active">
-                        <span class="page-link">
-                            {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-                        </span>
-                    </li>
-
-                    {% if page_obj.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}" aria-label="Last">
-                                <span aria-hidden="true">&raquo;&raquo;</span>
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </nav>
-        {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% else %}
-        <div class="text-center">
-            <div class="mb-4">
-                <i class="bi bi-bar-chart-line display-1 text-muted"></i>
-            </div>
-            <h3 class="text-muted">No reports found</h3>
-            <p class="text-muted mb-4">Create your first custom report to analyze your sales data.</p>
-            <a href="{% url 'reports:create' %}" class="btn btn-primary">Create Your First Report</a>
-        </div>
+    <div class="text-center py-5 text-muted">No reports found.</div>
     {% endif %}
 </div>
-
-<div class="footer-bar mt-5">
-    <div class="container">
-        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
-    </div>
-</div>
-{% endblock %}
-{% block extra_head %}
-<style>
-.table-hover tbody tr:hover {
-    background-color: rgba(111, 66, 193, 0.05);
-}
-.badge {
-    font-size: 0.75em;
-    padding: 0.3em 0.6em;
-}
-.btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-}
-</style>
 {% endblock %}

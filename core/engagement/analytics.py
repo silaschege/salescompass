@@ -3,7 +3,7 @@ from django.utils import timezone
 from datetime import timedelta
 from opportunities.models import Opportunity
 from .models import EngagementStatus, EngagementEvent
-
+ 
 def calculate_engagement_roi(tenant_id=None):
     """
     Calculate correlation between engagement scores and opportunity outcomes.
@@ -14,12 +14,14 @@ def calculate_engagement_roi(tenant_id=None):
     
     # Get all closed opportunities
     opps = Opportunity.objects.filter(
-        created_at__gte=one_year_ago,
-        status__in=['closed_won', 'closed_lost'] 
-    )
+        created_at__gte=one_year_ago
+    ).select_related('stage')
+    
+    # Filter for closed opportunities (won or lost)
+    opps = [o for o in opps if o.stage.is_won or o.stage.is_lost]
     
     if tenant_id:
-        opps = opps.filter(tenant_id=tenant_id)
+        opps = [o for o in opps if o.tenant_id == tenant_id]
         
     # We need to map Opportunity -> Account -> EngagementStatus
     # But historical engagement score at the time of closure isn't stored in EngagementStatus (it's current).
@@ -36,7 +38,7 @@ def calculate_engagement_roi(tenant_id=None):
     
     processed_accounts = set()
     
-    for opp in opps.select_related('account'):
+    for opp in opps:
         if not opp.account or opp.account.id in processed_accounts:
             continue
             
@@ -50,9 +52,10 @@ def calculate_engagement_roi(tenant_id=None):
             score = 0
             
         # Get Win Rate for this account
-        account_opps = Opportunity.objects.filter(account=opp.account, status__in=['closed_won', 'closed_lost'])
-        total = account_opps.count()
-        won = account_opps.filter(status='closed_won').count()
+        account_opps = Opportunity.objects.filter(account=opp.account).select_related('stage')
+        closed_opps = [o for o in account_opps if o.stage.is_won or o.stage.is_lost]
+        total = len(closed_opps)
+        won = len([o for o in closed_opps if o.stage.is_won])
         win_rate = (won / total * 100) if total > 0 else 0
         
         data_points.append({

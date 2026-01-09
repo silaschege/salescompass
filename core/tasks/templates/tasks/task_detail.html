@@ -1,301 +1,328 @@
 {% extends "tasks/base.html" %}
-{%load auth_extras math filters_extras%} 
+{% load auth_extras math filters_extras static %}
 {% block title %}{{ task.title }} - SalesCompass{% endblock %}
 
 {% block content %}
 <div class="header-bar mb-4">
     <div class="container">
         <h1 class="block-title">{{ task.title }}</h1>
-        <p class="text-white text-center lead">
-            Task details and collaboration
-        </p>
+        <p class="text-white text-center lead">{{ task.task_type_ref.name|default:"General Task" }}</p>
     </div>
 </div>
 
-<div class="container">
+<div class="container pb-5">
+    <!-- Status Stepper Card -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body p-0">
+            <div class="d-flex flex-wrap status-stepper">
+                {% for status_obj in dynamic_statuses %}
+                <button class="btn status-step {% if task.status_ref == status_obj %}active{% endif %}"
+                    data-status-id="{{ status_obj.id }}"
+                    style="{% if task.status_ref == status_obj %}background-color: {{ status_obj.color|default:'#6f42c1' }}; color: white;{% endif %}">
+                    <i class="bi bi-circle-fill me-2"
+                        style="font-size: 0.6rem; color: {{ status_obj.color|default:'#6c757d' }};"></i>
+                    {{ status_obj.label }}
+                    {% if not forloop.last %}<i class="bi bi-chevron-right ms-3 opacity-25"></i>{% endif %}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
     <div class="row">
-        <div class="col-md-8">
-            <!-- Task Information -->
-            <div class="card mb-4">
+        <div class="col-lg-8">
+            <!-- Main Details -->
+            <div class="card shadow-sm mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5>Task Details</h5>
-                    <span class="badge bg-{% if task.priority == 'high' %}danger{% elif task.priority == 'medium' %}warning{% elif task.priority == 'low' %}secondary{% else %}info{% endif %}">
-                        {{ task.get_priority_display }}
-                    </span>
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-info-circle me-2"></i>Task Details</h5>
+                    <div class="actions">
+                        <a href="{% url 'tasks:update' task.pk %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil me-1"></i> Edit
+                        </a>
+                        <a href="{% url 'tasks:list' %}" class="btn btn-sm btn-outline-secondary ms-2">
+                            <i class="bi bi-arrow-left me-1"></i> Back
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Status:</strong> 
-                                <span class="badge bg-{% if task.status == 'completed' %}success{% elif task.status == 'cancelled' %}secondary{% elif task.status == 'overdue' %}danger{% else %}warning{% endif %}">
-                                    {{ task.get_status_display }}
-                                </span>
-                                {% if task.is_overdue %}
-                                    <span class="badge bg-danger ms-1">Overdue</span>
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small fw-bold text-uppercase mb-1 d-block">Related To</label>
+                            {% if task.get_related_object_url %}
+                            <a href="{{ task.get_related_object_url }}" class="text-decoration-none">
+                                {% if task.account %}
+                                <i class="bi bi-building me-1"></i> {{ task.account.name }}
+                                {% elif task.opportunity %}
+                                <i class="bi bi-lightbulb me-1"></i> {{ task.opportunity.name }}
+                                {% elif task.lead %}
+                                <i class="bi bi-person me-1"></i> {{ task.lead.full_name }}
+                                {% elif task.case %}
+                                <i class="bi bi-headset me-1"></i> {{ task.case.subject }}
                                 {% endif %}
-                            </p>
-                            <p><strong>Assigned To:</strong> 
-                                {% if task.assigned_to %}
-                                    {{ task.assigned_to.email }}
-                                {% else %}
-                                    <span class="text-muted">Unassigned</span>
-                                {% endif %}
-                            </p>
-                            <p><strong>Created By:</strong> 
-                                {% if task.created_by %}
-                                    {{ task.created_by.email }}
-                                {% else %}
-                                    <span class="text-muted">System</span>
-                                {% endif %}
-                            </p>
-                            <p><strong>Task Type:</strong> {{ task.get_task_type_display }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Due Date:</strong> {{ task.due_date|date:"M d, Y H:i" }}</p>
-                            <p><strong>Created:</strong> {{ task.created_at|date:"M d, Y H:i" }}</p>
-                            {% if task.completed_at %}
-                                <p><strong>Completed:</strong> {{ task.completed_at|date:"M d, Y H:i" }}</p>
+                            </a>
+                            {% else %}
+                            <span class="text-muted">—</span>
                             {% endif %}
-                            <p><strong>Estimated Hours:</strong> 
-                                {% if task.estimated_hours %}
-                                    {{ task.estimated_hours }}
-                                {% else %}
-                                    <span class="text-muted">—</span>
-                                {% endif %}
-                            </p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small fw-bold text-uppercase mb-1 d-block">Assigned To</label>
+                            {% if task.assigned_to %}
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white small"
+                                    style="width: 28px; height: 28px;">
+                                    {{ task.assigned_to.email|first|upper }}
+                                </div>
+                                <span>{{ task.assigned_to.email }}</span>
+                            </div>
+                            {% else %}
+                            <span class="text-muted">Unassigned</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small fw-bold text-uppercase mb-1 d-block">Due Date</label>
+                            <span class="{% if task.is_overdue %}text-danger fw-bold{% endif %}">
+                                <i class="bi bi-calendar-event me-1"></i>
+                                {{ task.due_date|date:"M d, Y H:i" }}
+                                {% if task.is_overdue %}<span class="badge bg-danger ms-2">Overdue</span>{% endif %}
+                            </span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small fw-bold text-uppercase mb-1 d-block">Priority</label>
+                            {% if task.priority_ref %}
+                            <span class="badge" style="background-color: {{ task.priority_ref.color }};">
+                                {{ task.priority_ref.label }}
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">Normal</span>
+                            {% endif %}
                         </div>
                     </div>
-                    <div class="mt-3">
-                        <strong>Description:</strong>
-                        <p class="mt-2">{{ task.description|linebreaks }}</p>
-                    </div>
-                    {% if task.tags %}
-                        <div class="mt-3">
-                            <strong>Tags:</strong>
-                            {% for tag in task.get_tags_list %}
-                                <span class="badge bg-light text-dark me-1">{{ tag }}</span>
-                            {% endfor %}
+
+                    <div class="description-section mt-4 pt-3 border-top">
+                        <label class="text-muted small fw-bold text-uppercase mb-2 d-block">Description</label>
+                        <div class="lead" style="font-size: 1rem; line-height: 1.6;">
+                            {{ task.task_description|linebreaks|default:"<em class='text-muted'>No description
+                                provided.</em>" }}
                         </div>
-                    {% endif %}
+                    </div>
                 </div>
             </div>
 
-            <!-- Related Object -->
-            {% if task.get_related_object %}
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5>Related {{ task.get_task_type_display }}</h5>
+            <!-- Collaboration / Chatter -->
+            <div class="card shadow-sm border-0 bg-light">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-chat-dots me-2"></i>Collaboration</h5>
                 </div>
                 <div class="card-body">
-                    {% if task.account %}
-                        <p><strong>Account:</strong> <a href="{% url 'accounts:detail' task.account.pk %}">{{ task.account.name }}</a></p>
-                    {% elif task.opportunity %}
-                        <p><strong>Opportunity:</strong> <a href="{% url 'opportunities:detail' task.opportunity.pk %}">{{ task.opportunity.name }}</a></p>
-                    {% elif task.related_lead %}
-                        <p><strong>Lead:</strong> <a href="{% url 'leads:detail' task.related_lead.pk %}">{{ task.related_lead.full_name }}</a></p>
-                    {% elif task.case %}
-                        <p><strong>Case:</strong> <a href="{% url 'cases:detail' task.case.pk %}">{{ task.case.subject }}</a></p>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Comments -->
-            <div class="card">
-                <div class="card-header">
-                    <h5>Comments ({{ comments.count }})</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
+                    <div class="comment-composer mb-4">
                         <form method="post" action="{% url 'tasks:add_comment' task.pk %}" id="comment-form">
                             {% csrf_token %}
-                            <div class="mb-2">
+                            <div class="form-floating mb-2">
                                 {{ comment_form.content }}
-                                {% if comment_form.content.errors %}
-                                    <div class="text-danger mt-1">{{ comment_form.content.errors }}</div>
-                                {% endif %}
+                                <label for="id_content">Write a message...</label>
                             </div>
-                            <button type="submit" class="btn btn-primary btn-sm">Add Comment</button>
+                            <button type="submit" class="btn btn-primary btn-sm px-4">Post Message</button>
                         </form>
                     </div>
-                    
-                    {% if comments %}
-                        <div class="comments-list">
-                            {% for comment in comments %}
-                            <div class="comment-item mb-3 pb-3 border-bottom">
-                                <div class="d-flex justify-content-between">
-                                    <strong>{{ comment.author.email|default:"Anonymous" }}</strong>
-                                    <small class="text-muted">{{ comment.created_at|date:"M d, Y H:i" }}</small>
+
+                    <div class="messages">
+                        {% if comments %}
+                        {% for comment in comments %}
+                        <div class="d-flex gap-3 mb-4">
+                            <div class="flex-shrink-0">
+                                <div class="bg-white rounded-circle d-flex align-items-center justify-content-center border shadow-sm"
+                                    style="width: 40px; height: 40px;">
+                                    <i class="bi bi-person text-muted"></i>
                                 </div>
-                                <p class="mt-1">{{ comment.content|linebreaks }}</p>
                             </div>
-                            {% endfor %}
+                            <div class="flex-grow-1 bg-white p-3 rounded-3 shadow-sm">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="fw-bold">{{ comment.author.email }}</span>
+                                    <small class="text-muted">{{ comment.created_at|date:"M d, H:i" }}</small>
+                                </div>
+                                <div class="message-body">
+                                    {{ comment.content|linebreaks }}
+                                </div>
+                            </div>
                         </div>
-                    {% else %}
-                        <p class="text-muted">No comments yet.</p>
-                    {% endif %}
+                        {% endfor %}
+                        {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-chat-right-quote opacity-25 display-4 d-block mb-3"></i>
+                            <p class="small">No messages yet. Lead the conversation!</p>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <!-- Actions -->
-            <div class="card mb-4">
+        <div class="col-lg-4">
+            <!-- Summary Stats -->
+            <div class="card shadow-sm mb-4">
                 <div class="card-header">
-                    <h5>Actions</h5>
+                    <h6 class="mb-0 fw-bold">Summary</h6>
                 </div>
                 <div class="card-body">
-                    <div class="d-grid gap-2">
-                        {% if task.status != 'completed' %}
-                            <form method="post" action="{% url 'tasks:complete_task' %}" class="d-inline">
-                                {% csrf_token %}
-                                <input type="hidden" name="task_id" value="{{ task.id }}">
-                                <button type="submit" class="btn btn-success">
-                                    <i class="bi bi-check-circle"></i> Complete Task
-                                </button>
-                            </form>
-                        {% endif %}
-                        <a href="{% url 'tasks:update' task.pk %}" class="btn btn-outline-primary">
-                            <i class="bi bi-pencil"></i> Edit Task
-                        </a>
-                        <a href="{% url 'tasks:list' %}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left"></i> Back to Tasks
-                        </a>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Task Type</span>
+                        <span class="small fw-bold">{{ task.task_type_ref.name|default:"General" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Estimated Hours</span>
+                        <span class="small fw-bold">{{ task.estimated_hours|default:"—" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Actual Hours</span>
+                        <span class="small fw-bold">{{ task.actual_hours|default:"—" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Created Date</span>
+                        <span class="small fw-bold">{{ task.created_at|date:"M d, Y" }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Attachments -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5>Attachments ({{ attachments.count }})</h5>
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold">Attachments ({{ attachments.count }})</h6>
                 </div>
                 <div class="card-body">
-                    <form method="post" action="{% url 'tasks:upload_attachment' task.pk %}" 
-                          enctype="multipart/form-data" id="attachment-form">
+                    <form method="post" action="{% url 'tasks:upload_attachment' task.pk %}"
+                        enctype="multipart/form-data" id="attachment-form" class="mb-3">
                         {% csrf_token %}
-                        <div class="mb-2">
+                        <div class="input-group input-group-sm">
                             {{ attachment_form.file }}
-                            {% if attachment_form.file.errors %}
-                                <div class="text-danger mt-1">{{ attachment_form.file.errors }}</div>
-                            {% endif %}
+                            <button type="submit" class="btn btn-primary">Upload</button>
                         </div>
-                        <button type="submit" class="btn btn-outline-primary btn-sm">Upload</button>
                     </form>
-                    
-                    {% if attachments %}
-                        <div class="mt-3">
-                            <h6>Files:</h6>
-                            <ul class="list-unstyled">
-                                {% for attachment in attachments %}
-                                <li class="mb-1">
-                                    <a href="{{ attachment.file.url }}" target="_blank">
-                                        <i class="bi bi-file-earmark"></i> {{ attachment.file.name|basename }}
-                                    </a>
-                                    <small class="text-muted ms-2">{{ attachment.created_at|date:"M d" }}</small>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
 
-            <!-- Recurrence Info -->
-            {% if task.is_recurring %}
-            <div class="card">
-                <div class="card-header">
-                    <h5>Recurrence</h5>
-                </div>
-                <div class="card-body">
-                    <p><strong>Pattern:</strong> {{ task.get_recurrence_pattern_display }}</p>
-                    {% if task.recurrence_end_date %}
-                        <p><strong>End Date:</strong> {{ task.recurrence_end_date|date:"M d, Y" }}</p>
+                    {% if attachments %}
+                    <div class="list-group list-group-flush">
+                        {% for attachment in attachments %}
+                        <div
+                            class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent">
+                            <div class="text-truncate" style="max-width: 80%;">
+                                <a href="{{ attachment.file.url }}" target="_blank" class="text-decoration-none small">
+                                    <i class="bi bi-file-earmark me-1"></i> {{ attachment.file.name|basename }}
+                                </a>
+                            </div>
+                            <small class="text-muted" style="font-size: 0.7rem;">{{ attachment.created_at|date:"M d"
+                                }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted small text-center py-2">No attachments yet.</p>
                     {% endif %}
                 </div>
             </div>
-            {% endif %}
         </div>
     </div>
 </div>
 
-
+{% csrf_token %}
 {% endblock %}
+
 {% block extra_head %}
 <style>
-.card-header h5 {
-    margin-bottom: 0;
-}
-.badge {
-    font-size: 0.75em;
-    padding: 0.3em 0.6em;
-}
-.btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-}
-.comment-item {
-    font-size: 0.9em;
-}
+    .status-step {
+        flex: 1;
+        min-width: 150px;
+        padding: 1rem;
+        border: none;
+        border-radius: 0;
+        border-right: 1px solid rgba(0, 0, 0, 0.05);
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        text-align: center;
+        opacity: 0.7;
+    }
+
+    .status-step:hover {
+        background-color: #f8f9fa;
+        opacity: 1;
+    }
+
+    .status-step.active {
+        opacity: 1;
+        box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .status-step:last-child {
+        border-right: none;
+    }
+
+    .form-floating>.form-control:focus~label,
+    .form-floating>.form-control:not(:placeholder-shown)~label {
+        color: var(--brand-primary);
+    }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Comment form submission
-    const commentForm = document.getElementById('comment-form');
-    if (commentForm) {
-        commentForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            
-            fetch(this.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error adding comment: ' + JSON.stringify(data.error));
-                }
-            })
-            .catch(error => {
-                alert('Error: ' + error);
+    document.addEventListener('DOMContentLoaded', function () {
+        // Status updates via AJAX
+        const statusButtons = document.querySelectorAll('.status-step');
+        statusButtons.forEach(btn => {
+            btn.addEventListener('click', function () {
+                const statusId = this.dataset.statusId;
+                const taskId = "{{ task.id }}";
+
+                fetch('/tasks/api/update-status/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({
+                        task_id: taskId,
+                        status_id: statusId // Note: The API might expect status string or ID, I'll align it.
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert('Error updating status: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Request failed');
+                    });
             });
         });
-    }
-    
-    // Attachment form submission
-    const attachmentForm = document.getElementById('attachment-form');
-    if (attachmentForm) {
-        attachmentForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            
-            fetch(this.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error uploading attachment: ' + JSON.stringify(data.error));
-                }
-            })
-            .catch(error => {
-                alert('Error: ' + error);
+
+        // Comment form submission
+        const commentForm = document.getElementById('comment-form');
+        if (commentForm) {
+            commentForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+
+                fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert('Error adding comment: ' + JSON.stringify(data.error));
+                        }
+                    })
+                    .catch(error => {
+                        alert('Error: ' + error);
+                    });
             });
-        });
-    }
-});
+        }
+    });
 </script>
 {% endblock %}

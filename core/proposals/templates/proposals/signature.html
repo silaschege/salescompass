@@ -1,0 +1,173 @@
+{% extends "proposals/base.html" %}
+{% load static %}
+
+{% block title %}Sign Proposal - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="block-title fw-bold mb-0">Sign Proposal</h1>
+        <div>
+            <a href="{% url 'proposals:detail' proposal.pk %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Cancel
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Proposal Preview</h5>
+                </div>
+                <div class="card-body">
+                    <h2>{{ proposal.title }}</h2>
+                    <p class="text-muted">Proposal for {{ proposal.opportunity.account.name }}</p>
+                    
+                    <div class="proposal-content mt-4">
+                        {{ proposal.content|safe }}
+                    </div>
+                    
+                    {% if proposal.esg_section_content %}
+                    <div class="esg-section mt-4">
+                        <div class="esg-box p-4 border-start border-success border-4 bg-light">
+                            <h3 class="text-success">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-tree" viewBox="0 0 16 16">
+                                    <path d="M8 1a7 7 0 0 0-7 7 7 7 0 0 0 7 7 7 7 0 0 0 7-7 7 7 0 0 0-7-7zM8 15a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6z"/>
+                                    <path d="M8 4a.5.5 0 0 1 .5.5v.545a3.5 3.5 0 0 1 0 6.91v.545a.5.5 0 0 1-1 0v-.545a3.5 3.5 0 0 1 0-6.91V4.5A.5.5 0 0 1 8 4z"/>
+                                    <path d="M9 7.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                                </svg>
+                                Environmental & Social Governance
+                            </h3>
+                            <div class="esg-content">
+                                {{ proposal.esg_section_content|safe }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Digital Signature</h5>
+                </div>
+                <div class="card-body">
+                    <form id="signature-form">
+                        <div class="mb-3">
+                            <label for="signer-name" class="form-label">Full Name *</label>
+                            <input type="text" class="form-control" id="signer-name" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="signer-title" class="form-label">Title *</label>
+                            <input type="text" class="form-control" id="signer-title" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Signature *</label>
+                            <div id="signature-pad" class="border rounded" style="height: 200px; background-color: #f8f9fa;"></div>
+                            <div class="mt-2">
+                                <button type="button" id="clear-signature" class="btn btn-sm btn-outline-secondary">Clear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="terms-agreement" required>
+                            <label class="form-check-label" for="terms-agreement">
+                                I agree to the terms and conditions outlined in this proposal
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-check-circle"></i> Sign and Accept Proposal
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize signature pad
+    const canvas = document.createElement('canvas');
+    canvas.width = document.getElementById('signature-pad').offsetWidth;
+    canvas.height = document.getElementById('signature-pad').offsetHeight;
+    document.getElementById('signature-pad').appendChild(canvas);
+    
+    const signaturePad = new SignaturePad(canvas, {
+        backgroundColor: 'rgb(255, 255, 255)'
+    });
+    
+    // Clear signature button
+    document.getElementById('clear-signature').addEventListener('click', function() {
+        signaturePad.clear();
+    });
+    
+    // Form submission
+    document.getElementById('signature-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (signaturePad.isEmpty()) {
+            alert('Please provide a signature first.');
+            return;
+        }
+        
+        const name = document.getElementById('signer-name').value;
+        const title = document.getElementById('signer-title').value;
+        
+        if (!name || !title) {
+            alert('Please fill in all required fields.');
+            return;
+        }
+        
+        // Send signature data to server
+        fetch('{% url "proposals:save_signature" proposal.pk %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                signature: signaturePad.toDataURL(),
+                name: name,
+                title: title
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Proposal signed successfully!');
+                window.location.href = '{% url "proposals:detail" proposal.pk %}';
+            } else {
+                alert('Error signing proposal: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while signing the proposal.');
+        });
+    });
+    
+    // Make signature pad responsive
+    function resizeCanvas() {
+        const container = document.getElementById('signature-pad');
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = container.offsetWidth * ratio;
+        canvas.height = container.offsetHeight * ratio;
+        canvas.getContext('2d').scale(ratio, ratio);
+        signaturePad.clear(); // Clear canvas when resizing
+    }
+    
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+});
+</script>
+{% endblock %}

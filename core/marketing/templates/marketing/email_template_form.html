@@ -3,244 +3,87 @@
 {% block title %}{% if object %}Edit {{ object.name }}{% else %}New Email Template{% endif %} - SalesCompass{% endblock
 %}
 
-{% block extra_head %}
-<!-- Quill Theme -->
-<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-<style>
-    /* Form-specific styling */
-    .form-label {
-        font-size: 0.95rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .form-control,
-    .form-select {
-        border: 1px solid #e3e6f3;
-        border-radius: 0.5rem;
-        padding: 0.75rem 1rem;
-        font-size: 0.95rem;
-        transition: all 0.2s ease;
-    }
-
-    .form-control:focus,
-    .form-select:focus {
-        border-color: #6f42c1;
-        box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
-    }
-
-    /* Quill Editor Styling */
-    #editor-container {
-        height: 400px;
-        background: white;
-        border-bottom-left-radius: 0.5rem;
-        border-bottom-right-radius: 0.5rem;
-    }
-
-    .ql-toolbar {
-        border-top-left-radius: 0.5rem;
-        border-top-right-radius: 0.5rem;
-        background: #f8f9fa;
-    }
-
-    .btn {
-        padding: 0.5rem 1.25rem;
-        font-weight: 600;
-        border-radius: 0.5rem;
-        transition: all 0.2s ease;
-    }
-
-    .btn-primary:hover {
-        background-color: #5a32a3;
-        border-color: #5a32a3;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
-    }
-
-    .card {
-        border: none;
-        border-radius: 1rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    }
-
-    code {
-        background-color: #f8f9fa;
-        padding: 0.1rem 0.25rem;
-        border-radius: 0.25rem;
-        font-size: 0.875rem;
-        color: #6f42c1;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="header-bar mb-4">
     <div class="container">
         <h1 class="block-title">{% if object %}Edit Email Template{% else %}Create New Email Template{% endif %}</h1>
         <p class="text-white text-center lead">
-            {% if object %}Update your email template content{% else %}Create a reusable email template for campaigns{%
-            endif %}
+            Design your outreach with personalized templates
         </p>
     </div>
 </div>
 
 <div class="container">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
+    <div class="row">
+        <div class="col-lg-8">
             <div class="card shadow-sm border-0">
                 <div class="card-body p-4">
-                    <form method="post" enctype="multipart/form-data" id="templateForm">
+                    <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <!-- Template Name -->
-                                <div class="mb-4">
-                                    <label for="{{ form.name.id_for_label }}" class="form-label fw-bold text-primary">
-                                        Template Name <span class="text-danger">*</span>
-                                    </label>
-                                    {{ form.name }}
-                                    {% if form.name.errors %}
-                                    <div class="text-danger mt-1">{{ form.name.errors }}</div>
-                                    {% endif %}
-                                </div>
-
-                                <!-- Subject Line -->
-                                <div class="mb-4">
-                                    <label for="{{ form.subject.id_for_label }}"
-                                        class="form-label fw-bold text-primary">
-                                        Email Subject <span class="text-danger">*</span>
-                                    </label>
-                                    {{ form.subject }}
-                                    {% if form.subject.errors %}
-                                    <div class="text-danger mt-1">{{ form.subject.errors }}</div>
-                                    {% endif %}
-                                </div>
-
-                                <!-- Status -->
-                                <div class="mb-4">
-                                    <label for="{{ form.is_active.id_for_label }}" class="form-check">
-                                        {{ form.is_active }}
-                                        <span class="form-check-label fw-bold text-primary">Active</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <!-- Merge Tags Helper -->
-                                <div class="card bg-light border-0 h-100">
-                                    <div class="card-body">
-                                        <h6 class="fw-bold text-primary mb-3">Available Merge Tags</h6>
-                                        <div class="d-flex flex-wrap gap-2">
-                                            <button type="button" class="btn btn-sm btn-outline-secondary merge-tag"
-                                                data-tag="{{ contact.first_name }}">First Name</button>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary merge-tag"
-                                                data-tag="{{ contact.last_name }}">Last Name</button>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary merge-tag"
-                                                data-tag="{{ account.name }}">Company</button>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary merge-tag"
-                                                data-tag="{{ unsubscribe_url }}">Unsubscribe Link</button>
-                                        </div>
-                                        <p class="small text-muted mt-3 mb-0">Click to copy to clipboard, then paste
-                                            into the editor.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- HTML Content (Quill Editor) -->
                         <div class="mb-4">
-                            <label class="form-label fw-bold text-primary">
-                                HTML Content <span class="text-danger">*</span>
-                            </label>
-                            <!-- Hidden input to store the actual HTML -->
-                            {{ form.html_content }}
-
-                            <!-- Quill Editor Container -->
-                            <div id="editor-container"></div>
-
-                            {% if form.html_content.errors %}
-                            <div class="text-danger mt-1">{{ form.html_content.errors }}</div>
+                            <label for="{{ form.name.id_for_label }}" class="form-label fw-bold text-primary">Template
+                                Name *</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="text-danger mt-1">{{ form.name.errors }}</div>
                             {% endif %}
                         </div>
 
-                        <!-- Plain Text Content -->
                         <div class="mb-4">
-                            <label for="{{ form.plain_text_content.id_for_label }}"
-                                class="form-label fw-bold text-primary">
-                                Plain Text Content (Optional)
-                            </label>
-                            {{ form.plain_text_content }}
-                            <div class="form-text text-muted small">
-                                Fallback for email clients that don't support HTML.
-                            </div>
+                            <label for="{{ form.subject_line.id_for_label }}"
+                                class="form-label fw-bold text-primary">Subject Line *</label>
+                            {{ form.subject_line }}
+                            {% if form.subject_line.errors %}
+                            <div class="text-danger mt-1">{{ form.subject_line.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.content.id_for_label }}" class="form-label fw-bold text-primary">Email
+                                Content (HTML)</label>
+                            {{ form.content }}
+                            {% if form.content.errors %}
+                            <div class="text-danger mt-1">{{ form.content.errors }}</div>
+                            {% endif %}
                         </div>
 
                         <!-- Action Buttons -->
-                        <div
-                            class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-4 pt-3 border-top">
-                            <div>
-                                <a href="{% url 'marketing:template_list' %}" class="btn btn-outline-primary">
-                                    Back to Templates
-                                </a>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <a href="{% url 'marketing:template_list' %}" class="btn btn-light">Cancel</a>
-                                <button type="submit" class="btn btn-primary">
-                                    {% if object %}Update Template{% else %}Create Template{% endif %}
-                                </button>
-                            </div>
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <a href="{% url 'marketing:email_template_list' %}" class="btn btn-light">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if object %}Update Template{% else %}Create Template{% endif %}
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
+
+        <!-- Help Sidebar -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 text-primary">Email Best Practices</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Dynamic Tags:</h6>
+                    <p class="small text-muted">Use tags like <code>{{ contact.first_name }}</code> or
+                        <code>{{ company_name }}</code> to personalize your emails.</p>
+
+                    <h6 class="mt-4">Subject Lines:</h6>
+                    <ul class="small text-muted">
+                        <li>Keep it under 60 characters.</li>
+                        <li>Avoid spam triggers like "FREE" or "URGENT".</li>
+                        <li>Ask a compelling question.</li>
+                    </ul>
+
+                    <h6 class="mt-4">Content Tips:</h6>
+                    <p class="small text-muted">Focus on one clear Call to Action (CTA). Use a professional tone but
+                        keep it conversational.</p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-
-<!-- Quill JS -->
-<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Initialize Quill
-        var quill = new Quill('#editor-container', {
-            theme: 'snow',
-            modules: {
-                toolbar: [
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ 'color': [] }, { 'background': [] }],
-                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                    ['link', 'image'],
-                    ['clean']
-                ]
-            }
-        });
-
-        // Load initial content from hidden textarea
-        var textarea = document.getElementById('{{ form.html_content.id_for_label }}');
-        textarea.style.display = 'none'; // Hide the original textarea
-        quill.root.innerHTML = textarea.value;
-
-        // Sync Quill content to textarea on form submit
-        var form = document.getElementById('templateForm');
-        form.onsubmit = function () {
-            textarea.value = quill.root.innerHTML;
-        };
-
-        // Merge Tag Copy Functionality
-        document.querySelectorAll('.merge-tag').forEach(button => {
-            button.addEventListener('click', function () {
-                const tag = this.dataset.tag;
-                navigator.clipboard.writeText(tag).then(() => {
-                    // Optional: Show a tooltip or toast
-                    const originalText = this.innerText;
-                    this.innerText = 'Copied!';
-                    setTimeout(() => {
-                        this.innerText = originalText;
-                    }, 1000);
-                });
-            });
-        });
-    });
-</script>
 {% endblock %}

@@ -137,6 +137,46 @@
             color: #6c757d;
             font-size: 0.9rem;
         }
+
+        /* Search Styles */
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto 3rem auto;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 1.5rem 1rem 3.5rem;
+            border-radius: 50px;
+            border: 2px solid rgba(111, 66, 193, 0.2);
+            background: white;
+            box-shadow: 0 10px 30px rgba(111, 66, 193, 0.05);
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: #6f42c1;
+            box-shadow: 0 15px 40px rgba(111, 66, 193, 0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6f42c1;
+            font-size: 1.4rem;
+        }
+
+        .no-results {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
     </style>
 </head>
 
@@ -177,7 +217,17 @@
     <div class="container py-5 mt-5">
         <h2 class="section-title">Apps</h2>
 
+        <div class="search-container">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" id="appSearch" class="search-input" placeholder="Search for an app..."
+                autocomplete="off">
+        </div>
+
         <div class="app-container">
+            <div id="noResults" class="no-results">
+                <i class="bi bi-search display-1 mb-3"></i>
+                <p class="fs-4">No apps found matching your search.</p>
+            </div>
 
             <!-- 1. Core Apps (Home, Dashboard, Accounts, etc.) -->
             {% if grouped_apps.core %}
@@ -245,6 +295,48 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('appSearch');
+            const apps = document.querySelectorAll('.app-item');
+            const sections = document.querySelectorAll('.app-section');
+            const noResults = document.getElementById('noResults');
+
+            searchInput.addEventListener('input', function () {
+                const query = searchInput.value.toLowerCase().trim();
+                let hasVisibleApps = false;
+
+                apps.forEach(app => {
+                    const appName = app.querySelector('.app-name').textContent.toLowerCase();
+                    const appDesc = app.getAttribute('title').toLowerCase();
+
+                    if (appName.includes(query) || appDesc.includes(query)) {
+                        app.style.display = 'flex';
+                        hasVisibleApps = true;
+                    } else {
+                        app.style.display = 'none';
+                    }
+                });
+
+                // Hide/show sections based on their children's visibility
+                sections.forEach(section => {
+                    const visibleIcons = section.querySelectorAll('.app-item[style*="display: flex"]');
+                    if (visibleIcons.length > 0) {
+                        section.style.display = 'block';
+                    } else {
+                        section.style.display = 'none';
+                    }
+                });
+
+                // Show no results message
+                if (!hasVisibleApps && query !== '') {
+                    noResults.style.display = 'block';
+                } else {
+                    noResults.style.display = 'none';
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

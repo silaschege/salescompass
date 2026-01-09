@@ -1,0 +1,66 @@
+{% extends "tasks/base.html" %}
+{% load static %}
+{% block title %}{% if object %}Edit Task Type: {{ object.name }}{% else %}New Task Type{% endif %} - SalesCompass{%
+endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container text-center">
+        <h1 class="block-title">{% if object %}Edit Task Type{% else %}Create Task Type{% endif %}</h1>
+        <p class="text-white lead">Define categories for your tasks</p>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold text-primary">Task Type Details</h5>
+                    <a href="{% url 'tasks:type_list' %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </a>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" id="type-form">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-uppercase mb-2">Type Name</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="invalid-feedback d-block">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small text-uppercase mb-2">Order</label>
+                                {{ form.order }}
+                            </div>
+                            <div class="col-md-6 mb-3 text-center">
+                                <div class="form-check form-switch mt-4 d-inline-block">
+                                    {{ form.is_default }}
+                                    <label class="form-check-label fw-bold small text-uppercase"
+                                        for="{{ form.is_default.id_for_label }}">Set as Default Type</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-uppercase mb-2">Description</label>
+                            {{ form.description }}
+                        </div>
+
+                        <div class="text-end mt-4">
+                            <button type="submit" class="btn btn-primary px-5 py-2">
+                                <i class="bi bi-save me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

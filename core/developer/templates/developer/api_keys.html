@@ -8,7 +8,7 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="h3">API Keys</h1>
-                <a href="{% url 'settings_app:api_key_create' %}" class="btn btn-primary">Create New Key</a>
+                <a href="{% url 'developer:generate_key' %}" class="btn btn-primary">Create New Key</a>
             </div>
 
             <div class="card">
@@ -51,12 +51,12 @@
                     {% else %}
                     <div class="text-center py-5">
                         <p class="text-muted">No API keys found. Create one to get started!</p>
-                        <a href="{% url 'settings_app:api_key_create' %}" class="btn btn-primary">Create API Key</a>
+                        <a href="{% url 'developer:generate_key' %}" class="btn btn-primary">Create API Key</a>
                     </div>
                     {% endif %}
                 </div>
             </div>
         </div>
-    </div>
+    </row>
 </div>
 {% endblock %}

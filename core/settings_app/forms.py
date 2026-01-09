@@ -1,5 +1,5 @@
 from django import forms
-from .models import Setting, CustomField, ModuleLabel, TeamMember, AssignmentRule, PipelineStage, EmailIntegration, BehavioralScoringRule, DemographicScoringRule, SettingType, ModelChoice, FieldType, ModuleChoice, TeamRole, Territory, AssignmentRuleType, PipelineType, EmailProvider, ActionType, OperatorType
+from .models import Setting, CustomField, ModuleLabel, AssignmentRule, PipelineStage, EmailIntegration, BehavioralScoringRule, DemographicScoringRule, SettingType, ModelChoice, FieldType, ModuleChoice, AssignmentRuleType, PipelineType, EmailProvider, ActionType, OperatorType
 from tenants.models import Tenant as TenantModel
 from core.forms import DynamicChoiceWidget
 
@@ -56,23 +56,7 @@ class ModuleLabelForm(forms.ModelForm):
             self.fields['module_key_ref'].queryset = ModuleChoice.objects.none()
 
 
-class TeamMemberForm(forms.ModelForm):
-    class Meta:
-        model = TeamMember
-        fields = ['user', 'role', 'territory', 'manager', 'status', 'hire_date', 'termination_date', 
-                  'quota_amount', 'quota_period', 'commission_rate']
-    
-    def __init__(self, *args, **kwargs):
-        self.tenant = kwargs.pop('tenant', None)
-        super().__init__(*args, **kwargs)
-        
-        # Load dynamic choices based on tenant
-        if self.tenant:
-            self.fields['role_ref'].queryset = TeamRole.objects.filter(tenant_id=self.tenant.id)
-            self.fields['territory_ref'].queryset = Territory.objects.filter(tenant_id=self.tenant.id)
-        else:
-            self.fields['role_ref'].queryset = TeamRole.objects.none()
-            self.fields['territory_ref'].queryset = Territory.objects.none()
+
 
 
 class AssignmentRuleForm(forms.ModelForm):
@@ -183,16 +167,10 @@ class ModuleChoiceForm(forms.ModelForm):
         fields = ['module_choice_name', 'label', 'order', 'module_choice_is_active', 'is_system']
 
 
-class TeamRoleForm(forms.ModelForm):
-    class Meta:
-        model = TeamRole
-        fields = ['role_name', 'label', 'order', 'role_is_active', 'is_system']
 
 
-class TerritoryForm(forms.ModelForm):
-    class Meta:
-        model = Territory
-        fields = ['territory_name', 'label', 'order', 'territory_is_active', 'is_system']
+
+
 
 
 class AssignmentRuleTypeForm(forms.ModelForm):

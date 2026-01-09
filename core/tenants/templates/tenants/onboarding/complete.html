@@ -1,0 +1,49 @@
+{% extends 'tenants/onboarding/base.html' %}
+
+{% block step_content %}
+<div class="text-center">
+  <div class="mb-4">
+    <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+  </div>
+  <h2 class="mb-3">Setup Complete!</h2>
+  <p class="lead">Your SalesCompass account is ready to use.</p>
+  <p class="text-muted">You've successfully configured your organization's CRM environment.</p>
+   
+  <div class="row mt-5">
+    <div class="col-md-4 mb-3">
+      <div class="card h-100 border-success">
+        <div class="card-body">
+          <i class="bi bi-people text-success" style="font-size: 2rem;"></i>
+          <h5 class="card-title">Add Users</h5>
+          <p class="card-text">Invite your team members to join your organization.</p>
+          <a href="#" class="btn btn-outline-success">Invite Users</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="card h-100 border-success">
+        <div class="card-body">
+          <i class="bi bi-file-earmark-text text-success" style="font-size: 2rem;"></i>
+          <h5 class="card-title">Import Data</h5>
+          <p class="card-text">Upload your existing contacts and leads.</p>
+          <a href="#" class="btn btn-outline-success">Import Data</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="card h-100 border-success">
+        <div class="card-body">
+          <i class="bi bi-gear text-success" style="font-size: 2rem;"></i>
+          <h5 class="card-title">Customize Settings</h5>
+          <p class="card-text">Fine-tune your CRM to match your workflow.</p>
+          <a href="#" class="btn btn-outline-success">Customize</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block next_button %}
+<a href="{% url 'dashboard:cockpit' %}" class="btn btn-success">Go to Dashboard →</a>
+{% endblock %}

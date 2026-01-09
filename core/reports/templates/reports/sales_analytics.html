@@ -1,59 +1,80 @@
-{% extends 'logged_in/base.html' %}
+{% extends "reports/base.html" %}
 {% load humanize %}
 
 {% block title %}Sales Performance Analytics | SalesCompass{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <!-- Header -->
-    <div class="row align-items-center mb-4">
-        <div class="col">
-            <h1 class="h3 mb-0 text-gray-800">Sales Performance Analytics</h1>
-            <p class="text-muted small mb-0">Overview of key sales metrics and trends</p>
-        </div>
-        <div class="col-auto">
-            <button class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-calendar3 me-1"></i> Last 30 Days
-            </button>
-            <button class="btn btn-sm btn-primary ms-2">
-                <i class="bi bi-download me-1"></i> Export
-            </button>
-        </div>
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Sales Performance Analytics</h1>
+        <p class="text-white text-center lead">Overview of key sales metrics and trends</p>
     </div>
+</div>
 
+<div class="container py-4">
     <!-- KPI Cards -->
     <div class="row g-3 mb-4">
         <div class="col-xl-3 col-sm-6">
-            <div class="card h-100 shadow-sm border-0 border-start border-primary border-4">
+            <div class="card h-100 shadow-sm border-0">
                 <div class="card-body">
-                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Revenue</div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800">${{ metrics.total_revenue|floatform:2|intcomma
-                        }}</div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1 text-uppercase small font-weight-bold">Total Revenue</h6>
+                            <h3 class="mb-0 font-weight-bold">${{ metrics.total_revenue|floatformat:2|intcomma }}</h3>
+                        </div>
+                        <div class="icon bg-primary text-white rounded-circle p-2"
+                            style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-currency-dollar"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-sm-6">
-            <div class="card h-100 shadow-sm border-0 border-start border-success border-4">
+            <div class="card h-100 shadow-sm border-0">
                 <div class="card-body">
-                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Win Rate</div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ metrics.win_rate|floatform:1 }}%</div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1 text-uppercase small font-weight-bold">Win Rate</h6>
+                            <h3 class="mb-0 font-weight-bold">{{ metrics.win_rate|floatformat:1 }}%</h3>
+                        </div>
+                        <div class="icon bg-success text-white rounded-circle p-2"
+                            style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-percent"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-sm-6">
-            <div class="card h-100 shadow-sm border-0 border-start border-info border-4">
+            <div class="card h-100 shadow-sm border-0">
                 <div class="card-body">
-                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Deals Closed</div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ metrics.total_deals }}</div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1 text-uppercase small font-weight-bold">Deals Closed</h6>
+                            <h3 class="mb-0 font-weight-bold">{{ metrics.total_deals }}</h3>
+                        </div>
+                        <div class="icon bg-info text-white rounded-circle p-2"
+                            style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-sm-6">
-            <div class="card h-100 shadow-sm border-0 border-start border-warning border-4">
+            <div class="card h-100 shadow-sm border-0">
                 <div class="card-body">
-                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Avg Deal Size</div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800">${{ metrics.avg_deal_size|floatform:2|intcomma
-                        }}</div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1 text-uppercase small font-weight-bold">Avg Deal Size</h6>
+                            <h3 class="mb-0 font-weight-bold">${{ metrics.avg_deal_size|floatformat:2|intcomma }}</h3>
+                        </div>
+                        <div class="icon bg-warning text-white rounded-circle p-2"
+                            style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-briefcase"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

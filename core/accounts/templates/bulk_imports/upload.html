@@ -13,18 +13,18 @@
             <div class="mb-3">
                 <label for="{{ form.csv_file.id_for_label }}" class="form-label fw-semibold">CSV File</label>
                 {{ form.csv_file }}
-                <div class="form-text">
-                    <p><strong>Required columns:</strong> <code>name</code>, <code>industry</code>, <code>country</code></p>
-                    <p><strong>Optional:</strong> <code>tier</code>, <code>website</code>, <code>esg_engagement</code>, etc.</p>
-                    <p>💡 Account owners will be auto-assigned to you.</p>
-                    <a href="#" id="download-template" class="btn btn-sm btn-outline-secondary mt-2">Download Template</a>
-                </div>
                 {% if form.csv_file.errors %}
                     <div class="text-danger">{{ form.csv_file.errors }}</div>
                 {% endif %}
+                <div class="form-text">
+                    <p><strong>Required columns:</strong> <code>name</code>, <code>industry</code>, <code>country</code></p>
+                    <p><strong>Optional columns:</strong> <code>tier</code>, <code>website</code>, <code>address</code>, <code>esg_engagement</code>, <code>sustainability_goals</code>, <code>renewal_date</code>, <code>gdpr_consent</code>, <code>ccpa_consent</code></p>
+                    <p>💡 Account owners will be auto-assigned to you.</p>
+                    <a href="#" id="download-template" class="btn btn-sm btn-outline-secondary mt-2">Download Template</a>
+                </div>
             </div>
             <button type="submit" class="btn btn-primary">Upload & Validate</button>
-            <a href="{% url 'accounts:accounts_list' %}" class="btn btn-secondary">Cancel</a>
+            <a href="{% url 'accounts:account_list' %}" class="btn btn-secondary">Cancel</a>
         </form>
     </div>
 </div>

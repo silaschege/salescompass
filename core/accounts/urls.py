@@ -1,6 +1,6 @@
 from django.urls import path, include
 from . import views
-
+ 
 app_name = 'accounts'
 urlpatterns = [
     # CRUD
@@ -30,25 +30,21 @@ urlpatterns = [
     # Account-specific contact URLs
     path('accounts/<int:account_pk>/contacts/', views.AccountContactListView.as_view(), name='account_contact_list'),
     
-    # Team Members
-    path('members/', views.OrganizationMemberListView.as_view(), name='member_list'),
-    path('members/create/', views.OrganizationMemberCreateView.as_view(), name='member_create'),
-    path('members/<int:pk>/', views.OrganizationMemberDetailView.as_view(), name='member_detail'),
-    path('members/<int:pk>/edit/', views.OrganizationMemberUpdateView.as_view(), name='member_update'),
-    path('members/<int:pk>/delete/', views.OrganizationMemberDeleteView.as_view(), name='member_delete'),
-
-    # Team Roles
-    path('roles/', views.TeamRoleListView.as_view(), name='role_list'),
-    path('roles/create/', views.TeamRoleCreateView.as_view(), name='role_create'),
-    path('roles/<int:pk>/edit/', views.TeamRoleUpdateView.as_view(), name='role_update'),
-    path('roles/<int:pk>/delete/', views.TeamRoleDeleteView.as_view(), name='role_delete'),
-
-    # Territories
-    path('territories/', views.TerritoryListView.as_view(), name='territory_list'),
-    path('territories/create/', views.TerritoryCreateView.as_view(), name='territory_create'),
-    path('territories/<int:pk>/edit/', views.TerritoryUpdateView.as_view(), name='territory_update'),
-    path('territories/<int:pk>/delete/', views.TerritoryDeleteView.as_view(), name='territory_delete'),
 
     # Admin URLs
     path('admin/', include('accounts.admin_urls')),
+
+
+    # Analytics URLs
+    path('analytics/<int:account_pk>/', views.AccountAnalyticsView.as_view(), name='account_analytics'),
+    path('dashboard/', views.AccountsDashboardView.as_view(), name='accounts_dashboard'),
+    
+    # API endpoints
+    path('api/account-health/<int:account_id>/', views.check_account_health, name='check_account_health'),
+    path('api/update-account-health/', views.trigger_account_health_update, name='trigger_account_health_update'),
+    
+    # New API endpoints for real-time updates
+    path('api/engagement-trend/<int:account_id>/', views.get_engagement_trend, name='get_engagement_trend'),
+    path('api/revenue-analysis/<int:account_id>/', views.get_revenue_analysis, name='get_revenue_analysis'),
+    path('api/health-history/<int:account_id>/', views.get_health_history, name='get_health_history'),
 ]

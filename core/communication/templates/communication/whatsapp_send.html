@@ -1,0 +1,67 @@
+{% extends "communication/base.html" %}
+
+{% block title %}Send WhatsApp - Communication{% endblock %}
+
+{% block comm_title %}💬 Send WhatsApp Message{% endblock %}
+{% block comm_subtitle %}Reach out to your customers on the world's most popular messaging app{% endblock %}
+
+{% block comm_actions %}
+<a href="{% url 'communication:unified_inbox' %}" class="btn btn-light fw-bold px-4 shadow-sm">
+    <i class="bi bi-arrow-left me-1"></i> Back to Inbox
+</a>
+{% endblock %}
+
+{% block comm_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="comm-card p-4">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">From (Your WhatsApp Number)</label>
+                    <select class="form-select" name="from_number">
+                        {% for number in wa_numbers %}
+                        <option value="{{ number }}">{{ number }} (Sales Office)</option>
+                        {% empty %}
+                        <option value="">-- No number configured --</option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text mt-2"><i class="bi bi-info-circle me-1"></i> Numbers are managed in your <a
+                            href="#">Service Configuration</a>.</div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Recipient Phone</label>
+                    <input type="text" class="form-control" name="to_number" placeholder="+1234567890"
+                        value="{{ request.GET.to }}">
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Message Content</label>
+                    <textarea class="form-control" name="message" rows="5"
+                        placeholder="Type your message here..."></textarea>
+                    <div class="form-text mt-2">
+                        <strong>Tip:</strong> Use <span class="badge bg-light text-dark">{% templatetag openvariable
+                            %}first_name{% templatetag closevariable %}</span> for personalization.
+                    </div>
+                </div>
+
+                <div class="alert alert-success d-flex align-items-center" role="alert">
+                    <i class="bi bi-shield-check me-2 fs-4"></i>
+                    <div>
+                        This message will be sent via the <strong>WhatsApp Business API</strong> associated with your
+                        tenant.
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end mt-4">
+                    <button type="submit" class="btn btn-comm px-5 shadow-sm">
+                        <i class="bi bi-whatsapp me-2"></i> Send Message
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

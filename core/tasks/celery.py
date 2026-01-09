@@ -2,8 +2,8 @@ from celery import shared_task
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
-from .models import Task
-from .utils import send_batch_task_reminders, cleanup_old_task_attachments
+from .models import Task, TaskDependency, TaskTimeEntry, TaskComment, TaskSharing, TaskActivity
+from .utils import send_batch_task_reminders, cleanup_old_task_attachments, process_recurring_tasks
 
 @shared_task
 def schedule_task_reminder(task_id):
@@ -14,38 +14,41 @@ def schedule_task_reminder(task_id):
     try:
         task = Task.objects.get(id=task_id)
         
-        if task.reminder_sent or task.status in ['completed', 'cancelled']:
-            return "Task reminder already sent or task completed"
+        # Check if task has reminder_enabled and has not been sent
+        if hasattr(task, 'reminder_enabled') and task.reminder_enabled and not task.reminder_sent:
+            # Calculate reminder time (assuming there's a reminder_time field or default to 24 hours before)
+            from datetime import timedelta
+            reminder_time = task.due_date - timedelta(hours=24)  # Default to 24 hours before
             
-        # Calculate reminder time
-        from datetime import timedelta
-        reminder_time = task.due_date - timedelta(minutes=task.reminder_time)
+            # If reminder_time field exists in model, use that instead
+            if hasattr(task, 'reminder_time'):
+                reminder_time = task.due_date - timedelta(minutes=task.reminder_time)
         
-        if timezone.now() >= reminder_time:
-            # Send reminder now
-            send_task_reminder_email(task)
-            task.reminder_sent = True
-            task.save(update_fields=['reminder_sent'])
-            return f"Task reminder sent for task {task_id}"
-        else:
-            # Schedule the reminder for the correct time
-            from django_celery_beat.models import PeriodicTask, IntervalSchedule
-            import json
-            
-            # Create interval schedule (runs once at the reminder time)
-            schedule, created = IntervalSchedule.objects.get_or_create(
-                every=(reminder_time - timezone.now()).total_seconds(),
-                period=IntervalSchedule.SECONDS,
-            )
-            
-            PeriodicTask.objects.create(
-                interval=schedule,
-                name=f'task_reminder_{task_id}',
-                task='tasks.tasks.send_task_reminder_email_task',
-                args=json.dumps([task_id]),
-                one_off=True,
-            )
-            
+            if timezone.now() >= reminder_time:
+                # Send reminder now
+                send_task_reminder_email(task)
+                task.reminder_sent = True
+                task.save(update_fields=['reminder_sent'])
+                return f"Task reminder sent for task {task_id}"
+            else:
+                # Schedule the reminder for the correct time
+                from django_celery_beat.models import PeriodicTask, IntervalSchedule
+                import json
+                
+                # Create interval schedule (runs once at the reminder time)
+                schedule, created = IntervalSchedule.objects.get_or_create(
+                    every=int((reminder_time - timezone.now()).total_seconds()),
+                    period=IntervalSchedule.SECONDS,
+                )
+                
+                PeriodicTask.objects.create(
+                    interval=schedule,
+                    name=f'task_reminder_{task_id}',
+                    task='tasks.tasks.send_task_reminder_email_task',
+                    args=json.dumps([task_id]),
+                    one_off=True,
+                )
+                
         return f"Task reminder scheduled for task {task_id}"
         
     except Task.DoesNotExist:
@@ -85,9 +88,9 @@ def send_task_reminder_email(task):
     This is a reminder that your task "{task.title}" is due on {task.due_date.strftime('%Y-%m-%d %H:%M')}.
 
     Task Details:
-    - Priority: {task.get_priority_display()}
-    - Type: {task.get_task_type_display()}
-    - Description: {task.description}
+    - Priority: {task.priority_ref.label if task.priority_ref else task.get_priority_display()}
+    - Type: {task.task_type_ref.label if task.task_type_ref else task.get_task_type_display()}
+    - Description: {task.task_description}
 
     Please complete this task as soon as possible.
 
@@ -113,105 +116,34 @@ def create_recurring_tasks():
     
     today = date.today()
     
-    # Get all active recurring tasks that need to be created for today
-    recurring_tasks = Task.objects.filter(
-        is_recurring=True,
-        status='completed',
-        recurrence_end_date__gte=today
+    # Use the utility function to process recurring tasks
+    created_count = process_recurring_tasks()
+    
+    return f"Processed {created_count} recurring tasks"
+
+
+@shared_task
+def process_task_dependencies():
+    """
+    Celery task to check and update task dependencies.
+    """
+    from django.db.models import Q
+    
+    # Find all tasks that are completed and may unlock dependent tasks
+    completed_tasks = Task.objects.filter(status='completed').select_related(
+        'status_ref'
+    ).filter(
+        Q(status_ref__status_name='completed') | Q(status_ref__isnull=True)
     )
     
-    for task in recurring_tasks:
-        # Check if we need to create a new instance based on recurrence pattern
-        if should_create_recurring_task(task, today):
-            create_new_recurring_task_instance(task, today)
-            
-    return f"Processed {recurring_tasks.count()} recurring tasks"
-
-
-def should_create_recurring_task(task, today):
-    """
-    Determine if a new recurring task instance should be created.
-    """
-    from datetime import timedelta
+    processed_count = 0
+    for task in completed_tasks:
+        # This will trigger the workflow to unlock dependent tasks
+        from .utils import unlock_dependent_tasks
+        unlock_dependent_tasks(task)
+        processed_count += 1
     
-    # Get the last completed instance of this recurring task
-    last_instance = Task.objects.filter(
-        title=task.title,
-        task_type=task.task_type,
-        is_recurring=True
-    ).exclude(id=task.id).order_by('-completed_at').first()
-    
-    if not last_instance:
-        return True
-        
-    if task.recurrence_pattern == 'daily':
-        return (today - last_instance.completed_at.date()).days >= 1
-    elif task.recurrence_pattern == 'weekly':
-        return (today - last_instance.completed_at.date()).days >= 7
-    elif task.recurrence_pattern == 'monthly':
-        return (today.year > last_instance.completed_at.year or 
-                (today.year == last_instance.completed_at.year and 
-                 today.month > last_instance.completed_at.month))
-    elif task.recurrence_pattern == 'quarterly':
-        last_quarter = (last_instance.completed_at.month - 1) // 3 + 1
-        current_quarter = (today.month - 1) // 3 + 1
-        return (today.year > last_instance.completed_at.year or 
-                (today.year == last_instance.completed_at.year and 
-                 current_quarter > last_quarter))
-    elif task.recurrence_pattern == 'yearly':
-        return today.year > last_instance.completed_at.year
-        
-    return False
-
-
-def create_new_recurring_task_instance(task, today):
-    """
-    Create a new instance of a recurring task.
-    """
-    from datetime import timedelta
-    
-    # Calculate new due date based on recurrence pattern
-    if task.recurrence_pattern == 'daily':
-        new_due_date = timezone.now() + timedelta(days=1)
-    elif task.recurrence_pattern == 'weekly':
-        new_due_date = timezone.now() + timedelta(weeks=1)
-    elif task.recurrence_pattern == 'monthly':
-        # Add one month (approximately)
-        new_due_date = timezone.now() + timedelta(days=30)
-    elif task.recurrence_pattern == 'quarterly':
-        new_due_date = timezone.now() + timedelta(days=90)
-    elif task.recurrence_pattern == 'yearly':
-        new_due_date = timezone.now() + timedelta(days=365)
-    else:
-        new_due_date = timezone.now() + timedelta(days=1)
-    
-    new_task = Task.objects.create(
-        title=task.title,
-        description=task.description,
-        assigned_to=task.assigned_to,
-        created_by=task.created_by,
-        account=task.account,
-        opportunity=task.opportunity,
-        related_lead=task.related_lead,
-        case=task.case,
-        nps_response=task.nps_response,
-        engagement_event=task.engagement_event,
-        priority=task.priority,
-        status='todo',
-        task_type=task.task_type,
-        due_date=new_due_date,
-        is_recurring=task.is_recurring,
-        recurrence_pattern=task.recurrence_pattern,
-        recurrence_end_date=task.recurrence_end_date,
-        reminder_enabled=task.reminder_enabled,
-        reminder_time=task.reminder_time,
-        estimated_hours=task.estimated_hours,
-        tags=task.tags,
-        custom_fields=task.custom_fields,
-        tenant_id=task.tenant_id
-    )
-    
-    return new_task
+    return f"Processed dependencies for {processed_count} completed tasks"
 
 
 @shared_task
@@ -219,7 +151,139 @@ def send_daily_task_reminders():
     """Send task reminders daily."""
     return send_batch_task_reminders()
 
+
 @shared_task
 def cleanup_task_attachments():
     """Cleanup old task attachments weekly."""
     return cleanup_old_task_attachments()
+
+
+@shared_task
+def check_overdue_tasks():
+    """
+    Celery task to check for overdue tasks and update their status.
+    """
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    # Get all tasks that are not completed and are past due
+    overdue_tasks = Task.objects.filter(
+        status__in=['todo', 'in_progress'],
+        due_date__lt=timezone.now(),
+        tenant_id__isnull=False
+    ).select_related('status_ref')
+    
+    updated_count = 0
+    for task in overdue_tasks:
+        # Check if the status is already 'overdue' to avoid unnecessary updates
+        if task.status != 'overdue':
+            if not task.status_ref or task.status_ref.status_name != 'overdue':
+                task.status = 'overdue'
+                
+                # Find the 'overdue' status for this tenant
+                overdue_status = task.tenant.taskstatus_set.filter(status_name='overdue').first()
+                if overdue_status:
+                    task.status_ref = overdue_status
+                    task.status = 'overdue'
+                
+                task.save(update_fields=['status', 'status_ref'])
+                
+                # Log activity
+                TaskActivity.objects.create(
+                    task=task,
+                    user=task.assigned_to or task.created_by,
+                    activity_type='updated',
+                    description='Task marked as overdue',
+                    tenant_id=task.tenant_id
+                )
+                updated_count += 1
+    
+    return f"Updated {updated_count} overdue tasks"
+
+
+@shared_task
+def calculate_task_time_tracking():
+    """
+    Celery task to recalculate actual hours on tasks based on time entries.
+    """
+    from django.db.models import Sum, Q
+    
+    # Get all tasks that have time entries
+    tasks_with_time = Task.objects.annotate(
+        total_time=Sum('time_entries__hours_spent')
+    ).filter(total_time__isnull=False)
+    
+    updated_count = 0
+    for task in tasks_with_time:
+        total_hours = TaskTimeEntry.objects.filter(task=task).aggregate(
+            total=Sum('hours_spent')
+        )['total'] or 0
+        
+        if task.actual_hours != total_hours:
+            task.actual_hours = total_hours
+            task.save(update_fields=['actual_hours'])
+            updated_count += 1
+    
+    return f"Updated actual hours for {updated_count} tasks"
+
+
+@shared_task
+def send_task_sharing_notifications():
+    """
+    Celery task to send notifications for task sharing that is about to expire.
+    """
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    # Find task shares that will expire in the next 24 hours
+    tomorrow = timezone.now() + timedelta(days=1)
+    expiring_shares = TaskSharing.objects.filter(
+        expires_at__isnull=False,
+        expires_at__gte=timezone.now(),
+        expires_at__lte=tomorrow
+    )
+    
+    notified_count = 0
+    for share in expiring_shares:
+        if share.shared_with_user and share.shared_with_user.email:
+            subject = f"Task sharing access expiring soon: {share.task.title}"
+            message = f"""
+            Hi {share.shared_with_user.first_name or share.shared_with_user.email},
+            
+            Your access to task "{share.task.title}" will expire on {share.expires_at.strftime('%Y-%m-%d %H:%M')}.
+            
+            If you need continued access, please contact the person who shared this task with you.
+            
+            Best regards,
+            SalesCompass Team
+            """
+            
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[share.shared_with_user.email],
+                fail_silently=True
+            )
+            notified_count += 1
+    
+    return f"Sent {notified_count} sharing expiration notifications"
+
+
+@shared_task
+def cleanup_expired_task_shares():
+    """
+    Celery task to remove expired task shares.
+    """
+    from django.utils import timezone
+    
+    # Find task shares that have expired
+    expired_shares = TaskSharing.objects.filter(
+        expires_at__isnull=False,
+        expires_at__lt=timezone.now()
+    )
+    
+    deleted_count = expired_shares.count()
+    expired_shares.delete()
+    
+    return f"Removed {deleted_count} expired task shares"

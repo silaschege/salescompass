@@ -17,19 +17,19 @@ A comprehensive multi-tenant B2B CRM platform built with Django 5.1.
 
 ## Tech Stack
 
-- **Backend**: Django 5.1.2, Django REST Framework
-- **Database**: PostgreSQL 15
+- **Backend**: Django 5.1.2, FastAPI (ML Engine)
+- **Database**: PostgreSQL 15, Redis 7
 - **Task Queue**: Celery with Redis
 - **Real-time**: Django Channels with WebSocket
 - **Search**: Elasticsearch 7+
-- **Telephony**: Wazo Platform
+- **Infrastructure**: Docker Compose, Nginx
 
 ## Prerequisites
 
-- Python 3.11+
+- Python 3.12+
 - PostgreSQL 15+
 - Redis 7+
-- Docker & Docker Compose (optional)
+- Docker & Docker Compose (Recommended)
 
 ## Quick Start
 
@@ -47,55 +47,37 @@ cp .env.example .env
 
 ### 3. Option A: Docker (Recommended)
 ```bash
-cd core
 docker-compose up -d
 ```
 
 ### 3. Option B: Manual Setup
+
+#### Start the ML Engine (FastAPI)
 ```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# or: venv\Scripts\activate  # Windows
-
-# Install dependencies
-pip install -r core/requirements.txt
-
-# Set up database
-export DATABASE_URL="postgres://user:password@localhost:5432/salescompass"
-cd core
-python manage.py migrate
-python manage.py createsuperuser
-
-# Run development server
-python manage.py runserver
+cd ml_models
+pip install -r requirements.txt
+uvicorn main:app --port 8001
 ```
 
-### 4. Start Celery workers (for background tasks)
+#### Start the CRM (Django)
 ```bash
-celery -A salescompass worker -l info
-celery -A salescompass beat -l info
+cd core
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
 ```
 
 ## Project Structure
 
 ```
 salescompass/
-├── core/                    # Django project
-│   ├── accounts/           # Account & contact management
-│   ├── automation/         # Workflow automation
-│   ├── billing/            # Subscriptions & payments
-│   ├── cases/              # Customer support
-│   ├── dashboard/          # Dashboard builder
-│   ├── engagement/         # Customer engagement
-│   ├── leads/              # Lead management
-│   ├── marketing/          # Campaign management
-│   ├── opportunities/      # Sales pipeline
-│   ├── reports/            # Reporting & analytics
-│   ├── salescompass/       # Project settings
-│   ├── tenants/            # Multi-tenant management
-│   └── ...
-├── ml_models/              # Machine learning infrastructure
+├── core/                    # Main CRM Platform (Django)
+│   ├── infrastructure/     # ML API Client & Infrastructure tools
+│   └── ... (apps)
+├── ml_models/              # Decoupled ML Engine (FastAPI)
+│   ├── core/               # Knowledge Graph & Ontology
+│   ├── engine/             # Algorithms & Agents
+│   └── main.py             # Inference API
 └── docker-compose.yml
 ```
 
@@ -106,6 +88,7 @@ salescompass/
 | `SECRET_KEY` | Django secret key | Required in production |
 | `DATABASE_URL` | PostgreSQL connection URL | SQLite (dev only) |
 | `REDIS_URL` | Redis connection URL | `redis://localhost:6379/0` |
+| `ML_SERVICE_URL` | Base URL for ML Inference | `http://localhost:8001/api/v1/ml/` |
 | `DEBUG` | Enable debug mode | `True` in development |
 | `ELASTICSEARCH_HOST` | Elasticsearch URL | `http://localhost:9200` |
 

@@ -1,66 +1,183 @@
-{% extends "settings_base.html" %}
-{% load crispy_forms_tags %}
+{% extends "opportunities/base.html" %}
+{% load static %}
 
 {% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Pipeline Stage - SalesCompass{% endblock %}
 
 {% block content %}
 <div class="header-bar mb-4">
     <div class="container">
-        <h1 class="block-title">{% if form.instance.pk %}Edit{% else %}Create{% endif %} Pipeline Stage</h1>
-        <p class="text-white text-center lead">Define a stage in your pipeline</p>
+        <h1 class="block-title text-center">{% if form.instance.pk %}Edit{% else %}Create{% endif %} Pipeline Stage</h1>
+        <p class=" text-center lead">Define a stage in your pipeline</p>
     </div>
 </div>
 
 <div class="container">
-    <div class="card shadow" style="max-width: 800px; margin: 0 auto;">
-        <div class="card-body p-4">
-            <form method="post">
-                {% csrf_token %}
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" id="opportunityStageTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="form-tab" data-bs-toggle="tab" data-bs-target="#form" type="button" role="tab" aria-controls="form" aria-selected="true">Stage Form</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="false">Information</button>
+        </li>
+    </ul>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label requiredField">Pipeline Type Reference</label>
-                        {{ form.pipeline_type_ref|as_crispy_field }}
-                        <small class="text-muted">Associate with a custom pipeline type</small>
-                    </div>
-                </div>
+    <!-- Tab content -->
+    <div class="tab-content" id="opportunityStageTabsContent">
+        <!-- Form tab -->
+        <div class="tab-pane fade show active" id="form" role="tabpanel" aria-labelledby="form-tab">
+            <div class="card shadow" style="max-width: 800px; margin: 0 auto;">
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    <p class="mb-0">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
 
-                <div class="row">
-                    <div class="col-md-8 mb-3">
-                        {{ form.opportunity_stage_name|as_crispy_field }}
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        {{ form.order|as_crispy_field }}
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    {{ form.stage_description|as_crispy_field }}
-                </div>
-
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        {{ form.probability|as_crispy_field }}
-                    </div>
-                    <div class="col-md-4 mb-3 d-flex align-items-center pt-3">
-                        <div class="form-check">
-                            {{ form.is_won }}
-                            <label class="form-check-label" for="{{ form.is_won.id_for_label }}">Won Stage</label>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label requiredField">Pipeline Type Reference</label>
+                                <select name="{{ form.pipeline_type_ref.name }}" class="form-select{% if form.pipeline_type_ref.errors %} is-invalid{% endif %}">
+                                    {% for choice in form.pipeline_type_ref %}
+                                        {{ choice }}
+                                    {% endfor %}
+                                </select>
+                                {% if form.pipeline_type_ref.help_text %}
+                                    <small class="text-muted">{{ form.pipeline_type_ref.help_text }}</small>
+                                {% endif %}
+                                {% if form.pipeline_type_ref.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.pipeline_type_ref.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="text-muted">Associate with a custom pipeline type</small>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-4 mb-3 d-flex align-items-center pt-3">
-                        <div class="form-check">
-                            {{ form.is_lost }}
-                            <label class="form-check-label" for="{{ form.is_lost.id_for_label }}">Lost Stage</label>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="mt-4 border-top pt-3 d-flex justify-content-between">
-                    <a href="{% url 'opportunities:stage_list' %}" class="btn btn-outline-secondary">Cancel</a>
-                    <button type="submit" class="btn btn-primary px-4">Save Stage</button>
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label requiredField">{{ form.opportunity_stage_name.label }}</label>
+                                <input type="text" name="{{ form.opportunity_stage_name.name }}" class="form-control{% if form.opportunity_stage_name.errors %} is-invalid{% endif %}" 
+                                       value="{% if form.opportunity_stage_name.value %}{{ form.opportunity_stage_name.value }}{% endif %}">
+                                {% if form.opportunity_stage_name.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.opportunity_stage_name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label requiredField">{{ form.order.label }}</label>
+                                <input type="number" name="{{ form.order.name }}" class="form-control{% if form.order.errors %} is-invalid{% endif %}" 
+                                       value="{% if form.order.value %}{{ form.order.value }}{% endif %}">
+                                {% if form.order.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.order.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.stage_description.label }}</label>
+                            <textarea name="{{ form.stage_description.name }}" class="form-control{% if form.stage_description.errors %} is-invalid{% endif %}" rows="3">{% if form.stage_description.value %}{{ form.stage_description.value }}{% endif %}</textarea>
+                            {% if form.stage_description.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.stage_description.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">{{ form.probability.label }}</label>
+                                <input type="number" step="0.01" name="{{ form.probability.name }}" class="form-control{% if form.probability.errors %} is-invalid{% endif %}" 
+                                       value="{% if form.probability.value %}{{ form.probability.value }}{% endif %}">
+                                {% if form.probability.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.probability.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3 d-flex align-items-center pt-3">
+                                <div class="form-check">
+                                    <input type="checkbox" name="{{ form.is_won.name }}" class="form-check-input{% if form.is_won.errors %} is-invalid{% endif %}" 
+                                           id="{{ form.is_won.id_for_label }}" {% if form.is_won.value %}checked{% endif %}>
+                                    <label class="form-check-label" for="{{ form.is_won.id_for_label }}">Won Stage</label>
+                                </div>
+                                {% if form.is_won.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.is_won.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3 d-flex align-items-center pt-3">
+                                <div class="form-check">
+                                    <input type="checkbox" name="{{ form.is_lost.name }}" class="form-check-input{% if form.is_lost.errors %} is-invalid{% endif %}" 
+                                           id="{{ form.is_lost.id_for_label }}" {% if form.is_lost.value %}checked{% endif %}>
+                                    <label class="form-check-label" for="{{ form.is_lost.id_for_label }}">Lost Stage</label>
+                                </div>
+                                {% if form.is_lost.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.is_lost.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mt-4 border-top pt-3 d-flex justify-content-between">
+                            <a href="{% url 'opportunities:stage_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4">Save Stage</button>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
+        </div>
+        
+        <!-- Information tab -->
+        <div class="tab-pane fade" id="info" role="tabpanel" aria-labelledby="info-tab">
+            <div class="card shadow" style="max-width: 800px; margin: 1rem auto;">
+                <div class="card-body p-4">
+                    <h3>About Pipeline Stages</h3>
+                    <p>Pipeline stages represent the steps in your sales process. Each opportunity moves through these stages as it progresses toward closure.</p>
+                    
+                    <h4>Key Fields:</h4>
+                    <ul>
+                        <li><strong>Pipeline Type Reference:</strong> Associates this stage with a specific pipeline type (e.g., Sales, Support).</li>
+                        <li><strong>Name:</strong> A descriptive name for the stage (e.g., Prospecting, Qualification, Negotiation).</li>
+                        <li><strong>Order:</strong> Determines the sequence of stages in the pipeline.</li>
+                        <li><strong>Description:</strong> Details about what happens in this stage.</li>
+                        <li><strong>Probability:</strong> The likelihood of closing an opportunity at this stage (0-100%).</li>
+                        <li><strong>Won/Lost Stage:</strong> Mark if this stage represents a closed-won or closed-lost status.</li>
+                    </ul>
+                    
+                    <h4>Best Practices:</h4>
+                    <ul>
+                        <li>Keep stage names consistent across your organization.</li>
+                        <li>Set realistic probabilities based on historical data.</li>
+                        <li>Limit the number of stages to avoid complexity (typically 5-8 stages).</li>
+                        <li>Regularly review and optimize your pipeline stages.</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 </div>

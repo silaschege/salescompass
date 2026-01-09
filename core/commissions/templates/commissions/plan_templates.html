@@ -1,0 +1,69 @@
+<!-- core/commissions/templates/commissions/plan_templates.html -->
+{% extends 'commissions/base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Plan Templates</h1>
+        <a href="{% url 'commissions:plan_template_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create Template
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Available Templates</h6>
+                </div>
+                <div class="card-body">
+                    {% if templates %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for template in templates %}
+                                <tr>
+                                    <td>{{ template.name }}</td>
+                                    <td>{{ template.description|default:"No description" }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if template.is_active %}success{% else %}secondary{% endif %}">
+                                            {% if template.is_active %}Active{% else %}Inactive{% endif %}
+                                        </span>
+                                    </td>
+                                    <td>{{ template.created_at }}</td>
+                                    <td>
+                                        <a href="{% url 'commissions:plan_template_update' template.id %}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        <a href="{% url 'commissions:plan_template_delete' template.id %}" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <p>No templates available yet.</p>
+                        <a href="{% url 'commissions:plan_template_create' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Create First Template
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

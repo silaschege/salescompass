@@ -267,6 +267,52 @@
                         </div>
                     </div>
                     {% endif %}
+
+                    
+                                <div class="col-md-6">
+                                    {% if event.contact %}
+                                    <div class="mb-3">
+                                        <label class="fw-bold text-muted small mb-1">Contact</label>
+                                        <div>
+                                            {{ event.contact.first_name }} {{ event.contact.last_name }}
+                                            {% if event.contact.role %} ({{ event.contact.role }}){% endif %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if event.engagementevent %}
+                                    <div class="mb-3">
+                                        <label class="fw-bold text-muted small mb-1">Source Event</label>
+                                        <div>
+                                            <a href="{% url 'engagement:event_detail' event.engagementevent.pk %}">
+                                                {{ event.engagementevent.title }}
+                                            </a>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- Attribution Information -->
+                                    {% if event.utm_source or event.utm_medium or event.utm_campaign or event.referring_domain %}
+                                    <div class="mb-3">
+                                        <label class="fw-bold text-muted small mb-1">Attribution</label>
+                                        <div class="small">
+                                            {% if event.utm_campaign %}
+                                                <div><strong>Campaign:</strong> {{ event.utm_campaign }}</div>
+                                            {% endif %}
+                                            {% if event.utm_source %}
+                                                <div><strong>Source:</strong> {{ event.utm_source }}</div>
+                                            {% endif %}
+                                            {% if event.utm_medium %}
+                                                <div><strong>Medium:</strong> {{ event.utm_medium }}</div>
+                                            {% endif %}
+                                            {% if event.referring_domain %}
+                                                <div><strong>Referrer:</strong> {{ event.referring_domain }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+
                 </div>
             </div>
         </div>

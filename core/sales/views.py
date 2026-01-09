@@ -5,10 +5,10 @@ from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from core.permissions import ObjectPermissionRequiredMixin
 from django.urls import reverse_lazy
-from .models import Sale, Product, Commission, CommissionRule, TerritoryPerformance, TerritoryAssignmentOptimizer, TeamMemberTerritoryMetrics
+from .models import Sale, Product, SalesCommission, SalesCommissionRule, TerritoryPerformance, TerritoryAssignmentOptimizer, TeamMemberTerritoryMetrics
 from django.db.models import Count, Avg, Sum
 from core.utils import get_queryset_for_user
-from settings_app.models import TeamMember, Territory
+from tenants.models import TenantMember, TenantTerritory
 from django.http import JsonResponse
 from django.core.serializers.json import DjangoJSONEncoder
 import json
@@ -32,6 +32,7 @@ class SaleDetailView(ObjectPermissionRequiredMixin, DetailView):
     context_object_name = 'sale'
 
 # Create View
+
 class SaleCreateView(ObjectPermissionRequiredMixin, CreateView):
     model = Sale
     fields = ['account', 'sale_type', 'product', 'amount']
@@ -39,11 +40,14 @@ class SaleCreateView(ObjectPermissionRequiredMixin, CreateView):
     permission_action = 'change'
 
     def form_valid(self, form):
-        messages.success(self.request, f"Sale recorded for {form.instance.account.name}!")
+        account = form.instance.account
+        account_name = f"{account.first_name} {account.last_name}".strip() or account.email
+        messages.success(self.request, f"Sale recorded for {account_name}!")
         return super().form_valid(form)
     
     def get_success_url(self):
         return reverse_lazy('sales:sale_detail', kwargs={'pk': self.object.pk})
+# ... existing code ...
 
 # Update View
 class SaleUpdateView(ObjectPermissionRequiredMixin, UpdateView):
@@ -78,10 +82,10 @@ class SalesDashboardView(ObjectPermissionRequiredMixin, TemplateView):
         context['sales_by_type'] = {type_labels.get(k, k): v for k, v in sales_by_type.items()}
 
         # Top Accounts by Revenue
-        top_accounts = sales.values('account__name').annotate(
+        top_accounts = sales.values('account__first_name').annotate(
             total=Sum('amount')
         ).order_by('-total')[:5]
-        context['top_accounts'] = {item['account__name']: item['total'] for item in top_accounts}
+        context['top_accounts'] = {item['account__first_name']: item['total'] for item in top_accounts}
 
         # Recent Sales
         context['recent_sales'] = sales.order_by('-sale_date')[:10]
@@ -97,7 +101,7 @@ def commission_dashboard(request):
     user = request.user
     
     # Base queryset
-    commissions = Commission.objects.select_related('sale', 'sales_rep', 'rule_applied')
+    commissions = SalesCommission.objects.select_related('sale', 'sales_rep', 'rule_applied')
     
     # If not admin/manager, only see own commissions
     if not user.is_staff and not user.has_perm('sales.view_all_commissions'):
@@ -114,7 +118,7 @@ def commission_dashboard(request):
     # Top earners (admin only)
     top_earners = []
     if user.is_staff:
-        top_earners = Commission.objects.values('sales_rep__email').annotate(
+        top_earners = SalesCommission.objects.values('sales_rep__email').annotate(
             total=Sum('amount')
         ).order_by('-total')[:5]
 
@@ -134,13 +138,13 @@ from django.urls import reverse_lazy
 from django.contrib.auth.mixins import PermissionRequiredMixin
 
 class CommissionRuleListView(PermissionRequiredMixin, ListView):
-    model = CommissionRule
+    model = SalesCommissionRule
     template_name = 'sales/commission_rule_list.html'
     context_object_name = 'rules'
     permission_required = 'sales.view_commissionrule'
 
 class CommissionRuleCreateView(PermissionRequiredMixin, CreateView):
-    model = CommissionRule
+    model = SalesCommissionRule
     fields = ['name', 'product_type', 'specific_product', 'percentage', 'flat_amount', 'min_sales_amount', 'start_date', 'end_date', 'is_active']
     template_name = 'sales/commission_rule_form.html'
     success_url = reverse_lazy('sales:rule_list')
@@ -151,7 +155,7 @@ class CommissionRuleCreateView(PermissionRequiredMixin, CreateView):
         return super().form_valid(form)
 
 class CommissionRuleUpdateView(PermissionRequiredMixin, UpdateView):
-    model = CommissionRule
+    model = SalesCommissionRule
     fields = ['name', 'product_type', 'specific_product', 'percentage', 'flat_amount', 'min_sales_amount', 'start_date', 'end_date', 'is_active']
     template_name = 'sales/commission_rule_form.html'
     success_url = reverse_lazy('sales:rule_list')
@@ -162,7 +166,7 @@ class CommissionRuleUpdateView(PermissionRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 class CommissionRuleDeleteView(PermissionRequiredMixin, DeleteView):
-    model = CommissionRule
+    model = SalesCommissionRule
     template_name = 'sales/commission_rule_confirm_delete.html'
     success_url = reverse_lazy('sales:rule_list')
     permission_required = 'sales.delete_commissionrule'
@@ -176,7 +180,7 @@ def territory_performance_dashboard(request):
     user = request.user
     
     # Get all territories for the tenant
-    territories = Territory.objects.filter(tenant_id=user.tenant_id)
+    territories = TenantTerritory.objects.filter(tenant_id=user.tenant_id)
     
     # Get latest performance data for each territory
     territory_data = []
@@ -245,7 +249,7 @@ def run_territory_optimization(request, territory_id):
     """
     Run territory assignment optimization for a specific territory
     """
-    territory = get_object_or_404(Territory, id=territory_id, tenant_id=request.user.tenant_id)
+    territory = get_object_or_404(TenantTerritory, id=territory_id, tenant_id=request.user.tenant_id)
     
     # Create a new optimization record
     optimizer = TerritoryAssignmentOptimizer.objects.create(
@@ -267,7 +271,7 @@ def territory_comparison_tool(request):
     user = request.user
     
     # Get territories and their latest performance data
-    territories = Territory.objects.filter(tenant_id=user.tenant_id)
+    territories = TenantTerritory.objects.filter(tenant_id=user.tenant_id)
     territory_comparison_data = []
     
     for territory in territories:
@@ -285,7 +289,7 @@ def territory_comparison_tool(request):
     
     # Prepare data for comparison chart
     chart_data = {
-        'labels': [td['territory'].label for td in territory_comparison_data if td['performance']],
+        'labels': [td['territory'].name for td in territory_comparison_data if td['performance']],
         'revenue_data': [float(td['performance'].total_revenue) if td['performance'] else 0 for td in territory_comparison_data],
         'deal_data': [td['performance'].total_deals if td['performance'] else 0 for td in territory_comparison_data],
         'conversion_data': [float(td['performance'].conversion_rate) if td['performance'] else 0 for td in territory_comparison_data],
@@ -306,7 +310,7 @@ def territory_performance_api(request):
     user = request.user
     
     # Get territories and their latest performance data
-    territories = Territory.objects.filter(tenant_id=user.tenant_id)
+    territories = TenantTerritory.objects.filter(tenant_id=user.tenant_id)
     data = []
     
     for territory in territories:
@@ -314,7 +318,7 @@ def territory_performance_api(request):
             latest_performance = territory.performance_metrics.latest('period_end')
             data.append({
                 'id': territory.id,
-                'name': territory.label,
+                'name': territory.name,
                 'total_revenue': float(latest_performance.total_revenue),
                 'total_deals': latest_performance.total_deals,
                 'conversion_rate': float(latest_performance.conversion_rate),
@@ -323,7 +327,7 @@ def territory_performance_api(request):
         except TerritoryPerformance.DoesNotExist:
             data.append({
                 'id': territory.id,
-                'name': territory.label,
+                'name': territory.name,
                 'total_revenue': 0,
                 'total_deals': 0,
                 'conversion_rate': 0,

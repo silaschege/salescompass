@@ -1,0 +1,205 @@
+{% extends "communication/base.html" %}
+{% load static %}
+
+{% block title %}Unified Inbox - Communication{% endblock %}
+
+{% block comm_title %}📥 Unified Inbox{% endblock %}
+{% block comm_subtitle %}Your central hub for all customer interactions across all channels{% endblock %}
+
+{% block comm_actions %}
+<div class="btn-group shadow-sm">
+    <button type="button" class="btn btn-comm dropdown-toggle fw-bold" data-bs-toggle="dropdown">
+        <i class="bi bi-plus-circle me-1"></i> New Interaction
+    </button>
+    <ul class="dropdown-menu shadow border-0">
+        <li><a class="dropdown-item py-2" href="{% url 'communication:email_compose' %}"><i
+                    class="bi bi-envelope me-2 text-primary"></i>
+                Send Email</a></li>
+        <li><a class="dropdown-item py-2" href="{% url 'communication:whatsapp_send' %}"><i
+                    class="bi bi-whatsapp me-2 text-success"></i>
+                WhatsApp Message</a></li>
+        <li><a class="dropdown-item py-2" href="{% url 'communication:sms_send' %}"><i
+                    class="bi bi-chat-dots me-2 text-info"></i> Send
+                SMS</a></li>
+        <li><a class="dropdown-item py-2" href="{% url 'communication:call_log_create' %}"><i
+                    class="bi bi-telephone me-2 text-warning"></i> Log Call</a></li>
+        <li>
+            <hr class="dropdown-divider">
+        </li>
+        <li><a class="dropdown-item py-2" href="{% url 'communication:linkedin_inmail' %}"><i
+                    class="bi bi-linkedin me-2 text-primary"></i>
+                InMail Tracking</a></li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block comm_content %}
+<div class="row">
+    <!-- Filters Sidebar -->
+    <div class="col-lg-3">
+        <div class="comm-card p-4">
+            <h6 class="fw-bold text-uppercase small text-muted mb-4">Filter Channels</h6>
+            <div class="d-flex flex-column gap-2 mb-5">
+                <div class="form-check custom-checkbox py-1">
+                    <input class="form-check-input" type="checkbox" checked id="filter-all">
+                    <label class="form-check-label fw-bold" for="filter-all">All Activity</label>
+                </div>
+                <div class="form-check custom-checkbox py-1">
+                    <input class="form-check-input" type="checkbox" checked id="filter-emails">
+                    <label class="form-check-label" for="filter-emails">Emails</label>
+                </div>
+                <div class="form-check custom-checkbox py-1">
+                    <input class="form-check-input" type="checkbox" checked id="filter-calls">
+                    <label class="form-check-label" for="filter-calls">Phone Calls</label>
+                </div>
+                <div class="form-check custom-checkbox py-1">
+                    <input class="form-check-input" type="checkbox" checked id="filter-sms">
+                    <label class="form-check-label" for="filter-sms">SMS Messages</label>
+                </div>
+            </div>
+
+            <h6 class="fw-bold text-uppercase small text-muted mb-4">Time Period</h6>
+            <div class="list-group list-group-flush small">
+                <a href="#"
+                    class="list-group-item list-group-item-action border-0 px-0 active bg-transparent text-comm fw-bold">Today</a>
+                <a href="#" class="list-group-item list-group-item-action border-0 px-0">Last 7 Days</a>
+                <a href="#" class="list-group-item list-group-item-action border-0 px-0">This Month</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Feed -->
+    <div class="col-lg-9">
+        <div class="comm-card border-0 shadow-none bg-transparent">
+            <div class="activity-timeline">
+                {% for item in interactions %}
+                <div class="timeline-item position-relative pb-4 ps-5">
+                    <!-- Timeline Connector -->
+                    {% if not forloop.last %}
+                    <div class="position-absolute start-0 h-100 border-start border-2 ms-4 pb-4"
+                        style="top: 2.5rem; z-index: 1;"></div>
+                    {% endif %}
+
+                    <!-- Icon Circle -->
+                    <div class="position-absolute start-0 bg-white border border-4 rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                        style="width: 50px; height: 50px; z-index: 10; margin-left: 17px;">
+                        {% if item.itype == 'email' %}
+                        <i class="bi bi-envelope-fill text-primary"></i>
+                        {% elif item.itype == 'sms' %}
+                        <i class="bi bi-chat-fill text-success"></i>
+                        {% elif item.itype == 'call' %}
+                        <i class="bi bi-telephone-fill text-warning"></i>
+                        {% elif item.itype == 'chat' %}
+                        <i class="bi bi-whatsapp text-success"></i>
+                        {% elif item.itype == 'social' %}
+                        <i class="bi bi-linkedin text-info"></i>
+                        {% endif %}
+                    </div>
+
+                    <!-- Content Card -->
+                    <div
+                        class="comm-card p-4 shadow-sm border-0 border-start border-4 
+                        {% if item.itype == 'email' %}border-primary{% elif item.itype == 'sms' %}border-success{% elif item.itype == 'call' %}border-warning{% elif item.itype == 'chat' %}border-success{% elif item.itype == 'social' %}border-info{% endif %}">
+
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="fw-bold mb-1">
+                                    {% if item.itype == 'email' %}
+                                    Email: {{ item.subject|truncatechars:60 }}
+                                    {% elif item.itype == 'sms' %}
+                                    SMS to {{ item.recipient_phone }}
+                                    {% elif item.itype == 'call' %}
+                                    Call with {{ item.contact_name|default:item.phone_number }}
+                                    {% elif item.itype == 'chat' %}
+                                    WhatsApp with {{ item.sender_name }}
+                                    {% elif item.itype == 'social' %}
+                                    LinkedIn InMail to {{ item.contact.get_full_name|default:item.lead.first_name }}
+                                    {% endif %}
+                                </h6>
+                                <div class="x-small text-muted fw-bold text-uppercase letter-spacing-1">
+                                    {% if item.direction == 'inbound' or item.call_type == 'incoming' or item.itype ==
+                                    'chat' %}
+                                    <i class="bi bi-arrow-down-left text-info"></i> INBOUND
+                                    {% else %}
+                                    <i class="bi bi-arrow-up-right text-secondary"></i> OUTBOUND
+                                    {% endif %}
+                                    &bull;
+                                    {% if item.itype == 'call' %}{{ item.call_started_at|timesince }}{% elif item.itype
+                                    == 'chat' %}{{ item.received_at|timesince }}{% elif item.itype == 'social' %}{{
+                                    item.posted_at|timesince }}{% else %}{{
+                                    item.created_at|timesince }}{% endif %} ago
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge rounded-pill px-3 
+                                    {% if item.status == 'sent' or item.status == 'answered' or item.status == 'completed' %}bg-success-subtle text-success
+                                    {% elif item.status == 'failed' or item.status == 'missed' %}bg-danger-subtle text-danger
+                                    {% else %}bg-light text-dark border{% endif %}">
+                                    {{ item.status|default:item.outcome|upper }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-light rounded-3 small text-muted">
+                            {% if item.itype == 'email' %}
+                            {{ item.content_text|truncatechars:200|default:"(No text preview available)" }}
+                            {% elif item.itype == 'sms' %}
+                            {{ item.message|truncatechars:200 }}
+                            {% elif item.itype == 'call' %}
+                            {{ item.notes|truncatechars:200|default:"No notes recorded for this call." }}
+                            {% elif item.itype == 'chat' %}
+                            {{ item.message|truncatechars:200 }}
+                            {% elif item.itype == 'social' %}
+                            {{ item.content|truncatechars:200 }}
+                            {% endif %}
+                        </div>
+
+                        <div class="mt-3 d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle bg-comm text-white d-flex align-items-center justify-content-center x-small"
+                                    style="width: 24px; height: 24px;">
+                                    {{
+                                    item.sender.username|slice:":2"|upper|default:item.user.username|slice:":2"|upper|default:"?"
+                                    }}
+                                </div>
+                                <span class="x-small fw-bold text-muted">{{
+                                    item.sender.get_full_name|default:item.sender.username|default:item.user.username|default:"System"
+                                    }}</span>
+                            </div>
+                            <div class="btn-group">
+                                <a href="#"
+                                    class="btn btn-sm btn-link text-decoration-none text-comm fw-bold p-0 me-3">View
+                                    Details</a>
+                                <a href="#" class="btn btn-sm btn-link text-decoration-none text-muted p-0"><i
+                                        class="bi bi-three-dots"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-5">
+                    <img src="{% static 'img/empty-inbox.svg' %}" style="width: 150px; opacity: 0.5;" class="mb-4">
+                    <h5 class="fw-bold text-muted">No interactions found</h5>
+                    <p class="text-muted small">Your unified timeline will start populating as you communicate with
+                        customers.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .x-small {
+        font-size: 0.75rem;
+    }
+
+    .letter-spacing-1 {
+        letter-spacing: 0.5px;
+    }
+
+    .timeline-item:last-child {
+        padding-bottom: 0 !important;
+    }
+</style>
+{% endblock %}
