@@ -1,0 +1,97 @@
+{% extends 'tenants/base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="fw-bold"><i class="bi bi-shield-check me-2 text-primary"></i>Data Preservations</h2>
+            <p class="text-muted">History of all data preservation and backup activities.</p>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm glass-card">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="mb-0 fw-bold">Recent Preservations</h5>
+        </div>
+        <div class="card-body p-4">
+            {% if preservations %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light border-0">
+                        <tr>
+                            <th class="border-0">Type</th>
+                            <th class="border-0">Date</th>
+                            <th class="border-0">Status</th>
+                            <th class="border-0">Size</th>
+                            <th class="border-0">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-0">
+                        {% for preservation in preservations %}
+                        <tr class="border-bottom">
+                            <td>
+                                <div class="fw-bold text-dark">{{ preservation.get_preservation_type_display }}</div>
+                                <div class="text-muted small">{{ preservation.description|truncatechars:50 }}</div>
+                            </td>
+                            <td>
+                                <div class="text-dark">{{ preservation.preservation_date|date:"M d, Y" }}</div>
+                                <div class="text-muted small">{{ preservation.preservation_date|time:"H:i" }}</div>
+                            </td>
+                            <td>
+                                {% if preservation.status == 'completed' %}
+                                <span class="badge bg-success-soft text-success px-3 py-2 rounded-pill shadow-none">
+                                    <i class="bi bi-check-circle me-1"></i>Completed
+                                </span>
+                                {% elif preservation.status == 'failed' %}
+                                <span class="badge bg-danger-soft text-danger px-3 py-2 rounded-pill shadow-none">
+                                    <i class="bi bi-x-circle me-1"></i>Failed
+                                </span>
+                                {% else %}
+                                <span class="badge bg-primary-soft text-primary px-3 py-2 rounded-pill shadow-none">
+                                    {{ preservation.status|title }}
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ preservation.file_size_mb }} MB</td>
+                            <td>
+                                <a href="{% url 'tenants:preservation_detail' preservation.id %}"
+                                    class="btn btn-sm btn-light rounded-pill px-3 border-0">
+                                    Details
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% include 'includes/pagination.html' %}
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-shield-exclamation display-4 text-muted mb-3"></i>
+                <h5>No preservation records found</h5>
+                <p class="text-muted">Data preservation activities will appear here.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-success-soft {
+        background-color: rgba(25, 135, 84, 0.1);
+    }
+
+    .bg-danger-soft {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+
+    .bg-primary-soft {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+</style>
+{% endblock %}

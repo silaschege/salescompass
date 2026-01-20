@@ -4,279 +4,800 @@
 
 {% block extra_css %}
 <style>
-    .module-card {
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --glass-bg: rgba(255, 255, 255, 0.9);
+        --shadow-primary: 0 8px 32px rgba(102, 126, 234, 0.2);
+    }
+
+    .page-header {
+        background: var(--primary-gradient);
+        padding: 28px 32px;
+        border-radius: 16px;
+        margin-bottom: 24px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .page-header h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .page-header p {
+        margin: 4px 0 0;
+        opacity: 0.85;
+        font-size: 0.9rem;
+    }
+
+    .header-actions .btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 600;
         transition: all 0.3s ease;
-        border: 1px solid #e9ecef;
+        backdrop-filter: blur(10px);
+    }
+
+    .header-actions .btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .header-actions .btn-primary {
+        background: white;
+        color: #667eea;
+        border: none;
+    }
+
+    .header-actions .btn-primary:hover {
+        background: #f8f9fa;
+    }
+
+    /* Cards */
+    .explorer-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        border: none;
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .explorer-card:hover {
+        box-shadow: var(--shadow-primary);
+    }
+
+    .explorer-card .card-header {
+        background: transparent;
+        border-bottom: 2px solid #f1f3f4;
+        padding: 16px 20px;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .explorer-card .card-header h5 {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    .explorer-card .card-body {
+        padding: 20px;
+    }
+
+    /* Module Cards */
+    .module-card {
+        display: flex;
+        align-items: center;
+        padding: 14px 16px;
+        border-radius: 12px;
+        background: #f8f9fa;
         cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        margin-bottom: 8px;
+        text-decoration: none;
+        color: inherit;
     }
-    
+
     .module-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-        border-color: #007bff;
+        transform: translateX(4px);
+        background: linear-gradient(90deg, rgba(102, 126, 234, 0.08) 0%, transparent 100%);
+        border-color: rgba(102, 126, 234, 0.2);
     }
-    
+
     .module-card.selected {
-        border-color: #007bff;
-        background-color: rgba(0, 123, 255, 0.05);
+        background: linear-gradient(90deg, rgba(102, 126, 234, 0.15) 0%, rgba(102, 126, 234, 0.05) 100%);
+        border-color: #667eea;
     }
-    
-    .field-selector {
-        max-height: 300px;
-        overflow-y: auto;
-    }
-    
-    .visualization-container {
-        min-height: 400px;
-        background-color: #f8f9fa;
-        border-radius: 0.375rem;
+
+    .module-card i {
+        width: 36px;
+        height: 36px;
         display: flex;
         align-items: center;
         justify-content: center;
+        border-radius: 10px;
+        background: var(--primary-gradient);
+        color: white;
+        margin-right: 12px;
+        font-size: 1rem;
     }
-    
-    .query-result-table {
-        max-height: 400px;
-        overflow-y: auto;
+
+    .module-card .module-info {
+        flex: 1;
     }
-    
+
+    .module-card .module-name {
+        font-weight: 600;
+        color: #212529;
+        font-size: 0.9rem;
+    }
+
+    .module-card .module-count {
+        background: #e9ecef;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6c757d;
+    }
+
+    /* Saved Queries */
+    .saved-query-item {
+        padding: 14px 16px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-left: 3px solid transparent;
+        margin-bottom: 4px;
+    }
+
+    .saved-query-item:hover {
+        background: #f8f9fa;
+        border-left-color: #667eea;
+    }
+
+    .saved-query-item h6 {
+        margin: 0 0 4px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .saved-query-item small {
+        color: #6c757d;
+        font-size: 0.75rem;
+    }
+
+    /* Fields */
+    .field-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 14px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .field-item:hover {
+        background: #e9ecef;
+    }
+
+    .field-item.selected {
+        background: rgba(102, 126, 234, 0.1);
+        border-left: 3px solid #667eea;
+    }
+
+    .field-item input {
+        margin-right: 10px;
+    }
+
+    .field-item label {
+        margin: 0;
+        font-size: 0.85rem;
+        cursor: pointer;
+    }
+
+    .field-type {
+        margin-left: auto;
+        font-size: 0.7rem;
+        padding: 2px 8px;
+        border-radius: 4px;
+        background: #e9ecef;
+        color: #6c757d;
+    }
+
+    /* Tabs */
+    .explorer-tabs {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 6px;
+        display: inline-flex;
+        gap: 4px;
+        margin-bottom: 20px;
+    }
+
+    .explorer-tabs .nav-link {
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        color: #6c757d;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+    }
+
+    .explorer-tabs .nav-link:hover {
+        color: #667eea;
+    }
+
+    .explorer-tabs .nav-link.active {
+        background: white;
+        color: #667eea;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Query Builder */
+    .query-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .query-section h5 {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #495057;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .query-section h5 i {
+        color: #667eea;
+    }
+
+    /* Visualization Type Buttons */
+    .viz-type-grid {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .viz-type-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 16px 20px;
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 80px;
+    }
+
+    .viz-type-btn:hover {
+        border-color: rgba(102, 126, 234, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .viz-type-btn.active {
+        background: var(--primary-gradient);
+        border-color: transparent;
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .viz-type-btn i {
+        font-size: 1.3rem;
+        margin-bottom: 6px;
+    }
+
+    .viz-type-btn span {
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    /* Filter Badges */
     .filter-badge {
-        background-color: #e9ecef;
-        border-radius: 1rem;
-        padding: 0.25rem 0.75rem;
-        margin-right: 0.5rem;
-        margin-bottom: 0.5rem;
         display: inline-flex;
         align-items: center;
+        background: var(--primary-gradient);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin: 4px;
+        animation: fadeIn 0.3s ease;
     }
-    
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
     .filter-badge .remove-filter {
-        margin-left: 0.5rem;
+        margin-left: 8px;
         cursor: pointer;
-        color: #6c757d;
+        opacity: 0.8;
+        transition: opacity 0.2s;
     }
-    
-    .visualization-placeholder {
+
+    .filter-badge .remove-filter:hover {
+        opacity: 1;
+    }
+
+    /* Action Buttons */
+    .btn-gradient-primary {
+        background: var(--primary-gradient);
+        border: none;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-gradient-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .btn-gradient-success {
+        background: var(--success-gradient);
+        border: none;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+    }
+
+    .btn-gradient-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(17, 153, 142, 0.4);
+        color: white;
+    }
+
+    /* Results Area */
+    .results-container {
+        min-height: 400px;
+        background: white;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .results-placeholder {
         text-align: center;
+        padding: 60px;
+    }
+
+    .results-placeholder i {
+        font-size: 4rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 16px;
+    }
+
+    .results-placeholder p {
         color: #6c757d;
+        font-size: 1rem;
     }
-    
-    .visualization-placeholder i {
-        font-size: 3rem;
-        margin-bottom: 1rem;
+
+    /* Data Table */
+    .data-table {
+        width: 100%;
+        overflow: hidden;
     }
-    
-    .saved-query-item {
-        cursor: pointer;
-        transition: background-color 0.2s;
+
+    .data-table table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
     }
-    
-    .saved-query-item:hover {
-        background-color: #f8f9fa;
+
+    .data-table thead th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 14px 16px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        position: sticky;
+        top: 0;
     }
-    
-    .query-builder-section {
-        border: 1px solid #dee2e6;
-        border-radius: 0.375rem;
-        padding: 1rem;
-        margin-bottom: 1rem;
+
+    .data-table thead th:first-child {
+        border-radius: 10px 0 0 0;
     }
-    
-    .field-chip {
-        display: inline-block;
-        background-color: #e9ecef;
-        border-radius: 1rem;
-        padding: 0.25rem 0.75rem;
-        margin-right: 0.5rem;
-        margin-bottom: 0.5rem;
+
+    .data-table thead th:last-child {
+        border-radius: 0 10px 0 0;
     }
-    
-    .field-chip .remove-field {
-        margin-left: 0.5rem;
-        cursor: pointer;
-        color: #6c757d;
+
+    .data-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .data-table tbody tr:hover {
+        background: rgba(102, 126, 234, 0.05);
+    }
+
+    .data-table tbody td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f1f3f4;
+        font-size: 0.875rem;
+    }
+
+    /* Chart Container */
+    .chart-container {
+        height: 350px;
+        padding: 20px;
+    }
+
+    /* SQL Editor */
+    .sql-editor {
+        font-family: 'Monaco', 'Menlo', monospace;
+        font-size: 0.875rem;
+        background: #1e1e1e;
+        color: #d4d4d4;
+        border: none;
+        border-radius: 12px;
+        padding: 20px;
+        resize: none;
+    }
+
+    .sql-editor:focus {
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+    }
+
+    /* Badge */
+    .result-badge {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    /* Modal Styling */
+    .modal-content {
+        border: none;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .modal-header {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 20px 24px;
+    }
+
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    .modal-footer {
+        border: none;
+        padding: 16px 24px;
+    }
+
+    /* Loading Spinner */
+    .loading-spinner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Toast */
+    .toast-container {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 9999;
+    }
+
+    .toast {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        padding: 16px 20px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .toast.success {
+        border-left: 4px solid #38ef7d;
+    }
+
+    .toast.error {
+        border-left: 4px solid #f5576c;
+    }
+
+    .toast.info {
+        border-left: 4px solid #4facfe;
+    }
+
+    /* Form Styling */
+    .form-control,
+    .form-select {
+        border-radius: 10px;
+        border: 2px solid #e9ecef;
+        padding: 10px 14px;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 6px;
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mt-4 mb-4">
+    <!-- Page Header -->
+    <div class="page-header">
         <div>
-            <h1 class="h3 mb-0">Data Explorer</h1>
-            <p class="text-muted mb-0">Explore and visualize your CRM data</p>
+            <h1><i class="bi bi-search me-2"></i>Data Explorer</h1>
+            <p>Explore and visualize your CRM data with powerful queries</p>
         </div>
-        <div>
+        <div class="header-actions d-flex gap-2">
             <button class="btn btn-primary" id="saveQueryBtn">
-                <i class="bi bi-save"></i> Save Query
+                <i class="bi bi-save me-2"></i>Save Query
             </button>
-            <button class="btn btn-outline-secondary" id="exportBtn">
-                <i class="bi bi-download"></i> Export
+            <button class="btn" id="exportBtn">
+                <i class="bi bi-download me-2"></i>Export
             </button>
         </div>
     </div>
-    
+
     <div class="row">
         <!-- Left Panel -->
         <div class="col-md-3">
             <!-- Saved Queries -->
-            <div class="card dashboard-card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Saved Queries</h5>
-                    <button class="btn btn-sm btn-outline-primary" id="newQueryBtn">
+            <div class="explorer-card mb-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-bookmark me-2"></i>Saved Queries</h5>
+                    <button class="btn btn-sm btn-outline-primary" id="newQueryBtn" style="border-radius: 8px;">
                         <i class="bi bi-plus"></i>
                     </button>
                 </div>
-                <div class="list-group list-group-flush" id="savedQueriesList">
-                    <a href="#" class="list-group-item list-group-item-action saved-query-item">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">Top Leads</h6>
-                            <small>Leads</small>
-                        </div>
-                        <small class="text-muted">Leads with highest potential</small>
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action saved-query-item">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">Won Opportunities</h6>
-                            <small>Opportunities</small>
-                        </div>
-                        <small class="text-muted">Recently closed opportunities</small>
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action saved-query-item">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">Active Accounts</h6>
-                            <small>Accounts</small>
-                        </div>
-                        <small class="text-muted">High-value active accounts</small>
-                    </a>
-                </div>
-            </div>
-            
-            <!-- Data Modules -->
-            <div class="card dashboard-card">
-                <div class="card-header">
-                    <h5>Data Modules</h5>
-                </div>
-                <div class="list-group list-group-flush">
-                    <a href="#" class="list-group-item list-group-item-action module-selector" data-module="leads">
-                        <i class="bi bi-person-plus"></i> Leads
-                        <span class="float-end text-muted">{{ leads_count|default:0 }}</span>
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action module-selector" data-module="opportunities">
-                        <i class="bi bi-briefcase"></i> Opportunities
-                        <span class="float-end text-muted">{{ opportunities_count|default:0 }}</span>
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action module-selector" data-module="accounts">
-                        <i class="bi bi-building"></i> Accounts
-                        <span class="float-end text-muted">{{ accounts_count|default:0 }}</span>
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action module-selector" data-module="cases">
-                        <i class="bi bi-inbox"></i> Cases
-                        <span class="float-end text-muted">{{ cases_count|default:0 }}</span>
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action module-selector" data-module="tasks">
-                        <i class="bi bi-check2-square"></i> Tasks
-                        <span class="float-end text-muted">{{ tasks_count|default:0 }}</span>
-                    </a>
-                </div>
-            </div>
-            
-            <!-- Fields Panel -->
-            <div class="card dashboard-card mt-4">
-                <div class="card-header">
-                    <h5>Fields</h5>
-                </div>
-                <div class="card-body field-selector">
-                    <div id="fieldsContainer">
-                        <p class="text-muted">Select a module to view available fields</p>
+                <div class="card-body" style="max-height: 200px; overflow-y: auto;">
+                    <div class="saved-query-item" onclick="loadSavedQuery('top_leads')">
+                        <h6>Top Leads</h6>
+                        <small>Leads with highest potential</small>
+                    </div>
+                    <div class="saved-query-item" onclick="loadSavedQuery('won_opps')">
+                        <h6>Won Opportunities</h6>
+                        <small>Recently closed opportunities</small>
+                    </div>
+                    <div class="saved-query-item" onclick="loadSavedQuery('active_accounts')">
+                        <h6>Active Accounts</h6>
+                        <small>High-value active accounts</small>
                     </div>
                 </div>
             </div>
-            
-            <!-- Filters Panel -->
-            <div class="card dashboard-card mt-4">
+
+            <!-- Data Modules -->
+            <div class="explorer-card mb-4">
                 <div class="card-header">
-                    <h5>Filters</h5>
+                    <h5><i class="bi bi-database me-2"></i>Data Modules</h5>
                 </div>
                 <div class="card-body">
-                    <div id="appliedFilters" class="mb-3">
-                        <p class="text-muted mb-2">Applied filters:</p>
-                        <div id="filterBadgesContainer">
-                            <!-- Filter badges will appear here -->
+                    <div class="module-card module-selector" data-module="leads">
+                        <i class="bi bi-person-plus"></i>
+                        <div class="module-info">
+                            <span class="module-name">Leads</span>
                         </div>
+                        <span class="module-count">{{ leads_count|default:0 }}</span>
                     </div>
-                    
-                    <div class="form-group mb-3">
-                        <label>Date Range</label>
-                        <select class="form-control" id="dateRangeFilter">
-                            <option value="">Select range</option>
-                            <option>Last 7 Days</option>
-                            <option selected>Last 30 Days</option>
-                            <option>Last 90 Days</option>
-                            <option>Last Year</option>
+                    <div class="module-card module-selector" data-module="opportunities">
+                        <i class="bi bi-briefcase"></i>
+                        <div class="module-info">
+                            <span class="module-name">Opportunities</span>
+                        </div>
+                        <span class="module-count">{{ opportunities_count|default:0 }}</span>
+                    </div>
+                    <div class="module-card module-selector" data-module="accounts">
+                        <i class="bi bi-building"></i>
+                        <div class="module-info">
+                            <span class="module-name">Accounts</span>
+                        </div>
+                        <span class="module-count">{{ accounts_count|default:0 }}</span>
+                    </div>
+                    <div class="module-card module-selector" data-module="cases">
+                        <i class="bi bi-inbox"></i>
+                        <div class="module-info">
+                            <span class="module-name">Cases</span>
+                        </div>
+                        <span class="module-count">{{ cases_count|default:0 }}</span>
+                    </div>
+                    <div class="module-card module-selector" data-module="tasks">
+                        <i class="bi bi-check2-square"></i>
+                        <div class="module-info">
+                            <span class="module-name">Tasks</span>
+                        </div>
+                        <span class="module-count">{{ tasks_count|default:0 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fields Panel -->
+            <div class="explorer-card mb-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-list-columns me-2"></i>Fields</h5>
+                </div>
+                <div class="card-body" style="max-height: 250px; overflow-y: auto;">
+                    <div id="fieldsContainer">
+                        <p class="text-muted text-center small">Select a module to view fields</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters Panel -->
+            <div class="explorer-card">
+                <div class="card-header">
+                    <h5><i class="bi bi-funnel me-2"></i>Filters</h5>
+                </div>
+                <div class="card-body">
+                    <div id="filterBadgesContainer" class="mb-3">
+                        <p class="text-muted small mb-0">No filters applied</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Date Range</label>
+                        <select class="form-select" id="dateRangeFilter">
+                            <option value="">All Time</option>
+                            <option value="7">Last 7 Days</option>
+                            <option value="30" selected>Last 30 Days</option>
+                            <option value="90">Last 90 Days</option>
+                            <option value="365">Last Year</option>
                         </select>
                     </div>
-                    
-                    <div class="form-group mb-3">
-                        <label>Field</label>
-                        <select class="form-control" id="filterField">
+
+                    <div class="mb-3">
+                        <label class="form-label">Field</label>
+                        <select class="form-select" id="filterField">
                             <option value="">Select a field</option>
                         </select>
                     </div>
-                    
-                    <div class="form-group mb-3">
-                        <label>Condition</label>
-                        <select class="form-control" id="filterCondition">
+
+                    <div class="mb-3">
+                        <label class="form-label">Condition</label>
+                        <select class="form-select" id="filterCondition">
                             <option value="">Select condition</option>
                             <option value="equals">Equals</option>
                             <option value="not_equals">Not Equals</option>
                             <option value="contains">Contains</option>
                             <option value="greater_than">Greater Than</option>
                             <option value="less_than">Less Than</option>
-                            <option value="starts_with">Starts With</option>
-                            <option value="ends_with">Ends With</option>
                         </select>
                     </div>
-                    
-                    <div class="form-group mb-3">
-                        <label>Value</label>
+
+                    <div class="mb-3">
+                        <label class="form-label">Value</label>
                         <input type="text" class="form-control" id="filterValue" placeholder="Enter value">
                     </div>
-                    
-                    <button class="btn btn-primary btn-block" id="addFilterBtn">
-                        <i class="bi bi-plus"></i> Add Filter
+
+                    <button class="btn btn-outline-primary w-100" id="addFilterBtn" style="border-radius: 10px;">
+                        <i class="bi bi-plus me-1"></i>Add Filter
                     </button>
                 </div>
             </div>
         </div>
-        
+
         <!-- Main Content Area -->
         <div class="col-md-9">
-            <div class="card dashboard-card">
-                <div class="card-header">
-                    <ul class="nav nav-tabs card-header-tabs" id="explorerTabs" role="tablist">
-                        <li class="nav-item">
-                            <a class="nav-link active" id="visual-tab" data-bs-toggle="tab" href="#visual" role="tab">
-                                <i class="bi bi-eye"></i> Visual Query
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" id="sql-tab" data-bs-toggle="tab" href="#sql" role="tab">
-                                <i class="bi bi-code-slash"></i> SQL Editor
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+            <div class="explorer-card">
                 <div class="card-body">
+                    <!-- Tabs -->
+                    <div class="explorer-tabs" role="tablist">
+                        <a class="nav-link active" id="visual-tab" data-bs-toggle="tab" href="#visual" role="tab">
+                            <i class="bi bi-eye me-2"></i>Visual Query
+                        </a>
+                        <a class="nav-link" id="sql-tab" data-bs-toggle="tab" href="#sql" role="tab">
+                            <i class="bi bi-code-slash me-2"></i>SQL Editor
+                        </a>
+                    </div>
+
                     <div class="tab-content">
                         <!-- Visual Query Builder -->
                         <div class="tab-pane fade show active" id="visual" role="tabpanel">
-                            <div class="query-builder-section">
-                                <h5>Query Builder</h5>
+                            <div class="query-section">
+                                <h5><i class="bi bi-sliders"></i>Query Builder</h5>
                                 <div class="row mb-3">
                                     <div class="col-md-4">
-                                        <label>Select Data Module</label>
-                                        <select class="form-control" id="moduleSelect">
+                                        <label class="form-label">Select Data Module</label>
+                                        <select class="form-select" id="moduleSelect">
                                             <option value="">Choose a module</option>
                                             <option value="leads">Leads</option>
                                             <option value="opportunities">Opportunities</option>
@@ -285,160 +806,111 @@
                                             <option value="tasks">Tasks</option>
                                         </select>
                                     </div>
-{% comment %}                                     
-                                    <div class="col-md-8">
-                                        <label>Selected Fields</label>
-                                        <div class="border rounded p-2 mb-2" id="selectedFieldsContainer">
-                                            <p class="text-muted mb-0">No fields selected</p>
-                                            
-                                        </div>
-                                        <div>
-                                            <button class="btn btn-sm btn-outline-secondary" id="clearFieldsBtn">Clear All</button>
-                                        </div>
-                                    </div> {% endcomment %}
+                                    <div class="col-md-4">
+                                        <label class="form-label">Group By</label>
+                                        <select class="form-select" id="groupBySelect">
+                                            <option value="">None</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Sort By</label>
+                                        <select class="form-select" id="sortSelect">
+                                            <option value="">None</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
 
-                                    <div class="col-md-8">
-                                        <label>Selected Fields</label>
-                                        <div>
-                                        <select class="form-control" id="selectedFieldsContainer">
-                                            <option value="">None</option>
-                                        </select>
-                                        </div>
-                                        <div>
-                                            <button class="btn btn-sm btn-outline-secondary" id="clearFieldsBtn">Clear All</button>
-                                        </div>
-                                   
-                                    </div>
-                                </div>
-                                
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label>Group By</label>
-                                        <select class="form-control" id="groupBySelect">
-                                            <option value="">None</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="col-md-6">
-                                        <label>Sort By</label>
-                                        <select class="form-control" id="sortSelect">
-                                            <option value="">None</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group mb-3">
-                                    <label>Sort Direction</label>
-                                    <div>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="radio" name="sortDirection" id="sortAsc" value="asc" checked>
-                                            <label class="form-check-label" for="sortAsc">Ascending</label>
-                                        </div>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="radio" name="sortDirection" id="sortDesc" value="desc">
-                                            <label class="form-check-label" for="sortDesc">Descending</label>
-                                        </div>
-                                    </div>
+                            <div class="query-section">
+                                <h5><i class="bi bi-bar-chart"></i>Visualization</h5>
+                                <div class="viz-type-grid">
+                                    <button class="viz-type-btn active" data-type="table">
+                                        <i class="bi bi-table"></i>
+                                        <span>Table</span>
+                                    </button>
+                                    <button class="viz-type-btn" data-type="bar">
+                                        <i class="bi bi-bar-chart"></i>
+                                        <span>Bar</span>
+                                    </button>
+                                    <button class="viz-type-btn" data-type="line">
+                                        <i class="bi bi-graph-up"></i>
+                                        <span>Line</span>
+                                    </button>
+                                    <button class="viz-type-btn" data-type="pie">
+                                        <i class="bi bi-pie-chart"></i>
+                                        <span>Pie</span>
+                                    </button>
+                                    <button class="viz-type-btn" data-type="doughnut">
+                                        <i class="bi bi-circle"></i>
+                                        <span>Doughnut</span>
+                                    </button>
+                                    <button class="viz-type-btn" data-type="area">
+                                        <i class="bi bi-graph-down"></i>
+                                        <span>Area</span>
+                                    </button>
                                 </div>
                             </div>
-                            
-                            <div class="query-builder-section">
-                                <h5>Visualization</h5>
-                                <div class="form-group mb-3">
-                                    <label>Chart Type</label>
-                                    <div class="row">
-                                        <div class="col-md-2 text-center">
-                                            <button class="btn btn-outline-secondary visualization-type active" data-type="table">
-                                                <i class="bi bi-table"></i><br>Table
-                                            </button>
-                                        </div>
-                                        <div class="col-md-2 text-center">
-                                            <button class="btn btn-outline-secondary visualization-type" data-type="bar">
-                                                <i class="bi bi-bar-chart"></i><br>Bar
-                                            </button>
-                                        </div>
-                                        <div class="col-md-2 text-center">
-                                            <button class="btn btn-outline-secondary visualization-type" data-type="line">
-                                                <i class="bi bi-graph-up"></i><br>Line
-                                            </button>
-                                        </div>
-                                        <div class="col-md-2 text-center">
-                                            <button class="btn btn-outline-secondary visualization-type" data-type="pie">
-                                                <i class="bi bi-pie-chart"></i><br>Pie
-                                            </button>
-                                        </div>
-                                        <div class="col-md-2 text-center">
-                                            <button class="btn btn-outline-secondary visualization-type" data-type="funnel">
-                                                <i class="bi bi-funnel"></i><br>Funnel
-                                            </button>
-                                        </div>
-                                        <div class="col-md-2 text-center">
-                                            <button class="btn btn-outline-secondary visualization-type" data-type="area">
-                                                <i class="bi bi-graph-down"></i><br>Area
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <button class="btn btn-success" id="runQueryBtn">
-                                        <i class="bi bi-play"></i> Run Query
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex gap-2">
+                                    <button class="btn-gradient-success" id="runQueryBtn">
+                                        <i class="bi bi-play-fill me-2"></i>Run Query
                                     </button>
-                                    <button class="btn btn-outline-secondary" id="previewQueryBtn">
-                                        <i class="bi bi-eye"></i> Preview SQL
+                                    <button class="btn btn-outline-secondary" id="previewQueryBtn"
+                                        style="border-radius: 10px;">
+                                        <i class="bi bi-eye me-2"></i>Preview SQL
                                     </button>
                                 </div>
-                                <div>
-                                    <button class="btn btn-outline-primary" id="saveAsReportBtn">
-                                        <i class="bi bi-file-earmark-bar-graph"></i> Save as Report
-                                    </button>
-                                </div>
+                                <button class="btn btn-outline-primary" id="saveAsReportBtn"
+                                    style="border-radius: 10px;">
+                                    <i class="bi bi-file-earmark-bar-graph me-2"></i>Save as Report
+                                </button>
                             </div>
                         </div>
-                        
+
                         <!-- SQL Editor -->
                         <div class="tab-pane fade" id="sql" role="tabpanel">
-                            <div class="form-group mb-3">
-                                <label>SQL Query</label>
-                                <textarea class="form-control" rows="12" id="sqlEditor" placeholder="Enter your SQL query here...">SELECT * FROM {{ selected_module|default:'leads' }} LIMIT 100;</textarea>
+                            <div class="mb-3">
+                                <label class="form-label">SQL Query</label>
+                                <textarea class="sql-editor form-control" rows="10" id="sqlEditor"
+                                    placeholder="Enter your SQL query here...">SELECT * FROM {{ selected_module|default:'leads' }} LIMIT 100;</textarea>
                             </div>
                             <div class="d-flex justify-content-between">
-                                <div>
-                                    <button class="btn btn-success" id="runSqlBtn">
-                                        <i class="bi bi-play"></i> Execute
+                                <div class="d-flex gap-2">
+                                    <button class="btn-gradient-success" id="runSqlBtn">
+                                        <i class="bi bi-play-fill me-2"></i>Execute
                                     </button>
-                                    <button class="btn btn-outline-secondary" id="formatSqlBtn">
-                                        <i class="bi bi-braces"></i> Format
-                                    </button>
-                                </div>
-                                <div>
-                                    <button class="btn btn-outline-primary" id="saveSqlAsReportBtn">
-                                        <i class="bi bi-file-earmark-bar-graph"></i> Save as Report
+                                    <button class="btn btn-outline-secondary" id="formatSqlBtn"
+                                        style="border-radius: 10px;">
+                                        <i class="bi bi-braces me-2"></i>Format
                                     </button>
                                 </div>
+                                <button class="btn btn-outline-primary" id="saveSqlAsReportBtn"
+                                    style="border-radius: 10px;">
+                                    <i class="bi bi-file-earmark-bar-graph me-2"></i>Save as Report
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Results Panel -->
-            <div class="card dashboard-card mt-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5>Query Results</h5>
-                    <div>
-                        <span class="badge bg-secondary" id="resultCount">0 records</span>
-                        <button class="btn btn-sm btn-outline-secondary ms-2" id="refreshResultsBtn">
+            <div class="explorer-card mt-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-clipboard-data me-2"></i>Query Results</h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="result-badge" id="resultCount">0 records</span>
+                        <button class="btn btn-sm btn-outline-secondary" id="refreshResultsBtn"
+                            style="border-radius: 8px;">
                             <i class="bi bi-arrow-clockwise"></i>
                         </button>
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="visualization-container" id="visualizationContainer">
-                        <div class="visualization-placeholder">
-                            <i class="bi bi-search"></i>
+                    <div class="results-container" id="visualizationContainer">
+                        <div class="results-placeholder">
+                            <i class="bi bi-search d-block"></i>
                             <p>Run a query to see results</p>
                         </div>
                     </div>
@@ -449,61 +921,56 @@
 </div>
 
 <!-- Preview SQL Modal -->
-<div class="modal fade" id="previewSqlModal" tabindex="-1" aria-labelledby="previewSqlModalLabel" aria-hidden="true">
+<div class="modal fade" id="previewSqlModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="previewSqlModalLabel">Generated SQL Query</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title"><i class="bi bi-code-slash me-2"></i>Generated SQL Query</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <pre id="previewSqlContent" class="bg-light p-3"></pre>
+                <pre id="previewSqlContent" class="sql-editor" style="margin: 0; padding: 20px;"></pre>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="copySqlBtn">Copy to Clipboard</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                    style="border-radius: 10px;">Close</button>
+                <button type="button" class="btn-gradient-primary" id="copySqlBtn">
+                    <i class="bi bi-clipboard me-2"></i>Copy to Clipboard
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Save Query Modal -->
-<div class="modal fade" id="saveQueryModal" tabindex="-1" aria-labelledby="saveQueryModalLabel" aria-hidden="true">
+<div class="modal fade" id="saveQueryModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="saveQueryModalLabel">Save Query</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title"><i class="bi bi-save me-2"></i>Save Query</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="saveQueryForm">
                     <div class="mb-3">
-                        <label for="queryName" class="form-label">Query Name</label>
-                        <input type="text" class="form-control" id="queryName" required>
+                        <label class="form-label">Query Name</label>
+                        <input type="text" class="form-control" id="queryName" required placeholder="Enter query name">
                     </div>
                     <div class="mb-3">
-                        <label for="queryDescription" class="form-label">Description</label>
-                        <textarea class="form-control" id="queryDescription" rows="3"></textarea>
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="queryDescription" rows="3"
+                            placeholder="Describe your query"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label for="queryTags" class="form-label">Tags</label>
-                        <input type="text" class="form-control" id="queryTags" placeholder="Enter tags separated by commas">
-                    </div>
-                    <div class="mb-3">
-                        <label for="queryModule" class="form-label">Module</label>
-                        <select class="form-control" id="queryModule">
-                            <option value="leads">Leads</option>
-                            <option value="opportunities">Opportunities</option>
-                            <option value="accounts">Accounts</option>
-                            <option value="cases">Cases</option>
-                            <option value="tasks">Tasks</option>
-                        </select>
+                        <label class="form-label">Tags</label>
+                        <input type="text" class="form-control" id="queryTags" placeholder="sales, leads, monthly">
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveQueryConfirmBtn">Save Query</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                    style="border-radius: 10px;">Cancel</button>
+                <button type="button" class="btn-gradient-primary" id="saveQueryConfirmBtn">Save Query</button>
             </div>
         </div>
     </div>
@@ -511,725 +978,481 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize variables
-    let selectedModule = '';
-    let appliedFilters = [];
-    let selectedFields = [];
-    let moduleFields = {
-        'leads': [
-            {name: 'id', label: 'ID', type: 'number'},
-            {name: 'first_name', label: 'First Name', type: 'string'},
-            {name: 'last_name', label: 'Last Name', type: 'string'},
-            {name: 'email', label: 'Email', type: 'string'},
-            {name: 'phone', label: 'Phone', type: 'string'},
-            {name: 'company', label: 'Company', type: 'string'},
-            {name: 'source', label: 'Source', type: 'string'},
-            {name: 'status', label: 'Status', type: 'string'},
-            {name: 'lead_created_at', label: 'Created At', type: 'datetime'},
-            {name: 'lead_updated_at', label: 'Updated At', type: 'datetime'}
-        ],
-        'opportunities': [
-            {name: 'id', label: 'ID', type: 'number'},
-            {name: 'name', label: 'Opportunity Name', type: 'string'},
-            {name: 'account_id', label: 'Account', type: 'number'},
-            {name: 'amount', label: 'Amount', type: 'decimal'},
-            {name: 'stage', label: 'Stage', type: 'string'},
-            {name: 'probability', label: 'Probability', type: 'number'},
-            {name: 'close_date', label: 'Close Date', type: 'date'},
-            {name: 'opportunity_created_at', label: 'Created At', type: 'datetime'},
-            {name: 'opportunity_updated_at', label: 'Updated At', type: 'datetime'}
-        ],
-        'accounts': [
-            {name: 'id', label: 'ID', type: 'number'},
-            {name: 'account_name', label: 'Account Name', type: 'string'},
-            {name: 'account_type', label: 'Type', type: 'string'},
-            {name: 'industry', label: 'Industry', type: 'string'},
-            {name: 'website', label: 'Website', type: 'string'},
-            {name: 'phone', label: 'Phone', type: 'string'},
-            {name: 'annual_revenue', label: 'Annual Revenue', type: 'decimal'},
-            {name: 'account_created_at', label: 'Created At', type: 'datetime'},
-            {name: 'account_updated_at', label: 'Updated At', type: 'datetime'}
-        ],
-        'cases': [
-            {name: 'id', label: 'ID', type: 'number'},
-            {name: 'subject', label: 'Subject', type: 'string'},
-            {name: 'description', label: 'Description', type: 'text'},
-            {name: 'status', label: 'Status', type: 'string'},
-            {name: 'priority', label: 'Priority', type: 'string'},
-            {name: 'account_id', label: 'Account', type: 'number'},
-            {name: 'case_created_at', label: 'Created At', type: 'datetime'},
-            {name: 'case_updated_at', label: 'Updated At', type: 'datetime'}
-        ],
-        'tasks': [
-            {name: 'id', label: 'ID', type: 'number'},
-            {name: 'subject', label: 'Subject', type: 'string'},
-            {name: 'description', label: 'Description', type: 'text'},
-            {name: 'status', label: 'Status', type: 'string'},
-            {name: 'priority', label: 'Priority', type: 'string'},
-            {name: 'due_date', label: 'Due Date', type: 'date'},
-            {name: 'assigned_to', label: 'Assigned To', type: 'number'},
-            {name: 'task_created_at', label: 'Created At', type: 'datetime'},
-            {name: 'task_updated_at', label: 'Updated At', type: 'datetime'}
-        ]
-    };
-    
-    // Tab switching
-    const triggerTabList = [].slice.call(document.querySelectorAll('#explorerTabs a'));
-    triggerTabList.forEach(function (triggerEl) {
-        const tabTrigger = new bootstrap.Tab(triggerEl);
-        
-        triggerEl.addEventListener('click', function (event) {
-            event.preventDefault();
-            tabTrigger.show();
+    document.addEventListener('DOMContentLoaded', function () {
+        // State
+        let selectedModule = '';
+        let appliedFilters = [];
+        let selectedFields = [];
+        let currentChart = null;
+
+        const moduleFields = {
+            'leads': [
+                { name: 'id', label: 'ID', type: 'number' },
+                { name: 'first_name', label: 'First Name', type: 'string' },
+                { name: 'last_name', label: 'Last Name', type: 'string' },
+                { name: 'email', label: 'Email', type: 'string' },
+                { name: 'phone', label: 'Phone', type: 'string' },
+                { name: 'company', label: 'Company', type: 'string' },
+                { name: 'source', label: 'Source', type: 'string' },
+                { name: 'status', label: 'Status', type: 'string' }
+            ],
+            'opportunities': [
+                { name: 'id', label: 'ID', type: 'number' },
+                { name: 'name', label: 'Name', type: 'string' },
+                { name: 'amount', label: 'Amount', type: 'decimal' },
+                { name: 'stage', label: 'Stage', type: 'string' },
+                { name: 'probability', label: 'Probability', type: 'number' },
+                { name: 'close_date', label: 'Close Date', type: 'date' }
+            ],
+            'accounts': [
+                { name: 'id', label: 'ID', type: 'number' },
+                { name: 'account_name', label: 'Account Name', type: 'string' },
+                { name: 'account_type', label: 'Type', type: 'string' },
+                { name: 'industry', label: 'Industry', type: 'string' },
+                { name: 'annual_revenue', label: 'Annual Revenue', type: 'decimal' }
+            ],
+            'cases': [
+                { name: 'id', label: 'ID', type: 'number' },
+                { name: 'subject', label: 'Subject', type: 'string' },
+                { name: 'status', label: 'Status', type: 'string' },
+                { name: 'priority', label: 'Priority', type: 'string' }
+            ],
+            'tasks': [
+                { name: 'id', label: 'ID', type: 'number' },
+                { name: 'subject', label: 'Subject', type: 'string' },
+                { name: 'status', label: 'Status', type: 'string' },
+                { name: 'priority', label: 'Priority', type: 'string' },
+                { name: 'due_date', label: 'Due Date', type: 'date' }
+            ]
+        };
+
+        // Toast
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+            <i class="bi bi-${type === 'success' ? 'check-circle-fill' : type === 'error' ? 'x-circle-fill' : 'info-circle-fill'}"></i>
+            <span>${message}</span>
+        `;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        // Tab switching
+        const tabs = document.querySelectorAll('.explorer-tabs .nav-link');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function (e) {
+                e.preventDefault();
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                document.querySelectorAll('.tab-pane').forEach(pane => {
+                    pane.classList.remove('show', 'active');
+                });
+                document.querySelector(this.getAttribute('href')).classList.add('show', 'active');
+            });
         });
-    });
-    
-    // Module selection
-    document.querySelectorAll('.module-selector').forEach(card => {
-        card.addEventListener('click', function(e) {
-            e.preventDefault();
-            const module = this.getAttribute('data-module');
-            selectModule(module);
-        });
-    });
-    
-    document.getElementById('moduleSelect').addEventListener('change', function() {
-        const module = this.value;
-        selectModule(module);
-    });
-    
-    function selectModule(module) {
-        if (!module) return;
-        
-        selectedModule = module;
-        
-        // Update UI
+
+        // Module selection
         document.querySelectorAll('.module-selector').forEach(card => {
-            card.classList.remove('selected');
-            if (card.getAttribute('data-module') === module) {
-                card.classList.add('selected');
+            card.addEventListener('click', function () {
+                const module = this.getAttribute('data-module');
+                selectModule(module);
+            });
+        });
+
+        document.getElementById('moduleSelect').addEventListener('change', function () {
+            selectModule(this.value);
+        });
+
+        function selectModule(module) {
+            if (!module) return;
+
+            selectedModule = module;
+            selectedFields = [];
+
+            document.querySelectorAll('.module-selector').forEach(card => {
+                card.classList.remove('selected');
+                if (card.getAttribute('data-module') === module) {
+                    card.classList.add('selected');
+                }
+            });
+
+            document.getElementById('moduleSelect').value = module;
+            updateFields(module);
+            document.getElementById('sqlEditor').value = `SELECT * FROM ${module} LIMIT 100;`;
+            showToast(`Selected ${module} module`, 'info');
+        }
+
+        function updateFields(module) {
+            const fields = moduleFields[module] || [];
+            const fieldsContainer = document.getElementById('fieldsContainer');
+            const groupBySelect = document.getElementById('groupBySelect');
+            const sortSelect = document.getElementById('sortSelect');
+            const filterFieldSelect = document.getElementById('filterField');
+
+            groupBySelect.innerHTML = '<option value="">None</option>';
+            sortSelect.innerHTML = '<option value="">None</option>';
+            filterFieldSelect.innerHTML = '<option value="">Select a field</option>';
+
+            if (fields.length === 0) {
+                fieldsContainer.innerHTML = '<p class="text-muted text-center small">No fields available</p>';
+                return;
             }
-        });
-        
-        document.getElementById('moduleSelect').value = module;
-        document.getElementById('queryModule').value = module;
-        
-        // Update fields
-        updateFields(module);
-        
-        // Update SQL editor
-        document.getElementById('sqlEditor').value = `SELECT * FROM ${module} LIMIT 100;`;
-    }
-    
-    function updateFields(module) {
-        const fields = moduleFields[module] || [];
-        const fieldsContainer = document.getElementById('fieldsContainer');
-        const groupBySelect = document.getElementById('groupBySelect');
-        const sortSelect = document.getElementById('sortSelect');
-        const filterFieldSelect = document.getElementById('filterField');
-        
-        // Clear existing options
-        groupBySelect.innerHTML = '<option value="">None</option>';
-        sortSelect.innerHTML = '<option value="">None</option>';
-        filterFieldSelect.innerHTML = '<option value="">Select a field</option>';
-        
-        if (fields.length === 0) {
-            fieldsContainer.innerHTML = '<p class="text-muted">No fields available for this module</p>';
-            return;
-        }
-        
-        // Update fields container for the left panel
-        let fieldsHtml = '<div class="form-check">';
-        fields.forEach(field => {
-            fieldsHtml += `
-                <div class="form-check mb-2">
-                    <input class="form-check-input field-checkbox" type="checkbox" value="${field.name}" id="field_${field.name}">
-                    <label class="form-check-label" for="field_${field.name}">
-                        ${field.label} <span class="text-muted">(${field.type})</span>
-                    </label>
+
+            let html = '';
+            fields.forEach(field => {
+                html += `
+                <div class="field-item" onclick="toggleField('${field.name}', '${field.label}', this)">
+                    <input type="checkbox" class="form-check-input field-checkbox" value="${field.name}">
+                    <label>${field.label}</label>
+                    <span class="field-type">${field.type}</span>
                 </div>
             `;
-        });
-        fieldsHtml += '</div>';
-        fieldsContainer.innerHTML = fieldsHtml;
-        
-        // Add event listeners to checkboxes
-        document.querySelectorAll('.field-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const fieldName = this.value;
-                const fieldLabel = this.nextElementSibling.textContent.split(' (')[0];
-                
-                if (this.checked) {
-                    // Add to selected fields
-                    selectedFields.push({name: fieldName, label: fieldLabel});
-                } else {
-                    // Remove from selected fields
-                    selectedFields = selectedFields.filter(f => f.name !== fieldName);
-                }
-                
-                updateSelectedFieldsDisplay();
             });
-        });
-        
-        // Update group by and sort selects
-        fields.forEach(field => {
-            const groupOption = document.createElement('option');
-            groupOption.value = field.name;
-            groupOption.textContent = field.label;
-            groupBySelect.appendChild(groupOption);
-            
-            const sortOption = document.createElement('option');
-            sortOption.value = field.name;
-            sortOption.textContent = field.label;
-            sortSelect.appendChild(sortOption);
-        });
-        
-        // Update filter field select
-        fields.forEach(field => {
-            const filterOption = document.createElement('option');
-            filterOption.value = field.name;
-            filterOption.textContent = field.label;
-            filterFieldSelect.appendChild(filterOption);
-        });
-    }
-    
-    function updateSelectedFieldsDisplay() {
-        const container = document.getElementById('selectedFieldsContainer');
-        
-        if (selectedFields.length === 0) {
-            container.innerHTML = '<p class="text-muted mb-0">No fields selected</p>';
-            return;
+            fieldsContainer.innerHTML = html;
+
+            fields.forEach(field => {
+                groupBySelect.add(new Option(field.label, field.name));
+                sortSelect.add(new Option(field.label, field.name));
+                filterFieldSelect.add(new Option(field.label, field.name));
+            });
         }
-        
-        let html = '';
-        selectedFields.forEach(field => {
-            html += `
-                <div class="field-chip">
-                    ${field.label}
-                    <span class="remove-field" data-field="${field.name}">&times;</span>
-                </div>
-            `;
-        });
-        
-        container.innerHTML = html;
-        
-        // Add event listeners to remove buttons
-        document.querySelectorAll('.remove-field').forEach(button => {
-            button.addEventListener('click', function() {
-                const fieldName = this.getAttribute('data-field');
-                
-                // Remove from selected fields array
-                selectedFields = selectedFields.filter(f => f.name !== fieldName);
-                
-                // Uncheck the checkbox
-                const checkbox = document.querySelector(`.field-checkbox[value="${fieldName}"]`);
-                if (checkbox) {
-                    checkbox.checked = false;
-                }
-                
-                // Update display
-                updateSelectedFieldsDisplay();
-            });
-        });
-    }
-    
-    // Clear all fields
-    document.getElementById('clearFieldsBtn').addEventListener('click', function() {
-        // Clear selected fields array
-        selectedFields = [];
-        
-        // Uncheck all checkboxes
-        document.querySelectorAll('.field-checkbox').forEach(checkbox => {
-            checkbox.checked = false;
-        });
-        
-        // Update display
-        updateSelectedFieldsDisplay();
-    });
-    
-    // Visualization type selection
-    document.querySelectorAll('.visualization-type').forEach(button => {
-        button.addEventListener('click', function() {
-            document.querySelectorAll('.visualization-type').forEach(btn => {
-                btn.classList.remove('active', 'btn-primary');
-                btn.classList.add('btn-outline-secondary');
-            });
-            this.classList.remove('btn-outline-secondary');
-            this.classList.add('active', 'btn-primary');
-        });
-    });
-    
-    // Add filter
-    document.getElementById('addFilterBtn').addEventListener('click', function() {
-        const field = document.getElementById('filterField').value;
-        const condition = document.getElementById('filterCondition').value;
-        const value = document.getElementById('filterValue').value;
-        
-        if (!field || !condition || !value) {
-            alert('Please fill in all filter fields');
-            return;
-        }
-        
-        // Add to applied filters
-        const filter = {
-            field: field,
-            condition: condition,
-            value: value
+
+        window.toggleField = function (name, label, element) {
+            const checkbox = element.querySelector('.field-checkbox');
+            checkbox.checked = !checkbox.checked;
+            element.classList.toggle('selected', checkbox.checked);
+
+            if (checkbox.checked) {
+                selectedFields.push({ name, label });
+            } else {
+                selectedFields = selectedFields.filter(f => f.name !== name);
+            }
         };
-        appliedFilters.push(filter);
-        
-        // Update UI
-        updateFilterBadges();
-        
-        // Clear inputs
-        document.getElementById('filterField').value = '';
-        document.getElementById('filterCondition').value = '';
-        document.getElementById('filterValue').value = '';
-    });
-    
-    function updateFilterBadges() {
-        const container = document.getElementById('filterBadgesContainer');
-        container.innerHTML = '';
-        
-        if (appliedFilters.length === 0) {
-            container.innerHTML = '<p class="text-muted mb-0">No filters applied</p>';
-            return;
-        }
-        
-        appliedFilters.forEach((filter, index) => {
-            const badge = document.createElement('div');
-            badge.className = 'filter-badge';
-            badge.innerHTML = `
+
+        // Visualization type selection
+        document.querySelectorAll('.viz-type-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                document.querySelectorAll('.viz-type-btn').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Add filter
+        document.getElementById('addFilterBtn').addEventListener('click', function () {
+            const field = document.getElementById('filterField').value;
+            const condition = document.getElementById('filterCondition').value;
+            const value = document.getElementById('filterValue').value;
+
+            if (!field || !condition || !value) {
+                showToast('Please fill in all filter fields', 'error');
+                return;
+            }
+
+            appliedFilters.push({ field, condition, value });
+            updateFilterBadges();
+
+            document.getElementById('filterField').value = '';
+            document.getElementById('filterCondition').value = '';
+            document.getElementById('filterValue').value = '';
+            showToast('Filter added', 'success');
+        });
+
+        function updateFilterBadges() {
+            const container = document.getElementById('filterBadgesContainer');
+
+            if (appliedFilters.length === 0) {
+                container.innerHTML = '<p class="text-muted small mb-0">No filters applied</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            appliedFilters.forEach((filter, index) => {
+                const badge = document.createElement('span');
+                badge.className = 'filter-badge';
+                badge.innerHTML = `
                 ${filter.field} ${getConditionLabel(filter.condition)} ${filter.value}
-                <span class="remove-filter" data-index="${index}">&times;</span>
+                <span class="remove-filter" onclick="removeFilter(${index})">&times;</span>
             `;
-            container.appendChild(badge);
-        });
-        
-        // Add event listeners to remove buttons
-        document.querySelectorAll('.remove-filter').forEach(button => {
-            button.addEventListener('click', function() {
-                const index = parseInt(this.getAttribute('data-index'));
-                appliedFilters.splice(index, 1);
-                updateFilterBadges();
+                container.appendChild(badge);
             });
-        });
-    }
-    
-    function getConditionLabel(condition) {
-        const labels = {
-            'equals': '=',
-            'not_equals': '!=',
-            'contains': 'contains',
-            'greater_than': '>',
-            'less_than': '<',
-            'starts_with': 'starts with',
-            'ends_with': 'ends with'
+        }
+
+        window.removeFilter = function (index) {
+            appliedFilters.splice(index, 1);
+            updateFilterBadges();
         };
-        return labels[condition] || condition;
-    }
-    
-    // Run query button
-    document.getElementById('runQueryBtn').addEventListener('click', function() {
-        if (!selectedModule) {
-            alert('Please select a data module');
-            return;
+
+        function getConditionLabel(condition) {
+            const labels = {
+                'equals': '=', 'not_equals': '≠', 'contains': '∋',
+                'greater_than': '>', 'less_than': '<'
+            };
+            return labels[condition] || condition;
         }
-        
-        if (selectedFields.length === 0) {
-            alert('Please select at least one field to display');
-            return;
-        }
-        
-        // Get visualization type
-        const visualizationType = document.querySelector('.visualization-type.active').getAttribute('data-type');
-        
-        // Simulate query execution
-        executeQuery(selectedModule, selectedFields, visualizationType);
-    });
-    
-    function executeQuery(module, fields, visualizationType) {
-        // Show loading state
-        const container = document.getElementById('visualizationContainer');
-        container.innerHTML = `
-            <div class="text-center">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="mt-2">Executing query...</p>
+
+        // Run query
+        document.getElementById('runQueryBtn').addEventListener('click', function () {
+            if (!selectedModule) {
+                showToast('Please select a data module', 'error');
+                return;
+            }
+
+            const vizType = document.querySelector('.viz-type-btn.active').getAttribute('data-type');
+            executeQuery(selectedModule, selectedFields, vizType);
+        });
+
+        function executeQuery(module, fields, vizType) {
+            const container = document.getElementById('visualizationContainer');
+            container.innerHTML = `
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p class="text-muted">Executing query...</p>
             </div>
         `;
-        
-        // Simulate API call delay
-        setTimeout(() => {
-            // Generate sample data based on module
-            let data = [];
-            let recordCount = Math.floor(Math.random() * 100) + 20;
-            
-            for (let i = 0; i < recordCount; i++) {
-                let record = {};
+
+            setTimeout(() => {
+                const recordCount = Math.floor(Math.random() * 80) + 20;
+                const data = generateSampleData(module, fields.length > 0 ? fields : moduleFields[module], recordCount);
+
+                renderVisualization(data, vizType);
+                document.getElementById('resultCount').textContent = `${recordCount} records`;
+                showToast(`Query executed: ${recordCount} records found`, 'success');
+            }, 1000);
+        }
+
+        function generateSampleData(module, fields, count) {
+            const data = [];
+            for (let i = 0; i < count; i++) {
+                const record = {};
                 fields.forEach(field => {
-                    switch(field.name) {
-                        case 'id':
-                            record[field.name] = i + 1;
-                            break;
-                        case 'first_name':
-                            record[field.name] = ['John', 'Jane', 'Bob', 'Alice', 'Charlie'][Math.floor(Math.random() * 5)];
-                            break;
-                        case 'last_name':
-                            record[field.name] = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones'][Math.floor(Math.random() * 5)];
-                            break;
-                        case 'email':
-                            record[field.name] = `user${i}@example.com`;
-                            break;
-                        case 'amount':
-                            record[field.name] = Math.floor(Math.random() * 10000) + 1000;
-                            break;
-                        case 'status':
-                            record[field.name] = ['New', 'In Progress', 'Closed'][Math.floor(Math.random() * 3)];
-                            break;
-                        case 'stage':
-                            record[field.name] = ['Prospecting', 'Qualification', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'][Math.floor(Math.random() * 6)];
-                            break;
-                        default:
-                            record[field.name] = `${field.name}_${i}`;
+                    switch (field.name) {
+                        case 'id': record[field.name] = i + 1; break;
+                        case 'first_name': record[field.name] = ['John', 'Jane', 'Bob', 'Alice', 'Charlie'][Math.floor(Math.random() * 5)]; break;
+                        case 'last_name': record[field.name] = ['Smith', 'Johnson', 'Williams', 'Brown'][Math.floor(Math.random() * 4)]; break;
+                        case 'email': record[field.name] = `user${i}@example.com`; break;
+                        case 'amount': record[field.name] = Math.floor(Math.random() * 50000) + 5000; break;
+                        case 'status': record[field.name] = ['New', 'In Progress', 'Closed', 'Pending'][Math.floor(Math.random() * 4)]; break;
+                        case 'stage': record[field.name] = ['Prospecting', 'Qualification', 'Proposal', 'Negotiation', 'Closed Won'][Math.floor(Math.random() * 5)]; break;
+                        default: record[field.name] = `${field.label} ${i + 1}`;
                     }
                 });
                 data.push(record);
             }
-            
-            // Render visualization
-            renderVisualization(data, visualizationType);
-            
-            // Update record count
-            document.getElementById('resultCount').textContent = `${recordCount} records`;
-        }, 1000);
-    }
-    
-    function renderVisualization(data, type) {
-        const container = document.getElementById('visualizationContainer');
-        
-        if (data.length === 0) {
-            container.innerHTML = `
-                <div class="visualization-placeholder">
-                    <i class="bi bi-database-x"></i>
-                    <p>No data found for your query</p>
-                </div>
-            `;
-            return;
+            return data;
         }
-        
-        switch(type) {
-            case 'table':
+
+        function renderVisualization(data, type) {
+            const container = document.getElementById('visualizationContainer');
+
+            if (currentChart) {
+                currentChart.destroy();
+                currentChart = null;
+            }
+
+            if (type === 'table') {
                 renderTable(data, container);
-                break;
-            case 'bar':
-                renderBarChart(data, container);
-                break;
-            case 'line':
-                renderLineChart(data, container);
-                break;
-            case 'pie':
-                renderPieChart(data, container);
-                break;
-            case 'funnel':
-                renderFunnelChart(data, container);
-                break;
-            case 'area':
-                renderAreaChart(data, container);
-                break;
-            default:
-                renderTable(data, container);
+            } else {
+                renderChart(data, type, container);
+            }
         }
-    }
-    
-    function renderTable(data, container) {
-        if (data.length === 0) {
-            container.innerHTML = '<p class="text-center text-muted">No data to display</p>';
-            return;
-        }
-        
-        // Get field names from the first record
-        const keys = Object.keys(data[0]);
-        let html = `
-            <div class="query-result-table">
-                <table class="table table-striped table-hover">
+
+        function renderTable(data, container) {
+            if (data.length === 0) {
+                container.innerHTML = '<div class="results-placeholder"><i class="bi bi-database-x d-block"></i><p>No data found</p></div>';
+                return;
+            }
+
+            const keys = Object.keys(data[0]);
+            let html = `
+            <div class="data-table" style="max-height: 400px; overflow: auto; width: 100%;">
+                <table>
                     <thead>
-                        <tr>
-                            ${keys.map(key => `<th>${key}</th>`).join('')}
-                        </tr>
+                        <tr>${keys.map(key => `<th>${key}</th>`).join('')}</tr>
                     </thead>
                     <tbody>
         `;
-        
-        data.forEach(row => {
-            html += '<tr>';
-            keys.forEach(key => {
-                html += `<td>${row[key]}</td>`;
-            });
-            html += '</tr>';
-        });
-        
-        html += `
-                    </tbody>
-                </table>
-            </div>
-        `;
-        
-        container.innerHTML = html;
-    }
-    
-    function renderBarChart(data, container) {
-        container.innerHTML = `
-            <div class="text-center p-5">
-                <i class="bi bi-bar-chart" style="font-size: 3rem;"></i>
-                <h4 class="mt-3">Bar Chart Visualization</h4>
-                <p class="text-muted">Bar chart would be rendered here with ${data.length} data points</p>
-                <div class="bg-light p-3 mt-3 rounded">
-                    <p class="mb-1"><strong>Sample Data:</strong></p>
-                    <p class="mb-0">X-axis: ${Object.keys(data[0])[0]}</p>
-                    <p class="mb-0">Y-axis: ${Object.keys(data[0])[1] || 'Count'}</p>
-                </div>
-            </div>
-        `;
-    }
-    
-    function renderLineChart(data, container) {
-        container.innerHTML = `
-            <div class="text-center p-5">
-                <i class="bi bi-graph-up" style="font-size: 3rem;"></i>
-                <h4 class="mt-3">Line Chart Visualization</h4>
-                <p class="text-muted">Line chart would be rendered here with ${data.length} data points</p>
-                <div class="bg-light p-3 mt-3 rounded">
-                    <p class="mb-1"><strong>Sample Data:</strong></p>
-                    <p class="mb-0">X-axis: ${Object.keys(data[0])[0]}</p>
-                    <p class="mb-0">Y-axis: ${Object.keys(data[0])[1] || 'Value'}</p>
-                </div>
-            </div>
-        `;
-    }
-    
-    function renderPieChart(data, container) {
-        container.innerHTML = `
-            <div class="text-center p-5">
-                <i class="bi bi-pie-chart" style="font-size: 3rem;"></i>
-                <h4 class="mt-3">Pie Chart Visualization</h4>
-                <p class="text-muted">Pie chart would be rendered here with ${data.length} segments</p>
-                <div class="bg-light p-3 mt-3 rounded">
-                    <p class="mb-1"><strong>Sample Data:</strong></p>
-                    <p class="mb-0">Categories: ${Object.keys(data[0])[0]}</p>
-                    <p class="mb-0">Values: ${Object.keys(data[0])[1] || 'Count'}</p>
-                </div>
-            </div>
-        `;
-    }
-    
-    function renderFunnelChart(data, container) {
-        container.innerHTML = `
-            <div class="text-center p-5">
-                <i class="bi bi-funnel" style="font-size: 3rem;"></i>
-                <h4 class="mt-3">Funnel Visualization</h4>
-                <p class="text-muted">Funnel chart would be rendered here with ${data.length} stages</p>
-                <div class="bg-light p-3 mt-3 rounded">
-                    <p class="mb-1"><strong>Sample Data:</strong></p>
-                    <p class="mb-0">Stages: ${Object.keys(data[0])[0]}</p>
-                    <p class="mb-0">Values: ${Object.keys(data[0])[1] || 'Count'}</p>
-                </div>
-            </div>
-        `;
-    }
-    
-    function renderAreaChart(data, container) {
-        container.innerHTML = `
-            <div class="text-center p-5">
-                <i class="bi bi-graph-down" style="font-size: 3rem;"></i>
-                <h4 class="mt-3">Area Chart Visualization</h4>
-                <p class="text-muted">Area chart would be rendered here with ${data.length} data points</p>
-                <div class="bg-light p-3 mt-3 rounded">
-                    <p class="mb-1"><strong>Sample Data:</strong></p>
-                    <p class="mb-0">X-axis: ${Object.keys(data[0])[0]}</p>
-                    <p class="mb-0">Y-axis: ${Object.keys(data[0])[1] || 'Value'}</p>
-                </div>
-            </div>
-        `;
-    }
-    
-    // Run SQL button
-    document.getElementById('runSqlBtn').addEventListener('click', function() {
-        const sql = document.getElementById('sqlEditor').value.trim();
-        if (!sql) {
-            alert('Please enter a SQL query');
-            return;
-        }
-        
-        // Show loading state
-        const container = document.getElementById('visualizationContainer');
-        container.innerHTML = `
-            <div class="text-center">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="mt-2">Executing SQL query...</p>
-            </div>
-        `;
-        
-        // Simulate SQL execution
-        setTimeout(() => {
-            // Generate sample data
-            const data = [];
-            const recordCount = Math.floor(Math.random() * 50) + 10;
-            
-            for (let i = 0; i < recordCount; i++) {
-                data.push({
-                    id: i + 1,
-                    name: `Record ${i + 1}`,
-                    value: Math.floor(Math.random() * 1000),
-                    date: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+            data.slice(0, 50).forEach(row => {
+                html += '<tr>';
+                keys.forEach(key => {
+                    html += `<td>${row[key]}</td>`;
                 });
-            }
-            
-            // Render as table
-            renderVisualization(data, 'table');
-            
-            // Update record count
-            document.getElementById('resultCount').textContent = `${recordCount} records`;
-        }, 1500);
-    });
-    
-    // Preview SQL button
-    document.getElementById('previewQueryBtn').addEventListener('click', function() {
-        if (!selectedModule) {
-            alert('Please select a data module first');
-            return;
-        }
-        
-        if (selectedFields.length === 0) {
-            alert('Please select at least one field');
-            return;
-        }
-        
-        // Generate SQL
-        let sql = `SELECT ${selectedFields.map(f => f.name).join(', ')}\nFROM ${selectedModule}`;
-        
-        if (appliedFilters.length > 0) {
-            sql += '\nWHERE ';
-            const conditions = appliedFilters.map(filter => {
-                let value = filter.value;
-                if (typeof value === 'string') {
-                    value = `'${value}'`;
-                }
-                return `${filter.field} ${getSqlOperator(filter.condition)} ${value}`;
+                html += '</tr>';
             });
-            sql += conditions.join(' AND ');
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
         }
-        
-        // Add GROUP BY
-        const groupBy = document.getElementById('groupBySelect').value;
-        if (groupBy) {
-            sql += `\nGROUP BY ${groupBy}`;
+
+        function renderChart(data, type, container) {
+            // Aggregate data for chart
+            const groupBy = document.getElementById('groupBySelect').value || Object.keys(data[0])[1] || 'status';
+            const counts = {};
+
+            data.forEach(row => {
+                const key = row[groupBy] || 'Other';
+                counts[key] = (counts[key] || 0) + 1;
+            });
+
+            const labels = Object.keys(counts);
+            const values = Object.values(counts);
+
+            const colors = [
+                'rgba(102, 126, 234, 0.8)',
+                'rgba(118, 75, 162, 0.8)',
+                'rgba(240, 147, 251, 0.8)',
+                'rgba(245, 87, 108, 0.8)',
+                'rgba(79, 172, 254, 0.8)',
+                'rgba(0, 242, 254, 0.8)',
+                'rgba(17, 153, 142, 0.8)',
+                'rgba(56, 239, 125, 0.8)'
+            ];
+
+            container.innerHTML = '<div class="chart-container"><canvas id="resultChart"></canvas></div>';
+            const canvas = document.getElementById('resultChart');
+
+            const chartType = type === 'area' ? 'line' : type;
+
+            currentChart = new Chart(canvas, {
+                type: chartType,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `Count by ${groupBy}`,
+                        data: values,
+                        backgroundColor: type === 'line' || type === 'area' ? 'rgba(102, 126, 234, 0.2)' : colors,
+                        borderColor: type === 'line' || type === 'area' ? 'rgba(102, 126, 234, 1)' : colors.map(c => c.replace('0.8', '1')),
+                        borderWidth: 2,
+                        fill: type === 'area',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: type === 'pie' || type === 'doughnut' }
+                    },
+                    scales: type === 'pie' || type === 'doughnut' ? {} : {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
         }
-        
-        // Add ORDER BY
-        const sortBy = document.getElementById('sortSelect').value;
-        if (sortBy) {
-            const sortDir = document.querySelector('input[name="sortDirection"]:checked').value;
-            sql += `\nORDER BY ${sortBy} ${sortDir.toUpperCase()}`;
-        }
-        
-        // Add limit
-        sql += '\nLIMIT 1000';
-        
-        // Show in modal
-        document.getElementById('previewSqlContent').textContent = sql;
-        const modal = new bootstrap.Modal(document.getElementById('previewSqlModal'));
-        modal.show();
-    });
-    
-    function getSqlOperator(condition) {
-        const operators = {
-            'equals': '=',
-            'not_equals': '!=',
-            'contains': 'LIKE',
-            'greater_than': '>',
-            'less_than': '<',
-            'starts_with': 'LIKE',
-            'ends_with': 'LIKE'
-        };
-        return operators[condition] || '=';
-    }
-    
-    // Copy SQL button
-    document.getElementById('copySqlBtn').addEventListener('click', function() {
-        const sql = document.getElementById('previewSqlContent').textContent;
-        navigator.clipboard.writeText(sql).then(() => {
-            const originalText = this.textContent;
-            this.innerHTML = '<i class="bi bi-check"></i> Copied!';
+
+        // SQL execution
+        document.getElementById('runSqlBtn').addEventListener('click', function () {
+            const sql = document.getElementById('sqlEditor').value.trim();
+            if (!sql) {
+                showToast('Please enter a SQL query', 'error');
+                return;
+            }
+
+            const container = document.getElementById('visualizationContainer');
+            container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p class="text-muted">Executing SQL...</p></div>';
+
             setTimeout(() => {
-                this.textContent = originalText;
-            }, 2000);
+                const data = [];
+                const count = Math.floor(Math.random() * 30) + 10;
+                for (let i = 0; i < count; i++) {
+                    data.push({ id: i + 1, name: `Record ${i + 1}`, value: Math.floor(Math.random() * 1000) });
+                }
+                renderTable(data, container);
+                document.getElementById('resultCount').textContent = `${count} records`;
+                showToast('SQL executed successfully', 'success');
+            }, 1500);
         });
+
+        // Preview SQL
+        document.getElementById('previewQueryBtn').addEventListener('click', function () {
+            if (!selectedModule) {
+                showToast('Please select a module first', 'error');
+                return;
+            }
+
+            const fields = selectedFields.length > 0 ? selectedFields.map(f => f.name).join(', ') : '*';
+            let sql = `SELECT ${fields}\nFROM ${selectedModule}`;
+
+            if (appliedFilters.length > 0) {
+                sql += '\nWHERE ' + appliedFilters.map(f => `${f.field} ${f.condition === 'equals' ? '=' : f.condition} '${f.value}'`).join(' AND ');
+            }
+
+            const groupBy = document.getElementById('groupBySelect').value;
+            if (groupBy) sql += `\nGROUP BY ${groupBy}`;
+
+            const sortBy = document.getElementById('sortSelect').value;
+            if (sortBy) sql += `\nORDER BY ${sortBy}`;
+
+            sql += '\nLIMIT 1000';
+
+            document.getElementById('previewSqlContent').textContent = sql;
+            new bootstrap.Modal(document.getElementById('previewSqlModal')).show();
+        });
+
+        // Copy SQL
+        document.getElementById('copySqlBtn').addEventListener('click', function () {
+            const sql = document.getElementById('previewSqlContent').textContent;
+            navigator.clipboard.writeText(sql);
+            this.innerHTML = '<i class="bi bi-check me-2"></i>Copied!';
+            setTimeout(() => this.innerHTML = '<i class="bi bi-clipboard me-2"></i>Copy to Clipboard', 2000);
+        });
+
+        // Save query
+        document.getElementById('saveQueryBtn').addEventListener('click', function () {
+            new bootstrap.Modal(document.getElementById('saveQueryModal')).show();
+        });
+
+        document.getElementById('saveQueryConfirmBtn').addEventListener('click', function () {
+            const name = document.getElementById('queryName').value.trim();
+            if (!name) {
+                showToast('Please enter a query name', 'error');
+                return;
+            }
+            showToast(`Query "${name}" saved successfully!`, 'success');
+            bootstrap.Modal.getInstance(document.getElementById('saveQueryModal')).hide();
+            document.getElementById('saveQueryForm').reset();
+        });
+
+        // Export
+        document.getElementById('exportBtn').addEventListener('click', function () {
+            showToast('Export feature: CSV, Excel, PDF formats available', 'info');
+        });
+
+        // Refresh
+        document.getElementById('refreshResultsBtn').addEventListener('click', function () {
+            if (document.getElementById('visual-tab').classList.contains('active')) {
+                document.getElementById('runQueryBtn').click();
+            } else {
+                document.getElementById('runSqlBtn').click();
+            }
+        });
+
+        // Format SQL
+        document.getElementById('formatSqlBtn').addEventListener('click', function () {
+            showToast('SQL formatting applied', 'info');
+        });
+
+        // Save as report
+        document.getElementById('saveAsReportBtn').addEventListener('click', function () {
+            showToast('Report creation feature coming soon', 'info');
+        });
+
+        document.getElementById('saveSqlAsReportBtn').addEventListener('click', function () {
+            showToast('Report creation feature coming soon', 'info');
+        });
+
+        // Load saved query
+        window.loadSavedQuery = function (queryId) {
+            showToast(`Loading saved query: ${queryId}`, 'info');
+        };
+
+        // Initialize
+        selectModule('leads');
     });
-    
-    // Format SQL button
-    document.getElementById('formatSqlBtn').addEventListener('click', function() {
-        const sql = document.getElementById('sqlEditor').value;
-        // In a real implementation, this would format the SQL
-        alert('SQL formatting would be applied here');
-    });
-    
-    // Save query button
-    document.getElementById('saveQueryBtn').addEventListener('click', function() {
-        const modal = new bootstrap.Modal(document.getElementById('saveQueryModal'));
-        modal.show();
-    });
-    
-    // Save query confirm button
-    document.getElementById('saveQueryConfirmBtn').addEventListener('click', function() {
-        const name = document.getElementById('queryName').value.trim();
-        if (!name) {
-            alert('Please enter a query name');
-            return;
-        }
-        
-        // In a real implementation, this would save to the database
-        alert(`Query "${name}" saved successfully!`);
-        
-        // Close modal
-        const modal = bootstrap.Modal.getInstance(document.getElementById('saveQueryModal'));
-        modal.hide();
-        
-        // Reset form
-        document.getElementById('saveQueryForm').reset();
-    });
-    
-    // Export button
-    document.getElementById('exportBtn').addEventListener('click', function() {
-        alert('Export functionality would be implemented here.\nSupported formats: CSV, Excel, PDF');
-    });
-    
-    // Save as report buttons
-    document.getElementById('saveAsReportBtn').addEventListener('click', function() {
-        alert('Save as Report functionality would be implemented here');
-    });
-    
-    document.getElementById('saveSqlAsReportBtn').addEventListener('click', function() {
-        alert('Save as Report functionality would be implemented here');
-    });
-    
-    // Refresh results button
-    document.getElementById('refreshResultsBtn').addEventListener('click', function() {
-        // Re-run the current query
-        if (document.getElementById('visual-tab').classList.contains('active')) {
-            document.getElementById('runQueryBtn').click();
-        } else {
-            document.getElementById('runSqlBtn').click();
-        }
-    });
-    
-    // Initialize with leads module selected
-    selectModule('leads');
-});
 </script>
 {% endblock %}

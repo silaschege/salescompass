@@ -9,16 +9,18 @@ from functools import wraps
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.decorators import login_required
 from core.utils import check_cross_tenant_access
+from core.access_control.controller import UnifiedAccessController
+from core.access_control.utils import access_required as unified_access_required
  
 def feature_required(feature_key, redirect_url=None, message=None):
     """
-    Decorator to enforce feature access for function-based views
+    Updated decorator to enforce feature access using unified access control
     """
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
-            # Check if user has access to the feature
-            if not FeatureEnforcementMiddleware.has_feature_access(request.user, feature_key):
+            # Use unified access controller for consistency
+            if not UnifiedAccessController.has_access(request.user, feature_key, 'access'):
                 error_msg = message or f"You don't have access to the '{feature_key}' feature."
                 
                 if redirect_url:
@@ -50,10 +52,6 @@ def feature_required(feature_key, redirect_url=None, message=None):
             return view_func(request, *args, **kwargs)
         return _wrapped_view
     return decorator
-
-
-
-
 
 
 def cross_tenant_access_check(resource_param_name='obj', action='access'):
@@ -90,13 +88,11 @@ def cross_tenant_access_check(resource_param_name='obj', action='access'):
     return decorator
 
 
-
-
-
-
-def feature_required(feature_key, redirect_url=None, message=None):
+# DEPRECATED: Keep for backward compatibility but encourage use of unified system
+def feature_required_legacy(feature_key, redirect_url=None, message=None):
     """
-    Decorator to enforce feature access for function-based views
+    LEGACY: Decorator to enforce feature access for function-based views
+    Use the unified access control system instead
     """
     def decorator(view_func):
         @wraps(view_func)
@@ -113,7 +109,6 @@ def feature_required(feature_key, redirect_url=None, message=None):
             
             # Check if it's a trial feature and if the trial has expired
             try:
-                from .models import TenantFeatureEntitlement
                 feature_entitlement = TenantFeatureEntitlement.objects.get(
                     tenant=request.user.tenant,
                     feature_key=feature_key
@@ -135,27 +130,3 @@ def feature_required(feature_key, redirect_url=None, message=None):
             return view_func(request, *args, **kwargs)
         return _wrapped_view
     return decorator
-
-def module_required(module_name, redirect_url=None, message=None):
-    """
-    Decorator to enforce module access for function-based views
-    """
-    def decorator(view_func):
-        @wraps(view_func)
-        def _wrapped_view(request, *args, **kwargs):
-            # Check if user has access to the module
-            if not FeatureEnforcementMiddleware.has_module_access(request.user, module_name):
-                error_msg = message or f"You don't have access to the '{module_name}' module."
-                
-                if redirect_url:
-                    messages.error(request, error_msg)
-                    return redirect(redirect_url)
-                else:
-                    return HttpResponseForbidden(error_msg)
-            
-            return view_func(request, *args, **kwargs)
-        return _wrapped_view
-    return decorator
-
-
-

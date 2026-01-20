@@ -132,7 +132,7 @@ class Task(TenantModel, TimeStampedModel):
     task_description = models.TextField(blank=True, help_text="Description of the task")  # Renamed from 'description' to avoid conflict with base class
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_tasks')
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_tasks')
-    account = models.ForeignKey('core.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
+    account = models.ForeignKey('accounts.Account', on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
     opportunity = models.ForeignKey('opportunities.Opportunity', on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
     lead = models.ForeignKey('leads.Lead', on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
     case = models.ForeignKey('cases.Case', on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')

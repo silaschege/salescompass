@@ -4,8 +4,13 @@
 {% include "leads/includes/module_nav.html" %}
 {% endblock %}
 
-{% block page_title %}Leads{% endblock %}
-{% block page_subtitle %}Manage and track your potential customers{% endblock %}
+{% block page_title %}
+<div class="text-center w-100">Leads</div>
+{% endblock %}
+
+{% block page_subtitle %}
+<div class="text-center text-dark">Manage and track your potential customers</div>
+{% endblock %}
 
 {% block actions %}
 <a href="{% url 'leads:lead_create' %}" class="btn btn-primary">
@@ -35,7 +40,7 @@
             {% for lead in leads %}
             <tr>
                 <td>
-                    <a href="{% url 'leads:detail' lead.pk %}" class="text-decoration-none fw-bold">
+                    <a href="{% url 'leads:lead_detail' lead.pk %}" class="text-decoration-none fw-bold">
                         {{ lead.full_name }}
                     </a>
                     <br>
@@ -43,7 +48,8 @@
                 </td>
                 <td>
                     {% if lead.account %}
-                    <a href="{% url 'accounts:detail' lead.account.pk %}" class="text-decoration-none text-muted">
+                    <a href="{% url 'accounts:account_detail' lead.account.pk %}"
+                        class="text-decoration-none text-muted">
                         <i class="bi bi-building"></i> {{ lead.account.name }}
                     </a>
                     {% else %}
@@ -51,7 +57,8 @@
                     {% endif %}
                 </td>
                 <td>
-                    <span class="badge bg-{{ lead.status_ref.color|default:'secondary' }}">
+                    
+                    <span class="badge bg-{{ lead.status_ref.color|default:'primary' }}">
                         {{ lead.status_ref.label|default:lead.status|title }}
                     </span>
                 </td>
@@ -84,10 +91,10 @@
                 <td>{{ lead.created_at|date:"M d, Y" }}</td>
                 <td>
                     <div class="btn-group">
-                        <a href="{% url 'leads:detail' lead.pk %}" class="btn btn-sm btn-outline-secondary">
+                        <a href="{% url 'leads:lead_detail' lead.pk %}" class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-eye"></i>
                         </a>
-                        <a href="{% url 'leads:update' lead.pk %}" class="btn btn-sm btn-outline-secondary">
+                        <a href="{% url 'leads:lead_update' lead.pk %}" class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-pencil"></i>
                         </a>
                     </div>

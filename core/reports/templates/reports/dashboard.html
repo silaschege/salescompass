@@ -2,32 +2,150 @@
 
 {% block title %}Reports Dashboard - SalesCompass{% endblock %}
 
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --glass-bg: rgba(255, 255, 255, 0.9);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --shadow-soft: 0 8px 32px rgba(31, 38, 135, 0.15);
+    }
+
+    body {
+        background: #f8f9fa;
+    }
+
+    .dashboard-wrapper {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: calc(100vh - 60px);
+        padding-bottom: 2rem;
+    }
+
+    .header-bar {
+        background: var(--primary-gradient);
+        padding: 3rem 0;
+        margin-bottom: -3rem;
+        color: white;
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .dashboard-container {
+        margin-top: 1rem;
+    }
+
+    .glass-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        box-shadow: var(--shadow-soft);
+        height: 100%;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
+    }
+
+    .glass-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(31, 38, 135, 0.25);
+    }
+
+    .card-header-glass {
+        background: rgba(255, 255, 255, 0.6);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 1rem 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .card-title-glass {
+        font-weight: 700;
+        margin: 0;
+        font-size: 1rem;
+        color: #333;
+    }
+
+    .footer-bar {
+        background: transparent;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 2rem 0;
+        color: #6c757d;
+        text-align: center;
+        margin-top: auto;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="header-bar mb-4">
-    <div class="container">
-        <h1 class="block-title">Reports Dashboard</h1>
-        <p class="text-white text-center lead">Customizable analytics and KPI tracking</p>
-    </div>
-</div>
-
-<div class="container">
-    <!-- Main Content Area -->
-    <div class="row">
-        {% for widget in widget_groups.main %}
-        <div class="col-md-6 mb-4">
-            {% include "reports/widget.html" with widget=widget %}
-        </div>
-        {% endfor %}
-    </div>
-
-    <!-- Sidebar Area -->
-    <div class="row">
-        <div class="col-md-4">
-            {% for widget in widget_groups.sidebar %}
-            <div class="mb-4">
-                {% include "reports/widget.html" with widget=widget %}
+<div class="dashboard-wrapper">
+    <div class="header-bar mb-5">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-6 fw-bold mb-1">Reports Dashboard</h1>
+                    <p class="mb-0 opacity-75">Customizable analytics and KPI tracking</p>
+                </div>
+                <div>
+                    <a href="{% url 'reports:widget_create' %}"
+                        class="btn btn-light btn-sm rounded-pill fw-bold shadow-sm text-primary">
+                        <i class="bi bi-plus-lg me-1"></i> Add Widget
+                    </a>
+                </div>
             </div>
-            {% endfor %}
+        </div>
+    </div>
+
+    <div class="container dashboard-container">
+        <!-- Main Content Area -->
+        <div class="row g-4">
+            <!-- Main Column -->
+            <div class="col-lg-8">
+                <div class="row g-4">
+                    {% for widget in widget_groups.main %}
+                    <div class="col-12">
+                        {% include "reports/widget.html" with widget=widget %}
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <div
+                            class="text-center py-5 glass-card d-flex flex-column align-items-center justify-content-center h-100">
+                            <div class="bg-light rounded-circle p-4 mb-3"
+                                style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-bar-chart-line display-6 text-muted opacity-50"></i>
+                            </div>
+                            <h5 class="fw-bold text-muted">No main widgets</h5>
+                            <p class="text-muted small">Add charts or detailed tables here.</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Sidebar Area -->
+            <div class="col-lg-4">
+                <div class="row g-4">
+                    {% for widget in widget_groups.sidebar %}
+                    <div class="col-12">
+                        {% include "reports/widget.html" with widget=widget %}
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <div class="text-center py-5 glass-card">
+                            <h6 class="fw-bold text-muted mb-0">Sidebar Empty</h6>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-bar mt-5">
+        <div class="container">
+            <small>&copy; 2025 SalesCompass. All rights reserved.</small>
         </div>
     </div>
 </div>
@@ -39,13 +157,30 @@
             const widgetId = canvas.dataset.widgetId;
             const dataElement = document.getElementById(`widget-data-${widgetId}`);
             if (dataElement) {
-                const data = JSON.parse(dataElement.textContent);
-                if (data && !data.error) {
-                    new Chart(canvas.getContext('2d'), {
-                        type: data.chart_type || 'bar',
-                        data: data,
-                        options: { responsive: true, maintainAspectRatio: false }
-                    });
+                try {
+                    const data = JSON.parse(dataElement.textContent);
+                    if (data && !data.error) {
+                        new Chart(canvas.getContext('2d'), {
+                            type: data.chart_type || 'bar',
+                            data: data,
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        display: true,
+                                        position: 'bottom',
+                                        labels: {
+                                            usePointStyle: true,
+                                            padding: 20
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.error("Error parsing widget data", e);
                 }
             }
         });
@@ -55,14 +190,9 @@
 {% for widget in widgets %}
 {% if widget.report_data %}
 <script type="application/json" id="widget-data-{{ widget.pk }}">
-            {{ widget.report_data|safe }}
-        </script>
+    {{ widget.report_data|safe }}
+</script>
 {% endif %}
 {% endfor %}
 
-<div class="footer-bar mt-5">
-    <div class="container">
-        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
-    </div>
-</div>
 {% endblock %}

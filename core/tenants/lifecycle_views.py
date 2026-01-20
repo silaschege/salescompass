@@ -8,11 +8,22 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
-from .models import Tenant, TenantDataPreservation, TenantDataRestoration, TenantDataPreservationStrategy, TenantDataPreservationSchedule, AutomatedTenantLifecycleRule, AutomatedTenantLifecycleEvent, TenantLifecycleWorkflow, TenantLifecycleWorkflowExecution, TenantSuspensionWorkflow, TenantTerminationWorkflow
+from django.utils import timezone
+from .models import (
+    Tenant, TenantDataPreservation, TenantDataRestoration, 
+    TenantDataPreservationStrategy, TenantDataPreservationSchedule, 
+    AutomatedTenantLifecycleRule, AutomatedTenantLifecycleEvent, 
+    TenantLifecycleWorkflow, TenantLifecycleWorkflowExecution, 
+    TenantSuspensionWorkflow, TenantTerminationWorkflow
+)
 from core.models import User
+from core.views import (
+    TenantAwareViewMixin, SalesCompassListView, SalesCompassDetailView, 
+    SalesCompassCreateView, SalesCompassUpdateView, SalesCompassDeleteView
+)
  
  
-class TenantLifecycleDashboardView(LoginRequiredMixin, TemplateView):
+class TenantLifecycleDashboardView(LoginRequiredMixin, TenantAwareViewMixin, TemplateView):
     """Dashboard view for tenant lifecycle management"""
     template_name = 'tenants/lifecycle_dashboard.html'
     
@@ -27,7 +38,7 @@ class TenantLifecycleDashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class TenantStatusManagementView(LoginRequiredMixin, ListView):
+class TenantStatusManagementView(SalesCompassListView):
     """View for managing tenant statuses"""
     template_name = 'tenants/status_management.html'
     model = Tenant
@@ -35,7 +46,7 @@ class TenantStatusManagementView(LoginRequiredMixin, ListView):
     paginate_by = 20
     
     def get_queryset(self):
-        queryset = Tenant.objects.all()
+        queryset = super().get_queryset()
         status_filter = self.request.GET.get('status')
         if status_filter:
             if status_filter == 'active':
@@ -49,7 +60,7 @@ class TenantStatusManagementView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class TenantSuspensionWorkflowView(LoginRequiredMixin, CreateView):
+class TenantSuspensionWorkflowView(SalesCompassCreateView):
     """View for initiating tenant suspension workflow"""
     template_name = 'tenants/suspension_workflow.html'
     model = TenantSuspensionWorkflow
@@ -58,11 +69,11 @@ class TenantSuspensionWorkflowView(LoginRequiredMixin, CreateView):
     
     def form_valid(self, form):
         form.instance.initiated_by = self.request.user
-        messages.success(self.request, f'Suspension workflow initiated for {form.instance.tenant.name}.')
+        # Tenant is assigned automatically if appropriate, but here 'tenant' is a field in the form
         return super().form_valid(form)
 
 
-class TenantTerminationWorkflowView(LoginRequiredMixin, CreateView):
+class TenantTerminationWorkflowView(SalesCompassCreateView):
     """View for initiating tenant termination workflow"""
     template_name = 'tenants/termination_workflow.html'
     model = TenantTerminationWorkflow
@@ -71,11 +82,10 @@ class TenantTerminationWorkflowView(LoginRequiredMixin, CreateView):
     
     def form_valid(self, form):
         form.instance.initiated_by = self.request.user
-        messages.success(self.request, f'Termination workflow initiated for {form.instance.tenant.name}.')
         return super().form_valid(form)
 
 
-class AutomatedLifecycleRulesView(LoginRequiredMixin, ListView):
+class AutomatedLifecycleRulesView(SalesCompassListView):
     """View for managing automated lifecycle rules"""
     template_name = 'tenants/automated_lifecycle_rules.html'
     model = AutomatedTenantLifecycleRule
@@ -83,10 +93,10 @@ class AutomatedLifecycleRulesView(LoginRequiredMixin, ListView):
     paginate_by = 20
     
     def get_queryset(self):
-        return AutomatedTenantLifecycleRule.objects.select_related('created_by').all()
+        return super().get_queryset().select_related('created_by')
 
 
-class CreateAutomatedLifecycleRuleView(LoginRequiredMixin, CreateView):
+class CreateAutomatedLifecycleRuleView(SalesCompassCreateView):
     """View for creating automated lifecycle rules"""
     template_name = 'tenants/create_automated_rule.html'
     model = AutomatedTenantLifecycleRule
@@ -95,11 +105,10 @@ class CreateAutomatedLifecycleRuleView(LoginRequiredMixin, CreateView):
     
     def form_valid(self, form):
         form.instance.created_by = self.request.user
-        messages.success(self.request, f'Automated lifecycle rule "{form.instance.name}" created successfully.')
         return super().form_valid(form)
 
 
-class TenantDataPreservationView(LoginRequiredMixin, ListView):
+class TenantDataPreservationView(SalesCompassListView):
     """View for managing tenant data preservation"""
     template_name = 'tenants/data_preservation.html'
     model = TenantDataPreservation
@@ -107,10 +116,10 @@ class TenantDataPreservationView(LoginRequiredMixin, ListView):
     paginate_by = 20
     
     def get_queryset(self):
-        return TenantDataPreservation.objects.select_related('tenant', 'created_by').all()
+        return super().get_queryset().select_related('tenant', 'created_by')
 
 
-class TenantDataRestorationView(LoginRequiredMixin, ListView):
+class TenantDataRestorationView(SalesCompassListView):
     """View for managing tenant data restoration"""
     template_name = 'tenants/data_restoration.html'
     model = TenantDataRestoration
@@ -118,10 +127,10 @@ class TenantDataRestorationView(LoginRequiredMixin, ListView):
     paginate_by = 20
     
     def get_queryset(self):
-        return TenantDataRestoration.objects.select_related('tenant', 'preservation_record').all()
+        return super().get_queryset().select_related('tenant', 'preservation_record')
 
 
-class TenantLifecycleWorkflowsView(LoginRequiredMixin, ListView):
+class TenantLifecycleWorkflowsView(SalesCompassListView):
     """View for managing tenant lifecycle workflows"""
     template_name = 'tenants/lifecycle_workflows.html'
     model = TenantLifecycleWorkflow
@@ -129,10 +138,10 @@ class TenantLifecycleWorkflowsView(LoginRequiredMixin, ListView):
     paginate_by = 20
     
     def get_queryset(self):
-        return TenantLifecycleWorkflow.objects.select_related('created_by').all()
+        return super().get_queryset().select_related('created_by')
 
 
-class ApproveSuspensionWorkflowView(LoginRequiredMixin, View):
+class ApproveSuspensionWorkflowView(LoginRequiredMixin, TenantAwareViewMixin, View):
     """View for approving suspension workflows"""
     def post(self, request, workflow_id):
         workflow = get_object_or_404(TenantSuspensionWorkflow, id=workflow_id)
@@ -144,7 +153,7 @@ class ApproveSuspensionWorkflowView(LoginRequiredMixin, View):
         return redirect('tenants:suspension-workflows')
 
 
-class ApproveTerminationWorkflowView(LoginRequiredMixin, View):
+class ApproveTerminationWorkflowView(LoginRequiredMixin, TenantAwareViewMixin, View):
     """View for approving termination workflows"""
     def post(self, request, workflow_id):
         workflow = get_object_or_404(TenantTerminationWorkflow, id=workflow_id)
@@ -156,7 +165,7 @@ class ApproveTerminationWorkflowView(LoginRequiredMixin, View):
         return redirect('tenants:termination-workflows')
 
 
-class TenantLifecycleEventLogView(LoginRequiredMixin, ListView):
+class TenantLifecycleEventLogView(SalesCompassListView):
     """View for viewing tenant lifecycle event logs"""
     template_name = 'tenants/lifecycle_event_log.html'
     model = AutomatedTenantLifecycleEvent
@@ -164,11 +173,11 @@ class TenantLifecycleEventLogView(LoginRequiredMixin, ListView):
     paginate_by = 20
     
     def get_queryset(self):
-        return AutomatedTenantLifecycleEvent.objects.select_related('tenant', 'rule', 'executed_by').order_by('-triggered_at')
+        return super().get_queryset().select_related('tenant', 'rule', 'executed_by').order_by('-triggered_at')
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class ExecuteLifecycleRuleView(LoginRequiredMixin, View):
+class ExecuteLifecycleRuleView(LoginRequiredMixin, TenantAwareViewMixin, View):
     """API view for executing lifecycle rules"""
     def post(self, request, rule_id):
         rule = get_object_or_404(AutomatedTenantLifecycleRule, id=rule_id)
@@ -257,7 +266,7 @@ class ExecuteLifecycleRuleView(LoginRequiredMixin, View):
         return now + timedelta(days=1)  # Default to daily
 
 
-class TenantRestorationView(LoginRequiredMixin, View):
+class TenantRestorationView(LoginRequiredMixin, TenantAwareViewMixin, View):
     """View for initiating tenant data restoration"""
     def get(self, request, preservation_id):
         preservation = get_object_or_404(TenantDataPreservation, id=preservation_id)

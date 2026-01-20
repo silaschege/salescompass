@@ -84,7 +84,7 @@
                             {% for proposal in recent_proposals %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'proposals:detail' proposal.pk %}">
+                                    <a href="{% url 'proposals:proposal_detail' proposal.pk %}">
                                         {{ proposal.title|truncatechars:30 }}
                                     </a>
                                 </td>

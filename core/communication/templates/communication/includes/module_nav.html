@@ -1,0 +1,102 @@
+<div class="section-title">COMMUNICATION</div>
+
+<a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+    href="{% url 'communication:dashboard' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-speedometer2 nav-icon"></i>
+        <span>Dashboard</span>
+    </div>
+</a>
+
+<a class="nav-link {% if request.resolver_match.url_name == 'unified_inbox' %}active{% endif %}"
+    href="{% url 'communication:unified_inbox' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-inbox nav-icon"></i>
+        <span>Unified Inbox</span>
+    </div>
+</a>
+
+<!-- Emails Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#emailMenu"
+    aria-expanded="{% if request.resolver_match.url_name in 'email_list,email_compose,signature_list' %}true{% else %}false{% endif %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-envelope nav-icon"></i>
+        <span>Emails</span>
+    </div>
+    <i class="bi bi-chevron-down"></i>
+</a>
+<div class="collapse {% if request.resolver_match.url_name in 'email_list,email_compose,signature_list' %}show{% endif %}"
+    id="emailMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'email_list' %}active{% endif %}"
+        href="{% url 'communication:email_list' %}">All Emails</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'email_compose' %}active{% endif %}"
+        href="{% url 'communication:email_compose' %}">Compose</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'signature_list' %}active{% endif %}"
+        href="{% url 'communication:signature_list' %}">Signatures</a>
+</div>
+
+<!-- SMS Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#smsMenu"
+    aria-expanded="{% if request.resolver_match.url_name in 'sms_list,sms_send' %}true{% else %}false{% endif %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-chat-dots nav-icon"></i>
+        <span>SMS</span>
+    </div>
+    <i class="bi bi-chevron-down"></i>
+</a>
+<div class="collapse {% if request.resolver_match.url_name in 'sms_list,sms_send' %}show{% endif %}" id="smsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'sms_list' %}active{% endif %}"
+        href="{% url 'communication:sms_list' %}">All SMS</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'sms_send' %}active{% endif %}"
+        href="{% url 'communication:sms_send' %}">Send SMS</a>
+</div>
+
+<!-- Calls Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#callMenu"
+    aria-expanded="{% if request.resolver_match.url_name in 'call_log_list,call_analytics' %}true{% else %}false{% endif %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-telephone nav-icon"></i>
+        <span>Calls</span>
+    </div>
+    <i class="bi bi-chevron-down"></i>
+</a>
+<div class="collapse {% if request.resolver_match.url_name in 'call_log_list,call_analytics' %}show{% endif %}"
+    id="callMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'call_log_list' %}active{% endif %}"
+        href="{% url 'communication:call_log_list' %}">Call Logs</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'call_analytics' %}active{% endif %}"
+        href="{% url 'communication:call_analytics' %}">Analytics</a>
+</div>
+
+<a class="nav-link {% if request.resolver_match.url_name == 'ticket_list' %}active{% endif %}"
+    href="{% url 'communication:ticket_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-headset nav-icon"></i>
+        <span>Support Tickets</span>
+    </div>
+</a>
+
+<a class="nav-link {% if request.resolver_match.url_name == 'feedback_list' %}active{% endif %}"
+    href="{% url 'communication:feedback_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-chat-heart nav-icon"></i>
+        <span>Feedback</span>
+    </div>
+</a>
+
+<a class="nav-link {% if request.resolver_match.url_name == 'history_list' %}active{% endif %}"
+    href="{% url 'communication:history_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-clock-history nav-icon"></i>
+        <span>History</span>
+    </div>
+</a>
+
+<div class="section-title">SETTING</div>
+<a class="nav-link {% if request.resolver_match.url_name == 'config_list' %}active{% endif %}"
+    href="{% url 'communication:config_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-gear nav-icon"></i>
+        <span>Configuration</span>
+    </div>
+</a>

@@ -3,16 +3,15 @@
 Seed initial access control entries for all registered apps in SalesCompass.
 
 This command creates the required entries for each app in the apps registry:
-1. An entitlement record (access_type='entitlement', scope_type='tenant')
-2. A feature flag record (access_type='feature_flag', scope_type='tenant')
-3. A permission record for each role (access_type='permission', scope_type='role')
+1. Creates AccessControl definitions (Entitlement, Feature Flag, Permission) for each app.
+2. Assigns these controls to all existing tenants and their roles.
 
 Usage:
     python manage.py seed_access_control_entries
 """
 from django.core.management.base import BaseCommand
-from access_control.models import AccessControl
-from accounts.models import Role
+from access_control.models import AccessControl, TenantAccessControl, RoleAccessControl
+from access_control.role_models import Role
 from tenants.models import Tenant
 
 
@@ -26,107 +25,113 @@ class Command(BaseCommand):
         created_count = 0
         updated_count = 0
 
-        # Get all existing tenants and roles
+        # Get all existing tenants
         tenants = Tenant.objects.all()
-        roles = Role.objects.all()
         
         if not tenants.exists():
             self.stdout.write(
                 self.style.WARNING('No tenants found. Please create at least one tenant first.')
             )
-            return
-
-        if not roles.exists():
-            self.stdout.write(
-                self.style.WARNING('No roles found. Please create at least one role first.')
-            )
-            return
+            # We can still check for definition creation, but skipping assignments for now.
+        else:
+            # Ensure default roles exist for each tenant
+            for tenant in tenants:
+                for role_data in Role.get_default_roles():
+                    role, created = Role.objects.get_or_create(
+                        name=role_data['name'],
+                        tenant=tenant,
+                        defaults={
+                            'description': role_data['description'],
+                            'is_system_role': role_data['is_system_role'],
+                            'is_assignable': role_data['is_assignable'],
+                        }
+                    )
+                    if created:
+                        self.stdout.write(f"Created default role '{role.name}' for tenant {tenant.name}")
 
         for app in AVAILABLE_APPS:
             app_id = app['id']
             app_name = app['name']
             app_description = app.get('description', f'Access to {app_name} module')
 
-            # Create entitlement record for each tenant
-            for tenant in tenants:
-                entitlement, created = AccessControl.objects.update_or_create(
-                    key=app_id,
-                    scope_type='tenant',
-                    tenant=tenant,
-                    access_type='entitlement',
-                    defaults={
-                        'name': f'{app_name} Entitlement',
-                        'description': f'{app_description} - Feature Entitlement',
-                        'is_enabled': True,
-                    }
-                )
-                if created:
-                    created_count += 1
-                    self.stdout.write(
-                        self.style.SUCCESS(f'Created entitlement: {entitlement.name} for tenant {tenant.name}')
-                    )
-                else:
-                    updated_count += 1
-                    self.stdout.write(
-                        self.style.WARNING(f'Updated entitlement: {entitlement.name} for tenant {tenant.name}')
-                    )
+            # 1. Create AccessControl DEFINITIONS
+            
+            # Entitlement Definition
+            entitlement_key = f"{app_id}.entitlement"
+            entitlement_def, created = AccessControl.objects.update_or_create(
+                key=entitlement_key,
+                defaults={
+                    'name': f'{app_name} Entitlement',
+                    'description': f'{app_description} - Entitlement',
+                    'access_type': 'entitlement',
+                    'default_enabled': True,
+                }
+            )
+            if created:
+                created_count += 1
+                self.stdout.write(self.style.SUCCESS(f'Created Definition: {entitlement_def.name}'))
 
-            # Create feature flag record for each tenant
-            for tenant in tenants:
-                feature_flag, created = AccessControl.objects.update_or_create(
-                    key=app_id,
-                    scope_type='tenant',
-                    tenant=tenant,
-                    access_type='feature_flag',
-                    defaults={
-                        'name': f'{app_name} Feature Flag',
-                        'description': f'{app_description} - Feature Toggle',
-                        'is_enabled': True,
-                        'rollout_percentage': 100,
-                    }
-                )
-                if created:
-                    created_count += 1
-                    self.stdout.write(
-                        self.style.SUCCESS(f'Created feature flag: {feature_flag.name} for tenant {tenant.name}')
-                    )
-                else:
-                    updated_count += 1
-                    self.stdout.write(
-                        self.style.WARNING(f'Updated feature flag: {feature_flag.name} for tenant {tenant.name}')
-                    )
+            # Feature Flag Definition
+            feature_key = f"{app_id}.feature"
+            feature_def, created = AccessControl.objects.update_or_create(
+                key=feature_key,
+                defaults={
+                    'name': f'{app_name} Feature',
+                    'description': f'{app_description} - Feature Toggle',
+                    'access_type': 'feature_flag',
+                    'default_enabled': True,
+                }
+            )
+            if created:
+                created_count += 1
+                self.stdout.write(self.style.SUCCESS(f'Created Definition: {feature_def.name}'))
 
-            # Create permission record for each role
-            for role in roles:
-                for tenant in tenants:
-                    # Find a user with this role and tenant to associate with the role
-                    # We need to check if there are users with this role in this tenant
-                    permission, created = AccessControl.objects.update_or_create(
-                        key=app_id,
-                        scope_type='role',
-                        role=role,
-                        tenant=tenant,  # Also associate with tenant
-                        access_type='permission',
-                        defaults={
-                            'name': f'{app_name} Permission',
-                            'description': f'{app_description} - Role Permission for {role.name}',
-                            'is_enabled': True,
-                        }
+            # Permission Definition (General access)
+            permission_key = f"{app_id}.permission" 
+            permission_def, created = AccessControl.objects.update_or_create(
+                key=permission_key,
+                defaults={
+                    'name': f'{app_name} Access',
+                    'description': f'{app_description} - General Access Permission',
+                    'access_type': 'permission',
+                    'default_enabled': True,
+                }
+            )
+            if created:
+                created_count += 1
+                self.stdout.write(self.style.SUCCESS(f'Created Definition: {permission_def.name}'))
+
+            # 2. Assign to Tenants (Entitlements & Features)
+            for tenant in tenants:
+                # Assign Entitlement
+                TenantAccessControl.objects.get_or_create(
+                    tenant=tenant,
+                    access_control=entitlement_def,
+                    defaults={'is_enabled': True}
+                )
+                
+                # Assign Feature Flag
+                TenantAccessControl.objects.get_or_create(
+                    tenant=tenant,
+                    access_control=feature_def,
+                    defaults={'is_enabled': True}
+                )
+                
+            # 3. Assign to Roles (Permissions)
+            # For each tenant, get roles and assign permission
+            for tenant in tenants:
+                # Admin Role gets everything
+                admin_role = Role.objects.filter(tenant=tenant, name='Tenant Admin').first()
+                if admin_role:
+                    RoleAccessControl.objects.get_or_create(
+                        role=admin_role,
+                        access_control=permission_def,
+                        defaults={'is_enabled': True}
                     )
-                    if created:
-                        created_count += 1
-                        self.stdout.write(
-                            self.style.SUCCESS(f'Created permission: {permission.name} for role {role.name} in tenant {tenant.name}')
-                        )
-                    else:
-                        updated_count += 1
-                        self.stdout.write(
-                            self.style.WARNING(f'Updated permission: {permission.name} for role {role.name} in tenant {tenant.name}')
-                        )
 
         self.stdout.write('')
         self.stdout.write(
             self.style.SUCCESS(
-                f'Access control entries seeded: {created_count} created, {updated_count} updated'
+                f'Access control seeding completed.'
             )
         )

@@ -46,10 +46,21 @@ def calculate_engagement_roi(tenant_id=None):
         
         # Get account's current engagement score
         try:
-            status = EngagementStatus.objects.get(account=opp.account)
-            score = status.engagement_score
-        except EngagementStatus.DoesNotExist:
-            score = 0
+            # First try company level score if we have a way to get it
+            from .utils import calculate_company_engagement_score
+            score = calculate_company_engagement_score(opp.account, tenant_id=tenant_id)
+        except Exception:
+            # Fallback to current behavior but fix the lookup
+            # Since EngagementStatus links to User, we can't directly lookup by Account
+            # Let's try to get the owner's status as a proxy
+            try:
+                if opp.account.owner:
+                    status = EngagementStatus.objects.get(account=opp.account.owner)
+                    score = status.engagement_score
+                else:
+                    score = 0
+            except EngagementStatus.DoesNotExist:
+                score = 0
             
         # Get Win Rate for this account
         account_opps = Opportunity.objects.filter(account=opp.account).select_related('stage')
@@ -61,7 +72,7 @@ def calculate_engagement_roi(tenant_id=None):
         data_points.append({
             'x': score, # Engagement Score
             'y': win_rate, # Win Rate %
-            'name': opp.account.name
+            'name': opp.account.account_name
         })
         
     return data_points

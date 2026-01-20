@@ -6,7 +6,7 @@
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="block-title fw-bold mb-0">Generate PDF for "{{ proposal.title }}"</h1>
-        <a href="{% url 'proposals:detail' proposal.pk %}" class="btn btn-secondary">
+        <a href="{% url 'proposals:proposal_detail' proposal.pk %}" class="btn btn-secondary">
             <i class="bi bi-arrow-left"></i> Back to Proposal
         </a>
     </div>

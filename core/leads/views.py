@@ -37,7 +37,7 @@ class LeadPipelineView(SalesCompassListView):
     
     def get_queryset(self):
         queryset = super().get_queryset()
-        return queryset.select_related('source_ref', 'status_ref', 'industry_ref', 'account', 'owner')
+        return queryset.filter(tenant=self.request.user.tenant).select_related('source_ref', 'status_ref', 'industry_ref', 'account', 'owner')
 
 
 class LeadAnalyticsView(SalesCompassListView):
@@ -50,7 +50,7 @@ class LeadAnalyticsView(SalesCompassListView):
     
     def get_queryset(self):
         queryset = super().get_queryset()
-        return queryset.select_related('source_ref', 'status_ref', 'industry_ref', 'account', 'owner')
+        return queryset.filter(tenant=self.request.user.tenant).select_related('source_ref', 'status_ref', 'industry_ref', 'account', 'owner')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -65,7 +65,7 @@ class LeadAnalyticsView(SalesCompassListView):
         # Calculate metrics by source
         metrics_by_source = {}
         for lead in leads:
-            source = lead.source or (lead.source_ref.label if lead.source_ref else 'Unknown')
+            source = lead.source_ref or (lead.source_ref.label if lead.source_ref else 'Unknown')
             if source not in metrics_by_source:
                 metrics_by_source[source] = {'total': 0, 'converted': 0}
             metrics_by_source[source]['total'] += 1

@@ -4,7 +4,7 @@
             <i class="fas fa-tasks me-2"></i>Tasks
             <span class="badge bg-secondary ms-1">{{ tasks.count }}</span>
         </h5>
-        <a href="{% url 'tasks:create' %}?content_type={{ content_type_id }}&object_id={{ object_id }}"
+        <a href="{% url 'tasks:task_create' %}?content_type={{ content_type_id }}&object_id={{ object_id }}"
             class="btn btn-sm btn-primary">
             <i class="fas fa-plus"></i> Add Task
         </a>
@@ -28,14 +28,12 @@
                             <i class="far fa-calendar-alt me-1"></i> {{ task.due_date|date:"M d" }}
                             {% endif %}
                             {% if task.assigned_to %}
-                            <span class="ms-2"><i class="far fa-user me-1"></i> {{
-                                task.assigned_to.get_full_name|default:task.assigned_to.email }}</span>
+                            <span class="ms-2"><i class="far fa-user me-1"></i> {{task.assigned_to.get_full_name|default:task.assigned_to.email }}</span>
                             {% endif %}
                         </div>
                     </div>
                 </div>
-                <span class="badge bg-{{ task.priority_ref.color|default:'secondary' }}">{{ task.priority_ref.label
-                    }}</span>
+                <span class="badge bg-{{ task.priority_ref.color|default:'secondary' }}">{{ task.priority_ref.label }}</span>
             </div>
             {% endfor %}
         </div>

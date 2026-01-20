@@ -32,7 +32,7 @@
                         <div class="col-md-6">
                             <p><strong>Role:</strong> {{ contact.role|default:"—" }}</p>
                             <p><strong>Account:</strong>
-                                <a href="{% url 'accounts:detail' contact.account.pk %}">
+                                <a href="{% url 'accounts:account_detail' contact.account.pk %}">
                                     {{ contact.account.account_name }}
                                 </a>
                             </p>
@@ -157,7 +157,8 @@
                     <p><strong>Industry:</strong> {{ contact.account.industry|default:"—" }}</p>
                     <p><strong>Tier:</strong> {{ contact.account.get_tier_display|default:"—" }}</p>
                     <p><strong>Health Score:</strong> {{ contact.account.health_score|default:"—" }}</p>
-                    <a href="{% url 'accounts:detail' contact.account.pk %}" class="btn btn-sm btn-outline-primary">View
+                    <a href="{% url 'accounts:account_detail' contact.account.pk %}"
+                        class="btn btn-sm btn-outline-primary">View
                         Account</a>
                 </div>
             </div>

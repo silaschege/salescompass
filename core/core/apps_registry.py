@@ -8,13 +8,21 @@ SUPERUSER_ONLY_CATEGORIES = ['control']
 
 AVAILABLE_APPS = [
     # Core Apps
+    # {
+    #     'id': 'home',
+    #     'name': 'Home',
+    #     'icon': 'bi-house-door',
+    #     'url_name': 'core:home',
+    #     'category': 'core',
+    #     'description': 'SalesCompass Home'
+    # },
     {
-        'id': 'home',
-        'name': 'Home',
-        'icon': 'bi-house-door',
-        'url_name': 'core:home',
+        'id': 'leads',
+        'name': 'Leads',
+        'icon': 'bi-funnel',
+        'url_name': 'leads:lead_list',
         'category': 'core',
-        'description': 'SalesCompass Home'
+        'description': 'Lead management and acquisition'
     },
     {
         'id': 'dashboard',
@@ -29,33 +37,19 @@ AVAILABLE_APPS = [
         'name': 'Accounts',
         'icon': 'bi-briefcase',
         'url_name': 'accounts:account_list',
-        'category': 'core',
+        'category': 'feature',
         'description': 'Manage customer accounts'
     },
-    {
-        'id': 'tenants',
-        'name': 'Tenants',
-        'icon': 'bi-building',
-        'url_name': 'tenants:tenant_list',
-        'category': 'core', # User listed under Core
-        'description': 'Manage tenants'
-    },
+
     {
         'id': 'billing',
         'name': 'Billing',
         'icon': 'bi-credit-card',
-        'url_name': 'billing:revenue_overview',
+        'url_name': 'billing:portal',
         'category': 'core',
         'description': 'Billing and revenue management'
     },
-    {
-        'id': 'access_control',
-        'name': 'Access Control',
-        'icon': 'bi-shield-lock',
-        'url_name': 'access_control:dashboard',
-        'category': 'feature',  # Changed to 'feature' so regular users can see it
-        'description': 'Manage permissions, feature toggles, and entitlements'
-    },
+
     # Feature Apps
     {
         'id': 'sales',
@@ -65,14 +59,7 @@ AVAILABLE_APPS = [
         'category': 'feature',
         'description': 'Sales pipelines and performance'
     },
-    {
-        'id': 'leads',
-        'name': 'Leads',
-        'icon': 'bi-funnel',
-        'url_name': 'leads:lead_list',
-        'category': 'feature',
-        'description': 'Lead management and acquisition'
-    },
+
     {
         'id': 'products',
         'name': 'Products',
@@ -193,7 +180,23 @@ AVAILABLE_APPS = [
         'category':'feature',
         'description':'Email and messaging management'
     },
+    {
+        'id': 'reachout',
+        'name': 'ReachOut',
+        'icon': 'bi-telephone-outbound',
+        'url_name': 'wazo:status',
+        'category': 'feature',
+        'description': 'Telephony and SMS services'
+    },
     # Control Plane Apps
+        {
+        'id': 'tenants',
+        'name': 'Tenants',
+        'icon': 'bi-building',
+        'url_name': 'tenants:tenant_list',
+        'category': 'control', # User listed under Core
+        'description': 'Manage tenants'
+    },
     {
         'id': 'core',
         'name': 'Core',
@@ -234,6 +237,17 @@ AVAILABLE_APPS = [
         'category': 'control',
         'description': 'System-wide alerts and incident management'
     },
+
+   
+    {
+        'id': 'access_control',
+        'name': 'Access Control',
+        'icon': 'bi-shield-lock',
+        'url_name': 'access_control:dashboard',
+        'category': 'control',  # Changed to 'control' so only superusers can see it
+        'description': 'Manage permissions, feature toggles, and entitlements'
+    },
+
 ]
 
 def get_app_by_id(app_id):

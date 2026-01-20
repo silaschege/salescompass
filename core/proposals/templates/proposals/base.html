@@ -214,11 +214,11 @@
             </a>
             <div class="collapse" id="proposalsMenu">
                 <a class="nav-link {% if request.resolver_match.app_name == 'proposals' and request.resolver_match.url_name == 'list' %}active{% endif %}" 
-                   href="{% url 'proposals:list' %}">
+                   href="{% url 'proposals:proposal_list' %}">
                     All Proposals
                 </a>
                 <a class="nav-link {% if request.resolver_match.app_name == 'proposals' and request.resolver_match.url_name == 'create' %}active{% endif %}" 
-                   href="{% url 'proposals:create' %}">
+                   href="{% url 'proposals:proposal_create' %}">
                     Create Proposal
                 </a>
             </div>

@@ -48,9 +48,9 @@ def calculate_sales_metrics(start_date, end_date, user_id=None, tenant_id=None):
     # Sales Cycle (Average days to close for WON opportunities in period)
     cycle_days = []
     for opp in opps.filter(stage__is_won=True):
-        if opp.closed_date and opp.created_at:
-            # Check if closed_date is date or datetime
-            closed = opp.closed_date
+        if opp.close_date and opp.created_at:
+            # Check if close_date is date or datetime
+            closed = opp.close_date
             created = opp.created_at.date() if hasattr(opp.created_at, 'date') else opp.created_at
             days = (closed - created).days
             if days >= 0:

@@ -16,7 +16,7 @@ def white_label_context(request):
     else:
         return {
             'white_label_settings': None,
-        }
+        } 
 
 def feature_flags(request):
     """Add feature flags to all template contexts"""

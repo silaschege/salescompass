@@ -19,11 +19,18 @@ from django.db.models import Q
 
 
 # List View
+
 class SaleListView(ObjectPermissionRequiredMixin, ListView):
     model = Sale
     template_name = 'sales/sale_list.html'
     context_object_name = 'sales'
     ordering = ['-sale_date']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Optimize query by selecting related fields that are used in the template
+        return queryset.select_related('account', 'product', 'sales_rep')
+
 
 # Detail View
 class SaleDetailView(ObjectPermissionRequiredMixin, DetailView):
@@ -33,6 +40,7 @@ class SaleDetailView(ObjectPermissionRequiredMixin, DetailView):
 
 # Create View
 
+
 class SaleCreateView(ObjectPermissionRequiredMixin, CreateView):
     model = Sale
     fields = ['account', 'sale_type', 'product', 'amount']
@@ -41,13 +49,13 @@ class SaleCreateView(ObjectPermissionRequiredMixin, CreateView):
 
     def form_valid(self, form):
         account = form.instance.account
-        account_name = f"{account.first_name} {account.last_name}".strip() or account.email
+        account_name = account.account_name
         messages.success(self.request, f"Sale recorded for {account_name}!")
         return super().form_valid(form)
     
     def get_success_url(self):
         return reverse_lazy('sales:sale_detail', kwargs={'pk': self.object.pk})
-# ... existing code ...
+
 
 # Update View
 class SaleUpdateView(ObjectPermissionRequiredMixin, UpdateView):
@@ -82,10 +90,10 @@ class SalesDashboardView(ObjectPermissionRequiredMixin, TemplateView):
         context['sales_by_type'] = {type_labels.get(k, k): v for k, v in sales_by_type.items()}
 
         # Top Accounts by Revenue
-        top_accounts = sales.values('account__first_name').annotate(
+        top_accounts = sales.values('account__account_name').annotate(
             total=Sum('amount')
         ).order_by('-total')[:5]
-        context['top_accounts'] = {item['account__first_name']: item['total'] for item in top_accounts}
+        context['top_accounts'] = {item['account__account_name']: item['total'] for item in top_accounts}
 
         # Recent Sales
         context['recent_sales'] = sales.order_by('-sale_date')[:10]

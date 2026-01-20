@@ -2,7 +2,7 @@
     <div class="card-body p-2">
         <div class="d-flex justify-content-between align-items-start">
             <h6 class="card-title mb-1">
-                <a href="{% url 'cases:detail' alert.response.case.id %}" class="text-decoration-none">
+                <a href="{% url 'cases:case_detail' alert.response.case.id %}" class="text-decoration-none">
                     {{ alert.response.case.subject|truncatechars:25 }}
                 </a>
             </h6>
@@ -20,9 +20,9 @@
             <strong>Created:</strong> {{ alert.response.case.created_at|timesince }} ago
         </p>
         {% if alert.assigned_to %}
-            <p class="card-text small mb-0">
-                <strong>Owner:</strong> {{ alert.assigned_to.email }}
-            </p>
+        <p class="card-text small mb-0">
+            <strong>Owner:</strong> {{ alert.assigned_to.email }}
+        </p>
         {% endif %}
     </div>
 </div>

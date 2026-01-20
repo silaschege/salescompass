@@ -1,57 +1,296 @@
 {% extends "tasks/base.html" %}
+{% load static %}
 
 {% block title %}Tasks Kanban - SalesCompass{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<style>
+    /* Custom Kanban Styles */
+    .kanban-board {
+        display: flex;
+        gap: 1.5rem;
+        overflow-x: auto;
+        padding-bottom: 1rem;
+        min-height: 75vh;
+    }
+    
+    .kanban-column {
+        min-width: 320px;
+        width: 100%;
+        background-color: #f8fafc;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .kanban-column-header {
+        padding: 1rem 1rem 0.5rem;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+    }
+    
+    .kanban-column-body {
+        padding: 0.75rem;
+        flex-grow: 1;
+        min-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .kanban-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        margin-bottom: 0.75rem;
+        padding: 0.75rem;
+        transition: all 0.2s ease;
+        cursor: grab;
+        border-left: 4px solid #e2e8f0;
+    }
+    
+    .kanban-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+    
+    .kanban-card.dragging {
+        opacity: 0.6;
+        transform: scale(0.98);
+    }
+    
+    .kanban-card-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+    
+    .kanban-card-description {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-bottom: 0.75rem;
+        line-height: 1.4;
+    }
+    
+    .kanban-card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.75rem;
+        color: #64748b;
+    }
+    
+    .kanban-card-assignee {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .kanban-card-priority {
+        display: inline-block;
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+    
+    .drag-over {
+        background-color: rgba(241, 245, 249, 0.8);
+        border: 2px dashed #94a3b8;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: #94a3b8;
+    }
+    
+    .empty-state i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.5;
+    }
+    
+    .stats-card {
+        border-radius: 12px;
+        padding: 1.25rem;
+        height: 100%;
+    }
+    
+    .stats-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.75rem;
+    }
+    
+    .stats-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stats-label {
+        font-size: 0.85rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+    
+    .priority-high { border-left-color: #ef4444 !important; }
+    .priority-medium { border-left-color: #f59e0b !important; }
+    .priority-low { border-left-color: #10b981 !important; }
+    .priority-critical { border-left-color: #8b5cf6 !important; }
+    .priority-overdue { border-left-color: #f97316 !important; }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="header-bar mb-4">
     <div class="container">
-        <h1 class="block-title">Task Pipeline</h1>
-        <p class="text-white text-center lead">Visualise and manage your task workflow</p>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="block-title">Task Pipeline</h1>
+                <p class="text-white text-center lead">Visualize and manage your task workflow</p>
+            </div>
+        </div>
     </div>
 </div>
 
 <div class="container-fluid px-4">
+    <!-- KPI Section -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="stats-icon bg-primary bg-opacity-10 text-primary mx-auto">
+                    <i class="bi bi-clipboard-data fs-4"></i>
+                </div>
+                <div class="text-center">
+                    <div class="stats-value text-dark">{{ user_total_tasks }}</div>
+                    <div class="stats-label text-uppercase">Total Tasks</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="stats-icon bg-success bg-opacity-10 text-success mx-auto">
+                    <i class="bi bi-check-circle fs-4"></i>
+                </div>
+                <div class="text-center">
+                    <div class="stats-value text-dark">{{ user_completed_tasks }}</div>
+                    <div class="stats-label text-uppercase">Completed</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="stats-icon bg-warning bg-opacity-10 text-warning mx-auto">
+                    <i class="bi bi-hourglass-split fs-4"></i>
+                </div>
+                <div class="text-center">
+                    <div class="stats-value text-dark">{{ user_inprogress_tasks }}</div>
+                    <div class="stats-label text-uppercase">In Progress</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="stats-icon bg-danger bg-opacity-10 text-danger mx-auto">
+                    <i class="bi bi-list-task fs-4"></i>
+                </div>
+                <div class="text-center">
+                    <div class="stats-value text-dark">{{ user_pending_tasks }}</div>
+                    <div class="stats-label text-uppercase">Pending</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="d-flex gap-2">
-            <a href="{% url 'tasks:create' %}" class="btn btn-primary shadow-sm">
-                <i class="bi bi-plus-lg"></i> New Task
+            <a href="{% url 'tasks:task_create' %}" class="btn btn-primary shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i> New Task
             </a>
             <a href="{% url 'tasks:dashboard' %}" class="btn btn-outline-secondary">Dashboard</a>
         </div>
         <div class="d-flex gap-2">
-            <div class="btn-group">
-                <a href="{% url 'tasks:list' %}" class="btn btn-outline-primary" title="List View">
-                    <i class="bi bi-list-ul"></i>
+            <div class="btn-group shadow-sm">
+                <a href="{% url 'tasks:task_list' %}" class="btn btn-outline-primary" title="List View">
+                    <i class="bi bi-list-ul me-1"></i> List
                 </a>
                 <a href="{% url 'tasks:kanban' %}" class="btn btn-primary active" title="Kanban View">
-                    <i class="bi bi-grid-3x3-gap"></i>
+                    <i class="bi bi-grid-3x3-gap me-1"></i> Kanban
                 </a>
                 <a href="{% url 'tasks:calendar' %}" class="btn btn-outline-primary" title="Calendar View">
-                    <i class="bi bi-calendar3"></i>
+                    <i class="bi bi-calendar3 me-1"></i> Calendar
                 </a>
             </div>
         </div>
     </div>
 
-    <div class="row g-3 kanban-board overflow-auto pb-4" style="min-height: 70vh; flex-wrap: nowrap;">
+    <div class="kanban-board">
         {% for status, tasks in tasks_by_status.items %}
-        <div class="col-12 col-sm-6 col-md-4 col-lg-3" style="min-width: 300px;">
-            <div class="kanban-column" data-status="{{ status.status_name }}">
-                <div class="kanban-header d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0 fw-bold">{{ status.label }}</h6>
-                    <span class="badge bg-white text-primary border shadow-sm">{{ tasks.count }}</span>
+        <div class="kanban-column" data-status="{{ status.id }}">
+            <div class="kanban-column-header" style="background-color: {{ status.color|default:'#6c757d' }}; color: white;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">{{ status.label }}</h5>
+                    <span class="badge bg-white text-dark rounded-pill px-2 py-1">{{ tasks.count }}</span>
                 </div>
-                <div class="kanban-cards-container d-flex flex-column gap-2" style="min-height: 100px;">
-                    {% for task in tasks %}
-                    {% include "tasks/task_kanban_card.html" with task=task %}
-                    {% endfor %}
+            </div>
+            <div class="kanban-column-body" id="column-{{ status.id }}">
+                {% for task in tasks %}
+                <div class="kanban-card priority-{{ task.priority }} {% if task.is_overdue %}priority-overdue{% endif %}"
+                     data-task-id="{{ task.id }}" 
+                     data-status="{{ task.status_ref.id|default:task.status }}">
+                    <div class="kanban-card-title">{{ task.title|truncatechars:40 }}</div>
+                    
+                    {% if task.task_description %}
+                    <div class="kanban-card-description">{{ task.task_description|truncatechars:80 }}</div>
+                    {% endif %}
+                    
+                    <div class="kanban-card-footer">
+                        <div class="kanban-card-assignee">
+                            {% if task.assigned_to %}
+                            <i class="bi bi-person text-muted"></i>
+                            <span>{{ task.assigned_to.email|truncatechars:15 }}</span>
+                            {% else %}
+                            <i class="bi bi-person-x text-muted"></i>
+                            <span>Unassigned</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            {% if task.due_date %}
+                            <i class="bi bi-calendar-event me-1 text-muted" title="{{ task.due_date }}"></i>
+                            <span class="text-muted small">{{ task.due_date|date:"m/d" }}</span>
+                            {% endif %}
+                            
+                            {% if task.priority_ref %}
+                            <span class="kanban-card-priority" style="background-color: {{ task.priority_ref.color|default:'#6c757d' }}; color: white;">
+                                {{ task.priority_ref.label|truncatechars:10 }}
+                            </span>
+                            {% else %}
+                            <span class="kanban-card-priority bg-secondary text-white">{{ task.get_priority_display|truncatechars:10 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
-                <div class="mt-3">
-                    <a href="{% url 'tasks:create' %}?status_ref={{ status.id }}"
-                        class="btn btn-sm btn-link text-muted text-decoration-none w-100 text-start">
-                        <i class="bi bi-plus-lg"></i> Add a task
-                    </a>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p class="mb-0">No tasks in this stage</p>
                 </div>
+                {% endfor %}
+            </div>
+            <div class="card-footer bg-transparent p-3">
+                <a href="{% url 'tasks:task_create' %}?status_ref={{ status.id }}"
+                   class="btn btn-sm btn-outline-primary w-100">
+                    <i class="bi bi-plus-lg me-1"></i> Add Task
+                </a>
             </div>
         </div>
         {% endfor %}
@@ -60,80 +299,13 @@
 
 {% csrf_token %}
 {% endblock %}
-<!-- Kanban Card Template (included above) -->
+
 {% block extra_head %}
-<style>
-    .kanban-column {
-        min-height: 500px;
-    }
-
-    .card-header h5 {
-        margin-bottom: 0;
-        font-size: 1rem;
-    }
-
-    .kanban-card {
-        background: white;
-        border: 1px solid #e9ecef;
-        border-radius: 0.375rem;
-        padding: 12px;
-        margin-bottom: 12px;
-        cursor: move;
-        transition: all 0.2s ease;
-    }
-
-    .kanban-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    }
-
-    .kanban-card h6 {
-        margin-bottom: 8px;
-        font-size: 0.95rem;
-        font-weight: 600;
-    }
-
-    .kanban-card p {
-        font-size: 0.85rem;
-        margin-bottom: 8px;
-        color: #6c757d;
-    }
-
-    .kanban-card .card-meta {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 0.75rem;
-        color: #6c757d;
-    }
-
-    .kanban-card .badge {
-        font-size: 0.65rem;
-        padding: 0.2em 0.4em;
-    }
-
-    .overdue-task {
-        border-left: 4px solid #dc3545;
-    }
-
-    .high-priority {
-        border-left: 4px solid #dc3545;
-    }
-
-    .medium-priority {
-        border-left: 4px solid #ffc107;
-    }
-
-    .low-priority {
-        border-left: 4px solid #6c757d;
-    }
-</style>
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         // Make cards draggable
         const cards = document.querySelectorAll('.kanban-card');
-        const columns = document.querySelectorAll('.card-body[data-status]');
+        const columns = document.querySelectorAll('.kanban-column-body');
 
         cards.forEach(card => {
             card.setAttribute('draggable', true);
@@ -163,38 +335,64 @@
                 this.classList.remove('drag-over');
 
                 const taskId = e.dataTransfer.getData('text/plain');
-                const newStatus = this.dataset.status;
+                const newStatusId = this.closest('.kanban-column').dataset.status;
                 const card = document.querySelector(`[data-task-id="${taskId}"]`);
 
-                if (card && card.dataset.status !== newStatus) {
-                    updateTaskStatus(taskId, newStatus);
+                if (card && card.dataset.status !== newStatusId) {
+                    updateTaskStatus(taskId, newStatusId);
                     // Move the card visually
                     this.appendChild(card);
-                    card.dataset.status = newStatus;
+                    card.dataset.status = newStatusId;
+                    
+                    // Update the status badge count
+                    updateColumnCounts();
                 }
             });
         });
+        
+        function updateColumnCounts() {
+            // Update the counts on each column header
+            document.querySelectorAll('.kanban-column').forEach(col => {
+                const statusId = col.dataset.status;
+                const cardCount = document.querySelectorAll(`#column-${statusId} .kanban-card`).length;
+                const badge = col.querySelector('.badge');
+                if (badge) {
+                    badge.textContent = cardCount;
+                }
+            });
+        }
 
-        function updateTaskStatus(taskId, newStatus) {
-            fetch('/tasks/api/update-status/', {
+        function updateTaskStatus(taskId, newStatusId) {
+            fetch('{% url "tasks:update_task_status_api" %}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                 },
                 body: JSON.stringify({
-                    task_id: taskId,
-                    status: newStatus
+                    task_id: parseInt(taskId),
+                    status_id: parseInt(newStatusId)
                 })
             })
                 .then(response => response.json())
                 .then(data => {
                     if (!data.success) {
                         alert('Error updating task status: ' + data.error);
+                        // Revert the visual change if API fails
+                        location.reload();
+                    } else {
+                        // Update the card with the new status visually
+                        const card = document.querySelector(`[data-task-id="${taskId}"]`);
+                        if (card) {
+                            card.dataset.status = newStatusId;
+                        }
                     }
                 })
                 .catch(error => {
-                    alert('Error: ' + error);
+                    console.error('Error:', error);
+                    alert('Error updating task status: ' + error);
+                    // Revert the visual change if API fails
+                    location.reload();
                 });
         }
     });

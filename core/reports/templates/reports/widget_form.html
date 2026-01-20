@@ -1,14 +1,12 @@
 {% extends "reports/base.html" %}
 
-{% block title %}{% if object %}Edit {{ object.widget_name }}{% else %}New Dashboard Widget{% endif %} - SalesCompass{%
-endblock %}
+{% block title %}{% if object %}Edit {{ object.widget_name }}{% else %}New Dashboard Widget{% endif %} - SalesCompass{%endblock %}
 
 {% block content %}
 <div class="header-bar mb-4">
     <div class="container">
-        <h1 class="block-title">{% if object %}Edit Widget{% else %}Create Widget{% endif %}</h1>
-        <p class="text-white text-center lead">{% if object %}Update your dashboard widget settings{% else %}Add a new
-            widget to your report dashboard{% endif %}</p>
+        <h1 class="block-title text-center">{% if object %}Edit Widget{% else %}Create Widget{% endif %}</h1>
+        <p class=" text-center lead">{% if object %}Update your dashboard widget settings{% else %}Add a new widget to your report dashboard{% endif %}</p>
     </div>
 </div>
 

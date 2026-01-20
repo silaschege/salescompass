@@ -64,7 +64,7 @@
                                         {% if tenant.is_suspended or tenant.is_archived %}
                                         <li>
                                             <a class="dropdown-item"
-                                                href="{% url 'tenants:reactivate_tenant' tenant_id=tenant.id %}">
+                                                href="{% url 'tenants:reactivate' tenant_id=tenant.id %}">
                                                 <i class="bi bi-arrow-clockwise text-success me-2"></i>Reactivate
                                             </a>
                                         </li>

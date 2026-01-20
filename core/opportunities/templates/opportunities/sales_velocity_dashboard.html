@@ -1,14 +1,14 @@
 {% extends 'opportunities/base.html' %}
 {% load static %}
 
-{% block title %}Sales Velocity Dashboard{% endblock %}
+{% block title %}Opportunity to Sales Velocity{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <h1 class="h3 mb-4 text-gray-800">Sales Velocity Dashboard</h1>
-            
+            <h1 class="h3 mb-4 text-gray-800">Opportunity to Sales Velocity</h1>
+
             <!-- Sales Velocity Overview Cards -->
             <div class="row">
                 <div class="col-xl-3 col-md-6 mb-4">
@@ -174,149 +174,149 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-// Sales Velocity Trend Chart
-const velocityCtx = document.getElementById('salesVelocityTrendChart').getContext('2d');
-const salesVelocityTrendChart = new Chart(velocityCtx, {
-    type: 'line',
-    data: {
-        labels: {{ velocity_trend_labels|safe }},
-        datasets: [{
-            label: 'Sales Velocity Trend',
-            data: {{ velocity_trend_data|safe }},
-            borderColor: 'rgb(78, 115, 223)',
-            backgroundColor: 'rgba(78, 115, 23, 0.05)',
-            tension: 0.4,
-            fill: true
+    // Sales Velocity Trend Chart
+    const velocityCtx = document.getElementById('salesVelocityTrendChart').getContext('2d');
+    const salesVelocityTrendChart = new Chart(velocityCtx, {
+        type: 'line',
+        data: {
+            labels: {{ velocity_trend_labels| safe }},
+    datasets: [{
+        label: 'Sales Velocity Trend',
+        data: {{ velocity_trend_data| safe }},
+        borderColor: 'rgb(78, 115, 223)',
+        backgroundColor: 'rgba(78, 115, 23, 0.05)',
+        tension: 0.4,
+        fill: true
         }]
     },
     options: {
         responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
+            maintainAspectRatio: false,
+                plugins: {
             legend: {
                 display: false
             },
             title: {
                 display: true,
-                text: 'Sales Velocity Over Time'
+                    text: 'Sales Velocity Over Time'
             }
         },
         scales: {
             y: {
                 beginAtZero: true,
-                grid: {
+                    grid: {
                     drawBorder: false,
-                    display: true,
-                    drawOnChartArea: true,
-                    drawTicks: false,
-                    borderDash: [5, 5]
+                        display: true,
+                            drawOnChartArea: true,
+                                drawTicks: false,
+                                    borderDash: [5, 5]
                 },
                 ticks: {
                     maxTicksLimit: 5,
-                    callback: function(value, index, values) {
-                        return '$' + value.toLocaleString() + '/day';
-                    }
+                        callback: function(value, index, values) {
+                            return '$' + value.toLocaleString() + '/day';
+                        }
                 }
             },
             x: {
                 grid: {
                     display: false,
-                    drawBorder: false
+                        drawBorder: false
                 }
             }
         }
     }
 });
 
-// Opportunities by Stage Chart
-const stageCtx = document.getElementById('opportunitiesByStageChart').getContext('2d');
-const opportunitiesByStageChart = new Chart(stageCtx, {
-    type: 'doughnut',
-    data: {
-        labels: {{ stage_labels|safe }},
-        datasets: [{
-            data: {{ stage_counts|safe }},
-            backgroundColor: [
-                'rgba(255, 99, 132, 0.7)',
-                'rgba(54, 162, 235, 0.7)',
-                'rgba(25, 205, 86, 0.7)',
-                'rgba(75, 192, 192, 0.7)',
-                'rgba(153, 102, 255, 0.7)',
-                'rgba(255, 159, 64, 0.7)'
-            ],
-            borderColor: [
-                'rgb(255, 99, 132)',
-                'rgb(54, 162, 235)',
-                'rgb(255, 205, 86)',
-                'rgb(75, 192, 192)',
-                'rgb(153, 102, 255)',
-                'rgb(255, 159, 64)'
-            ],
-            borderWidth: 1
+    // Opportunities by Stage Chart
+    const stageCtx = document.getElementById('opportunitiesByStageChart').getContext('2d');
+    const opportunitiesByStageChart = new Chart(stageCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ stage_labels| safe }},
+    datasets: [{
+        data: {{ stage_counts| safe }},
+        backgroundColor: [
+        'rgba(255, 99, 132, 0.7)',
+        'rgba(54, 162, 235, 0.7)',
+        'rgba(25, 205, 86, 0.7)',
+        'rgba(75, 192, 192, 0.7)',
+        'rgba(153, 102, 255, 0.7)',
+        'rgba(255, 159, 64, 0.7)'
+    ],
+        borderColor: [
+        'rgb(255, 99, 132)',
+        'rgb(54, 162, 235)',
+        'rgb(255, 205, 86)',
+        'rgb(75, 192, 192)',
+        'rgb(153, 102, 255)',
+        'rgb(255, 159, 64)'
+    ],
+        borderWidth: 1
         }]
     },
     options: {
         responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
+            maintainAspectRatio: false,
+                plugins: {
             legend: {
                 position: 'bottom',
             },
             title: {
                 display: true,
-                text: 'Opportunities Distribution by Stage'
+                    text: 'Opportunities Distribution by Stage'
             }
         }
     }
 });
 
-// Opportunity Value by Stage Chart
-const valueCtx = document.getElementById('opportunityValueByStageChart').getContext('2d');
-const opportunityValueByStageChart = new Chart(valueCtx, {
-    type: 'bar',
-    data: {
-        labels: {{ stage_labels|safe }},
-        datasets: [{
-            label: 'Total Value by Stage',
-            data: {{ stage_values|safe }},
-            backgroundColor: 'rgba(78, 115, 223, 0.7)',
-            borderColor: 'rgb(78, 115, 223)',
-            borderWidth: 1
+    // Opportunity Value by Stage Chart
+    const valueCtx = document.getElementById('opportunityValueByStageChart').getContext('2d');
+    const opportunityValueByStageChart = new Chart(valueCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ stage_labels| safe }},
+    datasets: [{
+        label: 'Total Value by Stage',
+        data: {{ stage_values| safe }},
+        backgroundColor: 'rgba(78, 115, 223, 0.7)',
+        borderColor: 'rgb(78, 115, 223)',
+        borderWidth: 1
         }]
     },
     options: {
         responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
+            maintainAspectRatio: false,
+                plugins: {
             legend: {
                 display: false
             },
             title: {
                 display: true,
-                text: 'Opportunity Value by Stage'
+                    text: 'Opportunity Value by Stage'
             }
         },
         scales: {
             y: {
                 beginAtZero: true,
-                grid: {
+                    grid: {
                     drawBorder: false,
-                    display: true,
-                    drawOnChartArea: true,
-                    drawTicks: false,
-                    borderDash: [5, 5]
+                        display: true,
+                            drawOnChartArea: true,
+                                drawTicks: false,
+                                    borderDash: [5, 5]
                 },
                 ticks: {
                     maxTicksLimit: 5,
-                    callback: function(value, index, values) {
-                        return '$' + value.toLocaleString();
-                    }
+                        callback: function(value, index, values) {
+                            return '$' + value.toLocaleString();
+                        }
                 }
             },
             x: {
                 grid: {
                     display: false,
-                    drawBorder: false
+                        drawBorder: false
                 }
             }
         }

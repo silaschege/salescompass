@@ -1,0 +1,106 @@
+{% extends 'tenants/base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'tenants:preservation_list' %}">Preservations</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Preservation Details</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4 glass-card">
+                <div
+                    class="card-header bg-transparent d-flex justify-content-between align-items-center py-3 px-4 border-0">
+                    <h5 class="mb-0 fw-bold">Preservation Information</h5>
+                    <span
+                        class="badge {% if preservation.status == 'completed' %}bg-success{% elif preservation.status == 'failed' %}bg-danger{% else %}bg-primary{% endif %} px-3 py-2 rounded-pill">
+                        {{ preservation.get_status_display }}
+                    </span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row mb-4">
+                        <div class="col-sm-4 text-muted small uppercase fw-bold">Type</div>
+                        <div class="col-sm-8 text-dark fw-bold">
+                            {{ preservation.get_preservation_type_display }}
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-sm-4 text-muted small uppercase fw-bold">Date & Time</div>
+                        <div class="col-sm-8 text-dark">
+                            <i class="bi bi-calendar-check me-2 text-primary"></i>
+                            {{ preservation.preservation_date|date:"F d, Y H:i:s" }}
+                        </div>
+                    </div>
+                    {% if preservation.backup_location %}
+                    <div class="row mb-4">
+                        <div class="col-sm-4 text-muted small uppercase fw-bold">Storage Location</div>
+                        <div class="col-sm-8 text-dark">
+                            <code class="bg-light p-1 rounded">{{ preservation.backup_location }}</code>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="row mb-4">
+                        <div class="col-sm-4 text-muted small uppercase fw-bold">File Size</div>
+                        <div class="col-sm-8 text-dark">
+                            {{ preservation.file_size_mb }} MB
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-sm-4 text-muted small uppercase fw-bold">Modules Included</div>
+                        <div class="col-sm-8">
+                            {% for module in preservation.modules_included %}
+                            <span class="badge bg-light text-dark border me-1 mb-1">{{ module|title }}</span>
+                            {% empty %}
+                            <span class="text-muted">No specific modules listed.</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <hr class="my-4 opacity-10">
+                    <div class="row">
+                        <div class="col-sm-4 text-muted small uppercase fw-bold">Notes</div>
+                        <div class="col-sm-8 text-dark">
+                            <div class="bg-light p-3 rounded">
+                                {{ preservation.notes|default:"No notes provided."|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm glass-card mb-4 text-center">
+                <div class="card-body p-4">
+                    <div class="bg-primary-soft text-primary display-4 rounded-circle d-inline-flex p-4 mb-3">
+                        <i class="bi bi-cloud-download"></i>
+                    </div>
+                    <h5 class="fw-bold">Restore Data</h5>
+                    <p class="text-muted small">You can initiate a restoration process using this preservation record.
+                    </p>
+                    <div class="d-grid">
+                        <button class="btn btn-outline-primary rounded-pill py-2" disabled>
+                            Initiate Restoration
+                        </button>
+                        <p class="text-danger small mt-2"><i class="bi bi-info-circle me-1"></i>Restoration feature
+                            coming soon.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-primary-soft {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+</style>
+{% endblock %}

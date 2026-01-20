@@ -20,6 +20,30 @@ from engagement.utils import log_engagement_event
 
 logger = logging.getLogger(__name__)
 
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from access_control.views import SecureViewMixin
+from access_control.utils import access_required
+
+class BillingDashboardView(SecureViewMixin, LoginRequiredMixin, TemplateView):
+    template_name = 'billing/dashboard.html'
+    required_access = 'billing.dashboard'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Add access control utilities to context
+        context['can_manage_plans'] = self.can_access('billing.plans', 'manage')
+        context['can_manage_subscriptions'] = self.can_access('billing.subscriptions', 'manage')
+        context['can_manage_payments'] = self.can_access('billing.payments', 'manage')
+        
+        return context
+
+# For function-based views
+@access_required('billing.reports.view')
+def billing_reports_view(request):
+    # View logic here
+    return render(request, 'billing/reports.html')
 class UpgradeRequiredView(LoginRequiredMixin, TemplateView):
     template_name = 'billing/upgrade_required.html'
     
@@ -28,10 +52,11 @@ class UpgradeRequiredView(LoginRequiredMixin, TemplateView):
         context['module_name'] = self.request.GET.get('module', 'Premium Feature')
         return context
 
-class PlanTierListView(ListView):
+class PlanTierListView(SecureViewMixin, LoginRequiredMixin, ListView):
     model = PlanTier
     template_name = 'billing/plan_tier_list.html'
     context_object_name = 'plan_tiers'
+    required_access = 'billing.admin.config'
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -41,11 +66,12 @@ class PlanTierListView(ListView):
         return queryset
 
 
-class PlanTierCreateView(CreateView):
+class PlanTierCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
     model = PlanTier
     form_class = PlanTierForm
     template_name = 'billing/plan_tier_form.html'
     success_url = reverse_lazy('billing:plan_tier_list')
+    required_access = 'billing.admin.config'
     
     def form_valid(self, form):
         # Set tenant automatically
@@ -55,31 +81,34 @@ class PlanTierCreateView(CreateView):
         return super().form_valid(form)
 
 
-class PlanTierUpdateView(UpdateView):
+class PlanTierUpdateView(SecureViewMixin, LoginRequiredMixin, UpdateView):
     model = PlanTier
     form_class = PlanTierForm
     template_name = 'billing/plan_tier_form.html'
     success_url = reverse_lazy('billing:plan_tier_list')
+    required_access = 'billing.admin.config'
     
     def form_valid(self, form):
         messages.success(self.request, 'Plan tier updated successfully.')
         return super().form_valid(form)
 
 
-class PlanTierDeleteView(DeleteView):
+class PlanTierDeleteView(SecureViewMixin, LoginRequiredMixin, DeleteView):
     model = PlanTier
     template_name = 'billing/plan_tier_confirm_delete.html'
     success_url = reverse_lazy('billing:plan_tier_list')
+    required_access = 'billing.admin.config'
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Plan tier deleted successfully.')
         return super().delete(request, *args, **kwargs)
 
 
-class SubscriptionStatusListView(ListView):
+class SubscriptionStatusListView(SecureViewMixin, LoginRequiredMixin, ListView):
     model = SubscriptionStatus
     template_name = 'billing/subscription_status_list.html'
     context_object_name = 'subscription_statuses'
+    required_access = 'billing.admin.config'
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -89,11 +118,12 @@ class SubscriptionStatusListView(ListView):
         return queryset
 
 
-class SubscriptionStatusCreateView(CreateView):
+class SubscriptionStatusCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
     model = SubscriptionStatus
     form_class = SubscriptionStatusForm
     template_name = 'billing/subscription_status_form.html'
     success_url = reverse_lazy('billing:subscription_status_list')
+    required_access = 'billing.admin.config'
     
     def form_valid(self, form):
         # Set tenant automatically
@@ -103,31 +133,34 @@ class SubscriptionStatusCreateView(CreateView):
         return super().form_valid(form)
 
 
-class SubscriptionStatusUpdateView(UpdateView):
+class SubscriptionStatusUpdateView(SecureViewMixin, LoginRequiredMixin, UpdateView):
     model = SubscriptionStatus
     form_class = SubscriptionStatusForm
     template_name = 'billing/subscription_status_form.html'
     success_url = reverse_lazy('billing:subscription_status_list')
+    required_access = 'billing.admin.config'
     
     def form_valid(self, form):
         messages.success(self.request, 'Subscription status updated successfully.')
         return super().form_valid(form)
 
 
-class SubscriptionStatusDeleteView(DeleteView):
+class SubscriptionStatusDeleteView(SecureViewMixin, LoginRequiredMixin, DeleteView):
     model = SubscriptionStatus
     template_name = 'billing/subscription_status_confirm_delete.html'
     success_url = reverse_lazy('billing:subscription_status_list')
+    required_access = 'billing.admin.config'
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Subscription status deleted successfully.')
         return super().delete(request, *args, **kwargs)
 
 
-class AdjustmentTypeListView(ListView):
+class AdjustmentTypeListView(SecureViewMixin, LoginRequiredMixin, ListView):
     model = AdjustmentType
     template_name = 'billing/adjustment_type_list.html'
     context_object_name = 'adjustment_types'
+    required_access = 'billing.admin.config'
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -137,11 +170,12 @@ class AdjustmentTypeListView(ListView):
         return queryset
 
 
-class AdjustmentTypeCreateView(CreateView):
+class AdjustmentTypeCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
     model = AdjustmentType
     form_class = AdjustmentTypeForm
     template_name = 'billing/adjustment_type_form.html'
     success_url = reverse_lazy('billing:adjustment_type_list')
+    required_access = 'billing.admin.config'
     
     def form_valid(self, form):
         # Set tenant automatically
@@ -151,31 +185,34 @@ class AdjustmentTypeCreateView(CreateView):
         return super().form_valid(form)
 
 
-class AdjustmentTypeUpdateView(UpdateView):
+class AdjustmentTypeUpdateView(SecureViewMixin, LoginRequiredMixin, UpdateView):
     model = AdjustmentType
     form_class = AdjustmentTypeForm
     template_name = 'billing/adjustment_type_form.html'
     success_url = reverse_lazy('billing:adjustment_type_list')
+    required_access = 'billing.admin.config'
     
     def form_valid(self, form):
         messages.success(self.request, 'Adjustment type updated successfully.')
         return super().form_valid(form)
 
 
-class AdjustmentTypeDeleteView(DeleteView):
+class AdjustmentTypeDeleteView(SecureViewMixin, LoginRequiredMixin, DeleteView):
     model = AdjustmentType
     template_name = 'billing/adjustment_type_confirm_delete.html'
     success_url = reverse_lazy('billing:adjustment_type_list')
+    required_access = 'billing.admin.config'
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Adjustment type deleted successfully.')
         return super().delete(request, *args, **kwargs)
 
 
-class PaymentProviderListView(ListView):
+class PaymentProviderListView(SecureViewMixin, LoginRequiredMixin, ListView):
     model = PaymentProvider
     template_name = 'billing/payment_provider_list.html'
     context_object_name = 'payment_providers'
+    required_access = 'billing.admin.config'
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -185,11 +222,12 @@ class PaymentProviderListView(ListView):
         return queryset
 
 
-class PaymentProviderCreateView(CreateView):
+class PaymentProviderCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
     model = PaymentProvider
     form_class = PaymentProviderForm
     template_name = 'billing/payment_provider_form.html'
     success_url = reverse_lazy('billing:payment_provider_list')
+    required_access = 'billing.admin.config'
     
     def form_valid(self, form):
         # Set tenant automatically
@@ -199,31 +237,34 @@ class PaymentProviderCreateView(CreateView):
         return super().form_valid(form)
 
 
-class PaymentProviderUpdateView(UpdateView):
+class PaymentProviderUpdateView(SecureViewMixin, LoginRequiredMixin, UpdateView):
     model = PaymentProvider
     form_class = PaymentProviderForm
     template_name = 'billing/payment_provider_form.html'
     success_url = reverse_lazy('billing:payment_provider_list')
+    required_access = 'billing.admin.config'
     
     def form_valid(self, form):
         messages.success(self.request, 'Payment provider updated successfully.')
         return super().form_valid(form)
 
 
-class PaymentProviderDeleteView(DeleteView):
+class PaymentProviderDeleteView(SecureViewMixin, LoginRequiredMixin, DeleteView):
     model = PaymentProvider
     template_name = 'billing/payment_provider_confirm_delete.html'
     success_url = reverse_lazy('billing:payment_provider_list')
+    required_access = 'billing.admin.config'
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Payment provider deleted successfully.')
         return super().delete(request, *args, **kwargs)
 
 
-class PaymentTypeListView(ListView):
+class PaymentTypeListView(SecureViewMixin, LoginRequiredMixin, ListView):
     model = PaymentType
     template_name = 'billing/payment_type_list.html'
     context_object_name = 'payment_types'
+    required_access = 'billing.admin.config'
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -233,11 +274,12 @@ class PaymentTypeListView(ListView):
         return queryset
 
 
-class PaymentTypeCreateView(CreateView):
+class PaymentTypeCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
     model = PaymentType
     form_class = PaymentTypeForm
     template_name = 'billing/payment_type_form.html'
     success_url = reverse_lazy('billing:payment_type_list')
+    required_access = 'billing.admin.config'
     
     def form_valid(self, form):
         # Set tenant automatically
@@ -247,21 +289,23 @@ class PaymentTypeCreateView(CreateView):
         return super().form_valid(form)
 
 
-class PaymentTypeUpdateView(UpdateView):
+class PaymentTypeUpdateView(SecureViewMixin, LoginRequiredMixin, UpdateView):
     model = PaymentType
     form_class = PaymentTypeForm
     template_name = 'billing/payment_type_form.html'
     success_url = reverse_lazy('billing:payment_type_list')
+    required_access = 'billing.admin.config'
     
     def form_valid(self, form):
         messages.success(self.request, 'Payment type updated successfully.')
         return super().form_valid(form)
 
 
-class PaymentTypeDeleteView(DeleteView):
+class PaymentTypeDeleteView(SecureViewMixin, LoginRequiredMixin, DeleteView):
     model = PaymentType
     template_name = 'billing/payment_type_confirm_delete.html'
     success_url = reverse_lazy('billing:payment_type_list')
+    required_access = 'billing.admin.config'
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Payment type deleted successfully.')
@@ -270,21 +314,23 @@ class PaymentTypeDeleteView(DeleteView):
 
 
 
-class PlanListView(ListView):
+class PlanListView(SecureViewMixin, LoginRequiredMixin, ListView):
     model = Plan
     template_name = 'billing/plan_list.html'
     context_object_name = 'plans'
+    required_access = 'billing.admin.plans'
     
     def get_queryset(self):
         return Plan.objects.filter(is_active=True)
 
 
 
-class PlanCreateView(CreateView):
+class PlanCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
     model = Plan
     form_class = PlanForm
     template_name = 'billing/plan_form.html'
     success_url = reverse_lazy('billing:plan_list')
+    required_access = 'billing.admin.plans'
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -307,11 +353,12 @@ class PlanCreateView(CreateView):
 
 
 
-class PlanUpdateView(UpdateView):
+class PlanUpdateView(SecureViewMixin, LoginRequiredMixin, UpdateView):
     model = Plan
     form_class = PlanForm
     template_name = 'billing/plan_form.html'
     success_url = reverse_lazy('billing:plan_list')
+    required_access = 'billing.admin.plans'
     pk_url_kwarg = 'plan_id'  # Added this to match the URL parameter name
     
     def get_form_kwargs(self):
@@ -332,10 +379,11 @@ class PlanUpdateView(UpdateView):
 
 
 
-class PlanDeleteView(DeleteView):
+class PlanDeleteView(SecureViewMixin, LoginRequiredMixin, DeleteView):
     model = Plan
     template_name = 'billing/plan_confirm_delete.html'
     success_url = reverse_lazy('billing:plan_list')
+    required_access = 'billing.admin.plans'
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Plan deleted successfully.')
@@ -344,11 +392,12 @@ class PlanDeleteView(DeleteView):
 
 
 
-class SubscriptionListView(ListView):
+class SubscriptionListView(SecureViewMixin, LoginRequiredMixin, ListView):
     model = Subscription
     template_name = 'billing/subscription_list.html'
     context_object_name = 'subscriptions'
     paginate_by = 20  # Optional: add pagination
+    required_access = 'billing.admin.subscriptions'
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -392,11 +441,12 @@ class SubscriptionListView(ListView):
 
 
 
-class SubscriptionCreateView(CreateView):
+class SubscriptionCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
     model = Subscription
     form_class = SubscriptionForm
     template_name = 'billing/subscription_form.html'
     success_url = reverse_lazy('billing:subscription_list')
+    required_access = 'billing.admin.subscriptions'
      
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -448,11 +498,12 @@ class SubscriptionCreateView(CreateView):
 
 
 
-class SubscriptionUpdateView(UpdateView):
+class SubscriptionUpdateView(SecureViewMixin, LoginRequiredMixin, UpdateView):
     model = Subscription
     form_class = SubscriptionForm
     template_name = 'billing/subscription_form.html'
     success_url = reverse_lazy('billing:subscription_list')
+    required_access = 'billing.admin.subscriptions'
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -496,21 +547,23 @@ class SubscriptionUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class SubscriptionDeleteView(DeleteView):
+class SubscriptionDeleteView(SecureViewMixin, LoginRequiredMixin, DeleteView):
     model = Subscription
     template_name = 'billing/subscription_confirm_delete.html'
     success_url = reverse_lazy('billing:subscription_list')
+    required_access = 'billing.admin.subscriptions'
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Subscription deleted successfully.')
         return super().delete(request, *args, **kwargs)
 
 
-class InvoiceListView(ListView):
+class InvoiceListView(SecureViewMixin, LoginRequiredMixin, ListView):
     model = Invoice
     template_name = 'billing/invoice_list.html'
     context_object_name = 'invoices'
     paginate_by = 20
+    required_access = 'billing.admin.invoices'
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -584,11 +637,12 @@ class InvoiceListView(ListView):
         
         return context
 
-class InvoiceCreateView(CreateView):
+class InvoiceCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
     model = Invoice
     form_class = InvoiceForm
     template_name = 'billing/invoice_create.html'
     success_url = reverse_lazy('billing:invoice_list')
+    required_access = 'billing.admin.invoices'
     
     def form_valid(self, form):
         # Set tenant automatically
@@ -622,31 +676,34 @@ class InvoiceCreateView(CreateView):
         return response
 
 
-class InvoiceUpdateView(UpdateView):
+class InvoiceUpdateView(SecureViewMixin, LoginRequiredMixin, UpdateView):
     model = Invoice
     form_class = InvoiceForm
     template_name = 'billing/invoice_create.html'
     success_url = reverse_lazy('billing:invoice_list')
+    required_access = 'billing.admin.invoices'
     
     def form_valid(self, form):
         messages.success(self.request, 'Invoice updated successfully.')
         return super().form_valid(form)
 
 
-class InvoiceDeleteView(DeleteView):
+class InvoiceDeleteView(SecureViewMixin, LoginRequiredMixin, DeleteView):
     model = Invoice
     template_name = 'billing/invoice_confirm_delete.html'
     success_url = reverse_lazy('billing:invoice_list')
+    required_access = 'billing.admin.invoices'
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Invoice deleted successfully.')
         return super().delete(request, *args, **kwargs)
 
 
-class CreditAdjustmentListView(ListView):
+class CreditAdjustmentListView(SecureViewMixin, LoginRequiredMixin, ListView):
     model = CreditAdjustment
     template_name = 'billing/credit_adjustment_list.html'
     context_object_name = 'credit_adjustments'
+    required_access = 'billing.admin.adjustments'
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         # Pass the current tenant to the form
@@ -666,11 +723,12 @@ class CreditAdjustmentListView(ListView):
         return queryset.select_related('subscription', 'invoice', 'adjustment_type_ref')
 
 
-class CreditAdjustmentCreateView(CreateView):
+class CreditAdjustmentCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
     model = CreditAdjustment
     form_class = CreditAdjustmentForm
     template_name = 'billing/credit_adjustment_form.html'
     success_url = reverse_lazy('billing:credit_adjustment_list')
+    required_access = 'billing.admin.adjustments'
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -691,11 +749,12 @@ class CreditAdjustmentCreateView(CreateView):
         messages.success(self.request, 'Credit adjustment created successfully.')
         return super().form_valid(form)
 
-class CreditAdjustmentUpdateView(UpdateView):
+class CreditAdjustmentUpdateView(SecureViewMixin, LoginRequiredMixin, UpdateView):
     model = CreditAdjustment
     form_class = CreditAdjustmentForm
     template_name = 'billing/credit_adjustment_form.html'
     success_url = reverse_lazy('billing:credit_adjustment_list')
+    required_access = 'billing.admin.adjustments'
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -714,20 +773,22 @@ class CreditAdjustmentUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class CreditAdjustmentDeleteView(DeleteView):
+class CreditAdjustmentDeleteView(SecureViewMixin, LoginRequiredMixin, DeleteView):
     model = CreditAdjustment
     template_name = 'billing/credit_adjustment_confirm_delete.html'
     success_url = reverse_lazy('billing:credit_adjustment_list')
+    required_access = 'billing.admin.adjustments'
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Credit adjustment deleted successfully.')
         return super().delete(request, *args, **kwargs)
 
 
-class PaymentProviderConfigListView(ListView):
+class PaymentProviderConfigListView(SecureViewMixin, LoginRequiredMixin, ListView):
     model = PaymentProviderConfig
     template_name = 'billing/payment_provider_config_list.html'
     context_object_name = 'payment_configs'
+    required_access = 'billing.admin.config'
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -737,11 +798,12 @@ class PaymentProviderConfigListView(ListView):
         return queryset.select_related('name_ref')
 
 
-class PaymentProviderConfigCreateView(CreateView):
+class PaymentProviderConfigCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
     model = PaymentProviderConfig
     form_class = PaymentProviderConfigForm
     template_name = 'billing/payment_provider_config_form.html'
     success_url = reverse_lazy('billing:payment_provider_config_list')
+    required_access = 'billing.admin.config'
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -762,11 +824,12 @@ class PaymentProviderConfigCreateView(CreateView):
         messages.success(self.request, 'Payment provider configuration created successfully.')
         return super().form_valid(form)
 
-class PaymentProviderConfigUpdateView(UpdateView):
+class PaymentProviderConfigUpdateView(SecureViewMixin, LoginRequiredMixin, UpdateView):
     model = PaymentProviderConfig
     form_class = PaymentProviderConfigForm
     template_name = 'billing/payment_provider_config_form.html'
     success_url = reverse_lazy('billing:payment_provider_config_list')
+    required_access = 'billing.admin.config'
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -785,20 +848,22 @@ class PaymentProviderConfigUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class PaymentProviderConfigDeleteView(DeleteView):
+class PaymentProviderConfigDeleteView(SecureViewMixin, LoginRequiredMixin, DeleteView):
     model = PaymentProviderConfig
     template_name = 'billing/payment_provider_config_confirm_delete.html'
     success_url = reverse_lazy('billing:payment_provider_config_list')
+    required_access = 'billing.admin.config'
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Payment provider configuration deleted successfully.')
         return super().delete(request, *args, **kwargs)
 
 
-class PaymentMethodListView(ListView):
+class PaymentMethodListView(SecureViewMixin, LoginRequiredMixin, ListView):
     model = PaymentMethod
     template_name = 'billing/payment_method_list.html'
     context_object_name = 'payment_methods'
+    required_access = 'billing.payment_method.view'
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -808,11 +873,12 @@ class PaymentMethodListView(ListView):
         return queryset.select_related('user', 'type_ref', 'provider')
 
 
-class PaymentMethodCreateView(CreateView):
+class PaymentMethodCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
     model = PaymentMethod
     form_class = PaymentMethodForm
     template_name = 'billing/payment_method_form.html'
     success_url = reverse_lazy('billing:payment_method_list')
+    required_access = 'billing.payment_method.manage'
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -833,11 +899,12 @@ class PaymentMethodCreateView(CreateView):
         messages.success(self.request, 'Payment method created successfully.')
         return super().form_valid(form)
 
-class PaymentMethodUpdateView(UpdateView):
+class PaymentMethodUpdateView(SecureViewMixin, LoginRequiredMixin, UpdateView):
     model = PaymentMethod
     form_class = PaymentMethodForm
     template_name = 'billing/payment_method_form.html'
     success_url = reverse_lazy('billing:payment_method_list')
+    required_access = 'billing.payment_method.manage'
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -856,20 +923,22 @@ class PaymentMethodUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class PaymentMethodDeleteView(DeleteView):
+class PaymentMethodDeleteView(SecureViewMixin, LoginRequiredMixin, DeleteView):
     model = PaymentMethod
     template_name = 'billing/payment_method_confirm_delete.html'
     success_url = reverse_lazy('billing:payment_method_list')
+    required_access = 'billing.payment_method.manage'
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Payment method deleted successfully.')
         return super().delete(request, *args, **kwargs)
 
 
-class PaymentListView(ListView):
+class PaymentListView(SecureViewMixin, LoginRequiredMixin, ListView):
     model = Payment
     template_name = 'billing/payment_list.html'
     context_object_name = 'payments'
+    required_access = 'billing.admin.payments'
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -879,11 +948,12 @@ class PaymentListView(ListView):
         return queryset.select_related('invoice', 'payment_method')
 
 
-class PaymentCreateView(CreateView):
+class PaymentCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
     model = Payment
     form_class = PaymentForm
     template_name = 'billing/payment_form.html'
     success_url = reverse_lazy('billing:payment_list')
+    required_access = 'billing.admin.payments'
     
     def form_valid(self, form):
         # Set tenant automatically
@@ -914,21 +984,23 @@ class PaymentCreateView(CreateView):
         return response
 
 
-class PaymentUpdateView(UpdateView):
+class PaymentUpdateView(SecureViewMixin, LoginRequiredMixin, UpdateView):
     model = Payment
     form_class = PaymentForm
     template_name = 'billing/payment_form.html'
     success_url = reverse_lazy('billing:payment_list')
+    required_access = 'billing.admin.payments'
     
     def form_valid(self, form):
         messages.success(self.request, 'Payment updated successfully.')
         return super().form_valid(form)
 
 
-class PaymentDeleteView(DeleteView):
+class PaymentDeleteView(SecureViewMixin, LoginRequiredMixin, DeleteView):
     model = Payment
     template_name = 'billing/payment_confirm_delete.html'
     success_url = reverse_lazy('billing:payment_list')
+    required_access = 'billing.admin.payments'
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Payment deleted successfully.')
@@ -971,15 +1043,17 @@ def get_billing_dynamic_choices(request, model_name):
 
 # === Additional Views Referenced in urls.py ===
 
-class BillingPortalView(LoginRequiredMixin, TemplateView):
+class BillingPortalView(SecureViewMixin, LoginRequiredMixin, TemplateView):
     """Tenant billing portal landing page."""
     template_name = 'billing/portal.html'
+    required_access = 'billing.portal'
 
 
 # Revenue Dashboard Views
-class RevenueOverviewView(LoginRequiredMixin, TemplateView):
+class RevenueOverviewView(SecureViewMixin, LoginRequiredMixin, TemplateView):
     """Revenue overview dashboard."""
     template_name = 'billing/revenue_overview.html'
+    required_access = 'billing.admin.revenue'
     
 
     def get_context_data(self, **kwargs):
@@ -989,32 +1063,37 @@ class RevenueOverviewView(LoginRequiredMixin, TemplateView):
 
 
 
-class MRRAnalyticsView(LoginRequiredMixin, TemplateView):
+class MRRAnalyticsView(SecureViewMixin, LoginRequiredMixin, TemplateView):
     """Monthly Recurring Revenue analytics."""
     template_name = 'billing/mrr_analytics.html'
+    required_access = 'billing.admin.revenue'
 
 
-class ARRAnalyticsView(LoginRequiredMixin, TemplateView):
+class ARRAnalyticsView(SecureViewMixin, LoginRequiredMixin, TemplateView):
     """Annual Recurring Revenue analytics."""
     template_name = 'billing/arr_analytics.html'
+    required_access = 'billing.admin.revenue'
 
 
-class ChurnRatesView(LoginRequiredMixin, TemplateView):
+class ChurnRatesView(SecureViewMixin, LoginRequiredMixin, TemplateView):
     """Churn rates analytics."""
     template_name = 'billing/churn_rates.html'
+    required_access = 'billing.admin.revenue'
 
 
-class RevenueForecastView(LoginRequiredMixin, TemplateView):
+class RevenueForecastView(SecureViewMixin, LoginRequiredMixin, TemplateView):
     """Revenue forecast view."""
     template_name = 'billing/revenue_forecast.html'
+    required_access = 'billing.admin.revenue'
 
 
 # Invoice Management Views
-class InvoiceDetailView(LoginRequiredMixin, DetailView):
+class InvoiceDetailView(SecureViewMixin, LoginRequiredMixin, DetailView):
     """Invoice detail view."""
     model = Invoice
     template_name = 'billing/invoice_detail.html'
     pk_url_kwarg = 'invoice_id'
+    required_access = 'billing.admin.invoices'
 
 
 class InvoiceMarkPaidView(LoginRequiredMixin, View):
@@ -1037,46 +1116,51 @@ class InvoiceVoidView(LoginRequiredMixin, View):
         return redirect('billing:invoice_list')
 
 
-class PaidInvoicesView(LoginRequiredMixin, ListView):
+class PaidInvoicesView(SecureViewMixin, LoginRequiredMixin, ListView):
     """List paid invoices."""
     model = Invoice
     template_name = 'billing/invoice_paid_list.html'
     context_object_name = 'invoices'
+    required_access = 'billing.admin.invoices'
     
     def get_queryset(self):
         return Invoice.objects.filter(status='paid')
 
 
-class OverdueInvoicesView(LoginRequiredMixin, ListView):
+class OverdueInvoicesView(SecureViewMixin, LoginRequiredMixin, ListView):
     """List overdue invoices."""
     model = Invoice
     template_name = 'billing/invoice_overdue_list.html'
     context_object_name = 'invoices'
+    required_access = 'billing.admin.invoices'
     
     def get_queryset(self):
         return Invoice.objects.filter(status='overdue')
 
 
-class VoidInvoicesView(LoginRequiredMixin, ListView):
+class VoidInvoicesView(SecureViewMixin, LoginRequiredMixin, ListView):
     """List void invoices."""
     model = Invoice
     template_name = 'billing/invoice_void_list.html'
     context_object_name = 'invoices'
+    required_access = 'billing.admin.invoices'
     
     def get_queryset(self):
         return Invoice.objects.filter(status='void')
 
 
-class ReconciliationView(LoginRequiredMixin, TemplateView):
+class ReconciliationView(SecureViewMixin, LoginRequiredMixin, TemplateView):
     """Invoice reconciliation view."""
     template_name = 'billing/reconciliation.html'
+    required_access = 'billing.admin.invoices'
 
 
 # Invoicing Engine Views
 
-class InvoiceGenerationView(LoginRequiredMixin, TemplateView):
+class InvoiceGenerationView(SecureViewMixin, LoginRequiredMixin, TemplateView):
     """Invoice generation view."""
     template_name = 'billing/invoice_generation.html'
+    required_access = 'billing.admin.dunning'
     
 
     def get_context_data(self, **kwargs):
@@ -1151,16 +1235,18 @@ class InvoiceGenerationView(LoginRequiredMixin, TemplateView):
 
 
 
-class DunningManagementView(LoginRequiredMixin, TemplateView):
+class DunningManagementView(SecureViewMixin, LoginRequiredMixin, TemplateView):
     """Dunning management view."""
     template_name = 'billing/dunning_management.html'
+    required_access = 'billing.admin.dunning'
 
 
-class FailedPaymentsView(LoginRequiredMixin, ListView):
+class FailedPaymentsView(SecureViewMixin, LoginRequiredMixin, ListView):
     """View failed payments."""
     model = Payment
     template_name = 'billing/failed_payments.html'
     context_object_name = 'payments'
+    required_access = 'billing.admin.payments'
     
     def get_queryset(self):
         return Payment.objects.filter(status='failed')
@@ -1168,12 +1254,13 @@ class FailedPaymentsView(LoginRequiredMixin, ListView):
 
 # Plan Views
 
-class PlanDetailView(LoginRequiredMixin, DetailView):
+class PlanDetailView(SecureViewMixin, LoginRequiredMixin, DetailView):
     """Plan detail view."""
     model = Plan
     template_name = 'billing/plan_detail.html'
     context_object_name = 'plan'
     pk_url_kwarg = 'plan_id'
+    required_access = 'billing.admin.plans'
 
 
 
@@ -1181,9 +1268,10 @@ class PlanDetailView(LoginRequiredMixin, DetailView):
 
 
 
-class PricingConfigView(LoginRequiredMixin, TemplateView):
+class PricingConfigView(SecureViewMixin, LoginRequiredMixin, TemplateView):
     """Plan pricing configuration."""
     template_name = 'billing/pricing_config.html'
+    required_access = 'billing.admin.plans'
 
 
 
@@ -1200,9 +1288,10 @@ class PlanToggleActiveView(LoginRequiredMixin, View):
 
 
  
-class PlanLimitsView(LoginRequiredMixin, TemplateView):
+class PlanLimitsView(SecureViewMixin, LoginRequiredMixin, TemplateView):
     """Plan limits configuration."""
     template_name = 'billing/plan_limits.html'
+    required_access = 'billing.admin.plans'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1211,11 +1300,12 @@ class PlanLimitsView(LoginRequiredMixin, TemplateView):
         return context
 
 # Subscription Views
-class SubscriptionDetailView(LoginRequiredMixin, DetailView):
+class SubscriptionDetailView(SecureViewMixin, LoginRequiredMixin, DetailView):
     """Subscription detail view."""
     model = Subscription
     template_name = 'billing/subscription_detail.html'
     pk_url_kwarg = 'subscription_id'
+    required_access = 'billing.subscription.view'
 
 
 class SubscriptionCancelView(LoginRequiredMixin, View):
@@ -1313,9 +1403,10 @@ class UpgradeDowngradeView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
 
 
 
-class ProrationCalculatorView(LoginRequiredMixin, TemplateView):
+class ProrationCalculatorView(SecureViewMixin, LoginRequiredMixin, TemplateView):
     """Proration calculator view."""
     template_name = 'billing/proration_calculator.html'
+    required_access = 'billing.admin.subscriptions'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1408,9 +1499,10 @@ class ProrationCalculatorView(LoginRequiredMixin, TemplateView):
 
 
 
-class LifecycleEventsView(LoginRequiredMixin, TemplateView):
+class LifecycleEventsView(SecureViewMixin, LoginRequiredMixin, TemplateView):
     """Subscription lifecycle events."""
     template_name = 'billing/lifecycle_events.html'
+    required_access = 'billing.admin.lifecycle'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1429,9 +1521,10 @@ class LifecycleEventsView(LoginRequiredMixin, TemplateView):
 
 
 
-class RenewalTrackingView(LoginRequiredMixin, TemplateView):
+class RenewalTrackingView(SecureViewMixin, LoginRequiredMixin, TemplateView):
     """Subscription renewal tracking."""
     template_name = 'billing/renewal_tracking.html'
+    required_access = 'billing.admin.lifecycle'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1468,41 +1561,47 @@ class RenewalTrackingView(LoginRequiredMixin, TemplateView):
 
 
 
-class CancellationManagementView(LoginRequiredMixin, TemplateView):
+class CancellationManagementView(SecureViewMixin, LoginRequiredMixin, TemplateView):
     """Cancellation management view."""
     template_name = 'billing/cancellation_management.html'
+    required_access = 'billing.admin.lifecycle'
 
 
 # Tenant Billing Views
-class TenantBillingSearchView(LoginRequiredMixin, TemplateView):
+class TenantBillingSearchView(SecureViewMixin, LoginRequiredMixin, TemplateView):
     """Search tenant billing."""
     template_name = 'billing/tenant_billing_search.html'
+    required_access = 'billing.admin.tenant_search'
 
 
-class BillingHistoryView(LoginRequiredMixin, TemplateView):
+class BillingHistoryView(SecureViewMixin, LoginRequiredMixin, TemplateView):
     """Tenant billing history."""
     template_name = 'billing/billing_history.html'
+    required_access = 'billing.history.view'
 
 
-class CreditAdjustmentManagementView(LoginRequiredMixin, TemplateView):
+class CreditAdjustmentManagementView(SecureViewMixin, LoginRequiredMixin, TemplateView):
     """Credit adjustment management."""
     template_name = 'billing/credit_adjustment_management.html'
+    required_access = 'billing.admin.adjustments'
 
 
 # Payment Gateway Views
-class PaymentGatewayListView(LoginRequiredMixin, ListView):
+class PaymentGatewayListView(SecureViewMixin, LoginRequiredMixin, ListView):
     """List payment gateways."""
     model = PaymentProviderConfig
     template_name = 'billing/payment_gateway_list.html'
     context_object_name = 'gateways'
+    required_access = 'billing.admin.gateways'
 
 
-class PaymentGatewayCreateView(LoginRequiredMixin, CreateView):
+class PaymentGatewayCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
     """Create payment gateway."""
     model = PaymentProviderConfig
     form_class = PaymentProviderConfigForm
     template_name = 'billing/payment_gateway_form.html'
     success_url = reverse_lazy('billing:payment_gateway_list')
+    required_access = 'billing.admin.gateways'
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -1517,13 +1616,14 @@ class PaymentGatewayCreateView(LoginRequiredMixin, CreateView):
         return kwargs
 
 
-class PaymentGatewayConfigView(LoginRequiredMixin, UpdateView):
+class PaymentGatewayConfigView(SecureViewMixin, LoginRequiredMixin, UpdateView):
     """Configure payment gateway."""
     model = PaymentProviderConfig
     form_class = PaymentProviderConfigForm
     template_name = 'billing/payment_gateway_config.html'
     pk_url_kwarg = 'provider_id'
     success_url = reverse_lazy('billing:payment_gateway_list')
+    required_access = 'billing.admin.gateways'
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -1539,19 +1639,21 @@ class PaymentGatewayConfigView(LoginRequiredMixin, UpdateView):
 
 
 
-class TenantPaymentConfigView(LoginRequiredMixin, TemplateView):
+class TenantPaymentConfigView(SecureViewMixin, LoginRequiredMixin, TemplateView):
     """Tenant payment configuration."""
     template_name = 'billing/tenant_payment_config.html'
+    required_access = 'billing.payment_method.manage'
 
 
 
 
-class PlanFeatureAccessListView(LoginRequiredMixin, ListView):
+class PlanFeatureAccessListView(SecureViewMixin, LoginRequiredMixin, ListView):
     """View for listing plan feature access"""
     model = PlanFeatureAccess
     template_name = 'billing/plan_feature_access_list.html'
     context_object_name = 'plan_features'
     paginate_by = 20
+    required_access = 'billing.admin.plans'
     
     def get_queryset(self):
         plan_id = self.request.GET.get('plan_id')
@@ -1560,47 +1662,51 @@ class PlanFeatureAccessListView(LoginRequiredMixin, ListView):
         return PlanFeatureAccess.objects.select_related('plan')
 
 
-class PlanFeatureAccessCreateView(LoginRequiredMixin, CreateView):
+class PlanFeatureAccessCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
     """View for creating plan feature access"""
     model = PlanFeatureAccess
     fields = ['plan', 'feature_key', 'feature_name', 'feature_category', 'is_available', 'notes']
     template_name = 'billing/plan_feature_access_form.html'
     success_url = reverse_lazy('billing:plan_feature_access_list')
+    required_access = 'billing.admin.plans'
     
     def form_valid(self, form):
         messages.success(self.request, f'Feature access "{form.instance.feature_name}" created successfully.')
         return super().form_valid(form)
 
 
-class PlanFeatureAccessUpdateView(LoginRequiredMixin, UpdateView):
+class PlanFeatureAccessUpdateView(SecureViewMixin, LoginRequiredMixin, UpdateView):
     """View for updating plan feature access"""
     model = PlanFeatureAccess
     fields = ['plan', 'feature_key', 'feature_name', 'feature_category', 'is_available', 'notes']
     template_name = 'billing/plan_feature_access_form.html'
     success_url = reverse_lazy('billing:plan_feature_access_list')
+    required_access = 'billing.admin.plans'
     
     def form_valid(self, form):
         messages.success(self.request, f'Feature access "{form.instance.feature_name}" updated successfully.')
         return super().form_valid(form)
 
 
-class PlanFeatureAccessDeleteView(LoginRequiredMixin, DeleteView):
+class PlanFeatureAccessDeleteView(SecureViewMixin, LoginRequiredMixin, DeleteView):
     """View for deleting plan feature access"""
     model = PlanFeatureAccess
     template_name = 'billing/plan_feature_access_confirm_delete.html'
     success_url = reverse_lazy('billing:plan_feature_access_list')
+    required_access = 'billing.admin.plans'
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, f'Feature access "{self.get_object().feature_name}" deleted successfully.')
         return super().delete(request, *args, **kwargs)
 
 
-class PlanModuleAccessListView(LoginRequiredMixin, ListView):
+class PlanModuleAccessListView(SecureViewMixin, LoginRequiredMixin, ListView):
     """View for listing plan module access"""
     model = PlanModuleAccess
     template_name = 'billing/plan_module_access_list.html'
     context_object_name = 'plan_modules'
     paginate_by = 20
+    required_access = 'billing.admin.plans'
     
     def get_queryset(self):
         plan_id = self.request.GET.get('plan_id')
@@ -1609,35 +1715,38 @@ class PlanModuleAccessListView(LoginRequiredMixin, ListView):
         return PlanModuleAccess.objects.select_related('plan')
 
 
-class PlanModuleAccessCreateView(LoginRequiredMixin, CreateView):
+class PlanModuleAccessCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
     """View for creating plan module access"""
     model = PlanModuleAccess
     fields = ['plan', 'module_name', 'module_display_name', 'is_available', 'notes']
     template_name = 'billing/plan_module_access_form.html'
     success_url = reverse_lazy('billing:plan_module_access_list')
+    required_access = 'billing.admin.plans'
     
     def form_valid(self, form):
         messages.success(self.request, f'Module access "{form.instance.module_display_name}" created successfully.')
         return super().form_valid(form)
 
 
-class PlanModuleAccessUpdateView(LoginRequiredMixin, UpdateView):
+class PlanModuleAccessUpdateView(SecureViewMixin, LoginRequiredMixin, UpdateView):
     """View for updating plan module access"""
     model = PlanModuleAccess
     fields = ['plan', 'module_name', 'module_display_name', 'is_available', 'notes']
     template_name = 'billing/plan_module_access_form.html'
     success_url = reverse_lazy('billing:plan_module_access_list')
+    required_access = 'billing.admin.plans'
     
     def form_valid(self, form):
         messages.success(self.request, f'Module access "{form.instance.module_display_name}" updated successfully.')
         return super().form_valid(form)
 
 
-class PlanModuleAccessDeleteView(LoginRequiredMixin, DeleteView):
+class PlanModuleAccessDeleteView(SecureViewMixin, LoginRequiredMixin, DeleteView):
     """View for deleting plan module access"""
     model = PlanModuleAccess
     template_name = 'billing/plan_module_access_confirm_delete.html'
     success_url = reverse_lazy('billing:plan_module_access_list')
+    required_access = 'billing.admin.plans'
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, f'Module access "{self.get_object().module_display_name}" deleted successfully.')

@@ -5,6 +5,7 @@ app_name = 'accounts'
 urlpatterns = [
     # CRUD
     path('accounts/', views.AccountListView.as_view(), name='account_list'),
+    path('accounts/export/', views.export_accounts_csv, name='account_export'),
     path('create/', views.AccountCreateView.as_view(), name='account_create'),
     path('<int:pk>/', views.AccountDetailView.as_view(), name='account_detail'),
     path('<int:pk>/edit/', views.AccountUpdateView.as_view(), name='account_update'),

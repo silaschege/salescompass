@@ -29,7 +29,7 @@ Best regards,
 {{ request.user.get_full_name }}</textarea>
                 </div>
                 <button type="submit" class="btn btn-primary">Send Email</button>
-                <a href="{% url 'proposals:detail' proposal.pk %}" class="btn btn-secondary">Cancel</a>
+                <a href="{% url 'proposals:proposal_detail' proposal.pk %}" class="btn btn-secondary">Cancel</a>
             </form>
         </div>
     </div>

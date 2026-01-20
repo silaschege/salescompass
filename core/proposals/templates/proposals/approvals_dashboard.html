@@ -138,7 +138,7 @@
                         {% for approval in recently_approved %}
                         <tr>
                             <td>
-                                <a href="{% url 'proposals:detail' approval.proposal.pk %}" class="fw-bold text-decoration-none">
+                                <a href="{% url 'proposals:proposal_detail' approval.proposal.pk %}" class="fw-bold text-decoration-none">
                                     {{ approval.proposal.title }}
                                 </a>
                             </td>

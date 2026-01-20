@@ -2,12 +2,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from core.permissions import ObjectPermissionRequiredMixin
-from .models import Case, KnowledgeBaseArticle, CsatResponse, CsatDetractorAlert, AssignmentRule,CaseAttachment, CaseComment, SlaPolicy
+from .models import Case, CsatResponse, CsatDetractorAlert, AssignmentRule, CaseAttachment, CaseComment, SlaPolicy
 from .forms import CaseForm, AssignmentRuleForm
 from .utils import get_overdue_cases
 from .utils import calculate_sla_due_date
-
-
+ 
+ 
 from django.http import JsonResponse
 from django.views import View
 from django.utils.decorators import method_decorator
@@ -85,16 +85,6 @@ class CsatSurveyView(TemplateView):
 
 class CsatThankYouView(TemplateView):
     template_name = 'cases/csat_thank_you.html'
-
-
-# === Knowledge Base Views ===
-class KnowledgeBaseView(ListView):
-    model = KnowledgeBaseArticle
-    template_name = 'cases/knowledge_base.html'
-    context_object_name = 'articles'
-
-    def get_queryset(self):
-        return KnowledgeBaseArticle.objects.filter(is_published=True)
 
 
 # === Kanban View ===
@@ -290,62 +280,6 @@ class AssignmentRuleDetailView(ObjectPermissionRequiredMixin, DetailView):
     model = AssignmentRule
     template_name = 'cases/assignment_rule_detail.html'
     context_object_name = 'assignment_rule'
-
-
-# === Knowledge Base Article Views ===
-class KnowledgeBaseArticleListView(ListView):
-    model = KnowledgeBaseArticle
-    template_name = 'cases/knowledge_base_article_list.html'
-    context_object_name = 'articles'
-    paginate_by = 20
-    
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        # Filter by current tenant
-        if hasattr(self.request.user, 'tenant_id'):
-            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
-        return queryset
-
-
-class KnowledgeBaseArticleCreateView(ObjectPermissionRequiredMixin, CreateView):
-    model = KnowledgeBaseArticle
-    fields = ['title', 'content', 'category', 'tags', 'is_published']
-    template_name = 'cases/knowledge_base_article_form.html'
-    success_url = reverse_lazy('cases:knowledge_base_article_list')
-    
-    def form_valid(self, form):
-        # Set tenant automatically
-        if hasattr(self.request.user, 'tenant_id'):
-            form.instance.tenant_id = self.request.user.tenant_id
-        messages.success(self.request, 'Knowledge base article created successfully.')
-        return super().form_valid(form)
-
-
-class KnowledgeBaseArticleDetailView(ObjectPermissionRequiredMixin, DetailView):
-    model = KnowledgeBaseArticle
-    template_name = 'cases/knowledge_base_article_detail.html'
-    context_object_name = 'article'
-
-
-class KnowledgeBaseArticleUpdateView(ObjectPermissionRequiredMixin, UpdateView):
-    model = KnowledgeBaseArticle
-    fields = ['title', 'content', 'category', 'tags', 'is_published']
-    template_name = 'cases/knowledge_base_article_form.html'
-    success_url = reverse_lazy('cases:knowledge_base_article_list')
-    
-    def form_valid(self, form):
-        messages.success(self.request, 'Knowledge base article updated successfully.')
-        return super().form_valid(form)
-
-
-class KnowledgeBaseArticleDeleteView(ObjectPermissionRequiredMixin, DeleteView):
-    model = KnowledgeBaseArticle
-    template_name = 'cases/knowledge_base_article_confirm_delete.html'
-    success_url = reverse_lazy('cases:knowledge_base_article_list')
-    
-    def delete(self, request, *args, **kwargs):
-        messages.success(request, 'Knowledge base article deleted successfully.')
-        return super().delete(request, *args, **kwargs)
 
 
 # === CSAT Response Views ===

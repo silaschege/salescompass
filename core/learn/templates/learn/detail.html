@@ -20,7 +20,7 @@
                 📄 Export PDF
             </a>
             {% if request.user|has_perm:"learn:write" %}
-                <a href="{% url 'learn:update' article.pk %}" class="btn btn-outline-secondary">Edit</a>
+                <a href="{% url 'learn:article_update' article.pk %}" class="btn btn-outline-secondary">Edit</a>
             {% endif %}
         </div>
     </div>
@@ -72,7 +72,7 @@
                     <ul class="list-group list-group-flush">
                         {% for related in related_articles %}
                         <li class="list-group-item">
-                            <a href="{% url 'learn:detail' related.slug %}">{{ related.title }}</a>
+                            <a href="{% url 'learn:article_detail' related.slug %}">{{ related.title }}</a>
                         </li>
                         {% endfor %}
                     </ul>

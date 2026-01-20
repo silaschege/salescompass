@@ -8,7 +8,7 @@ from automation.utils import emit_event
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.db import models
-
+ 
 def calculate_sla_due_date(priority: str) -> timezone.datetime:
     """Calculate SLA due date based on priority."""
     policy = SlaPolicy.objects.filter(priority=priority).first()

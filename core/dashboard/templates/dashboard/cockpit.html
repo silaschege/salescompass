@@ -113,7 +113,8 @@
                 </div>
                 <div class="list-group list-group-flush">
                     {% for account in at_risk_accounts %}
-                    <a href="{% url 'accounts:detail' account.id %}" class="list-group-item list-group-item-action">
+                    <a href="{% url 'accounts:account_detail' account.id %}"
+                        class="list-group-item list-group-item-action">
                         <div class="d-flex w-100 justify-content-between">
                             <h6 class="mb-1">{{ account.name }}</h6>
                             <small class="text-danger fw-bold">{{ account.health_score }}%</small>

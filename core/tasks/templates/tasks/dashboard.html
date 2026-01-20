@@ -2,8 +2,91 @@
 {% load static %}
 {% block title %}Tasks Dashboard - SalesCompass{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css">
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, var(--brand-primary) 0%, #5a32a3 100%);
+        color: #fff;
+        padding: 2.5rem 0 2rem 0;
+        border-radius: 0 0 2rem 2rem;
+        box-shadow: 0 4px 24px rgba(111, 66, 193, 0.25);
+        margin-bottom: 2.5rem;
+    }
+    
+    .stats-card {
+        border-radius: 12px;
+        padding: 1.5rem;
+        height: 100%;
+        transition: transform 0.2s ease;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-3px);
+    }
+    
+    .stats-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+    
+    .stats-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stats-label {
+        font-size: 0.85rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+    
+    .chart-container {
+        border-radius: 12px;
+        padding: 1.5rem;
+        height: 100%;
+    }
+    
+    .table-card {
+        border-radius: 12px;
+        padding: 0;
+        overflow: hidden;
+    }
+    
+    .table-card .card-header {
+        border-bottom: 1px solid rgba(111, 66, 193, 0.1);
+    }
+    
+    .table-card .card-body {
+        padding: 0;
+    }
+    
+    .priority-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+    
+    .status-badge {
+        padding: 0.4em 0.8em;
+        font-weight: 500;
+        border-radius: 6px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="header-bar mb-4">
+<div class="dashboard-header mb-4">
     <div class="container text-center">
         <h1 class="block-title">Tasks & Productivity</h1>
         <p class="text-white lead">Track your team's progress and stay on top of deadlines</p>
@@ -14,76 +97,140 @@
     <!-- Quick Actions -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="d-flex gap-2">
-            <a href="{% url 'tasks:create' %}" class="btn btn-primary shadow-sm">
-                <i class="bi bi-plus-lg"></i> New Task
+            <a href="{% url 'tasks:task_create' %}" class="btn btn-primary shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i> New Task
             </a>
-            <a href="{% url 'tasks:my_tasks' %}" class="btn btn-outline-secondary">
-                <i class="bi bi-person"></i> My Tasks
+            <a href="{% url 'tasks:my_tasks' %}" class="btn btn-outline-light">
+                <i class="bi bi-person me-1"></i> My Tasks
             </a>
         </div>
         <div class="d-flex gap-2">
             <div class="btn-group shadow-sm">
-                <a href="{% url 'tasks:list' %}" class="btn btn-outline-primary" title="List View"><i
-                        class="bi bi-list-ul"></i></a>
+                <a href="{% url 'tasks:task_list' %}" class="btn btn-outline-primary" title="List View"><i
+                        class="bi bi-list-ul me-1"></i> List</a>
                 <a href="{% url 'tasks:kanban' %}" class="btn btn-outline-primary" title="Kanban View"><i
-                        class="bi bi-grid-3x3-gap"></i></a>
+                        class="bi bi-grid-3x3-gap me-1"></i> Kanban</a>
                 <a href="{% url 'tasks:calendar' %}" class="btn btn-outline-primary" title="Calendar View"><i
-                        class="bi bi-calendar3"></i></a>
+                        class="bi bi-calendar3 me-1"></i> Calendar</a>
             </div>
         </div>
     </div>
 
     <!-- KPI Section -->
     <div class="row g-4 mb-5">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100 text-center p-3"
-                style="background: linear-gradient(135deg, white 0%, #f0f4ff 100%);">
-                <div class="card-body">
-                    <div class="icon-circle bg-primary text-white mx-auto mb-3"
-                        style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                        <i class="bi bi-clipboard-data fs-4"></i>
-                    </div>
-                    <h6 class="text-muted small text-uppercase fw-bold mb-2">Total Tasks</h6>
-                    <h2 class="fw-bold mb-0 text-dark">{{ total_tasks }}</h2>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="stats-icon bg-primary bg-opacity-10 text-primary mx-auto">
+                    <i class="bi bi-clipboard-data fs-3"></i>
+                </div>
+                <div class="text-center">
+                    <div class="stats-value text-dark">{{ total_tasks }}</div>
+                    <div class="stats-label">Total Tasks</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100 text-center p-3"
-                style="background: linear-gradient(135deg, white 0%, #e8f5e9 100%);">
-                <div class="card-body">
-                    <div class="icon-circle bg-success text-white mx-auto mb-3"
-                        style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                        <i class="bi bi-check2-circle fs-4"></i>
-                    </div>
-                    <h6 class="text-muted small text-uppercase fw-bold mb-2">Completed</h6>
-                    <h2 class="fw-bold mb-0 text-dark">{{ completed_tasks }}</h2>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="stats-icon bg-success bg-opacity-10 text-success mx-auto">
+                    <i class="bi bi-check2-circle fs-3"></i>
+                </div>
+                <div class="text-center">
+                    <div class="stats-value text-dark">{{ completed_tasks }}</div>
+                    <div class="stats-label">Completed</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100 text-center p-3"
-                style="background: linear-gradient(135deg, white 0%, #ffebee 100%);">
-                <div class="card-body">
-                    <div class="icon-circle bg-danger text-white mx-auto mb-3"
-                        style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                        <i class="bi bi-exclamation-triangle fs-4"></i>
-                    </div>
-                    <h6 class="text-muted small text-uppercase fw-bold mb-2">Overdue</h6>
-                    <h2 class="fw-bold mb-0 text-dark">{{ overdue_tasks }}</h2>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="stats-icon bg-danger bg-opacity-10 text-danger mx-auto">
+                    <i class="bi bi-exclamation-triangle fs-3"></i>
+                </div>
+                <div class="text-center">
+                    <div class="stats-value text-dark">{{ overdue_tasks }}</div>
+                    <div class="stats-label">Overdue</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100 text-center p-3"
-                style="background: linear-gradient(135deg, white 0%, #fffde7 100%);">
-                <div class="card-body">
-                    <div class="icon-circle bg-warning text-dark mx-auto mb-3"
-                        style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                        <i class="bi bi-graph-up-arrow fs-4"></i>
-                    </div>
-                    <h6 class="text-muted small text-uppercase fw-bold mb-2">Efficiency</h6>
-                    <h2 class="fw-bold mb-0 text-dark">{{ completion_rate|floatformat:1 }}%</h2>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="stats-icon bg-warning bg-opacity-10 text-warning mx-auto">
+                    <i class="bi bi-graph-up-arrow fs-3"></i>
+                </div>
+                <div class="text-center">
+                    <div class="stats-value text-dark">{{ completion_rate|floatformat:1 }}%</div>
+                    <div class="stats-label">Efficiency</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User-specific KPIs -->
+    <div class="row g-4 mb-5">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="stats-icon bg-info bg-opacity-10 text-info mx-auto">
+                    <i class="bi bi-person-badge fs-3"></i>
+                </div>
+                <div class="text-center">
+                    <div class="stats-value text-dark">{{ user_total_tasks }}</div>
+                    <div class="stats-label">My Total Tasks</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="stats-icon bg-success bg-opacity-10 text-success mx-auto">
+                    <i class="bi bi-check-circle fs-3"></i>
+                </div>
+                <div class="text-center">
+                    <div class="stats-value text-dark">{{ user_completed_tasks }}</div>
+                    <div class="stats-label">My Completed</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="stats-icon bg-warning bg-opacity-10 text-warning mx-auto">
+                    <i class="bi bi-hourglass-split fs-3"></i>
+                </div>
+                <div class="text-center">
+                    <div class="stats-value text-dark">{{ user_inprogress_tasks }}</div>
+                    <div class="stats-label">In Progress</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="stats-icon bg-danger bg-opacity-10 text-danger mx-auto">
+                    <i class="bi bi-list-task fs-3"></i>
+                </div>
+                <div class="text-center">
+                    <div class="stats-value text-dark">{{ user_pending_tasks }}</div>
+                    <div class="stats-label">Pending</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-5">
+        <div class="col-xl-6">
+            <div class="card border-0 shadow-sm h-100 chart-container">
+                <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-pie-chart me-2 text-primary"></i>Tasks by Priority</h5>
+                </div>
+                <div class="card-body pt-0">
+                    <canvas id="priorityChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="card border-0 shadow-sm h-100 chart-container">
+                <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-bar-chart me-2 text-primary"></i>Tasks by Status</h5>
+                </div>
+                <div class="card-body pt-0">
+                    <canvas id="statusChart" width="400" height="200"></canvas>
                 </div>
             </div>
         </div>
@@ -91,11 +238,11 @@
 
     <!-- Main Content -->
     <div class="row g-4">
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm h-100">
+        <div class="col-xl-6">
+            <div class="card table-card border-0 shadow-sm h-100">
                 <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-primary"></i>Recent Tasks</h5>
-                    <a href="{% url 'tasks:list' %}" class="small text-decoration-none">View All</a>
+                    <a href="{% url 'tasks:task_list' %}" class="small text-decoration-none">View All</a>
                 </div>
                 <div class="card-body p-0">
                     {% if recent_tasks %}
@@ -110,26 +257,26 @@
                             </thead>
                             <tbody>
                                 {% for task in recent_tasks %}
-                                <tr onclick="window.location='{% url 'tasks:detail' task.pk %}'"
+                                <tr onclick="window.location='{% url 'tasks:task_detail' task.pk %}'"
                                     style="cursor: pointer;">
                                     <td class="ps-4">
                                         <div class="fw-bold text-dark">{{ task.title|truncatechars:40 }}</div>
-                                        <div class="text-muted small">{{ task.created_at|date:"M d" }}</div>
+                                        <div class="text-muted small">{{ task.created_at|date:"M d, Y" }}</div>
                                     </td>
                                     <td>
                                         {% if task.status_ref %}
-                                        <span class="badge"
-                                            style="background-color: {{ task.status_ref.color|default:'#6c757d' }}; opacity: 0.9;">
+                                        <span class="status-badge"
+                                            style="background-color: {{ task.status_ref.color|default:'#6c757d' }}; opacity: 0.9; color: white;">
                                             {{ task.status_ref.label }}
                                         </span>
                                         {% else %}
-                                        <span class="badge bg-secondary opacity-75">{{ task.get_status_display }}</span>
+                                        <span class="status-badge bg-secondary opacity-75">{{ task.get_status_display }}</span>
                                         {% endif %}
                                     </td>
                                     <td class="text-end pe-4">
-                                        <div class="priority-dot d-inline-block"
-                                            style="width: 10px; height: 10px; border-radius: 50%; background-color: {{ task.priority_ref.color|default:'#6c757d' }};"
-                                            title="{{ task.priority_ref.label|default:task.get_priority_display }}">
+                                        <div class="priority-indicator" 
+                                             style="background-color: {{ task.priority_ref.color|default:'#6c757d' }};"
+                                             title="{{ task.priority_ref.label|default:task.get_priority_display }}">
                                         </div>
                                     </td>
                                 </tr>
@@ -147,8 +294,8 @@
             </div>
         </div>
 
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm h-100">
+        <div class="col-xl-6">
+            <div class="card table-card border-0 shadow-sm h-100">
                 <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold"><i class="bi bi-calendar-event me-2 text-primary"></i>Upcoming Deadlines
                     </h5>
@@ -167,18 +314,17 @@
                             </thead>
                             <tbody>
                                 {% for task in upcoming_tasks %}
-                                <tr onclick="window.location='{% url 'tasks:detail' task.pk %}'"
+                                <tr onclick="window.location='{% url 'tasks:task_detail' task.pk %}'"
                                     style="cursor: pointer;">
                                     <td class="ps-4">
                                         <div class="fw-bold text-dark">{{ task.title|truncatechars:40 }}</div>
                                         <div class="text-muted small">{% if task.assigned_to %}<i
-                                                class="bi bi-person me-1"></i>{{ task.assigned_to.email|truncatechars:20
-                                            }}{% else %}Unassigned{% endif %}</div>
+                                                class="bi bi-person me-1"></i>{{ task.assigned_to.email|truncatechars:20 }}{% else %}Unassigned{% endif %}</div>
                                     </td>
                                     <td>
                                         <span
                                             class="{% if task.is_overdue %}text-danger fw-bold{% else %}text-muted{% endif %} small">
-                                            {{ task.due_date|date:"M d, H:i" }}
+                                            {{ task.due_date|date:"M d, Y" }}
                                         </span>
                                     </td>
                                     <td class="text-end pe-4">
@@ -186,6 +332,8 @@
                                         <span class="badge bg-danger rounded-pill">Overdue</span>
                                         {% elif task.priority == 'high' %}
                                         <span class="badge bg-warning text-dark rounded-pill">Urgent</span>
+                                        {% elif task.priority == 'critical' %}
+                                        <span class="badge bg-danger rounded-pill">Critical</span>
                                         {% else %}
                                         <i class="bi bi-bell text-muted opacity-50"></i>
                                         {% endif %}
@@ -206,4 +354,76 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Priority Chart
+    const priorityCtx = document.getElementById('priorityChart').getContext('2d');
+    const priorityChart = new Chart(priorityCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Low', 'Medium', 'High', 'Critical'],
+            datasets: [{
+                data: [
+                    {{ tasks_by_priority.low|default:0 }},
+                    {{ tasks_by_priority.medium|default:0 }},
+                    {{ tasks_by_priority.high|default:0 }},
+                    {{ tasks_by_priority.critical|default:0 }}
+                ],
+                backgroundColor: [
+                    '#4CAF50',
+                    '#FFC107',
+                    '#FF9800',
+                    '#F44336'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Status Chart
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    const statusChart = new Chart(statusCtx, {
+        type: 'bar',
+        data: {
+            labels: ['To Do', 'In Progress', 'Completed', 'Cancelled'],
+            datasets: [{
+                label: 'Tasks Count',
+                data: [
+                    {{ tasks_by_status.todo|default:0 }},
+                    {{ tasks_by_status.in_progress|default:0 }},
+                    {{ tasks_by_status.completed|default:0 }},
+                    {{ tasks_by_status.cancelled|default:0 }}
+                ],
+                backgroundColor: [
+                    '#2196F3',
+                    '#FF9800',
+                    '#4CAF50',
+                    '#9E9E9E'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+</script>
 {% endblock %}

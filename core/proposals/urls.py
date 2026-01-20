@@ -6,11 +6,11 @@ urlpatterns = [
     # Dashboard
     path('', views.ProposalDashboardView.as_view(), name='proposal_dashboard'),
     # CRUD
-    path('list/', views.ProposalListView.as_view(), name='list'),
-    path('create/', views.ProposalCreateView.as_view(), name='create'),
-    path('<int:pk>/', views.ProposalDetailView.as_view(), name='detail'),
-    path('<int:pk>/edit/', views.ProposalUpdateView.as_view(), name='update'),
-    path('<int:pk>/delete/', views.ProposalDeleteView.as_view(), name='delete'),
+    path('list/', views.ProposalListView.as_view(), name='proposal_list'),
+    path('create/', views.ProposalCreateView.as_view(), name='proposal_create'),
+    path('<int:pk>/', views.ProposalDetailView.as_view(), name='proposal_detail'),
+    path('<int:pk>/edit/', views.ProposalUpdateView.as_view(), name='proposal_update'),
+    path('<int:pk>/delete/', views.ProposalDeleteView.as_view(), name='proposal_delete'),
     
     # Email and PDF
     path('<int:pk>/send-email/', views.SendProposalEmailView.as_view(), name='send_email'),

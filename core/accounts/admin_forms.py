@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm as BaseUserCreationForm
-from .models import User, Role
+from .models import User
+from access_control.role_models import Role
 from tenants.models import Tenant
 
 
@@ -135,13 +136,7 @@ class UserInvitationForm(forms.Form):
 class RoleManagementForm(forms.ModelForm):
     class Meta:
         model = Role
-        fields = ('name', 'description', 'permissions')
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Limit permission choices to relevant permissions
-        from django.contrib.auth.models import Permission
-        self.fields['permissions'].queryset = Permission.objects.select_related('content_type').all()
+        fields = ('name', 'description', 'tenant', 'is_system_role', 'is_assignable')
 
 
 class SystemConfigurationForm(forms.Form):

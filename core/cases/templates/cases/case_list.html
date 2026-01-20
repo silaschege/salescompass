@@ -1,75 +1,150 @@
 {% extends "cases/base.html" %}
 
+{% load humanize %}
+
 {% block title %}Cases - SalesCompass{% endblock %}
 
 {% block content %}
-   <h1 class="block-title">Customer Support Cases</h1>
-    <p class="text-muted text-center lead">Manage and track all customer support tickets</p>
+<h1 class="block-title">Customer Support Cases</h1>
+<p class="text-muted text-center lead">Manage and track all customer support tickets</p>
 
 <div class="container">
-    <div class="d-flex justify-content-between mb-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <h2>Case List</h2>
-        <a href="{% url 'cases:case_create' %}" class="btn btn-primary">+ New Case</a>
+        <div class="d-flex gap-2">
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    Filter
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="filterDropdown">
+                    <li><a class="dropdown-item" href="?status=new">New Cases</a></li>
+                    <li><a class="dropdown-item" href="?status=in_progress">In Progress</a></li>
+                    <li><a class="dropdown-item" href="?status=critical">Critical Priority</a></li>
+                    <li><a class="dropdown-item" href="?status=overdue">Overdue Cases</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="?">Show All</a></li>
+                </ul>
+            </div>
+            <a href="{% url 'cases:case_create' %}" class="btn btn-primary">+ New Case</a>
+        </div>
     </div>
 
     {% if cases %}
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Subject</th>
-                        <th>Account</th>
-                        <th>Priority</th>
-                        <th>Status</th>
-                        <th>Owner</th>
-                        <th>SLA</th>
-                        <th>CSAT</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for case in cases %}
-                    <tr>
-                        <td>
-                            <a href="{% url 'cases:detail' case.pk %}">{{ case.subject }}</a>
-                        </td>
-                        <td>{{ case.account.name }}</td>
-                        <td>
-                            <span class="badge bg-{% if case.priority == 'critical' %}danger{% elif case.priority == 'high' %}warning{% elif case.priority == 'medium' %}info{% else %}secondary{% endif %}">
-                                {{ case.get_priority_display }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="badge bg-{% if case.status == 'closed' %}success{% elif case.status == 'resolved' %}primary{% elif case.status == 'in_progress' %}warning{% else %}secondary{% endif %}">
-                                {{ case.get_status_display }}
-                            </span>
-                        </td>
-                        <td>{{ case.owner.email|default:"Unassigned" }}</td>
-                        <td>
-                            {% if case.is_overdue %}
-                                <span class="badge bg-danger">Overdue</span>
-                            {% else %}
-                                {{ case.sla_remaining_hours|default:"—" }}h
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if case.csat_score %}
-                                <span class="badge bg-{% if case.csat_score >= 4 %}success{% elif case.csat_score >= 3 %}warning{% else %}danger{% endif %}">
-                                    {{ case.csat_score }}/5
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{% url 'cases:detail' case.pk %}" class="btn btn-sm btn-outline-primary">View</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Subject</th>
+                    <th>Account</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Owner</th>
+                    <th>Created</th>
+                    <th>SLA</th>
+                    <th>CSAT</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for case in cases %}
+                <tr class="{% if case.priority == 'critical' %}table-danger{% elif case.priority == 'high' %}table-warning{% elif case.is_overdue %}table-secondary{% endif %}">
+                    <td>
+                        <small class="text-muted">#{{ case.id|truncatechars:8 }}</small>
+                    </td>
+                    <td>
+                        <div>
+                            <a href="{% url 'cases:case_detail' case.pk %}">{{ case.subject|truncatechars:30 }}</a>
+                        </div>
+                        <small class="text-muted d-block">{{ case.case_description|truncatechars:40 }}</small>
+                    </td>
+                    <td>{{ case.account.name|truncatechars:20 }}</td>
+                    <td>
+                        <span
+                            class="badge bg-{% if case.priority == 'critical' %}danger{% elif case.priority == 'high' %}warning{% elif case.priority == 'medium' %}info{% else %}secondary{% endif %}">
+                            {{ case.get_priority_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <span
+                            class="badge bg-{% if case.status == 'closed' %}success{% elif case.status == 'resolved' %}primary{% elif case.status == 'in_progress' %}warning{% elif case.status == 'new' %}secondary{% else %}light text-dark{% endif %}">
+                            {{ case.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ case.owner.email|default:"<em>Unassigned</em>"|truncatechars:20 }}</td>
+                    <td>{{ case.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        {% if case.is_overdue %}
+                        <span class="badge bg-danger d-block">Overdue</span>
+                        {% elif case.sla_remaining_hours %}
+                        <span class="badge bg-{% if case.sla_remaining_hours < 5 %}danger{% elif case.sla_remaining_hours < 24 %}warning{% else %}success{% endif %} d-block">
+                            {{ case.sla_remaining_hours|default:"—" }}h
+                        </span>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if case.csat_score %}
+                        <span
+                            class="badge bg-{% if case.csat_score >= 4 %}success{% elif case.csat_score >= 3 %}warning{% else %}danger{% endif %}">
+                            {{ case.csat_score }}/5
+                        </span>
+                        {% else %}
+                        <span class="text-muted">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <a href="{% url 'cases:case_detail' case.pk %}" class="btn btn-outline-primary btn-sm">View</a>
+                            <a href="{% url 'cases:case_update' case.pk %}" class="btn btn-outline-secondary btn-sm">Edit</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                </li>
+            {% endif %}
+            
+            <li class="page-item disabled">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    
     {% else %}
-        <p class="text-muted">No cases found.</p>
+    <div class="text-center py-5">
+        <h3 class="text-muted">No cases found</h3>
+        <p class="text-muted">Get started by creating your first case</p>
         <a href="{% url 'cases:case_create' %}" class="btn btn-primary">Create your first case</a>
+    </div>
     {% endif %}
 </div>
+
+<script>
+// Enable tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
 {% endblock %}

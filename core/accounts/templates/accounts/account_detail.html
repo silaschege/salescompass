@@ -4,225 +4,491 @@
 {% block title %}{{ account.account_name }} - SalesCompass{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-start mb-3">
-    <div>
-        <h1 class="block-title fw-bold mb-0">{{ account.account_name }}</h1>
-        <span class="badge bg-primary">{{ account.get_tier_display }}</span>
-        <span class="badge bg-secondary">{{ account.get_industry_display }}</span>
+<!-- Hero Section -->
+<div class="row align-items-center mb-4">
+    <div class="col-md-8">
+        <div class="d-flex align-items-center">
+            <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3 text-primary">
+                <i class="bi bi-building fs-3"></i>
+            </div>
+            <div>
+                <h1 class="fw-bold mb-1">{{ account.account_name }}</h1>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                        {{ account.get_tier_display }}
+                    </span>
+                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                        {{ account.get_industry_display }}
+                    </span>
+                    <span class="badge bg-info-subtle text-info border border-info-subtle">
+                        {{ account.get_status_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
     </div>
-    <div>
+    <div class="col-md-4 text-md-end mt-3 mt-md-0">
         {% if request.user.is_authenticated and request.user|has_perm:"accounts.change_account" %}
-        <a href="{% url 'communication:whatsapp_send' %}?account_id={{ account.pk }}" class="btn btn-success me-1">
-            <i class="bi bi-whatsapp"></i> WhatsApp
-        </a>
-        <a href="{% url 'communication:whatsapp_send' %}?account_id={{ account.pk }}" class="btn btn-success me-1">
-            <i class="bi bi-whatsapp"></i> WhatsApp
-        </a>
-        <a href="{% url 'accounts:account_update' account.pk %}" class="btn btn-outline-secondary">Edit</a>
-        <a href="{% url 'accounts:account_delete' account.pk %}" class="btn btn-outline-danger">Delete</a>
+        <div class="btn-group shadow-sm">
+            <a href="{% url 'communication:whatsapp_send' %}?account_id={{ account.pk }}"
+                class="btn btn-outline-success btn-sm">
+                <i class="bi bi-whatsapp"></i>
+            </a>
+            <a href="{% url 'accounts:account_update' account.pk %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            <a href="{% url 'accounts:account_delete' account.pk %}" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-trash"></i>
+            </a>
+        </div>
         {% endif %}
     </div>
 </div>
 
 <div class="row">
-    <div class="col-md-8">
-        {% comment %} account details {% endcomment %}
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>Account Detail</h5>
+    <!-- Left Column: Key Info & ESG -->
+    <div class="col-xl-3 col-lg-4 mb-4">
+        <!-- Key Details Card -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-0 pt-3 pb-0">
+                <h5 class="card-title fw-bold text-dark mb-0"><i class="bi bi-info-circle text-primary me-2"></i>Details
+                </h5>
             </div>
             <div class="card-body">
-                <table class="table table-borderless">
-                    <tr>
-                        <th>Website</th>
-                        <td>{{ account.website|default:"—" }}</td>
-                    </tr>
-                    <tr>
-                        <th>Country</th>
-                        <td>{{ account.country|default:"—" }}</td>
-                    </tr>
-                    <tr>
-                        <th>Address</th>
-                        <td>{{ account.address|linebreaksbr|default:"—" }}</td>
-                    </tr>
-                    <tr>
-                        <th>Renewal Date</th>
-                        <td>{{ account.renewal_date|default:"Not set" }}</td>
-
-                    <tr>
-                        <th>Owner</th>
-                        <td>
-                            {% if account.owner %}
-                            {{ account.owner.email }}
-                            {% else %}
-                            Unassigned
-                            {% endif %}
-                        </td>
-                    </tr>
-
-                    <td>{{ account.get_status_display }}</td>
-                    </tr>
-                </table>
-            </div>
-        </div>
-        {% comment %} esg_engagement {% endcomment %}
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>ESG Engagement</h5>
-            </div>
-            <div class="card-body">
-                <p><strong>Level:</strong> {{ account.get_esg_engagement_display }}</p>
-                {% if account.sustainability_goals %}
-                <p><strong>Goals:</strong> {{ account.sustainability_goals|linebreaks }}</p>
-                {% endif %}
-
-                {% if account.esg_score %}
-                <h4>ESG Metrics</h4>
-                <ul>
-                    <li>Overall Score: {{ account.esg_score.overall_esg_score|floatformat:1 }}/100</li>
-                    <li>tCO2e Saved: {{ account.esg_score.tco2e_saved|floatformat:2 }}</li>
-                    <li>CSRD Ready: {% if account.esg_score.csr_ready %}✅ Yes{% else %}❌ No{% endif %}</li>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item px-0 border-0 d-flex justify-content-between align-items-center">
+                        <span class="text-muted"><i class="bi bi-globe me-2"></i>Website</span>
+                        <span class="text-end text-truncate" style="max-width: 150px;">
+                            {{ account.website|default:"—"|urlize }}
+                        </span>
+                    </li>
+                    <li class="list-group-item px-0 border-0 d-flex justify-content-between align-items-center">
+                        <span class="text-muted"><i class="bi bi-geo-alt me-2"></i>Country</span>
+                        <span>{{ account.country|default:"—" }}</span>
+                    </li>
+                    <li class="list-group-item px-0 border-0">
+                        <span class="text-muted d-block mb-1"><i class="bi bi-map me-2"></i>Address</span>
+                        <div class="ms-4 text-dark small">
+                            {{ account.billing_address_line1|default:"—" }}, {{ account.billing_city|default:"—" }}, {{ account.billing_state|default:"—" }} {{ account.billing_postal_code|default:"—" }}
+                        </div>
+                    </li>
+                    <li class="list-group-item px-0 border-0 d-flex justify-content-between align-items-center">
+                        <span class="text-muted"><i class="bi bi-calendar-event me-2"></i>Renewal</span>
+                        <span class="badge bg-light text-dark border">{{ account.renewal_date|default:"Not set" }}</span>
+                    </li>
                 </ul>
+            </div>
+        </div>
+
+        <!-- Account Owner -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    {% if account.owner.profile.avatar %}
+                    <img src="{{ account.owner.profile.avatar.url }}" class="rounded-circle border" width="48"
+                        height="48">
+                    {% else %}
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 48px; height: 48px;">
+                        {{ account.owner.username|slice:":2"|upper }}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <small class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Account Owner</small>
+                    <h6 class="mb-0 fw-bold">
+                        {% if account.owner %}
+                        {{ account.owner.get_full_name|default:account.owner.username }}
+                        {% else %}
+                        <span class="text-muted fst-italic">Unassigned</span>
+                        {% endif %}
+                    </h6>
+                </div>
+            </div>
+        </div>
+
+        <!-- ESG Engagement -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-0 pt-3 pb-0 hstack gap-2">
+                <h5 class="card-title fw-bold text-dark mb-0">ESG Metrics</h5>
+                {% if account.csr_ready %}
+                <span class="badge bg-success-subtle text-success ms-auto"><i
+                        class="bi bi-check-circle me-1"></i>CSRD</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <span
+                        class="display-6 fw-bold {% if account.overall_esg_score > 70 %}text-success{% else %}text-warning{% endif %}">
+                        {{ account.overall_esg_score|floatformat:0|default:"N/A" }}
+                    </span>
+                    <span class="text-muted d-block small">Overall ESG Score</span>
+                </div>
+
+                <div class="row g-2 text-center small mb-3">
+                    <div class="col-6">
+                        <div class="p-2 bg-light rounded">
+                            <i class="bi bi-tree text-success d-block mb-1"></i>
+                            <span class="fw-bold d-block">{{ account.tco2e_saved|floatformat:1|default:"0"}}</span>
+                            <span class="text-muted">tCO2e</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 bg-light rounded">
+                            <i class="bi bi-bar-chart-steps text-info d-block mb-1"></i>
+                            <span class="fw-bold d-block">{{ account.get_esg_engagement_display|default:"-" }}</span>
+                            <span class="text-muted">Level</span>
+                        </div>
+                    </div>
+                </div>
+
+                {% if account.sustainability_goals %}
+                <div class="mt-3">
+                    <h6 class="text-muted text-uppercase small fw-bold mb-2">Sustainability Goals</h6>
+                    <p class="small text-muted mb-0">{{ account.sustainability_goals|linebreaks }}</p>
+                </div>
                 {% endif %}
             </div>
         </div>
 
+        <!-- Compliance -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase small fw-bold mb-3">Compliance Status</h6>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>GDPR</span>
+                    {% if account.gdpr_consent %}
+                    <span class="text-success small fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Consent</span>
+                    {% else %}
+                    <span class="text-muted small"><i class="bi bi-dash-circle me-1"></i>Missing</span>
+                    {% endif %}
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>CCPA</span>
+                    {% if account.ccpa_consent %}
+                    <span class="text-success small fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Consent</span>
+                    {% else %}
+                    <span class="text-muted small"><i class="bi bi-dash-circle me-1"></i>Missing</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="col-md-4">
+    <!-- Center Column: Activity & Timeline -->
+    <div class="col-xl-6 col-lg-8 mb-4">
         <!-- Tasks Widget -->
         <div class="mb-4">
             {% render_object_tasks account %}
         </div>
 
-        <!-- Intelligence Widgets -->
-        {% include "includes/account_health.html" with health=account.health_score %}
-
-        {% include "includes/next_best_action.html" %}
-
-        <div class="card">
-            <div class="card-header">Compliance</div>
+        <!-- Account Timeline -->
+        <div class="card border-0 shadow-sm">
+            <div
+                class="card-header bg-transparent border-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
+                <h5 class="card-title fw-bold text-dark mb-0">
+                    <i class="bi bi-clock-history text-primary me-2"></i>Activity Timeline
+                </h5>
+                <span class="badge bg-light text-dark border rounded-pill">{{ timeline_events.count }}</span>
+            </div>
             <div class="card-body">
-                <p>GDPR: {% if account.gdpr_consent %}✅ Consent given{% else %}❌ Not provided{% endif %}</p>
-                <p>CCPA: {% if account.ccpa_consent %}✅ Consent given{% else %}❌ Not provided{% endif %}</p>
+                {% if timeline_events %}
+                <div class="timeline">
+                    {% for event in timeline_events %}
+                    <div class="timeline-item">
+                        <div class="timeline-icon shadow-sm">
+                            {% if event.event_type == 'lead_created' %}
+                            <i class="bi bi-person-plus text-primary"></i>
+                            {% elif event.event_type == 'lead_converted' %}
+                            <i class="bi bi-arrow-right-circle text-success"></i>
+                            {% elif event.event_type == 'account_created' %}
+                            <i class="bi bi-building text-info"></i>
+                            {% elif event.event_type == 'opportunity_created' %}
+                            <i class="bi bi-graph-up text-warning"></i>
+                            {% elif event.event_type == 'email_sent' or event.event_type == 'email_opened' %}
+                            <i class="bi bi-envelope text-secondary"></i>
+                            {% elif event.event_type == 'call_completed' %}
+                            <i class="bi bi-telephone text-success"></i>
+                            {% else %}
+                            <i class="bi bi-activity text-muted"></i>
+                            {% endif %}
+                        </div>
+                        <div class="timeline-content shadow-sm border-0 bg-light">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="fw-bold mb-0 text-dark">{{ event.title }}</h6>
+                                <small class="text-muted whitespace-nowrap ms-2">{{ event.created_at|date:"M d, H:i"}}</small>
+                            </div>
+                            <p class="mb-2 text-muted small">{{ event.description }}</p>
+
+                            {% if event.event_type == 'lead_created' %}
+                            <div class="mt-2">
+                                <a href="{% url 'leads:lead_detail' event.lead_id %}"
+                                    class="btn btn-xs btn-outline-primary rounded-pill">
+                                    View Lead
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-calendar-x text-muted opacity-25" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-3">No timeline events recorded yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Actions & Deep Dive -->
+    <div class="col-xl-3 col-lg-12">
+        <!-- Action Launcher -->
+        <div class="card border-0 shadow-sm mb-4 bg-primary text-white overflow-hidden position-relative">
+            <div class="position-absolute top-0 end-0 p-3 opacity-25">
+                <i class="bi bi-lightning-charge-fill" style="font-size: 5rem; transform: rotate(15deg);"></i>
+            </div>
+            <div class="card-header bg-transparent border-0 pt-3 text-white">
+                <h5 class="card-title fw-bold mb-0 position-relative z-1">Quick Actions</h5>
+            </div>
+            <div class="card-body position-relative z-1 pt-0">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'communication:unified_inbox' %}?account_id={{ account.pk }}"
+                        class="btn btn-light text-primary fw-bold text-start shadow-sm hover-elevate">
+                        <i class="bi bi-chat-dots me-2"></i> Log Communication
+                    </a>
+                    <a href="{% url 'tasks:task_create' %}?related_to={{ account.pk }}"
+                        class="btn btn-light text-primary fw-bold text-start shadow-sm hover-elevate">
+                        <i class="bi bi-check2-square me-2"></i> Create Task
+                    </a>
+                    <a href="{% url 'opportunities:opportunity_create' %}?account={{ account.pk }}"
+                        class="btn btn-light text-primary fw-bold text-start shadow-sm hover-elevate">
+                        <i class="bi bi-graph-up me-2"></i> New Opportunity
+                    </a>
+                    <a href="{% url 'cases:case_create' %}?account={{ account.pk }}"
+                        class="btn btn-light text-primary fw-bold text-start shadow-sm hover-elevate">
+                        <i class="bi bi-life-preserver me-2"></i> Open Case
+                    </a>
+                </div>
             </div>
         </div>
 
-        <!-- Add to Account Detail Page -->
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5>Lead Generation</h5>
-                <span class="badge bg-info">Upsell/Cross-sell</span>
+        <!-- Financial Health -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-0 pt-3 d-flex justify-content-between align-items-center">
+                <h5 class="card-title fw-bold text-dark mb-0">Financials</h5>
+                {% if billing_summary.has_overdue %}
+                <span class="badge bg-danger">Overdue</span>
+                {% else %}
+                <span class="badge bg-success">Good</span>
+                {% endif %}
             </div>
             <div class="card-body">
-                <p>Create new leads for additional business opportunities with {{ account.account_name }}.</p>
-                <div class="d-grid gap-2">
+                <div class="row text-center g-2 mb-3">
+                    <div class="col-6">
+                        <div class="p-2 border rounded bg-light">
+                            <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">MRR</small>
+                            <h5 class="mb-0 text-primary fw-bold">${{ billing_summary.mrr|floatformat:0 }}</h5>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 border rounded bg-light">
+                            <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">LTV</small>
+                            <h5 class="mb-0 text-success fw-bold">${{ billing_summary.ltv|floatformat:0 }}</h5>
+                        </div>
+                    </div>
+                </div>
 
-                    <button class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#quick-lead-form">
-                        <i class="bi bi-lightning"></i> Quick Lead
+                {% if billing_summary.outstanding_amount > 0 %}
+                <div class="alert alert-warning py-2 small d-flex align-items-center mb-3">
+                    <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                    <div class="lh-1">
+                        <span class="d-block fw-bold">${{ billing_summary.outstanding_amount|floatformat:2 }}</span>
+                        <span class="small">Outstanding</span>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="d-grid">
+                    <a href="#" class="btn btn-outline-primary btn-sm rounded-pill">View Invoices</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Team -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-0 pt-3 d-flex justify-content-between align-items-center">
+                <h5 class="card-title fw-bold text-dark mb-0">Team</h5>
+                <a href="{% url 'accounts:account_update' account.pk %}"
+                    class="text-decoration-none small fw-bold">Manage</a>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for member in account.accountteammember_set.all|slice:":5" %}
+                    {% if member.user != account.owner %}
+                    <li class="list-group-item border-0 d-flex align-items-center px-3 py-2">
+                        {% if member.user.profile.avatar %}
+                        <img src="{{ member.user.profile.avatar.url }}" class="rounded-circle" width="32" height="32">
+                        {% else %}
+                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center"
+                            style="width: 32px; height: 32px;">
+                            {{ member.user.username|slice:":2"|upper }}
+                        </div>
+                        {% endif %}
+                        <div class="ms-2 lh-1 text-truncate">
+                            <span class="d-block fw-bold text-dark small">{{
+                                member.user.get_full_name|default:member.user.username }}</span>
+                            <small class="text-muted" style="font-size: 0.7em;">{{ member.get_role_display }}</small>
+                        </div>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Lead Gen Widget -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="bi bi-lightbulb text-warning me-2 fs-4"></i>
+                    <h6 class="fw-bold mb-0">New Lead?</h6>
+                </div>
+                <p class="small text-muted mb-3">Create an upsell or cross-sell opportunity.</p>
+                <div class="d-grid">
+                    <button class="btn btn-primary btn-sm rounded-pill" data-bs-toggle="collapse"
+                        data-bs-target="#quick-lead-form">
+                        <i class="bi bi-plus-lg me-1"></i> Quick Create
                     </button>
                 </div>
 
-                <!-- Quick Lead Form with Contact Selection -->
+                <!-- Collapsible Lead Form -->
                 <div class="collapse mt-3" id="quick-lead-form">
                     <form method="post" action="{% url 'leads:quick_create_from_account' account.pk %}">
                         {% csrf_token %}
-                        <div class="row">
-                            <div class="col-md-6">
-                                <!-- Contact Selection -->
-                                <div class="mb-3">
-                                    <label class="form-label">Select Contact</label>
-                                    <select name="contact_id" class="form-select" id="contact-select">
-                                        <option value="">Create new contact...</option>
-                                        {% for contact in account.contacts.all %}
-                                        <option value="{{ contact.id }}" data-first-name="{{ contact.first_name }}"
-                                            data-last-name="{{ contact.last_name }}" data-email="{{ contact.email }}">
-                                            {{ contact.first_name }} {{ contact.last_name }} ({{
-                                            contact.email|default:"No email" }})
-                                        </option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-
-                                <!-- Manual Entry Fields (shown when "Create new contact" is selected) -->
-                                <div id="manual-fields">
-                                    <input type="text" name="first_name" id="manual-first-name"
-                                        class="form-control mb-2" placeholder="First Name" required>
-                                    <input type="text" name="last_name" id="manual-last-name" class="form-control mb-2"
-                                        placeholder="Last Name" required>
-                                    <input type="email" name="email" id="manual-email" class="form-control mb-2"
-                                        placeholder="Email">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <select name="lead_source" class="form-select mb-2">
-                                    <option value="upsell">Upsell Opportunity</option>
-                                    <option value="cross_sell">Cross-sell Opportunity</option>
-                                    <option value="renewal">Renewal Discussion</option>
-                                </select>
-                                <button type="submit" class="btn btn-success w-100">Create Quick Lead</button>
-                            </div>
+                        <div class="mb-2">
+                            <select name="contact_id" class="form-select form-select-sm" id="contact-select">
+                                <option value="">+ New Contact</option>
+                                {% for contact in account.contacts.all %}
+                                <option value="{{ contact.id }}" data-first-name="{{ contact.first_name }}"
+                                    data-last-name="{{ contact.last_name }}" data-email="{{ contact.email }}">
+                                    {{ contact.first_name }} {{ contact.last_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
                         </div>
+
+                        <div id="manual-fields" class="mb-2">
+                            <input type="text" name="first_name" id="manual-first-name"
+                                class="form-control form-control-sm mb-1" placeholder="First Name" required>
+                            <input type="text" name="last_name" id="manual-last-name"
+                                class="form-control form-control-sm mb-1" placeholder="Last Name" required>
+                            <input type="email" name="email" id="manual-email" class="form-control form-control-sm mb-1"
+                                placeholder="Email">
+                        </div>
+
+                        <select name="lead_source" class="form-select form-select-sm mb-2">
+                            <option value="upsell">Upsell</option>
+                            <option value="cross_sell">Cross-sell</option>
+                            <option value="renewal">Renewal</option>
+                        </select>
+                        <button type="submit" class="btn btn-success btn-sm w-100">Create</button>
                     </form>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
 
-<!-- Add Timeline Section to Account Detail -->
-<div class="card">
-    <div class="card-header">
-        <h5>
-            <i class="bi bi-clock-history"></i> Account Timeline
-            <span class="badge bg-secondary ms-2">{{ timeline_events.count }}</span>
-        </h5>
-    </div>
-    <div class="card-body">
-        {% if timeline_events %}
-        <div class="timeline">
-            {% for event in timeline_events %}
-            <div class="timeline-item">
-                <div class="timeline-icon">
-                    {% if event.event_type == 'lead_created' %}
-                    <i class="bi bi-person-plus text-primary"></i>
-                    {% elif event.event_type == 'lead_converted' %}
-                    <i class="bi bi-arrow-right-circle text-success"></i>
-                    {% elif event.event_type == 'account_created' %}
-                    <i class="bi bi-building text-info"></i>
-                    {% elif event.event_type == 'opportunity_created' %}
-                    <i class="bi bi-graph-up text-warning"></i>
-                    {% else %}
-                    <i class="bi bi-activity text-muted"></i>
-                    {% endif %}
-                </div>
-                <div class="timeline-content">
-                    <div class="d-flex justify-content-between">
-                        <h6 class="mb-1">{{ event.title }}</h6>
-                        <small class="text-muted">{{ event.created_at|date:"M d, Y H:i" }}</small>
-                    </div>
-                    <p class="mb-2">{{ event.description }}</p>
-                    {% if event.event_type == 'lead_created' %}
-                    <div class="d-flex gap-2">
-                        <a href="{% url 'leads:detail' event.lead_id %}" class="btn btn-sm btn-outline-primary">View
-                            Lead</a>
-                        {% if event.lead_status == 'new' %}
-                        <a href="" class="btn btn-sm btn-outline-success">Qualify</a>
-                        {% endif %}
-                    </div>
-                    {% elif event.event_type == 'lead_converted' %}
-                    <span class="badge bg-success">Converted to Account</span>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <p class="text-muted">No timeline events yet.</p>
-        {% endif %}
-    </div>
-</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .timeline {
+        position: relative;
+        padding: 10px 0;
+    }
+
+    .timeline:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e9ecef;
+        left: 20px;
+        border-radius: 2px;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 24px;
+        padding-left: 50px;
+    }
+
+    .timeline-icon {
+        position: absolute;
+        left: 11px;
+        top: 0;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: white;
+        border: 4px solid #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1em;
+        z-index: 2;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    .timeline-content {
+        padding: 1rem;
+        border-radius: 0.75rem;
+        position: relative;
+        background-color: #f8f9fa;
+    }
+
+    .hover-elevate {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .hover-elevate:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+    }
+
+    .btn-xs {
+        padding: 0.1rem 0.4rem;
+        font-size: 0.75rem;
+    }
+    
+    .bg-primary-subtle {
+        background-color: #e0e7ff !important;
+        color: #6f42c1 !important;
+    }
+    
+    .bg-secondary-subtle {
+        background-color: #e2e3e5 !important;
+        color: #6c757d !important;
+    }
+    
+    .bg-info-subtle {
+        background-color: #e7f1ff !important;
+        color: #0d6efd !important;
+    }
+    
+    .bg-success-subtle {
+        background-color: #e8f5e9 !important;
+        color: #198754 !important;
+    }
+    
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+</style>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const contactSelect = document.getElementById('contact-select');
@@ -231,7 +497,6 @@
         const manualLastName = document.getElementById('manual-last-name');
         const manualEmail = document.getElementById('manual-email');
 
-        // Helper function to show/hide fields and manage the 'required' attribute
         function toggleManualFields(show) {
             if (show) {
                 manualFields.style.display = 'block';
@@ -244,82 +509,25 @@
             }
         }
 
-        // Initial check on page load
-        console.log("DOM Loaded. Initial select value:", contactSelect.value);
-        toggleManualFields(contactSelect.value === ''); // Show if no value is selected initially
+        // Initialize
+        if (contactSelect) {
+            toggleManualFields(contactSelect.value === '');
 
-        contactSelect.addEventListener('change', function () {
-            console.log("Dropdown changed. New value:", this.value);
-            const selectedOption = this.options[this.selectedIndex];
-
-            if (this.value === '') {
-                // Show manual fields for new contact
-                toggleManualFields(true);
-                // Clear manual fields when switching back to "Create new"
-                manualFirstName.value = '';
-                manualLastName.value = '';
-                manualEmail.value = '';
-            } else {
-                // Hide manual fields and auto-fill them in the DOM (even if hidden)
-                toggleManualFields(false);
-                manualFirstName.value = selectedOption.dataset.firstName;
-                manualLastName.value = selectedOption.dataset.lastName;
-                manualEmail.value = selectedOption.dataset.email;
-                console.log(`Auto-filled: ${manualFirstName.value} ${manualLastName.value}, ${manualEmail.value}`);
-            }
-        });
+            contactSelect.addEventListener('change', function () {
+                const selectedOption = this.options[this.selectedIndex];
+                if (this.value === '') {
+                    toggleManualFields(true);
+                    manualFirstName.value = '';
+                    manualLastName.value = '';
+                    manualEmail.value = '';
+                } else {
+                    toggleManualFields(false);
+                    manualFirstName.value = selectedOption.dataset.firstName;
+                    manualLastName.value = selectedOption.dataset.lastName;
+                    manualEmail.value = selectedOption.dataset.email;
+                }
+            });
+        }
     });
 </script>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    .timeline {
-        position: relative;
-        padding: 20px 0;
-    }
-
-    .timeline:before {
-        content: '';
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-        background: #e9ecef;
-        left: 20px;
-    }
-
-    .timeline-item {
-        position: relative;
-        margin-bottom: 20px;
-        padding-left: 60px;
-    }
-
-    .timeline-icon {
-        position: absolute;
-        left: 7px;
-        top: 0;
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: white;
-        border: 2px solid #e9ecef;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.2em;
-    }
-
-    .timeline-content {
-        background: #f8f9fa;
-        padding: 15px;
-        border-radius: 0.5rem;
-        border-left: 3px solid #6f42c1;
-    }
-
-    .timeline-content h6 {
-        margin-bottom: 0.5rem;
-        color: #495057;
-    }
-</style>
 {% endblock %}

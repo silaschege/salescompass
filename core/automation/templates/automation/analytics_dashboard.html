@@ -4,354 +4,720 @@
 {% block title %}Workflow Analytics - SalesCompass{% endblock %}
 
 {% block extra_head %}
+<!-- Chart.js and Moment.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+
 <style>
-    .metric-card {
-        background: linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%);
-        color: white;
-        border-radius: 1rem;
-        padding: 1.5rem;
-        text-align: center;
-        box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.7);
+        --glass-border: rgba(255, 255, 255, 0.5);
+        --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --success-custom: #10b981;
+        --warning-custom: #f59e0b;
+        --danger-custom: #ef4444;
     }
 
-    .metric-card.success {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background-color: #f8fafc;
+        background-image:
+            radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.05) 0px, transparent 50%);
     }
 
-    .metric-card.warning {
-        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    /* Glassmorphism Card Style */
+    .glass-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 1.5rem;
+        box-shadow: var(--glass-shadow);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        overflow: hidden;
     }
 
-    .metric-card.danger {
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    .glass-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.12);
     }
 
-    .metric-value {
-        font-size: 2.5rem;
-        font-weight: bold;
+    /* Header Section */
+    .dashboard-header {
+        margin-bottom: 2.5rem;
+        position: relative;
     }
 
-    .metric-label {
-        font-size: 0.9rem;
-        opacity: 0.9;
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: -0.025em;
+        margin-bottom: 0.5rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
 
-    .chart-container {
+    .page-subtitle {
+        color: var(--text-secondary);
+        font-size: 1rem;
+    }
+
+    /* Date Filter Styling */
+    .date-filter-container {
+        background: rgba(255, 255, 255, 0.8);
+        padding: 0.35rem;
+        border-radius: 9999px;
+        display: inline-flex;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .filter-btn {
+        padding: 0.5rem 1.25rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        transition: all 0.2s ease;
+        text-decoration: none;
+        border: none;
+    }
+
+    .filter-btn:hover {
+        color: var(--text-primary);
+        background: rgba(241, 245, 249, 0.8);
+    }
+
+    .filter-btn.active {
         background: white;
-        border-radius: 1rem;
+        color: #6366f1;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    /* KPI Cards */
+    .kpi-card {
         padding: 1.5rem;
-        box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
-    }
-
-    .date-filter {
+        position: relative;
         display: flex;
-        gap: 0.5rem;
-        margin-bottom: 1.5rem;
+        flex-direction: column;
+        justify-content: space-between;
     }
 
-    .date-filter .btn {
-        padding: 0.5rem 1rem;
-        border-radius: 0.5rem;
-    }
-
-    .date-filter .btn.active {
-        background-color: #6f42c1;
-        color: white;
-    }
-    
-    .progress-container {
-        margin-top: 10px;
-    }
-    
-    .performance-metric {
+    .kpi-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
         margin-bottom: 1rem;
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
-    
-    .performance-metric .label {
-        font-weight: bold;
+
+    .kpi-value {
+        font-size: 2.25rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        line-height: 1.2;
         margin-bottom: 0.25rem;
     }
-    
-    .performance-metric .value {
-        font-size: 1.2rem;
-        color: #6f42c1;
+
+    .kpi-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .kpi-trend {
+        font-size: 0.875rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin-top: 0.5rem;
+    }
+
+    .trend-up {
+        color: var(--success-custom);
+    }
+
+    .trend-down {
+        color: var(--danger-custom);
+    }
+
+    /* Chart Containers */
+    .chart-header {
+        padding: 1.5rem 1.5rem 0.5rem;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.4);
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .chart-title {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .chart-body {
+        padding: 0 1.5rem 1.5rem;
+        height: 350px;
+        position: relative;
+    }
+
+    /* Table Styles */
+    .table-container {
+        padding: 0;
+    }
+
+    .custom-table {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .custom-table thead th {
+        background: rgba(248, 250, 252, 0.5);
+        color: var(--text-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        border-top: none;
+    }
+
+    .custom-table tbody td {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+        color: var(--text-primary);
+        vertical-align: middle;
+        font-size: 0.95rem;
+    }
+
+    .custom-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .custom-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    .custom-table tbody tr:hover {
+        background-color: rgba(248, 250, 252, 0.6);
+    }
+
+    /* Badges */
+    .status-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .status-badge.success {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: var(--success-custom);
+    }
+
+    .status-badge.warning {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: var(--warning-custom);
+    }
+
+    .status-badge.danger {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: var(--danger-custom);
+    }
+
+    .status-badge.info {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        border-radius: 1.5rem;
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(99, 102, 241, 0.3);
+        border-radius: 50%;
+        border-top-color: #6366f1;
+        animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Performance Circle */
+    .perf-circle {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 1rem;
+        position: relative;
+    }
+
+    .perf-metric-item {
+        text-align: center;
+        padding: 1.5rem;
+        border-right: 1px solid rgba(226, 232, 240, 0.6);
+    }
+
+    .perf-metric-item:last-child {
+        border-right: none;
+    }
+
+    .perf-value-lg {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .perf-label-sm {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+        .date-filter-container {
+            width: 100%;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .perf-metric-item {
+            border-right: none;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="header-bar">
-    <div class="container">
-        <h1 class="block-title">📊 {{ page_title }}</h1>
-        <p class="text-center text-light opacity-75 mb-0">Monitor workflow performance and execution metrics</p>
-    </div>
-</div>
+<div class="container-fluid py-4 px-4">
+    <!-- Header with Actions -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center dashboard-header">
+        <div>
+            <h1 class="page-title">Workflow Analytics</h1>
+            <p class="page-subtitle">Real-time insights into your automation performance</p>
+        </div>
 
-<!-- Date Range Filter -->
-<div class="date-filter justify-content-center">
-    <a href="?days=7" class="btn btn-light {% if days == 7 %}active{% endif %}">7 Days</a>
-    <a href="?days=30" class="btn btn-light {% if days == 30 %}active{% endif %}">30 Days</a>
-    <a href="?days=90" class="btn btn-light {% if days == 90 %}active{% endif %}">90 Days</a>
-</div>
+        <div class="mt-3 mt-md-0">
+            <div class="date-filter-container">
+                <a href="?days=1" class="filter-btn {% if days == 1 %}active{% endif %}">Today</a>
+                <a href="?days=7" class="filter-btn {% if days == 7 %}active{% endif %}">7 Days</a>
+                <a href="?days=30" class="filter-btn {% if days == 30 %}active{% endif %}">30 Days</a>
+                <a href="?days=90" class="filter-btn {% if days == 90 %}active{% endif %}">Quarter</a>
+                <a href="?days=all" class="filter-btn {% if days == 'all' %}active{% endif %}">All Time</a>
+            </div>
+        </div>
+    </div>
 
-<!-- Metric Cards -->
-<div class="row g-4 mb-4">
-    <div class="col-md-3">
-        <div class="metric-card">
-            <div class="metric-value">{{ tenant_analytics.workflows.total|default:0 }}</div>
-            <div class="metric-label">Total Workflows</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="metric-card success">
-            <div class="metric-value">{{ tenant_analytics.workflows.active|default:0 }}</div>
-            <div class="metric-label">Active Workflows</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="metric-card warning">
-            <div class="metric-value">{{ tenant_analytics.executions.total|default:0 }}</div>
-            <div class="metric-label">Total Executions</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        {% with success_count=tenant_analytics.executions.by_status.completed|default:0 %}
-        {% with total=tenant_analytics.executions.total|default:1 %}
-        <div
-            class="metric-card {% if success_count >= total %}success{% elif success_count > 0 %}warning{% else %}danger{% endif %}">
-            <div class="metric-value">{{ tenant_analytics.executions.by_status.completed|default:0 }}</div>
-            <div class="metric-label">Successful Executions</div>
-        </div>
-        {% endwith %}
-        {% endwith %}
-    </div>
-</div>
-
-<!-- Status Breakdown -->
-<div class="row g-4 mb-4">
-    <div class="col-md-4">
-        <div class="metric-card danger">
-            <div class="metric-value">{{ tenant_analytics.executions.by_status.failed|default:0 }}</div>
-            <div class="metric-label">Failed Executions</div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="metric-card warning">
-            <div class="metric-value">{{ tenant_analytics.executions.by_status.pending|default:0 }}</div>
-            <div class="metric-label">Pending Executions</div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="metric-card">
-            <div class="metric-value">{{ tenant_analytics.executions.by_status.waiting_for_approval|default:0 }}</div>
-            <div class="metric-label">Awaiting Approval</div>
-        </div>
-    </div>
-</div>
-
-<!-- Performance Metrics -->
-<div class="row g-4 mb-4">
-    <div class="col-md-12">
-        <div class="chart-container">
-            <h5 class="mb-3">Performance Metrics</h5>
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="performance-metric text-center">
-                        <div class="label">Avg. Execution Time</div>
-                        <div class="value">{{ tenant_analytics.top_workflows.0.avg_time|floatformat:2|default:"0.00" }} ms</div>
+    <!-- KPI Grid -->
+    <div class="row g-4 mb-4">
+        <!-- Total Executions -->
+        <div class="col-xl-3 col-md-6">
+            <div class="glass-card kpi-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="kpi-label">Total Executions</div>
+                        <div class="kpi-value">{{ tenant_analytics.executions.total|default:0 }}</div>
+                        <div class="kpi-trend text-muted">
+                            <i class="bi bi-clock-history"></i> In selected period
+                        </div>
+                    </div>
+                    <div class="kpi-icon" style="color: #6366f1;">
+                        <i class="bi bi-lightning-charge-fill"></i>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="performance-metric text-center">
-                        <div class="label">Success Rate</div>
-                        {% with total=tenant_analytics.executions.total|default:1 %}
-                        {% with success=tenant_analytics.executions.by_status.completed|default:0 %}
-                        <div class="value">{{ success|div:total|mul:100|floatformat:1 }}%</div>
-                        {% endwith %}
-                        {% endwith %}
+            </div>
+        </div>
+
+        <!-- Success Rate -->
+        <div class="col-xl-3 col-md-6">
+            <div class="glass-card kpi-card">
+                {% with success=tenant_analytics.executions.by_status.completed|default:0 %}
+                {% with total=tenant_analytics.executions.total|default:1 %}
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="kpi-label">Success Rate</div>
+                        <div class="kpi-value text-success">
+                            {% widthratio success total 100 %}%
+                        </div>
+                        <div class="kpi-trend trend-up">
+                            <i class="bi bi-check-circle-fill"></i> {{ success }} successful
+                        </div>
+                    </div>
+                    <div class="kpi-icon" style="color: #10b981;">
+                        <i class="bi bi-graph-up-arrow"></i>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="performance-metric text-center">
-                        <div class="label">Avg. Failed Rate</div>
-                        {% with total=tenant_analytics.executions.total|default:1 %}
-                        {% with failed=tenant_analytics.executions.by_status.failed|default:0 %}
-                        <div class="value">{{ failed|div:total|mul:100|floatformat:1 }}%</div>
-                        {% endwith %}
-                        {% endwith %}
+                {% endwith %}
+                {% endwith %}
+            </div>
+        </div>
+
+        <!-- Active Workflows -->
+        <div class="col-xl-3 col-md-6">
+            <div class="glass-card kpi-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="kpi-label">Active Workflows</div>
+                        <div class="kpi-value">{{ tenant_analytics.workflows.active|default:0 }}</div>
+                        <div class="kpi-trend text-primary">
+                            <i class="bi bi-robot"></i> Out of {{ tenant_analytics.workflows.total|default:0 }} total
+                        </div>
+                    </div>
+                    <div class="kpi-icon" style="color: #3b82f6;">
+                        <i class="bi bi-diagram-3-fill"></i>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="performance-metric text-center">
-                        <div class="label">Active Workflows</div>
-                        <div class="value">{{ tenant_analytics.workflows.active|default:0 }}</div>
+            </div>
+        </div>
+
+        <!-- Avg Execution Time -->
+        <div class="col-xl-3 col-md-6">
+            <div class="glass-card kpi-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="kpi-label">Avg. Duration</div>
+                        <div class="kpi-value">{{ tenant_analytics.top_workflows.0.avg_time|floatformat:0|default:"0" }}
+                            <span style="font-size: 1rem; color: var(--text-secondary);">ms</span></div>
+                        <div class="kpi-trend text-muted">
+                            <i class="bi bi-speedometer2"></i> Processing speed
+                        </div>
                     </div>
+                    <div class="kpi-icon" style="color: #f59e0b;">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Charts Section -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="glass-card h-100">
+                <div class="chart-header">
+                    <h5 class="chart-title">Execution Trends</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-link text-muted" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#">Download CSV</a></li>
+                            <li><a class="dropdown-item" href="#">View Details</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <div id="loading-trends" class="loading-overlay">
+                        <div class="spinner"></div>
+                    </div>
+                    <canvas id="trendsChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="glass-card h-100">
+                <div class="chart-header">
+                    <h5 class="chart-title">Action Distribution</h5>
+                </div>
+                <div class="chart-body d-flex align-items-center justify-content-center">
+                    <div id="loading-action" class="loading-overlay">
+                        <div class="spinner"></div>
+                    </div>
+                    <div style="width: 100%; height: 100%; position: relative;">
+                        <canvas id="actionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Performance and Top Workflows -->
+    <div class="row g-4">
+        <!-- Quick Stats Breakdown -->
+        <div class="col-xl-4">
+            <div class="glass-card">
+                <div class="chart-header">
+                    <h5 class="chart-title">Performance Summary</h5>
+                </div>
+                <div class="p-0">
+                    <div class="perf-metric-item d-flex justify-content-between align-items-center border-bottom">
+                        <div class="text-start">
+                            <div class="perf-label-sm">Total Failed</div>
+                            <div class="perf-value-lg text-danger">{{tenant_analytics.executions.by_status.failed|default:0 }}</div>
+                        </div>
+                        <div class="icon-circle bg-danger-subtle text-danger p-3 rounded-circle">
+                            <i class="bi bi-x-octagon fs-4"></i>
+                        </div>
+                    </div>
+                    <div class="perf-metric-item d-flex justify-content-between align-items-center border-bottom">
+                        <div class="text-start">
+                            <div class="perf-label-sm">Pending / Waiting</div>
+                            <div class="perf-value-lg text-warning">{{tenant_analytics.executions.by_status.pending|default:0 }}</div>
+                        </div>
+                        <div class="icon-circle bg-warning-subtle text-warning p-3 rounded-circle">
+                            <i class="bi bi-pause-circle fs-4"></i>
+                        </div>
+                    </div>
+                    <div class="perf-metric-item d-flex justify-content-between align-items-center">
+                        <div class="text-start">
+                            <div class="perf-label-sm">Approvals Needed</div>
+                            <div class="perf-value-lg text-info">{{tenant_analytics.executions.by_status.waiting_for_approval|default:0 }}</div>
+                        </div>
+                        <div class="icon-circle bg-info-subtle text-info p-3 rounded-circle">
+                            <i class="bi bi-person-check fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Workflows Table -->
+        <div class="col-xl-8">
+            <div class="glass-card">
+                <div class="chart-header">
+                    <h5 class="chart-title">🏆 Top Performing Workflows</h5>
+                </div>
+                <div class="table-container table-responsive">
+                    <table class="table custom-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Workflow Name</th>
+                                <th>Status</th>
+                                <th class="text-center">Executions</th>
+                                <th class="text-center">Avg Time</th>
+                                <th class="text-end">Success Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for wf in tenant_analytics.top_workflows %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-primary-subtle text-primary p-2 me-3"
+                                            style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="bi bi-diagram-2-fill"></i>
+                                        </div>
+                                        <div>
+                                            <a href="{% url 'automation:workflow_detail' pk=wf.workflow_id %}"
+                                                class="fw-bold text-dark text-decoration-none hover-primary">
+                                                {{ wf.workflow__workflow_name }}
+                                            </a>
+                                            <div class="small text-muted">ID: #{{ wf.workflow_id }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-badge success">
+                                        <i class="bi bi-check-circle-fill" style="font-size: 0.6rem;"></i> Active
+                                    </span>
+                                </td>
+                                <td class="text-center fw-semibold">{{ wf.execution_count }}</td>
+                                <td class="text-center">{{ wf.avg_time|floatformat:0|default:"-" }} ms</td>
+                                <td class="text-end">
+                                    {% with total=wf.execution_count|default:1 %}
+                                    {% with success=wf.execution_count|default:0 %}
+                                    <!-- Assuming all in top list are successful/completed for now or adjust based on real data -->
+                                    <div class="d-flex align-items-center justify-content-end gap-2">
+                                        <span class="fw-bold text-success">{% widthratio success total 100 %}%</span>
+                                        <div class="progress" style="width: 60px; height: 4px;">
+                                            <div class="progress-bar bg-success" role="progressbar"
+                                                style="width: {% widthratio success total 100 %}%"></div>
+                                        </div>
+                                    </div>
+                                    {% endwith %}
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-3 opacity-25"></i>
+                                    No workflow data available for this period.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Charts Row -->
-<div class="row g-4 mb-4">
-    <div class="col-md-8">
-        <div class="chart-container">
-            <h5 class="mb-3">Execution Trends</h5>
-            <canvas id="trendsChart"></canvas>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="chart-container">
-            <h5 class="mb-3">Action Types</h5>
-            <canvas id="actionChart"></canvas>
-        </div>
-    </div>
-</div>
-
-<!-- Top Workflows -->
-{% if tenant_analytics.top_workflows %}
-<div class="card">
-    <div class="card-header bg-white">
-        <h5 class="mb-0">🏆 Top Performing Workflows</h5>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Workflow</th>
-                        <th>Executions</th>
-                        <th>Avg. Time (ms)</th>
-                        <th>Success Rate</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for wf in tenant_analytics.top_workflows %}
-                    <tr>
-                        <td>
-                            <a href="{% url 'automation:workflow_detail' pk=wf.workflow_id %}">
-                                {{ wf.workflow__workflow_name }}
-                            </a>
-                        </td>
-                        <td><span class="badge bg-primary">{{ wf.execution_count }}</span></td>
-                        <td>{{ wf.avg_time|floatformat:0|default:"-" }}</td>
-                        <td>
-                            {% with total=wf.execution_count|default:1 %}
-                            {% with success=wf.execution_count|default:0 %}
-                            {{ success|div:total|mul:100|floatformat:1 }}%
-                            {% endwith %}
-                            {% endwith %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="text-muted text-center">No workflow executions in this period</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-{% endif %}
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Execution Trends Chart
-        const trendsData = {{ execution_trends|safe}};
+        // Shared Chart Configuration
+        Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+        Chart.defaults.color = '#64748b';
+        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.9)';
+        Chart.defaults.plugins.tooltip.padding = 12;
+        Chart.defaults.plugins.tooltip.cornerRadius = 8;
+        Chart.defaults.scale.grid.color = 'rgba(226, 232, 240, 0.6)';
+
+        // --- Execution Trends Chart ---
+        const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+        const trendsData = {{ execution_trends| safe
+    }};
+
+    // Hide loader
+    document.getElementById('loading-trends').style.display = 'none';
+
+    if (trendsData && trendsData.length > 0) {
         const labels = trendsData.map(d => d.date);
         const totals = trendsData.map(d => d.total);
         const completed = trendsData.map(d => d.completed);
         const failed = trendsData.map(d => d.failed);
 
-        new Chart(document.getElementById('trendsChart'), {
+        // Gradients
+        const purpleGradient = trendsCtx.createLinearGradient(0, 0, 0, 400);
+        purpleGradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
+        purpleGradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
+
+        new Chart(trendsCtx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Total',
+                        label: 'Total Executions',
                         data: totals,
-                        borderColor: '#6f42c1',
-                        backgroundColor: 'rgba(111, 66, 193, 0.1)',
+                        borderColor: '#6366f1',
+                        backgroundColor: purpleGradient,
+                        borderWidth: 2,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#6366f1',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
                         fill: true,
-                        tension: 0.3
-                    },
-                    {
-                        label: 'Completed',
-                        data: completed,
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        fill: false,
-                        tension: 0.3
+                        tension: 0.4
                     },
                     {
                         label: 'Failed',
                         data: failed,
                         borderColor: '#ef4444',
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
                         fill: false,
-                        tension: 0.3
+                        tension: 0.4
                     }
                 ]
             },
             options: {
                 responsive: true,
-                plugins: { 
-                    legend: { position: 'top' },
-                    title: {
-                        display: true,
-                        text: 'Execution Trends Over Time'
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        align: 'end',
+                        labels: { usePointStyle: true, boxWidth: 8 }
                     }
                 },
-                scales: { 
-                    y: { 
+                scales: {
+                    y: {
                         beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Number of Executions'
-                        }
+                        grid: { borderDash: [2, 4] }
                     },
                     x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        }
+                        grid: { display: false }
                     }
-                }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
             }
         });
+    } else {
+        // Empty state for chart
+        // (Optional: Render "No Data" message on canvas)
+    }
 
-        // Action Types Chart
-        const actionData = {{ action_stats|safe}};
+    // --- Action Types Chart ---
+    const actionCtx = document.getElementById('actionChart').getContext('2d');
+    const actionData = {{ action_stats| safe }}; // e.g. {"Email": 10, "Webhook": 5}
+
+    // Hide loader
+    document.getElementById('loading-action').style.display = 'none';
+
+    if (Object.keys(actionData).length > 0) {
         const actionLabels = Object.keys(actionData);
         const actionValues = Object.values(actionData);
 
-        new Chart(document.getElementById('actionChart'), {
+        new Chart(actionCtx, {
             type: 'doughnut',
             data: {
                 labels: actionLabels,
                 datasets: [{
                     data: actionValues,
                     backgroundColor: [
-                        '#6f42c1', '#10b981', '#f59e0b', '#ef4444',
-                        '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4',
-                        '#84cc16', '#f97316', '#0ea5e9', '#8b5cf6'
-                    ]
+                        '#6366f1', '#a855f7', '#ec4899', '#f43f5e',
+                        '#f59e0b', '#10b981', '#3b82f6', '#06b6d4'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 4
                 }]
             },
             options: {
                 responsive: true,
-                plugins: { 
-                    legend: { position: 'bottom' },
-                    title: {
-                        display: true,
-                        text: 'Action Type Distribution'
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { usePointStyle: true, boxWidth: 8, padding: 20 }
                     }
                 }
             }
         });
+    }
     });
 </script>
 {% endblock %}

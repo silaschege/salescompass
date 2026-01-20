@@ -13,7 +13,8 @@
             margin: 0;
             padding: 0;
             min-height: 100vh;
-            overflow-x: hidden; /* Prevents horizontal scroll caused by animations */
+            overflow-x: hidden;
+            /* Prevents horizontal scroll caused by animations */
         }
 
         /* Sidebar */
@@ -143,9 +144,9 @@
             .main-content {
                 margin-left: 0;
             }
-            
+
             /* Add padding back on mobile since container-fluid behaves differently */
-            .main-content > .container-fluid {
+            .main-content>.container-fluid {
                 padding-left: 1rem;
                 padding-right: 1rem;
             }
@@ -169,8 +170,8 @@
 
         <nav class="nav flex-column">
             <!-- Billing Portal -->
-            <a class="nav-link {% if request.resolver_match.url_name == 'portal' %}active{% endif %}" 
-               href="{% url 'billing:portal' %}">
+            <a class="nav-link {% if request.resolver_match.url_name == 'portal' %}active{% endif %}"
+                href="{% url 'billing:portal' %}">
                 <i class="bi bi-wallet2"></i> Billing Portal
             </a>
 
@@ -260,7 +261,8 @@
             </div>
 
             <!-- Payment Management -->
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#paymentManagementMenu">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse"
+                data-bs-target="#paymentManagementMenu">
                 <i class="bi bi-currency-dollar"></i> Payment Management
             </a>
             <div class="collapse" id="paymentManagementMenu">
@@ -376,4 +378,5 @@
     </script>
     {% block extra_scripts %}{% endblock %}
 </body>
+
 </html>

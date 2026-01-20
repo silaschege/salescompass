@@ -4,6 +4,7 @@ from io import StringIO
 from typing import List, Dict, Tuple
 from django.core.exceptions import ValidationError
 from django.db.models import Count, Q, Sum
+from django.db import models
 from django.utils import timezone
 import json
 from datetime import datetime
@@ -15,6 +16,7 @@ from opportunities.models import Opportunity, OpportunityStage
 from cases.models import Case
 from communication.models import Email, CallLog, Meeting
 from engagement.models import EngagementEvent
+from billing.models import Subscription, Invoice
 
  
 INDUSTRY_CHOICES = {choice[0] for choice in [
@@ -175,6 +177,13 @@ def calculate_account_health(account, detailed=False):
             
     score -= renewal_penalty
     
+    # Financial Risk (Overdue Invoices)
+    financial_penalty = 0
+    overdue_invoices = Invoice.objects.filter(account=account, status='overdue').exists()
+    if overdue_invoices:
+        financial_penalty = 30 # Severe penalty for non-payment
+    score -= financial_penalty
+    
     # Account completeness
     completeness_score = 0
     if account.website:
@@ -220,6 +229,7 @@ def calculate_account_health(account, detailed=False):
     return score
 
 
+
 def get_accounts_summary(tenant_id=None):
     """Get summary statistics for all accounts"""
     accounts = Account.objects.all()
@@ -249,6 +259,26 @@ def get_accounts_summary(tenant_id=None):
         status__in=['new', 'open', 'escalated']
     ).count()
     
+    # ESG metrics
+    esg_certified = accounts.filter(esg_certified=True).count()
+    avg_esg_score = accounts.aggregate(avg_score=models.Avg('overall_esg_score'))['avg_score'] or 0
+    high_esg_risk = accounts.filter(esg_engagement='high').count()
+    total_co2_saved = accounts.aggregate(total=models.Sum('tco2e_saved'))['total'] or 0
+    
+    # Industry distribution
+    industry_distribution = accounts.values('industry').annotate(
+        count=models.Count('id')
+    ).order_by('-count')[:5]
+    
+    top_industries = [item['industry'].title() for item in industry_distribution if item['industry']]
+    top_industries_counts = [item['count'] for item in industry_distribution if item['industry']]
+    
+    # Average health score
+    avg_health_score = accounts.aggregate(avg_health=models.Avg('health_score'))['avg_health'] or 0
+    
+    # Total revenue
+    total_revenue = accounts.aggregate(total_rev=models.Sum('annual_revenue'))['total_rev'] or 0
+    
     return {
         'total_accounts': total_accounts,
         'active_accounts': active_accounts,
@@ -256,8 +286,17 @@ def get_accounts_summary(tenant_id=None):
         'churned_accounts': churned_accounts,
         'recent_engagement': recent_engagement,
         'open_leads': open_leads,
-        'open_cases': open_cases
+        'open_cases': open_cases,
+        'esg_certified': esg_certified,
+        'avg_esg_score': avg_esg_score,
+        'high_esg_risk': high_esg_risk,
+        'total_co2_saved': total_co2_saved,
+        'top_industries': top_industries,
+        'top_industries_counts': top_industries_counts,
+        'avg_health_score': avg_health_score,
+        'total_revenue': total_revenue
     }
+
 
 
 def get_last_engagement_date(account):
@@ -342,8 +381,59 @@ def get_account_kpi_data(account):
         'high_value_opportunities': high_value_opportunities,
         'open_cases': open_cases,
         'health_score': calculate_account_health(account),
-        'last_engagement': get_last_engagement_date(account)
+        'last_engagement': get_last_engagement_date(account),
+        'billing': get_account_billing_summary(account)
     }
+
+
+def get_account_billing_summary(account):
+    """Get billing metrics for account"""
+    # MRR
+    active_subs = Subscription.objects.filter(account=account, subscription_is_active=True)
+    mrr = sum(sub.price_monthly for sub in active_subs if sub.plan)
+    
+    # LTV
+    paid_invoices = Invoice.objects.filter(account=account, status='paid')
+    ltv = sum(inv.amount for inv in paid_invoices)
+    
+    # Outstanding
+    outstanding = Invoice.objects.filter(account=account, status__in=['open', 'overdue'])
+    outstanding_amount = sum(inv.amount for inv in outstanding)
+    
+    return {
+        'mrr': float(mrr),
+        'ltv': float(ltv),
+        'outstanding_amount': float(outstanding_amount),
+        'has_overdue': outstanding.filter(status='overdue').exists()
+    }
+
+
+def update_account_risk_status(account):
+    """
+    Automate status update based on health and financial risk.
+    """
+    health_score = calculate_account_health(account)
+    billing_summary = get_account_billing_summary(account)
+    
+    old_status = account.status
+    new_status = old_status
+    
+    if account.status == 'churned':
+        return # Don't auto-revive churned without manual intervention?
+        
+    if billing_summary['has_overdue']:
+        new_status = 'at_risk'
+    elif health_score < 30:
+        new_status = 'at_risk'
+    elif health_score > 70 and not billing_summary['has_overdue']:
+        if account.status == 'at_risk':
+            new_status = 'active'
+            
+    if new_status != old_status:
+        account.status = new_status
+        account.save(update_fields=['status'])
+        return True
+    return False
 
 
 def get_account_health_history(account, days=90):
@@ -557,21 +647,39 @@ def get_account_analytics_data(account):
     }
 
 
+
 def get_top_performing_accounts(limit=5):
     """Get top performing accounts based on revenue and health"""
     # Filter for accounts with closed_won opportunities
     top_accounts_qs = Account.objects.annotate(
         revenue=Sum('opportunities__amount', filter=Q(opportunities__stage__opportunity_stage_name='Closed Won'))
-    ).order_by('-revenue')[:limit]
+    ).order_by('-revenue')[:limit*2]  # Get more accounts to have fallback options
     
     results = []
     for account in top_accounts_qs:
-        if account.revenue:
+        results.append({
+            'account': account,
+            'revenue': account.revenue or 0,
+            'engagement_score': calculate_account_engagement_score(account),
+            'health_score': getattr(account, 'health_score', 0)
+        })
+    
+    # If we don't have enough accounts with revenue, add others based on health score and engagement
+    if len(results) < limit:
+        additional_accounts = Account.objects.exclude(
+            id__in=[r['account'].id for r in results]
+        ).annotate(
+            revenue=Sum('opportunities__amount', filter=Q(opportunities__stage__opportunity_stage_name='Closed Won'))
+        )[:limit-len(results)]
+        
+        for account in additional_accounts:
             results.append({
                 'account': account,
-                'revenue': account.revenue,
+                'revenue': account.revenue or 0,
                 'engagement_score': calculate_account_engagement_score(account),
                 'health_score': getattr(account, 'health_score', 0)
             })
     
-    return results
+    # Sort by revenue first, then by health score, then by engagement
+    results.sort(key=lambda x: (x['revenue'], x['health_score'], x['engagement_score']), reverse=True)
+    return results[:limit]

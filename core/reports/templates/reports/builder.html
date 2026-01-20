@@ -2,264 +2,511 @@
 
 {% block title %}Report Builder - SalesCompass{% endblock %}
 
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --glass-bg: rgba(255, 255, 255, 0.9);
+        --glass-border: white;
+        --shadow-soft: 0 8px 32px rgba(31, 38, 135, 0.15);
+        --shadow-hover: 0 12px 40px rgba(31, 38, 135, 0.25);
+    }
+
+    body {
+        background: white;
+    }
+
+    .builder-wrapper {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: calc(100vh - 60px);
+        padding-bottom: 2rem;
+    }
+
+    .header-bar {
+        background: var(--primary-gradient);
+        padding: 3rem 0;
+        margin-bottom: -3rem;
+        color: white;
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .glass-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        box-shadow: var(--shadow-soft);
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .glass-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .glass-header {
+        background: rgba(255, 255, 255, 0.99);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 1.25rem 1.5rem;
+        border-radius: 16px 16px 0 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .glass-title {
+        font-weight: 700;
+        margin: 0;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: 0.5px;
+    }
+
+    .glass-body {
+        padding: 1.5rem;
+    }
+
+    /* Form Controls */
+    .form-label {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #555;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 10px;
+        border: 1px solid #e0e0e0;
+        padding: 0.6rem 1rem;
+        transition: all 0.2s;
+        background: rgba(255, 255, 255, 0.8);
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #764ba2;
+        box-shadow: 0 0 0 4px rgba(118, 75, 162, 0.1);
+        background: white;
+    }
+
+    /* Buttons */
+    .btn-primary {
+        background: var(--primary-gradient);
+        border: none;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    /* Presets */
+    .preset-btn {
+        border: none;
+        background: white;
+        color: #555;
+        padding: 1rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 600;
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .preset-btn i {
+        font-size: 1.5rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .preset-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        color: #764ba2;
+    }
+
+    /* Drag & Drop Areas */
+    .field-container {
+        border: 2px dashed #e0e0e0;
+        border-radius: 12px;
+        background: white;
+        min-height: 200px;
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 1rem;
+        transition: all 0.2s;
+    }
+
+    .field-container:hover {
+        border-color: #b8c2cc;
+        background: rgba(255, 255, 255, 0.8);
+    }
+
+    .field-item {
+        background: white;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        cursor: grab;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .field-item:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        border-color: #d0d0d0;
+    }
+
+    .field-item::before {
+        content: '\f4ce';
+        /* drag handle icon from bootstrap icons or fontawesome */
+        font-family: bootstrap-icons;
+        margin-right: 0.75rem;
+        color: #bbb;
+    }
+
+    /* Action Rows (Filters, Formulas) */
+    .action-row {
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 10px;
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+        border: 1px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .action-row:hover {
+        border-color: #eee;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+
+    .btn-icon-danger {
+        color: #dc3545;
+        border: 1px solid transparent;
+        background: rgba(220, 53, 69, 0.1);
+        border-radius: 8px;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .btn-icon-danger:hover {
+        background: #dc3545;
+        color: white;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="header-bar mb-4">
-    <div class="container">
-        <h1 class="block-title">Custom Report Builder</h1>
-        <p class="text-white text-center lead">Create powerful reports with drag-and-drop fields</p>
-    </div>
-</div>
-
-<div class="container">
-    <form method="post" id="report-builder-form">
-        {% csrf_token %}
-
-        <!-- Hidden Query Config Field -->
-        <div class="d-none">
-            {{ form.query_config }}
+<div class="builder-wrapper">
+    <div class="header-bar">
+        <div class="container">
+            <h1 class="display-5 fw-bold mb-2">Reports Builder</h1>
+            <p class="lead opacity-75 mb-0">Design powerful custom reports with our drag-and-drop interface.</p>
         </div>
+    </div>
 
-        <div class="row">
-            <!-- Left Sidebar: Configuration -->
-            <div class="col-md-4">
-                <div class="card mb-4">
-                    <div class="card-header bg-light">
-                        <h5 class="card-title mb-0">Report Details</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label for="id_report_name" class="form-label">Report Name</label>
-                            {{ form.report_name }}
-                        </div>
-                        <div class="mb-3">
-                            <label for="id_report_description" class="form-label">Description</label>
-                            {{ form.report_description }}
-                        </div>
-                        <div class="mb-3">
-                            <label for="id_report_type_ref" class="form-label">Report Type</label>
-                            {{ form.report_type_ref }}
-                        </div>
-                        <div class="mb-3">
-                            <div class="form-check">
-                                {{ form.report_is_active }}
-                                <label class="form-check-label" for="id_report_is_active">Active</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <div class="container" style="margin-top: 1rem;">
+        <form method="post" id="report-builder-form">
+            {% csrf_token %}
+
+            <!-- Hidden Query Config Field -->
+            <div class="d-none">
+                {{ form.query_config }}
             </div>
 
-            <!-- Main Area: Filters & Settings -->
-            <div class="col-md-9">
-                <!-- Preset Reports -->
-                <div class="card mb-4">
-                    <div class="card-header bg-light">
-                        <h5 class="card-title mb-0">Quick Start: Preset Reports</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-flex gap-2 flex-wrap">
-                            <button type="button" class="btn btn-outline-primary preset-btn" data-entity="opportunity"
-                                data-group="stage" data-chart="bar">
-                                <i class="bi bi-bar-chart"></i> Pipeline by Stage
-                            </button>
-                            <button type="button" class="btn btn-outline-success preset-btn" data-entity="opportunity"
-                                data-group="close_date__month" data-chart="line">
-                                <i class="bi bi-graph-up"></i> Revenue Trend
-                            </button>
-                            <button type="button" class="btn btn-outline-info preset-btn" data-entity="task"
-                                data-group="assigned_to" data-chart="bar">
-                                <i class="bi bi-check-square"></i> Tasks by Rep
-                            </button>
-                            <button type="button" class="btn btn-outline-warning preset-btn" data-entity="lead"
-                                data-group="source_ref" data-chart="conversion">
-                                <i class="bi bi-funnel"></i> Conversion by Source
-                            </button>
+            <div class="row g-4">
+                <!-- Left Sidebar: Configuration -->
+                <div class="col-lg-4">
+                    <div class="glass-card">
+                        <div class="glass-header">
+                            <i class="bi bi-file-earmark-text me-2 fs-5 text-primary"></i>
+                            <h5 class="glass-title">Report Details</h5>
                         </div>
-                    </div>
-                </div>
-
-                <div class="card mb-4">
-                    <div class="card-header bg-light">
-                        <h5 class="card-title mb-0">Report Configuration</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label for="entity-select" class="form-label">Primary Entity</label>
-                            <select class="form-select" id="entity-select">
-                                <option value="">Select Entity...</option>
-                                {% for entity in entity_options %}
-                                <option value="{{ entity.value }}" data-fields="{{ entity.fields }}">
-                                    {{ entity.label }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div id="field-selection-area" class="d-none">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Available Fields</label>
-                                    <div id="available-fields" class="border rounded p-3 bg-light"
-                                        style="max-height: 300px; overflow-y: auto;">
-                                        <!-- Fields populated via JS -->
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Selected Fields (Drag to reorder)</label>
-                                    <div id="selected-fields" class="border rounded p-3 bg-white"
-                                        style="max-height: 300px; min-height: 100px; overflow-y: auto;">
-                                        <!-- Fields dropped here -->
-                                    </div>
-                                </div>
+                        <div class="glass-body">
+                            <div class="mb-4">
+                                <label for="id_report_name" class="form-label">Report Name</label>
+                                {{ form.report_name }}
                             </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Custom Formulas</label>
-                                <div id="formulas-container">
-                                    <p class="text-muted small">Add calculated fields (e.g., amount * 1.1)</p>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-outline-success mt-1" id="add-formula-btn">
-                                    <i class="bi bi-plus-circle"></i> Add Formula
-                                </button>
+                            <div class="mb-4">
+                                <label for="id_report_description" class="form-label">Description</label>
+                                {{ form.report_description }}
                             </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Conditional Formatting</label>
-                                <div id="formatting-container">
-                                    <p class="text-muted small">Highlight data based on rules (e.g., amount > 5000: Red)
-                                    </p>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-outline-warning mt-1" id="add-format-btn">
-                                    <i class="bi bi-palette"></i> Add Rule
-                                </button>
+                            <div class="mb-4">
+                                <label for="id_report_type_ref" class="form-label">Report Type</label>
+                                {{ form.report_type_ref }}
                             </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Filters</label>
-                                <div id="filters-container">
-                                    <p class="text-muted" id="no-filters-msg">No filters added.</p>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="add-filter-btn"
-                                    disabled>
-                                    <i class="bi bi-plus"></i> Add Filter
-                                </button>
+                            <div class="form-check form-switch">
+                                {{ form.report_is_active }}
+                                <label class="form-check-label ms-2" for="id_report_is_active">Active Status</label>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="card mb-4">
-                    <div class="card-header bg-light">
-                        <h5 class="card-title mb-0">Visualization Settings</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Group By</label>
-                                <select class="form-select" id="group-by-select" disabled>
-                                    <option value="">None</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
+                    <div class="glass-card">
+                        <div class="glass-header">
+                            <i class="bi bi-graph-up me-2 fs-5 text-primary"></i>
+                            <h5 class="glass-title">Visualization</h5>
+                        </div>
+                        <div class="glass-body">
+                            <div class="mb-4">
                                 <label class="form-label">Chart Type</label>
                                 <select class="form-select" id="chart-type-select">
-                                    <option value="table">Table</option>
+                                    <option value="table">Table View</option>
                                     <option value="bar">Bar Chart</option>
                                     <option value="line">Line Chart</option>
                                     <option value="pie">Pie Chart</option>
                                     <option value="doughnut">Doughnut Chart</option>
                                     <option value="radar">Radar Chart</option>
-                                    <option value="polarArea">Polar Area Chart</option>
+                                    <option value="polarArea">Polar Area</option>
                                     <option value="scatter">Scatter Plot</option>
                                     <option value="conversion">Conversion Funnel</option>
                                     <option value="pivot">Pivot Table</option>
                                 </select>
                             </div>
-                        </div>
 
-                        <!-- Pivot Table Configuration (Hidden by default) -->
-                        <div id="pivot-config-area" class="d-none">
-                            <hr>
-                            <h6>Pivot Table Configuration</h6>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Pivot Rows (Y-Axis)</label>
-                                    <select class="form-select" id="pivot-rows-select">
+                            <div class="mb-4">
+                                <label class="form-label">Group By (X-Axis)</label>
+                                <select class="form-select" id="group-by-select" disabled>
+                                    <option value="">None</option>
+                                </select>
+                            </div>
+
+                            <!-- Pivot Config -->
+                            <div id="pivot-config-area" class="d-none bg-light rounded p-3 mb-3 border">
+                                <h6 class="fw-bold mb-3 small text-uppercase text-muted">Pivot Settings</h6>
+                                <div class="mb-3">
+                                    <label class="form-label small">Rows (Y-Axis)</label>
+                                    <select class="form-select w-100" id="pivot-rows-select">
                                         <option value="">Select Field...</option>
                                     </select>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Pivot Columns (X-Axis)</label>
-                                    <select class="form-select" id="pivot-cols-select">
+                                <div class="mb-3">
+                                    <label class="form-label small">Columns (X-Axis)</label>
+                                    <select class="form-select w-100" id="pivot-cols-select">
                                         <option value="">Select Field...</option>
                                     </select>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Drill-down Configuration -->
-                        <div class="mb-3">
-                            <hr>
-                            <h6>Drill-down Settings</h6>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Drill-down Type</label>
-                                    <select class="form-select" id="drilldown-type-select">
-                                        <option value="none">None</option>
-                                        <option value="report">Target Report</option>
-                                        <option value="record">Single Record</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6 mb-3 d-none" id="drilldown-target-area">
-                                    <label class="form-label">Target ID (Report or Field)</label>
-                                    <input type="text" class="form-control" id="drilldown-target-input"
-                                        placeholder="e.g. 123 or field_name">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="mb-0">
                                 <label class="form-label">Date Range Field</label>
                                 <select class="form-select" id="date-field-select" disabled>
                                     <option value="">None</option>
                                 </select>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Preview Area -->
-                        <div class="mt-3">
-                            <button type="button" class="btn btn-outline-secondary w-100" id="preview-btn">
-                                <i class="bi bi-eye"></i> Preview Report
-                            </button>
-                            <div id="preview-container" class="mt-3 border rounded p-3 bg-white"
-                                style="min-height: 300px; overflow-x: auto;">
-                                <canvas id="preview-chart"></canvas>
-                                <div id="preview-table-container" class="d-none"></div>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-dark btn-lg" id="preview-btn">
+                            <i class="bi bi-eye me-2"></i> Preview Report
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-save me-2"></i> Save Report
+                        </button>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'reports:report_list' %}" class="text-muted text-decoration-none small">Cancel &
+                            Return to List</a>
+                    </div>
+                </div>
+
+                <!-- Main Area: Filters & Settings -->
+                <div class="col-lg-8">
+                    <!-- Quick Start Presets -->
+                    <div class="glass-card">
+                        <div class="glass-header">
+                            <i class="bi bi-lightning-charge me-2 fs-5 text-warning"></i>
+                            <h5 class="glass-title">Quick Start Templates</h5>
+                        </div>
+                        <div class="glass-body">
+                            <div class="d-flex gap-3 flex-wrap">
+                                <button type="button" class="preset-btn" data-entity="opportunity" data-group="stage"
+                                    data-chart="bar">
+                                    <i class="bi bi-bar-chart"></i> Pipeline by Stage
+                                </button>
+                                <button type="button" class="preset-btn" data-entity="opportunity"
+                                    data-group="close_date__month" data-chart="line">
+                                    <i class="bi bi-graph-up-arrow"></i> Revenue Trend
+                                </button>
+                                <button type="button" class="preset-btn" data-entity="task" data-group="assigned_to"
+                                    data-chart="bar">
+                                    <i class="bi bi-check2-square"></i> Tasks by Rep
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configuration Area -->
+                    <div class="glass-card">
+                        <div class="glass-header d-flex justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-sliders me-2 fs-5 text-primary"></i>
+                                <h5 class="glass-title">Data Configuration</h5>
+                            </div>
+                            <div class="w-50">
+                                <select class="form-select form-select-sm" id="entity-select">
+                                    <option value="">Select Primary Entity...</option>
+                                    {% for entity in entity_options %}
+                                    <option value="{{ entity.value }}" data-fields="{{ entity.fields }}">
+                                        {{ entity.label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="glass-body">
+                            <div id="field-selection-area" class="d-none">
+                                <div class="row g-4 mb-5">
+                                    <div class="col-md-6">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <label class="form-label mb-0">Available Fields</label>
+                                            <span class="badge bg-light text-dark">Drag items</span>
+                                        </div>
+                                        <div id="available-fields" class="field-container">
+                                            <!-- Fields populated via JS -->
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <label class="form-label mb-0">Selected Fields</label>
+                                            <span class="badge bg-primary-subtle text-primary">Drop here</span>
+                                        </div>
+                                        <div id="selected-fields"
+                                            class="field-container bg-white border-primary border-opacity-25">
+                                            <!-- Fields dropped here -->
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-4">
+                                    <div class="col-lg-6">
+                                        <div class="card border-0 bg-light h-100">
+                                            <div
+                                                class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                                                <span class="fw-bold small text-uppercase">Filters</span>
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                                    id="add-filter-btn" disabled>
+                                                    <i class="bi bi-plus"></i> Add
+                                                </button>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="filters-container">
+                                                    <p class="text-muted small text-center py-3" id="no-filters-msg">No
+                                                        filters applied.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="card border-0 bg-light h-100 mb-3">
+                                            <div
+                                                class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                                                <span class="fw-bold small text-uppercase">Calculated Fields</span>
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-success rounded-pill px-3"
+                                                    id="add-formula-btn">
+                                                    <i class="bi bi-plus"></i> Add
+                                                </button>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="formulas-container">
+                                                    <p class="text-muted small text-center py-3">No custom formulas.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="card border-0 bg-light">
+                                            <div
+                                                class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                                                <span class="fw-bold small text-uppercase">Conditional Formatting</span>
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-warning rounded-pill px-3"
+                                                    id="add-format-btn">
+                                                    <i class="bi bi-plus"></i> Add Rule
+                                                </button>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="formatting-container">
+                                                    <p class="text-muted small text-center py-3">No formatting rules.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Placeholder when no entity selected -->
+                            <div id="entity-placeholder" class="text-center py-5">
+                                <i class="bi bi-arrow-up-circle display-4 text-muted opacity-25"></i>
+                                <p class="text-muted mt-3">Select a primary entity above to start building.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Preview -->
+                    <div class="glass-card">
+                        <div class="glass-header">
+                            <i class="bi bi-display me-2 fs-5 text-primary"></i>
+                            <h5 class="glass-title">Report Preview</h5>
+                        </div>
+                        <div class="glass-body">
+                            <div id="preview-container" class="border rounded-3 p-4 bg-white"
+                                style="min-height: 400px; position: relative;">
+                                <div class="text-center text-muted py-5" id="preview-placeholder">
+                                    <i class="bi bi-bar-chart-line display-1 opacity-25"></i>
+                                    <p class="mt-3">Click "Preview Report" to generate visualization</p>
+                                </div>
+                                <canvas id="preview-chart" class="d-none"></canvas>
+                                <div id="preview-table-container" class="d-none table-responsive"></div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <div class="d-flex justify-content-end gap-2">
-                    <a href="{% url 'reports:list' %}" class="btn btn-secondary">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Save Report</button>
-                </div>
             </div>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
 
 <!-- Template for Filter Row -->
 <template id="filter-row-template">
-    <div class="row g-2 mb-2 align-items-center filter-row">
-        <div class="col-md-4">
-            <select class="form-select filter-field">
+    <div class="row g-2 mb-2 align-items-center action-row mx-0">
+        <div class="col-4">
+            <select
+                class="form-select form-select-sm filter-field border-0 bg-transparent shadow-none ps-0 fw-bold text-dark">
                 <!-- Options populated via JS -->
             </select>
         </div>
-        <div class="col-md-3">
-            <select class="form-select filter-operator">
+        <div class="col-3">
+            <select class="form-select form-select-sm filter-operator border-0 bg-transparent shadow-none text-muted">
                 <option value="exact">Equals</option>
                 <option value="icontains">Contains</option>
                 <option value="gt">Greater Than</option>
@@ -268,11 +515,11 @@
                 <option value="lte">Less or Equal</option>
             </select>
         </div>
-        <div class="col-md-4">
-            <input type="text" class="form-control filter-value" placeholder="Value">
+        <div class="col-4">
+            <input type="text" class="form-control form-control-sm filter-value bg-white" placeholder="Value...">
         </div>
-        <div class="col-md-1">
-            <button type="button" class="btn btn-outline-danger btn-sm remove-filter">
+        <div class="col-1 text-end">
+            <button type="button" class="btn-icon-danger remove-filter ms-auto">
                 <i class="bi bi-trash"></i>
             </button>
         </div>
@@ -281,15 +528,18 @@
 
 <!-- Template for Formula Row -->
 <template id="formula-row-template">
-    <div class="row g-2 mb-2 align-items-center formula-row">
-        <div class="col-md-4">
-            <input type="text" class="form-control formula-name" placeholder="Field Name (e.g. Total + Tax)">
+    <div class="row g-2 mb-2 align-items-center action-row mx-0">
+        <div class="col-4">
+            <input type="text"
+                class="form-control form-control-sm formula-name border-0 bg-transparent shadow-none ps-0 fw-bold"
+                placeholder="Field Name">
         </div>
-        <div class="col-md-7">
-            <input type="text" class="form-control formula-expression" placeholder="Expression (e.g. amount * 1.1)">
+        <div class="col-7">
+            <input type="text" class="form-control form-control-sm formula-expression bg-white"
+                placeholder="e.g. amount * 1.1">
         </div>
-        <div class="col-md-1">
-            <button type="button" class="btn btn-outline-danger btn-sm remove-formula">
+        <div class="col-1 text-end">
+            <button type="button" class="btn-icon-danger remove-formula ms-auto">
                 <i class="bi bi-trash"></i>
             </button>
         </div>
@@ -298,33 +548,32 @@
 
 <!-- Template for Formatting Rule -->
 <template id="format-row-template">
-    <div class="row g-2 mb-2 align-items-center format-row">
-        <div class="col-md-3">
-            <select class="form-select format-field">
+    <div class="row g-2 mb-2 align-items-center action-row mx-0">
+        <div class="col-3">
+            <select class="form-select form-select-sm format-field border-0 bg-transparent shadow-none ps-0 fw-bold">
                 <!-- Populated via JS -->
             </select>
         </div>
-        <div class="col-md-2">
-            <select class="form-select format-operator">
-                <option value="gt">></option>
-                <option value="lt">
-                    << /option>
+        <div class="col-2">
+            <select class="form-select form-select-sm format-operator border-0 bg-transparent shadow-none text-muted">
+                <option value="gt">&gt;</option>
+                <option value="lt">&lt;</option>
                 <option value="eq">=</option>
             </select>
         </div>
-        <div class="col-md-2">
-            <input type="text" class="form-control format-value" placeholder="Val">
+        <div class="col-3">
+            <input type="text" class="form-control form-control-sm format-value bg-white" placeholder="Value">
         </div>
-        <div class="col-md-4">
-            <select class="form-select format-color">
-                <option value="red">Red</option>
-                <option value="green">Green</option>
-                <option value="blue">Blue</option>
-                <option value="yellow">Yellow</option>
+        <div class="col-3">
+            <select class="form-select form-select-sm format-color bg-white">
+                <option value="red">Red Highlight</option>
+                <option value="green">Green Highlight</option>
+                <option value="blue">Blue Highlight</option>
+                <option value="yellow">Yellow Highlight</option>
             </select>
         </div>
-        <div class="col-md-1">
-            <button type="button" class="btn btn-outline-danger btn-sm remove-format">
+        <div class="col-1 text-end">
+            <button type="button" class="btn-icon-danger remove-format ms-auto">
                 <i class="bi bi-trash"></i>
             </button>
         </div>
@@ -352,9 +601,9 @@
         const pivotConfigArea = document.getElementById('pivot-config-area');
         const pivotRowsSelect = document.getElementById('pivot-rows-select');
         const pivotColsSelect = document.getElementById('pivot-cols-select');
-        const drilldownTypeSelect = document.getElementById('drilldown-type-select');
-        const drilldownTargetArea = document.getElementById('drilldown-target-area');
-        const drilldownTargetInput = document.getElementById('drilldown-target-input');
+        // const drilldownTypeSelect = document.getElementById('drilldown-type-select'); // Removed as not in new UI plan
+        // const drilldownTargetArea = document.getElementById('drilldown-target-area'); // Removed
+        // const drilldownTargetInput = document.getElementById('drilldown-target-input'); // Removed
 
         const groupBySelect = document.getElementById('group-by-select');
         const dateFieldSelect = document.getElementById('date-field-select');
@@ -362,6 +611,7 @@
         const configInput = document.getElementById('id_query_config');
         const form = document.getElementById('report-builder-form');
         const noFiltersMsg = document.getElementById('no-filters-msg');
+        const entityPlaceholder = document.getElementById('entity-placeholder');
 
         const filterTemplate = document.getElementById('filter-row-template');
         const formulaTemplate = document.getElementById('formula-row-template');
@@ -369,6 +619,7 @@
 
         const previewBtn = document.getElementById('preview-btn');
         const previewChartCanvas = document.getElementById('preview-chart');
+        const previewPlaceholder = document.getElementById('preview-placeholder');
         const presetBtns = document.querySelectorAll('.preset-btn');
 
         // State
@@ -379,12 +630,14 @@
         // Initialize Sortable
         new Sortable(availableFieldsContainer, {
             group: 'fields',
-            animation: 150
+            animation: 150,
+            ghostClass: 'bg-light'
         });
 
         new Sortable(selectedFieldsContainer, {
             group: 'fields',
-            animation: 150
+            animation: 150,
+            ghostClass: 'bg-light'
         });
 
         // Event Listeners
@@ -394,6 +647,7 @@
 
             if (currentEntity) {
                 let fieldsStr = selectedOption.dataset.fields;
+                // Basic cleanup strictly for demonstration, real app should ensure valid JSON
                 fieldsStr = fieldsStr.replace(/'/g, '"');
                 try {
                     availableFields = JSON.parse(fieldsStr);
@@ -406,17 +660,19 @@
                 updateDropdowns();
 
                 fieldSelectionArea.classList.remove('d-none');
+                entityPlaceholder.classList.add('d-none');
                 addFilterBtn.disabled = false;
                 if (noFiltersMsg) noFiltersMsg.classList.add('d-none');
             } else {
                 fieldSelectionArea.classList.add('d-none');
+                entityPlaceholder.classList.remove('d-none');
                 addFilterBtn.disabled = true;
                 if (noFiltersMsg) noFiltersMsg.classList.remove('d-none');
                 availableFieldsContainer.innerHTML = '';
                 selectedFieldsContainer.innerHTML = '';
-                filtersContainer.innerHTML = '';
-                formulasContainer.innerHTML = '';
-                formattingContainer.innerHTML = '';
+                filtersContainer.innerHTML = '<p class="text-muted small text-center py-3" id="no-filters-msg">No filters applied.</p>';
+                formulasContainer.innerHTML = '<p class="text-muted small text-center py-3">No custom formulas.</p>';
+                formattingContainer.innerHTML = '<p class="text-muted small text-center py-3">No formatting rules.</p>';
                 groupBySelect.innerHTML = '<option value="">None</option>';
                 groupBySelect.disabled = true;
                 dateFieldSelect.innerHTML = '<option value="">None</option>';
@@ -432,17 +688,23 @@
             }
         });
 
-        drilldownTypeSelect.addEventListener('change', function () {
-            if (this.value !== 'none') {
-                drilldownTargetArea.classList.remove('d-none');
-            } else {
-                drilldownTargetArea.classList.add('d-none');
+        addFilterBtn.addEventListener('click', function () {
+            if (document.getElementById('no-filters-msg')) {
+                document.getElementById('no-filters-msg').remove();
             }
+            addRow(filterTemplate, filtersContainer, '.filter-field', '.remove-filter');
         });
 
-        addFilterBtn.addEventListener('click', () => addRow(filterTemplate, filtersContainer, '.filter-field', '.remove-filter'));
-        addFormulaBtn.addEventListener('click', () => addRow(formulaTemplate, formulasContainer, null, '.remove-formula'));
-        addFormatBtn.addEventListener('click', () => addRow(formatTemplate, formattingContainer, '.format-field', '.remove-format'));
+        addFormulaBtn.addEventListener('click', function () {
+            // Remove placeholder if exists (simple check)
+            if (formulasContainer.querySelector('p')) formulasContainer.innerHTML = '';
+            addRow(formulaTemplate, formulasContainer, null, '.remove-formula');
+        });
+
+        addFormatBtn.addEventListener('click', function () {
+            if (formattingContainer.querySelector('p')) formattingContainer.innerHTML = '';
+            addRow(formatTemplate, formattingContainer, '.format-field', '.remove-format');
+        });
 
         previewBtn.addEventListener('click', generatePreview);
 
@@ -461,11 +723,30 @@
                     cols: pivotColsSelect.value
                 },
                 drilldown: {
-                    type: drilldownTypeSelect.value,
-                    target: drilldownTargetInput.value
+                    type: 'none', // Simplified
+                    target: ''
                 }
             };
             configInput.value = JSON.stringify(newConfig);
+        });
+
+        // Handle Presets
+        presetBtns.forEach(btn => {
+            btn.addEventListener('click', function () {
+                const entity = this.dataset.entity;
+                const group = this.dataset.group;
+                const chart = this.dataset.chart;
+
+                // Set Entity
+                entitySelect.value = entity;
+                entitySelect.dispatchEvent(new Event('change'));
+
+                // Wait for dropdowns to update then set chart & group
+                setTimeout(() => {
+                    if (chartTypeSelect) chartTypeSelect.value = chart;
+                    if (groupBySelect) groupBySelect.value = group;
+                }, 200);
+            });
         });
 
         // Helpers
@@ -474,9 +755,8 @@
             selectedFieldsContainer.innerHTML = '';
             availableFields.forEach(field => {
                 const div = document.createElement('div');
-                div.className = 'p-2 mb-1 border rounded bg-white field-item';
+                div.className = 'field-item';
                 div.dataset.field = field;
-                div.style.cursor = 'move';
                 div.textContent = formatLabel(field);
                 availableFieldsContainer.appendChild(div);
             });
@@ -507,7 +787,7 @@
         }
 
         function getFilters() {
-            return Array.from(filtersContainer.querySelectorAll('.filter-row')).map(row => ({
+            return Array.from(filtersContainer.querySelectorAll('.action-row')).map(row => ({
                 field: row.querySelector('.filter-field').value,
                 operator: row.querySelector('.filter-operator').value,
                 value: row.querySelector('.filter-value').value
@@ -515,14 +795,14 @@
         }
 
         function getFormulas() {
-            return Array.from(formulasContainer.querySelectorAll('.formula-row')).map(row => ({
+            return Array.from(formulasContainer.querySelectorAll('.action-row')).map(row => ({
                 name: row.querySelector('.formula-name').value,
                 expression: row.querySelector('.formula-expression').value
             })).filter(f => f.name && f.expression);
         }
 
         function getFormatting() {
-            return Array.from(formattingContainer.querySelectorAll('.format-row')).map(row => ({
+            return Array.from(formattingContainer.querySelectorAll('.action-row')).map(row => ({
                 field: row.querySelector('.format-field').value,
                 operator: row.querySelector('.format-operator').value,
                 value: row.querySelector('.format-value').value,
@@ -569,12 +849,13 @@
                     rows: pivotRowsSelect.value,
                     cols: pivotColsSelect.value
                 },
-                drilldown: {
-                    type: drilldownTypeSelect.value,
-                    target: drilldownTargetInput.value
-                }
+                drilldown: { type: 'none', target: '' }
             };
 
+            previewPlaceholder.classList.add('d-none');
+
+            // Simulate fetch for now since we don't have the backend active to prevent 500s in this environment
+            // In real scenario, this would be the actual fetch
             fetch("{% url 'reports:generate' %}", {
                 method: 'POST',
                 headers: {
@@ -593,12 +874,12 @@
                         const tableContainer = document.getElementById('preview-table-container');
                         tableContainer.classList.remove('d-none');
 
-                        let html = '<table class="table table-bordered table-sm"><thead><tr><th>Rows \\ Cols</th>';
-                        data.labels.forEach(label => html += `<th>${label}</th>`);
+                        let html = '<table class="table table-hover table-bordered table-sm"><thead><tr><th class="bg-light">Rows \\ Cols</th>';
+                        data.labels.forEach(label => html += `<th class="bg-light">${label}</th>`);
                         html += '</tr></thead><tbody>';
 
                         data.datasets.forEach(dataset => {
-                            html += `<tr><td><strong>${dataset.label}</strong></td>`;
+                            html += `<tr><td class="fw-bold text-muted">${dataset.label}</td>`;
                             dataset.data.forEach(val => html += `<td>${val}</td>`);
                             html += '</tr>';
                         });
@@ -614,6 +895,10 @@
                             options: { responsive: true, maintainAspectRatio: false }
                         });
                     }
+                })
+                .catch(err => {
+                    console.error("Preview error", err);
+                    alert("Unable to generate preview. Please check settings.");
                 });
         }
 

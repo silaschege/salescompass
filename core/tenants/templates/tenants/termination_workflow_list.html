@@ -1,0 +1,97 @@
+{% extends 'tenants/base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="fw-bold"><i class="bi bi-x-circle me-2 text-danger"></i>Termination Workflows</h2>
+            <p class="text-muted">Manage the critical process of permanent tenant service termination and data handling.
+            </p>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm glass-card">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="mb-0 fw-bold">Active Workflows</h5>
+        </div>
+        <div class="card-body p-4">
+            {% if workflows %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light border-0">
+                        <tr>
+                            <th class="border-0">Tenant</th>
+                            <th class="border-0">Status</th>
+                            <th class="border-0">Started</th>
+                            <th class="border-0">Progress</th>
+                            <th class="border-0">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-0">
+                        {% for workflow in workflows %}
+                        <tr class="border-bottom">
+                            <td>
+                                <div class="fw-bold text-dark">{{ workflow.tenant.name }}</div>
+                                <div class="text-muted small">ID: {{ workflow.id }}</div>
+                            </td>
+                            <td>
+                                <span
+                                    class="badge {% if workflow.status == 'completed' %}bg-success-soft text-success{% elif workflow.status == 'cancelled' %}bg-secondary-soft text-secondary{% else %}bg-primary-soft text-primary{% endif %} px-3 py-2 rounded-pill">
+                                    {{ workflow.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="text-dark">{{ workflow.started_at|date:"M d, Y" }}</div>
+                                <div class="text-muted small">{{ workflow.started_at|time:"H:i" }}</div>
+                            </td>
+                            <td>
+                                <div class="progress" style="height: 6px; width: 100px;">
+                                    <div class="progress-bar bg-danger" role="progressbar"
+                                        style="width: {% widthratio workflow.steps_completed|length workflow.total_steps 100 %}%">
+                                    </div>
+                                </div>
+                                <div class="small text-muted mt-1">{{ workflow.steps_completed|length }} / {{
+                                    workflow.total_steps }} steps</div>
+                            </td>
+                            <td>
+                                <a href="{% url 'tenants:lifecycle-workflows' %}"
+                                    class="btn btn-sm btn-light rounded-pill px-3 border-0">
+                                    Manage
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% include 'includes/pagination.html' %}
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-x-circle display-4 text-muted mb-3"></i>
+                <h5>No termination workflows found</h5>
+                <p class="text-muted">Initiated termination processes will appear here.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-success-soft {
+        background-color: rgba(25, 135, 84, 0.1);
+    }
+
+    .bg-secondary-soft {
+        background-color: rgba(108, 117, 125, 0.1);
+    }
+
+    .bg-primary-soft {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+</style>
+{% endblock %}

@@ -2,11 +2,14 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
+from django.views.generic import TemplateView
 from django.views import View
 from django.utils import timezone
 from django.contrib.auth.mixins import LoginRequiredMixin
-from core.permissions import PermissionRequiredMixin
+from core.views import (
+    TenantAwareViewMixin, SalesCompassListView, SalesCompassDetailView,
+    SalesCompassCreateView, SalesCompassUpdateView, SalesCompassDeleteView
+)
 from .models import Report, ReportSchedule, ReportExport, EXPORT_FORMATS, WIDGET_TYPES, ReportSnapshot, ReportSubscription
 from dashboard.models import DashboardWidget
 from dashboard.forms import DashboardWidgetForm
@@ -35,15 +38,13 @@ def export_report(request, report_id):
         return redirect('reports:detail', pk=report_id)
 
 
-class ReportListView(PermissionRequiredMixin, ListView):
-    """
-    List all reports with filtering and search capabilities.
-    """
+
+
+class ReportListView(SalesCompassListView):
     model = Report
     template_name = 'reports/report_list.html'
     context_object_name = 'reports'
     paginate_by = 20
-    required_permission = 'reports:read'
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -66,14 +67,10 @@ class ReportListView(PermissionRequiredMixin, ListView):
         return context
 
 
-class ReportDetailView(PermissionRequiredMixin, DetailView):
-    """
-    Display detailed report information and preview.
-    """
+class ReportDetailView(SalesCompassDetailView):
     model = Report
     template_name = 'reports/detail.html'
     context_object_name = 'report'
-    required_permission = 'reports:read'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -97,7 +94,7 @@ class ReportDetailView(PermissionRequiredMixin, DetailView):
         return context
 
 
-class PublicReportView(DetailView):
+class PublicReportView(SalesCompassDetailView):
     """
     View a report via a public token without login.
     """
@@ -117,16 +114,14 @@ class PublicReportView(DetailView):
         return context
 
 
-class ReportSnapshotListView(PermissionRequiredMixin, ListView):
+class ReportSnapshotListView(SalesCompassListView):
     model = ReportSnapshot
     template_name = 'reports/snapshot_list.html'
     context_object_name = 'snapshots'
-    required_permission = 'reports:read'
 
     def get_queryset(self):
-        return ReportSnapshot.objects.filter(
-            report_id=self.kwargs['report_id'],
-            report__tenant_id=getattr(self.request.user, 'tenant_id', None)
+        return super().get_queryset().filter(
+            report_id=self.kwargs['report_id']
         ).select_related('report', 'created_by').order_by('-snapshot_date')
 
     def get_context_data(self, **kwargs):
@@ -154,11 +149,10 @@ class ReportSnapshotListView(PermissionRequiredMixin, ListView):
         return context
 
 
-class ReportSnapshotCreateView(PermissionRequiredMixin, View):
-    required_permission = 'reports:write'
+class ReportSnapshotCreateView(LoginRequiredMixin, TenantAwareViewMixin, View):
 
     def post(self, request, report_id):
-        report = get_object_or_404(Report, id=report_id, tenant_id=getattr(request.user, 'tenant_id', None))
+        report = get_object_or_404(Report, id=report_id, tenant_id=request.user.tenant_id)
         data = get_report_data(report.query_config)
         
         ReportSnapshot.objects.create(
@@ -188,19 +182,14 @@ class SubscriptionToggleView(LoginRequiredMixin, View):
         return redirect('reports:detail', pk=report_id)
 
 
-class ReportBuilderView(PermissionRequiredMixin, CreateView):
-    """
-    Create a new custom report with configuration builder.
-    """
+class ReportBuilderView(SalesCompassCreateView):
     model = Report
     form_class = ReportForm
     template_name = 'reports/builder.html'
     success_url = reverse_lazy('reports:list')
-    required_permission = 'reports:write'
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
-        form.instance.tenant_id = getattr(self.request.user, 'tenant_id', None)
         messages.success(self.request, f"Report '{form.instance.report_name}' created successfully!")
         return super().form_valid(form)
 
@@ -238,12 +227,8 @@ class ReportBuilderView(PermissionRequiredMixin, CreateView):
         return context
 
 
-class DashboardView(PermissionRequiredMixin, TemplateView):
-    """
-    Main reports dashboard with configurable widgets.
-    """
+class DashboardView(LoginRequiredMixin, TenantAwareViewMixin, TemplateView):
     template_name = 'reports/dashboard.html'
-    required_permission = 'reports:read'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -252,7 +237,7 @@ class DashboardView(PermissionRequiredMixin, TemplateView):
         # Get active dashboard widgets for current tenant
         widgets = DashboardWidget.objects.filter(
             widget_is_active=True,
-            report__tenant_id=getattr(user, 'tenant_id', None)
+            tenant_id=user.tenant_id
         ).select_related('report').order_by('position', 'order')
 
         # Group widgets by position and fetch data
@@ -279,15 +264,11 @@ class DashboardView(PermissionRequiredMixin, TemplateView):
         return context
 
 
-class DashboardWidgetUpdateView(PermissionRequiredMixin, UpdateView):
-    """
-    Update dashboard widget configuration.
-    """
+class DashboardWidgetUpdateView(SalesCompassUpdateView):
     model = DashboardWidget
     form_class = DashboardWidgetForm
     template_name = 'reports/widget_form.html'
     success_url = reverse_lazy('reports:dashboard')
-    required_permission = 'reports:write'
 
     def form_valid(self, form):
         messages.success(self.request, f"Widget '{form.instance.widget_name}' updated successfully!")
@@ -300,30 +281,21 @@ class DashboardWidgetUpdateView(PermissionRequiredMixin, UpdateView):
         )
 
 
-class DashboardWidgetCreateView(PermissionRequiredMixin, CreateView):
-    """
-    Create a new dashboard widget.
-    """
+class DashboardWidgetCreateView(SalesCompassCreateView):
     model = DashboardWidget
     form_class = DashboardWidgetForm
     template_name = 'reports/widget_form.html'
     success_url = reverse_lazy('reports:dashboard')
-    required_permission = 'reports:write'
 
     def form_valid(self, form):
-        form.instance.tenant_id = getattr(self.request.user, 'tenant_id', None)
         messages.success(self.request, f"Widget '{form.instance.widget_name}' created successfully!")
         return super().form_valid(form)
 
 
-class DashboardWidgetDeleteView(PermissionRequiredMixin, DeleteView):
-    """
-    Delete a dashboard widget.
-    """
+class DashboardWidgetDeleteView(SalesCompassDeleteView):
     model = DashboardWidget
     template_name = 'reports/widget_confirm_delete.html'
     success_url = reverse_lazy('reports:dashboard')
-    required_permission = 'reports:write'
 
     def delete(self, request, *args, **kwargs):
         widget = self.get_object()
@@ -331,20 +303,14 @@ class DashboardWidgetDeleteView(PermissionRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
     def get_queryset(self):
-        return DashboardWidget.objects.filter(
-            report__tenant_id=getattr(self.request.user, 'tenant_id', None)
-        )
+        return super().get_queryset()
 
 
-class ReportScheduleCreateView(PermissionRequiredMixin, CreateView):
-    """
-    Create a scheduled report delivery.
-    """
+class ReportScheduleCreateView(SalesCompassCreateView):
     model = ReportSchedule
     form_class = ReportScheduleForm
     template_name = 'reports/schedule_form.html'
     success_url = reverse_lazy('reports:list')
-    required_permission = 'reports:write'
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -352,9 +318,6 @@ class ReportScheduleCreateView(PermissionRequiredMixin, CreateView):
         return kwargs
 
     def form_valid(self, form):
-        # Set tenant_id
-        form.instance.tenant_id = getattr(self.request.user, 'tenant_id', None)
-
         # Set the next_run date based on frequency
         from datetime import timedelta
         now = timezone.now()
@@ -375,15 +338,11 @@ class ReportScheduleCreateView(PermissionRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class ReportScheduleUpdateView(PermissionRequiredMixin, UpdateView):
-    """
-    Update a scheduled report delivery.
-    """
+class ReportScheduleUpdateView(SalesCompassUpdateView):
     model = ReportSchedule
     form_class = ReportScheduleForm
     template_name = 'reports/schedule_form.html'
     success_url = reverse_lazy('reports:list')
-    required_permission = 'reports:write'
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -411,19 +370,13 @@ class ReportScheduleUpdateView(PermissionRequiredMixin, UpdateView):
         return super().form_valid(form)
 
     def get_queryset(self):
-        return ReportSchedule.objects.filter(
-            report__tenant_id=getattr(self.request.user, 'tenant_id', None)
-        )
+        return super().get_queryset()
 
 
-class ReportScheduleDeleteView(PermissionRequiredMixin, DeleteView):
-    """
-    Delete a scheduled report.
-    """
+class ReportScheduleDeleteView(SalesCompassDeleteView):
     model = ReportSchedule
     template_name = 'reports/schedule_confirm_delete.html'
     success_url = reverse_lazy('reports:list')
-    required_permission = 'reports:write'
 
     def delete(self, request, *args, **kwargs):
         schedule = self.get_object()
@@ -431,37 +384,27 @@ class ReportScheduleDeleteView(PermissionRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
     def get_queryset(self):
-        return ReportSchedule.objects.filter(
-            report__tenant_id=getattr(self.request.user, 'tenant_id', None)
-        )
+        return super().get_queryset()
 
 
-class ReportUpdateView(PermissionRequiredMixin, UpdateView):
-    """
-    Update an existing report.
-    """
+class ReportUpdateView(SalesCompassUpdateView):
     model = Report
     form_class = ReportForm
     template_name = 'reports/edit.html'
     success_url = reverse_lazy('reports:list')
-    required_permission = 'reports:write'
 
     def form_valid(self, form):
         messages.success(self.request, f"Report '{form.instance.report_name}' updated successfully!")
         return super().form_valid(form)
 
     def get_queryset(self):
-        return Report.objects.filter(tenant_id=getattr(self.request.user, 'tenant_id', None))
+        return super().get_queryset()
 
 
-class ReportDeleteView(PermissionRequiredMixin, DeleteView):
-    """
-    Delete a report.
-    """
+class ReportDeleteView(SalesCompassDeleteView):
     model = Report
     template_name = 'reports/report_confirm_delete.html'
     success_url = reverse_lazy('reports:list')
-    required_permission = 'reports:write'
 
     def delete(self, request, *args, **kwargs):
         report = self.get_object()
@@ -509,39 +452,27 @@ def export_report(request, report_id):
         return redirect('reports:detail', pk=report_id)
 
 
-class ReportExportListView(PermissionRequiredMixin, ListView):
-    """
-    List all report exports.
-    """
+class ReportExportListView(SalesCompassListView):
     model = ReportExport
     template_name = 'reports/export_list.html'
     context_object_name = 'exports'
     paginate_by = 20
-    required_permission = 'reports:read'
 
     def get_queryset(self):
         return super().get_queryset().select_related('report', 'created_by').order_by('-export_created_at')
 
 
-class ScheduledReportsView(PermissionRequiredMixin, ListView):
-    """
-    List all scheduled reports.
-    """
+class ScheduledReportsView(SalesCompassListView):
     model = ReportSchedule
     template_name = 'reports/schedule_list.html'
     context_object_name = 'schedules'
     paginate_by = 20
-    required_permission = 'reports:read'
 
     def get_queryset(self):
         return super().get_queryset().select_related('report').order_by('-schedule_created_at')
 
 
-class GenerateReportView(PermissionRequiredMixin, View):
-    """
-    AJAX endpoint to generate report data based on configuration.
-    """
-    required_permission = 'reports:read'
+class GenerateReportView(LoginRequiredMixin, TenantAwareViewMixin, View):
 
     def post(self, request, *args, **kwargs):
         import json
@@ -562,10 +493,6 @@ class GenerateReportView(PermissionRequiredMixin, View):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-
-        except Exception as e:
-
             return JsonResponse({'error': str(e)}, status=500)
 
 

@@ -27,7 +27,7 @@
     <a class="nav-link ms-3" href="{% url 'settings_app:lead_status_list' %}">Statuses</a>
     <a class="nav-link ms-3" href="{% url 'settings_app:lead_source_list' %}">Sources</a>
 </div>
-
+ 
 <!-- Opportunity Settings -->
 <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#oppSettingsMenu">
     Opportunity Settings
@@ -41,9 +41,9 @@
     Team Management
 </a>
 <div class="collapse" id="teamMenu">
-    <a class="nav-link ms-3" href="{% url 'accounts:member_list' %}">Team Members</a>
-    <a class="nav-link ms-3" href="{% url 'accounts:member_create' %}">Add Member</a>
-    <a class="nav-link ms-3" href="{% url 'accounts:role_list' %}">Roles & Permissions</a>
+    <a class="nav-link ms-3" href="{% url 'tenants:member_list' %}">Team Members</a>
+    <a class="nav-link ms-3" href="{% url 'tenants:member_create' %}">Add Member</a>
+    <a class="nav-link ms-3" href="{% url 'tenants:role_list' %}">Roles & Permissions</a>
 </div>
 
 <!-- Territories -->
@@ -51,8 +51,8 @@
     Territories
 </a>
 <div class="collapse" id="territoriesMenu">
-    <a class="nav-link ms-3" href="{% url 'accounts:territory_list' %}">List</a>
-    <a class="nav-link ms-3" href="{% url 'accounts:territory_create' %}">Create</a>
+    <a class="nav-link ms-3" href="{% url 'tenants:territory_list' %}">List</a>
+    <a class="nav-link ms-3" href="{% url 'tenants:territory_create' %}">Create</a>
 </div>
 
 <!-- Customization -->

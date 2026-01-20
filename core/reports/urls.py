@@ -6,12 +6,12 @@ app_name = 'reports'
 
 urlpatterns = [
     # Report CRUD
-    path('', views.ReportListView.as_view(), name='list'),
+    path('', views.ReportListView.as_view(), name='report_list'),
     path('create/', views.ReportBuilderView.as_view(), name='create'),
     path('builder/', views.ReportBuilderView.as_view(), name='builder'),
     path('public/<uuid:token>/', views.PublicReportView.as_view(), name='public_view'),
-    path('<int:pk>/', views.ReportDetailView.as_view(), name='detail'),
-    path('<int:pk>/delete/', views.ReportDeleteView.as_view(), name='delete'),
+    path('<int:pk>/', views.ReportDetailView.as_view(), name='report_detail'),
+    path('<int:pk>/delete/', views.ReportDeleteView.as_view(), name='report_delete'),
     path('report_list/', views.ReportListView.as_view(), name='report_list'),  # Additional name for navigation
     
     # Sales Analytics
@@ -41,7 +41,7 @@ urlpatterns = [
     # Generation (AJAX)
     path('generate/', views.GenerateReportView.as_view(), name='generate'),
     
-    # Business Metrics Exports
+    # Business Metrihttp://127.0.0.1:8000/reports/schedules/cs Exports
     path('export/clv-metrics/', views.export_clv_metrics, name='export_clv_metrics'),
     path('export/cac-metrics/', views.export_cac_metrics, name='export_cac_metrics'),
     path('export/sales-velocity-metrics/', views.export_sales_velocity_metrics, name='export_sales_velocity_metrics'),

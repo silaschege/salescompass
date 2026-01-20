@@ -6,7 +6,7 @@ from core.models import User
 from django.core.files.storage import default_storage
 import os
 
-
+ 
 # Choices for various fields
 TIMEZONE_CHOICES = [
     ('UTC', 'UTC'),
@@ -366,26 +366,26 @@ class Tenant(models.Model):
     
 
 
-def get_accessible_features(user):
-    """
-    Get all features that are accessible to the user's tenant
-    """
-    if not hasattr(user, 'tenant') or not user.tenant:
-        return []
-    
-    from .models import TenantFeatureEntitlement
-    accessible_features = TenantFeatureEntitlement.objects.filter(
-        tenant=user.tenant,
-        is_enabled=True
-    )
-    
-    # Check trial expiration
-    active_features = []
-    for feature in accessible_features:
-        if feature.entitlement_type != 'trial' or not feature.trial_end_date or feature.trial_end_date > timezone.now():
-            active_features.append(feature)
-    
-    return active_features
+    def get_accessible_features_for_user(user):
+        """
+        Get all features that are accessible to the user's tenant
+        """
+        if not hasattr(user, 'tenant') or not user.tenant:
+            return []
+        
+        from .models import TenantFeatureEntitlement
+        accessible_features = TenantFeatureEntitlement.objects.filter(
+            tenant=user.tenant,
+            is_enabled=True
+        )
+        
+        # Check trial expiration
+        active_features = []
+        for feature in accessible_features:
+            if feature.entitlement_type != 'trial' or not feature.trial_end_date or feature.trial_end_date > timezone.now():
+                active_features.append(feature)
+        
+        return active_features
 
     def now(self):
         """
@@ -1765,7 +1765,7 @@ class TenantTerminationWorkflow(models.Model):
         self.approval_notes = notes
         self.approved_at = timezone.now()
         self.save()
-    
+     
     def complete_step(self, step_name):
         """Mark a step as completed"""
         if step_name not in self.steps_completed:

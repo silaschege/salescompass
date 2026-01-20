@@ -7,11 +7,11 @@ urlpatterns = [
     path('dashboard/', views.LearnerDashboardView.as_view(), name='dashboard'),
 
     # Articles
-    path('', views.ArticleListView.as_view(), name='list'),
-    path('create/', views.ArticleCreateView.as_view(), name='create'),
-    path('article/<slug:slug>/', views.ArticleDetailView.as_view(), name='detail'),
-    path('article/<int:pk>/edit/', views.ArticleUpdateView.as_view(), name='update'),
-    path('article/<int:pk>/delete/', views.ArticleDeleteView.as_view(), name='delete'),
+    path('', views.ArticleListView.as_view(), name='article_list'),
+    path('create/', views.ArticleCreateView.as_view(), name='article_create'),
+    path('article/<slug:slug>/', views.ArticleDetailView.as_view(), name='article_detail'),
+    path('article/<int:pk>/edit/', views.ArticleUpdateView.as_view(), name='article_update'),
+    path('article/<int:pk>/delete/', views.ArticleDeleteView.as_view(), name='article_delete'),
     
     # Courses
     path('courses/', views.CourseListView.as_view(), name='course_list'),

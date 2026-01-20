@@ -6,7 +6,7 @@
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">Historical Snapshots: {{ report.report_name }}</h1>
-        <a href="{% url 'reports:detail' report.pk %}" class="btn btn-secondary btn-sm">Back to Report</a>
+        <a href="{% url 'reports:report_detail' report.pk %}" class="btn btn-secondary btn-sm">Back to Report</a>
     </div>
 
     <div class="row">

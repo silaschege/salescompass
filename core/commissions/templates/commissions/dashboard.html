@@ -68,8 +68,7 @@
                             </div>
                             <div class="row no-gutters align-items-center">
                                 <div class="col-auto">
-                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">{{
-                                        performance.attainment|floatformat:1 }}%</div>
+                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">{{performance.attainment|floatformat:1 }}%</div>
                                 </div>
                                 <div class="col">
                                     <div class="progress progress-sm mr-2">
@@ -97,8 +96,7 @@
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                 Commissions Earned</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{
-                                performance.commissions_earned|floatformat:2 }}</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ performance.commissions_earned|floatformat:2 }}</div>
                         </div>
                         <div class="col-auto">
                             <i class="bi bi-cash-coin fa-2x text-gray-300"></i>
@@ -122,13 +120,11 @@
                         </div>
                         <div class="col-auto text-right">
                             <div class="text-xs font-weight-bold text-uppercase mb-1">Projected</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{
-                                forecast.forecast_amount|floatformat:2 }}</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ forecast.forecast_amount|floatformat:2 }}</div>
                         </div>
                         <div class="col-auto text-right ml-4">
                             <div class="text-xs font-weight-bold text-uppercase mb-1">Weighted</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{
-                                forecast.weighted_forecast_amount|floatformat:2 }}</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{forecast.weighted_forecast_amount|floatformat:2 }}</div>
                         </div>
                     </div>
                 </div>

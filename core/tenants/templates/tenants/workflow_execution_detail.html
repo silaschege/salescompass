@@ -1,0 +1,102 @@
+{% extends 'tenants/base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'tenants:workflow_execution_list' %}">Workflows</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Execution Log</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <div class="card border-0 shadow-sm glass-card">
+                <div
+                    class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center py-4 px-4">
+                    <div>
+                        <h3 class="fw-bold mb-1">{{ execution.workflow.name }}</h3>
+                        <p class="text-muted mb-0">Workflow execution for <span class="fw-bold text-dark">{{
+                                execution.tenant.name }}</span></p>
+                    </div>
+                    <div class="text-end">
+                        <div class="mb-1">
+                            {% if execution.status == 'completed' %}
+                            <span class="badge bg-success px-4 py-2 rounded-pill shadow-sm">Completed</span>
+                            {% elif execution.status == 'failed' %}
+                            <span class="badge bg-danger px-4 py-2 rounded-pill shadow-sm">Failed</span>
+                            {% else %}
+                            <span class="badge bg-primary px-4 py-2 rounded-pill shadow-sm">In Progress</span>
+                            {% endif %}
+                        </div>
+                        <div class="text-muted small">Started: {{ execution.started_at|date:"M d, Y H:i" }}</div>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row mb-5">
+                        <div class="col-md-3">
+                            <div class="p-3 bg-light rounded text-center border">
+                                <div class="text-muted small uppercase fw-bold mb-1">Current Step</div>
+                                <h4 class="fw-bold mb-0 text-primary">{{ execution.current_step }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 bg-light rounded text-center border">
+                                <div class="text-muted small uppercase fw-bold mb-1">Total Steps</div>
+                                <h4 class="fw-bold mb-0 text-dark">{{ execution.total_steps }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 bg-light rounded text-center border">
+                                <div class="text-muted small uppercase fw-bold mb-1">Executed By</div>
+                                <h4 class="fw-bold mb-0 text-dark">{{
+                                    execution.executed_by.get_full_name|default:execution.executed_by.email|default:"System"
+                                    }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            {% if execution.completed_at %}
+                            <div class="p-3 bg-light rounded text-center border">
+                                <div class="text-muted small uppercase fw-bold mb-1">Duration</div>
+                                <h4 class="fw-bold mb-0 text-dark">--</h4>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mb-4">Execution Log</h5>
+                    <div class="timeline shadow-inner bg-light p-4 rounded">
+                        {% if execution.error_message %}
+                        <div class="alert alert-danger border-0 shadow-sm mb-4">
+                            <div class="d-flex">
+                                <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-1">Workflow Error</h6>
+                                    <p class="mb-0">{{ execution.error_message }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-journal-text fs-1 opacity-25"></i>
+                            <p class="mt-2">Detailed step-by-step logs would appear here.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .shadow-inner {
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+</style>
+{% endblock %}

@@ -6,11 +6,11 @@ app_name = 'automation'
 urlpatterns = [
     # CRUD operations
     path('', include('automation.urls_rules')), # Business Rules
-    path('', views.AutomationListView.as_view(), name='list'),
-    path('create/', views.AutomationCreateView.as_view(), name='create'),
-    path('<int:pk>/', views.AutomationDetailView.as_view(), name='detail'),
-    path('<int:pk>/edit/', views.AutomationUpdateView.as_view(), name='update'),
-    path('<int:pk>/delete/', views.AutomationDeleteView.as_view(), name='delete'),
+    path('', views.AutomationListView.as_view(), name='automation_list'),
+    path('create/', views.AutomationCreateView.as_view(), name='automation_create'),
+    path('<int:pk>/', views.AutomationDetailView.as_view(), name='automation_detail'),
+    path('<int:pk>/edit/', views.AutomationUpdateView.as_view(), name='automation_update'),
+    path('<int:pk>/delete/', views.AutomationDeleteView.as_view(), name='automation_delete'),
     
     # API endpoints (for integration with other modules)
     path('api/trigger/', views.TriggerAutomationView.as_view(), name='trigger_automation'),

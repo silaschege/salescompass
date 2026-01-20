@@ -1,140 +1,244 @@
 {% extends "accounts/base.html" %}
-{%load auth_extras math filters_extras %}
+{% load auth_extras math filters_extras %}
 {% block title %}Contacts - SalesCompass{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-center align-items-center mb-3">
-    <h2 class="block-title fw-bold mb-0">Contact List</h2>
+<div class="d-flex flex-column align-items-center mb-4">
+    <h2 class="block-title fw-bold mb-0">Contact Directory</h2>
+    <p class="text-muted mb-0">Manage your customer contacts and relationships</p>
 </div>
 
-
-<div class="container">
+<div class="container-fluid px-0">
     <!-- Action Buttons and Filters -->
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <a href="{% url 'accounts:contact_create' %}" class="btn btn-primary">+ New Contact</a>
+    <div class="row g-3 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <a href="{% url 'accounts:contact_create' %}" class="btn btn-primary w-100">
+                <i class="bi bi-plus-circle me-2"></i>+ New Contact
+            </a>
         </div>
-        <div class="col-md-6">
-            <form method="get" class="d-flex gap-2">
-                <input type="text" name="search" class="form-control" placeholder="Search contacts..."
-                    value="{{ search_term }}">
-                <select name="account_id" class="form-select" style="width: auto;">
-                    <option value="">All Accounts</option>
-                    {% for account in filter_accounts %}
-                    <option value="{{ account.id }}" {% if selected_account == account.id|to_string %}selected{% endif %}>
-                        {{ account.account_name }}
-                    </option>
-                    {% endfor %}
-                </select>
-                <select name="esg_influence" class="form-select" style="width: auto;">
-                    <option value="">All ESG Influence</option>
-                    {% for value, label in esg_influence_choices %}
-                    <option value="{{ value }}" {% if request.GET.esg_influence == value %}selected{% endif %}>
-                        {{ label }}
-                    </option>
-                    {% endfor %}
-                </select>
-                <button type="submit" class="btn btn-outline-primary">Filter</button>
+        
+        <div class="col-lg-9 col-md-6">
+            <form method="get" class="row g-2">
+                <div class="col-xl-4 col-lg-5 col-md-12">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" class="form-control" placeholder="Search contacts..." 
+                               value="{{ search_term }}">
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <select name="account_id" class="form-select">
+                        <option value="">All Accounts</option>
+                        {% for account in filter_accounts %}
+                        <option value="{{ account.id }}" {% if selected_account == account.id|to_string %}selected{% endif %}>
+                            {{ account.account_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-xl-3 col-lg-3 col-md-6">
+                    <select name="esg_influence" class="form-select">
+                        <option value="">All ESG Influence</option>
+                        {% for value, label in esg_influence_choices %}
+                        <option value="{{ value }}" {% if request.GET.esg_influence == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-xl-2 col-lg-12 col-md-12 d-grid">
+                    <button type="submit" class="btn btn-outline-primary h-100">
+                        <i class="bi bi-filter me-1"></i>Apply
+                    </button>
+                </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-light h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ contacts|length }} Contacts</h5>
+                    <p class="card-text text-muted">Total contacts in system</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ primary_contacts_count }}</h5>
+                    <p class="card-text text-muted">Primary contacts</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ contacts|length }}</h5>
+                    <p class="card-text text-muted">On this page</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ page_obj.paginator.count }}</h5>
+                    <p class="card-text text-muted">Total results</p>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Contacts Table -->
     {% if contacts %}
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Contact</th>
-                    <th>Account</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>ESG Influence</th>
-                    <th>Primary</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for contact in contacts %}
-                <tr>
-                    <td>
-                        <a href="{% url 'accounts:contact_detail' contact.pk %}">
-                            {{ contact.first_name }} {{ contact.last_name }}
-                        </a>
-                        {% if contact.is_primary %}
-                        <span class="badge bg-primary ms-1">Primary</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a href="{% url 'accounts:detail' contact.account.pk %}">
-                            {{ contact.account.account_name }}
-                        </a>
-                    </td>
-                    <td>{{ contact.email }}</td>
-                    <td>{{ contact.role|default:"—" }}</td>
-                    <td>
-                        <span
-                            class="badge bg-{% if contact.esg_influence == 'high' %}success{% elif contact.esg_influence == 'medium' %}warning{% else %}secondary{% endif %}">
-                            {{ contact.get_esg_influence_display }}
-                        </span>
-                    </td>
-                    <td>
-                        {% if contact.is_primary %}
-                        <span class="badge bg-success">Yes</span>
-                        {% else %}
-                        <span class="badge bg-secondary">No</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a href="{% url 'accounts:contact_detail' contact.pk %}"
-                            class="btn btn-sm btn-outline-primary">View</a>
-                        <a href="{% url 'accounts:contact_update' contact.pk %}"
-                            class="btn btn-sm btn-outline-secondary">Edit</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">
+                                <a href="?{% if request.GET.order_by == 'name' and request.GET.direction == 'asc' %}order_by=name&direction=desc{% else %}order_by=name&direction=asc{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.account_id %}&account_id={{ request.GET.account_id }}{% endif %}{% if request.GET.esg_influence %}&esg_influence={{ request.GET.esg_influence }}{% endif %}">
+                                    Contact <i class="bi bi-arrow-down-up"></i>
+                                </a>
+                            </th>
+                            <th scope="col">
+                                <a href="?{% if request.GET.order_by == 'account__account_name' and request.GET.direction == 'asc' %}order_by=account__account_name&direction=desc{% else %}order_by=account__account_name&direction=asc{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.account_id %}&account_id={{ request.GET.account_id }}{% endif %}{% if request.GET.esg_influence %}&esg_influence={{ request.GET.esg_influence }}{% endif %}">
+                                    Account <i class="bi bi-arrow-down-up"></i>
+                                </a>
+                            </th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Role</th>
+                            <th scope="col">
+                                <a href="?{% if request.GET.order_by == 'esg_influence' and request.GET.direction == 'asc' %}order_by=esg_influence&direction=desc{% else %}order_by=esg_influence&direction=asc{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.account_id %}&account_id={{ request.GET.account_id }}{% endif %}{% if request.GET.esg_influence %}&esg_influence={{ request.GET.esg_influence }}{% endif %}">
+                                    ESG Influence <i class="bi bi-arrow-down-up"></i>
+                                </a>
+                            </th>
+                            <th scope="col">Primary</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contact in contacts %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <div class="avatar bg-primary rounded-circle d-flex align-items-center justify-content-center" 
+                                             style="width: 40px; height: 40px;">
+                                            <span class="text-white fw-bold">
+                                                {{ contact.first_name.0|upper }}{{ contact.last_name.0|upper }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <a href="{% url 'accounts:contact_detail' contact.pk %}" class="fw-bold text-decoration-none">
+                                            {{ contact.first_name }} {{ contact.last_name }}
+                                        </a>
+                                        {% if contact.is_primary %}
+                                        <span class="badge bg-primary ms-1">Primary</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <a href="{% url 'accounts:account_detail' contact.account.pk %}" class="text-decoration-none">
+                                    {{ contact.account.account_name }}
+                                </a>
+                            </td>
+                            <td>
+                                <a href="mailto:{{ contact.email }}" class="text-decoration-none">
+                                    {{ contact.email }}
+                                </a>
+                            </td>
+                            <td>{{ contact.role|default:"—" }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if contact.esg_influence == 'high' %}
+                                        bg-success
+                                    {% elif contact.esg_influence == 'medium' %}
+                                        bg-warning text-dark
+                                    {% else %}
+                                        bg-secondary
+                                    {% endif %}">
+                                    {{ contact.get_esg_influence_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if contact.is_primary %}
+                                <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                <span class="badge bg-secondary">No</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'accounts:contact_detail' contact.pk %}"
+                                       class="btn btn-sm btn-outline-primary" 
+                                       data-bs-toggle="tooltip" 
+                                       title="View contact details">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'accounts:contact_update' contact.pk %}"
+                                       class="btn btn-sm btn-outline-secondary" 
+                                       data-bs-toggle="tooltip" 
+                                       title="Edit contact">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- Pagination -->
     {% if is_paginated %}
-    <nav aria-label="Page navigation">
+    <nav aria-label="Page navigation" class="mt-4">
         <ul class="pagination justify-content-center">
             {% if page_obj.has_previous %}
             <li class="page-item">
-                <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
-                    aria-label="First">
+                <a class="page-link" 
+                   href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.account_id %}&account_id={{ request.GET.account_id }}{% endif %}{% if request.GET.esg_influence %}&esg_influence={{ request.GET.esg_influence }}{% endif %}{% if request.GET.order_by %}&order_by={{ request.GET.order_by }}{% endif %}{% if request.GET.direction %}&direction={{ request.GET.direction }}{% endif %}"
+                   aria-label="First">
                     <span aria-hidden="true">&laquo;&laquo;</span>
                 </a>
             </li>
             <li class="page-item">
-                <a class="page-link"
-                    href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
-                    aria-label="Previous">
+                <a class="page-link" 
+                   href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.account_id %}&account_id={{ request.GET.account_id }}{% endif %}{% if request.GET.esg_influence %}&esg_influence={{ request.GET.esg_influence }}{% endif %}{% if request.GET.order_by %}&order_by={{ request.GET.order_by }}{% endif %}{% if request.GET.direction %}&direction={{ request.GET.direction }}{% endif %}"
+                   aria-label="Previous">
                     <span aria-hidden="true">&laquo;</span>
                 </a>
             </li>
             {% endif %}
 
-            <li class="page-item active">
-                <span class="page-link">
-                    {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            <li class="page-item disabled">
+                <span class="page-link bg-transparent border-0">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
                 </span>
             </li>
 
             {% if page_obj.has_next %}
             <li class="page-item">
-                <a class="page-link"
-                    href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
-                    aria-label="Next">
+                <a class="page-link" 
+                   href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.account_id %}&account_id={{ request.GET.account_id }}{% endif %}{% if request.GET.esg_influence %}&esg_influence={{ request.GET.esg_influence }}{% endif %}{% if request.GET.order_by %}&order_by={{ request.GET.order_by }}{% endif %}{% if request.GET.direction %}&direction={{ request.GET.direction }}{% endif %}"
+                   aria-label="Next">
                     <span aria-hidden="true">&raquo;</span>
                 </a>
             </li>
             <li class="page-item">
-                <a class="page-link"
-                    href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
-                    aria-label="Last">
+                <a class="page-link" 
+                   href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.account_id %}&account_id={{ request.GET.account_id }}{% endif %}{% if request.GET.esg_influence %}&esg_influence={{ request.GET.esg_influence }}{% endif %}{% if request.GET.order_by %}&order_by={{ request.GET.order_by }}{% endif %}{% if request.GET.direction %}&direction={{ request.GET.direction }}{% endif %}"
+                   aria-label="Last">
                     <span aria-hidden="true">&raquo;&raquo;</span>
                 </a>
             </li>
@@ -143,16 +247,28 @@
     </nav>
     {% endif %}
     {% else %}
-    <div class="text-center">
+    <div class="text-center py-5">
         <div class="mb-4">
             <i class="bi bi-people display-1 text-muted"></i>
         </div>
         <h3 class="text-muted">No contacts found</h3>
         <p class="text-muted mb-4">Create your first contact to get started.</p>
-        <a href="{% url 'accounts:contact_create' %}" class="btn btn-primary">Create Contact</a>
+        <a href="{% url 'accounts:contact_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>Create Contact
+        </a>
     </div>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
 
 <div class="footer-bar mt-5">
     <div class="container">

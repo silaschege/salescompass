@@ -1,0 +1,33 @@
+{% extends 'engagement/base.html' %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 text-gray-800">Automation Rules</h1>
+            <p class="text-muted mb-0">Automate actions based on engagement events.</p>
+        </div>
+        <a href="{% url 'engagement:automation_rule_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus mr-1"></i> New Rule
+        </a>
+    </div>
+
+    <!-- Empty State for now as it is a placeholder feature in Phase 1 -->
+    <div class="text-center py-5">
+        <div class="mb-4">
+            <span class="fa-stack fa-2x text-gray-300">
+                <i class="fas fa-circle fa-stack-2x"></i>
+                <i class="fas fa-robot fa-stack-1x fa-inverse"></i>
+            </span>
+        </div>
+        <h4 class="text-gray-600 mb-2">No Automation Rules Configured</h4>
+        <p class="text-muted mb-4 max-w-lg mx-auto">
+            Automation rules allow you to trigger actions like creating tasks, sending emails,
+            or updating scores when specific engagement criteria are met.
+        </p>
+        <button class="btn btn-outline-primary" disabled>
+            Features coming soon
+        </button>
+    </div>
+</div>
+{% endblock %}

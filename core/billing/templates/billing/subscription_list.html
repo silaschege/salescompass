@@ -24,11 +24,15 @@
                 <div class="col-md-3">
                     <select name="status" class="form-select">
                         <option value="">All Statuses</option>
-                        <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
-                        <option value="trialing" {% if current_status == 'trialing' %}selected{% endif %}>Trialing</option>
-                        <option value="canceled" {% if current_status == 'canceled' %}selected{% endif %}>Canceled</option>
-                        <option value="past_due" {% if current_status == 'past_due' %}selected{% endif %}>Past Due</option>
-                        <option value="incomplete" {% if current_status == 'incomplete' %}selected{% endif %}>Incomplete</option>
+                        <option value="active" {% if current_status=='active' %}selected{% endif %}>Active</option>
+                        <option value="trialing" {% if current_status=='trialing' %}selected{% endif %}>Trialing
+                        </option>
+                        <option value="canceled" {% if current_status=='canceled' %}selected{% endif %}>Canceled
+                        </option>
+                        <option value="past_due" {% if current_status=='past_due' %}selected{% endif %}>Past Due
+                        </option>
+                        <option value="incomplete" {% if current_status=='incomplete' %}selected{% endif %}>Incomplete
+                        </option>
                     </select>
                 </div>
                 <div class="col-auto">

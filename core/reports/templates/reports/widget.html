@@ -1,37 +1,72 @@
-<div class="card h-100">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">{{ widget.widget_name }}</h5>
+<div class="glass-card h-100 position-relative">
+    <div class="card-header-glass">
+        <h5 class="card-title-glass mb-0 d-flex align-items-center">
+            {% if widget.widget_type_ref.widget_name == 'kpi_card' %}
+            <i class="bi bi-speedometer2 me-2 text-primary"></i>
+            {% elif widget.widget_type_ref.widget_name == 'chart' %}
+            <i class="bi bi-graph-up me-2 text-info"></i>
+            {% elif widget.widget_type_ref.widget_name == 'table' %}
+            <i class="bi bi-table me-2 text-success"></i>
+            {% elif widget.widget_type_ref.widget_name == 'trend' %}
+            <i class="bi bi-arrow-up-right-circle me-2 text-warning"></i>
+            {% endif %}
+            {{ widget.widget_name }}
+        </h5>
+
         <div class="dropdown">
-            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                <i class="bi bi-gear"></i>
+            <button class="btn btn-sm btn-link text-muted p-0" type="button" data-bs-toggle="dropdown"
+                style="opacity: 0.6;">
+                <i class="bi bi-three-dots-vertical"></i>
             </button>
-            <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{% url 'reports:widget_edit' widget.pk %}">Edit</a></li>
-                <li><a class="dropdown-item" href="{% url 'reports:widget_delete' widget.pk %}">Delete</a></li>
+            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg"
+                style="border-radius: 12px; overflow: hidden;">
                 <li>
-                    <hr class="dropdown-divider">
+                    <span class="dropdown-header small text-uppercase fw-bold text-muted">Widget Actions</span>
                 </li>
-                <li><a class="dropdown-item" href="{% url 'reports:export_report' widget.report.pk %}?format=csv">Export
-                        CSV</a></li>
+                <li><a class="dropdown-item small py-2" href="{% url 'reports:widget_edit' widget.pk %}"><i
+                            class="bi bi-pencil me-2"></i> Edit</a></li>
+                <li><a class="dropdown-item small py-2"
+                        href="{% url 'reports:export_report' widget.report.pk %}?format=csv"><i
+                            class="bi bi-download me-2"></i> Export Data</a></li>
+                <li>
+                    <hr class="dropdown-divider my-1">
+                </li>
+                <li><a class="dropdown-item small py-2 text-danger"
+                        href="{% url 'reports:widget_delete' widget.pk %}"><i class="bi bi-trash me-2"></i> Delete</a>
+                </li>
             </ul>
         </div>
     </div>
-    <div class="card-body">
+    <div class="card-body p-4">
         {% if widget.widget_type_ref.widget_name == 'kpi_card' %}
-        <div class="text-center">
-            <h2 class="display-4">{{ widget.data.value }}</h2>
-            <p class="text-muted">{{ widget.data.label }}</p>
+        <div class="d-flex flex-column align-items-center justify-content-center h-100 py-3">
+            <div class="display-4 fw-bold text-transparent bg-clip-text"
+                style="background-image: var(--primary-gradient); -webkit-background-clip: text; color: transparent;">
+                {{ widget.data.value }}
+            </div>
+            <p class="text-muted text-uppercase small fw-bold mt-2 letter-spacing-1">{{ widget.data.label }}</p>
+
+            {% if widget.data.trend %}
+            <div class="mt-2 text-center">
+                <span
+                    class="badge rounded-pill {% if widget.data.trend > 0 %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %} px-3 py-2">
+                    <i class="bi {% if widget.data.trend > 0 %}bi-arrow-up{% else %}bi-arrow-down{% endif %} me-1"></i>
+                    {{ widget.data.trend }}% vs last period
+                </span>
+            </div>
+            {% endif %}
         </div>
         {% elif widget.widget_type_ref.widget_name == 'chart' %}
-        <canvas id="chart-{{ widget.pk }}" class="widget-chart-canvas" data-widget-id="{{ widget.pk }}"
-            height="200"></canvas>
+        <div style="height: 250px; width: 100%;">
+            <canvas id="chart-{{ widget.pk }}" class="widget-chart-canvas" data-widget-id="{{ widget.pk }}"></canvas>
+        </div>
         {% elif widget.widget_type_ref.widget_name == 'table' %}
-        <div class="table-responsive">
-            <table class="table table-sm">
-                <thead>
+        <div class="table-responsive" style="max-height: 250px;">
+            <table class="table table-hover table-sm align-middle mb-0">
+                <thead class="bg-light sticky-top" style="z-index: 1;">
                     <tr>
                         {% for header in widget.data.headers %}
-                        <th>{{ header }}</th>
+                        <th class="small text-uppercase text-muted border-0 py-2">{{ header }}</th>
                         {% endfor %}
                     </tr>
                 </thead>
@@ -39,16 +74,36 @@
                     {% for row in widget.data.rows %}
                     <tr>
                         {% for cell in row %}
-                        <td>{{ cell }}</td>
+                        <td class="small">{{ cell }}</td>
                         {% endfor %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{{ widget.data.headers|length }}" class="text-center py-4 text-muted small">
+                            No data available
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         {% elif widget.widget_type_ref.widget_name == 'trend' %}
-        <canvas id="trend-{{ widget.pk }}" class="widget-chart-canvas" data-widget-id="{{ widget.pk }}"
-            height="200"></canvas>
+        <div style="height: 200px; width: 100%;">
+            <canvas id="trend-{{ widget.pk }}" class="widget-chart-canvas" data-widget-id="{{ widget.pk }}"></canvas>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-exclamation-circle text-warning mb-2 fs-4"></i>
+            <p class="small mb-0">Unsupported widget type</p>
+        </div>
+        {% endif %}
+
+        <!-- Error State Display -->
+        {% if widget.report_data.error %}
+        <div
+            class="alert alert-danger mt-3 mb-0 py-2 px-3 small rounded-3 border-0 bg-danger bg-opacity-10 text-danger">
+            <i class="bi bi-exclamation-triangle me-2"></i> {{ widget.report_data.error }}
+        </div>
         {% endif %}
     </div>
 </div>

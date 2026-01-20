@@ -1,7 +1,6 @@
-# apps/engagement/forms.py
+# apps/marketing/nps/forms.py
 from django import forms
 from django.forms import inlineformset_factory
-from django.core.exceptions import ValidationError
 from .models import (
     NpsAbTest, NpsAbVariant, NpsSurvey, NpsConditionalFollowUp, 
     NpsEscalationRule, NpsEscalationRuleAction, NpsEscalationAction
@@ -9,10 +8,15 @@ from .models import (
 
 # --- Survey & Conditional Follow-up ---
 
-
-
-
 class NpsSurveyForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        if user:
+            self.fields['target_roles'].queryset = self.fields['target_roles'].queryset.filter(tenant_id=user.tenant_id)
+            self.fields['target_territories'].queryset = self.fields['target_territories'].queryset.filter(tenant_id=user.tenant_id)
+
     class Meta:
         model = NpsSurvey
         fields = [
@@ -35,13 +39,6 @@ class NpsSurveyForm(forms.ModelForm):
             'target_roles': forms.SelectMultiple(attrs={'class': 'form-select'}),
             'target_territories': forms.SelectMultiple(attrs={'class': 'form-select'}),
         }
-    
-    def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user', None)
-        super().__init__(*args, **kwargs)
-        if user:
-            self.fields['target_roles'].queryset = self.fields['target_roles'].queryset.filter(tenant_id=user.tenant_id)
-            self.fields['target_territories'].queryset = self.fields['target_territories'].queryset.filter(tenant_id=user.tenant_id)
 
 NpsConditionalFollowUpFormSet = inlineformset_factory(
     NpsSurvey,
@@ -54,13 +51,17 @@ NpsConditionalFollowUpFormSet = inlineformset_factory(
         'conditional_question_text': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
     }
 )
-# ... rest of the file remains the same ...
-
-
 
 # --- A/B Testing ---
 
 class NpsAbTestForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        if user:
+            self.fields['survey'].queryset = NpsSurvey.objects.filter(tenant_id=user.tenant_id)
+
     class Meta:
         model = NpsAbTest
         fields = [
@@ -76,13 +77,11 @@ class NpsAbTestForm(forms.ModelForm):
             'confidence_level': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }
 
-    def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user', None)
-        super().__init__(*args, **kwargs)
-        if user:
-            self.fields['survey'].queryset = NpsSurvey.objects.filter(tenant_id=user.tenant_id)
-
 class NpsAbVariantForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = NpsAbVariant
         fields = ['variant', 'question_text', 'follow_up_question', 'delivery_delay_hours', 'assignment_rate']
@@ -109,6 +108,10 @@ NpsAbVariantFormSet = inlineformset_factory(
 # --- Escalation Rules ---
 
 class NpsEscalationRuleForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = NpsEscalationRule
         fields = ['name', 'is_active', 'response_type', 'min_score', 'max_score', 'requires_comment', 'auto_escalate_after_hours']
@@ -123,6 +126,10 @@ class NpsEscalationRuleForm(forms.ModelForm):
         }
 
 class NpsEscalationActionForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = NpsEscalationAction
         fields = ['name', 'description', 'action_type', 'is_active', 'action_parameters', 'order']

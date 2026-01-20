@@ -2,7 +2,7 @@ from .models import TenantUsageMetric
 from django.utils import timezone
 from django.db.models import Sum
 import datetime
-
+ 
 def track_usage(tenant, metric_type, value=1, unit='', period_start=None, period_end=None):
     """
     Track usage for a tenant
@@ -69,38 +69,96 @@ def check_usage_limits(tenant):
     Check if tenant is approaching or exceeding usage limits
     """
     alerts = []
-    
+    warnings = []
+    has_critical_overage = False
+    overage_type = None
+    approaching_limit = False
+
     # Check user limit
     current_users = get_current_usage(tenant, 'users_total')
-    if tenant.user_limit > 0 and current_users >= tenant.user_limit * 0.8:
-        status = 'warning' if current_users < tenant.user_limit else 'danger'
-        alerts.append({
-            'type': status,
-            'message': f'User limit approaching ({current_users}/{tenant.user_limit})',
-            'metric': 'users_total'
-        })
-    
+    if tenant.user_limit > 0:
+        user_percentage = (current_users / tenant.user_limit) * 100
+        if user_percentage >= 100:
+            has_critical_overage = True
+            overage_type = 'user_count'
+            alerts.append({
+                'type': 'danger',
+                'message': f'User limit exceeded ({current_users}/{tenant.user_limit})',
+                'metric': 'users_total'
+            })
+        elif user_percentage >= 80:
+            approaching_limit = True
+            alerts.append({
+                'type': 'warning' if user_percentage < 100 else 'danger',
+                'message': f'User limit approaching ({current_users}/{tenant.user_limit})',
+                'metric': 'users_total'
+            })
+            warnings.append({
+                'type': 'warning',
+                'message': f'User limit approaching ({current_users}/{tenant.user_limit})',
+                'metric': 'users_total'
+            })
+
     # Check storage limit
     current_storage = get_current_usage(tenant, 'storage_used_mb')
-    if tenant.storage_limit_mb > 0 and current_storage >= tenant.storage_limit_mb * 0.8:
-        status = 'warning' if current_storage < tenant.storage_limit_mb else 'danger'
-        alerts.append({
-            'type': status,
-            'message': f'Storage limit approaching ({current_storage}/{tenant.storage_limit_mb} MB)',
-            'metric': 'storage_used_mb'
-        })
-    
+    if tenant.storage_limit_mb > 0:
+        storage_percentage = (current_storage / tenant.storage_limit_mb) * 100
+        if storage_percentage >= 100:
+            has_critical_overage = True
+            if overage_type is None:
+                overage_type = 'storage'
+            alerts.append({
+                'type': 'danger',
+                'message': f'Storage limit exceeded ({current_storage}/{tenant.storage_limit_mb} MB)',
+                'metric': 'storage_used_mb'
+            })
+        elif storage_percentage >= 80:
+            approaching_limit = True
+            alerts.append({
+                'type': 'warning' if storage_percentage < 100 else 'danger',
+                'message': f'Storage limit approaching ({current_storage}/{tenant.storage_limit_mb} MB)',
+                'metric': 'storage_used_mb'
+            })
+            warnings.append({
+                'type': 'warning',
+                'message': f'Storage limit approaching ({current_storage}/{tenant.storage_limit_mb} MB)',
+                'metric': 'storage_used_mb'
+            })
+
     # Check API call limit
     current_api_calls = get_current_usage(tenant, 'api_calls')
-    if tenant.api_call_limit > 0 and current_api_calls >= tenant.api_call_limit * 0.8:
-        status = 'warning' if current_api_calls < tenant.api_call_limit else 'danger'
-        alerts.append({
-            'type': status,
-            'message': f'API call limit approaching ({current_api_calls}/{tenant.api_call_limit})',
-            'metric': 'api_calls'
-        })
-    
-    return alerts
+    if tenant.api_call_limit > 0:
+        api_percentage = (current_api_calls / tenant.api_call_limit) * 100
+        if api_percentage >= 100:
+            has_critical_overage = True
+            if overage_type is None:
+                overage_type = 'api_calls'
+            alerts.append({
+                'type': 'danger',
+                'message': f'API call limit exceeded ({current_api_calls}/{tenant.api_call_limit})',
+                'metric': 'api_calls'
+            })
+        elif api_percentage >= 80:
+            approaching_limit = True
+            alerts.append({
+                'type': 'warning' if api_percentage < 100 else 'danger',
+                'message': f'API call limit approaching ({current_api_calls}/{tenant.api_call_limit})',
+                'metric': 'api_calls'
+            })
+            warnings.append({
+                'type': 'warning',
+                'message': f'API call limit approaching ({current_api_calls}/{tenant.api_call_limit})',
+                'metric': 'api_calls'
+            })
+
+    # Return a structured dictionary that matches what the middleware expects
+    return {
+        'alerts': alerts,
+        'warnings': warnings,
+        'has_critical_overage': has_critical_overage,
+        'overage_type': overage_type,
+        'approaching_limit': approaching_limit
+    }
 
 def generate_usage_report(tenant, metric_type, start_date, end_date, include_trend=False, include_comparison=False):
     """
@@ -536,4 +594,45 @@ def get_accessible_features(tenant):
             })
     
     return accessible_features
+
+
+def trigger_lifecycle_event(tenant, event_type, triggered_by=None, reason="", details=None):
+    """
+    Trigger and log a tenant lifecycle event
+    """
+    from .models import TenantLifecycleEvent
+    if details is None:
+        details = {}
+        
+    event = TenantLifecycleEvent.objects.create(
+        tenant=tenant,
+        event_type=event_type,
+        triggered_by=triggered_by,
+        reason=reason,
+        details=details,
+        timestamp=timezone.now()
+    )
+    return event
+
+
+def initiate_tenant_migration(source_tenant, target_tenant, migration_type, notes=""):
+    """
+    Initiate a data migration between two tenants
+    """
+    from .models import TenantMigrationRecord
+    
+    migration = TenantMigrationRecord.objects.create(
+        source_tenant=source_tenant,
+        target_tenant=target_tenant,
+        migration_type=migration_type,
+        migration_notes=notes,
+        status='pending',
+        started_at=timezone.now()
+    )
+    
+    # In a real implementation, this would trigger an asynchronous task
+    # to perform the actual data migration.
+    
+    return migration
+
 

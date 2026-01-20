@@ -2,7 +2,7 @@ from django.utils import timezone
 from datetime import timedelta
 import logging
 from .models import EngagementEvent, EngagementStatus
-
+ 
 logger = logging.getLogger(__name__)
 
 # Decay configuration

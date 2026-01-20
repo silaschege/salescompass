@@ -3,8 +3,8 @@
 
 {% block title %}Unified Inbox - Communication{% endblock %}
 
-{% block comm_title %}📥 Unified Inbox{% endblock %}
-{% block comm_subtitle %}Your central hub for all customer interactions across all channels{% endblock %}
+{% block comm_title %}<span style="text-align: center; display: block;">📥 Unified Inbox</span>{% endblock %}
+{% block comm_subtitle %}<span style="color: black; text-align: center; display: block;">Consolidated view of all your interactions</span>{% endblock %}
 
 {% block comm_actions %}
 <div class="btn-group shadow-sm">
@@ -61,7 +61,7 @@
             <h6 class="fw-bold text-uppercase small text-muted mb-4">Time Period</h6>
             <div class="list-group list-group-flush small">
                 <a href="#"
-                    class="list-group-item list-group-item-action border-0 px-0 active bg-transparent text-comm fw-bold">Today</a>
+                    class="list-group-item list-group-item-action border-0 px-0 active bg-transparent text-comm fw-bold text-dark">Today</a>
                 <a href="#" class="list-group-item list-group-item-action border-0 px-0">Last 7 Days</a>
                 <a href="#" class="list-group-item list-group-item-action border-0 px-0">This Month</a>
             </div>
@@ -117,17 +117,13 @@
                                     {% endif %}
                                 </h6>
                                 <div class="x-small text-muted fw-bold text-uppercase letter-spacing-1">
-                                    {% if item.direction == 'inbound' or item.call_type == 'incoming' or item.itype ==
-                                    'chat' %}
+                                    {% if item.direction == 'inbound' or item.call_type == 'incoming' or item.itype == 'chat' %}
                                     <i class="bi bi-arrow-down-left text-info"></i> INBOUND
                                     {% else %}
                                     <i class="bi bi-arrow-up-right text-secondary"></i> OUTBOUND
                                     {% endif %}
                                     &bull;
-                                    {% if item.itype == 'call' %}{{ item.call_started_at|timesince }}{% elif item.itype
-                                    == 'chat' %}{{ item.received_at|timesince }}{% elif item.itype == 'social' %}{{
-                                    item.posted_at|timesince }}{% else %}{{
-                                    item.created_at|timesince }}{% endif %} ago
+                                    {% if item.itype == 'call' %}{{ item.call_started_at|timesince }}{% elif item.itype == 'chat' %}{{ item.received_at|timesince }}{% elif item.itype == 'social' %}{{ item.posted_at|timesince }}{% else %}{{ item.created_at|timesince }}{% endif %} ago
                                 </div>
                             </div>
                             <div class="text-end">
@@ -156,15 +152,21 @@
 
                         <div class="mt-3 d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center gap-2">
-                                <div class="rounded-circle bg-comm text-white d-flex align-items-center justify-content-center x-small"
+                                <div class="rounded-circle bg-comm  d-flex align-items-center justify-content-center x-small"
                                     style="width: 24px; height: 24px;">
-                                    {{
-                                    item.sender.username|slice:":2"|upper|default:item.user.username|slice:":2"|upper|default:"?"
-                                    }}
+                                    {% if item.itype == 'call' %}
+                                        {{item.user.username|slice:":2"|upper|default:"?"}}
+                                    {% else %}
+                                        {{item.sender.username|slice:":2"|upper|default:item.user.username|slice:":2"|upper|default:"?"}}
+                                    {% endif %}
                                 </div>
-                                <span class="x-small fw-bold text-muted">{{
-                                    item.sender.get_full_name|default:item.sender.username|default:item.user.username|default:"System"
-                                    }}</span>
+                                <span class="x-small fw-bold text-muted">
+                                    {% if item.itype == 'call' %}
+                                        {{ item.user.get_full_name|default:item.user.username|default:"System" }}
+                                    {% else %}
+                                        {{ item.sender.get_full_name|default:item.sender.username|default:item.user.username|default:"System" }}
+                                    {% endif %}
+                                </span>
                             </div>
                             <div class="btn-group">
                                 <a href="#"

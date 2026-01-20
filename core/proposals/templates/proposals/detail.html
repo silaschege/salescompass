@@ -16,8 +16,8 @@
     </div>
     <div>
         {% if request.user.is_authenticated and request.user|has_perm:"proposals:write" %}
-            <a href="{% url 'proposals:update' proposal.pk %}" class="btn btn-outline-secondary">Edit</a>
-            <a href="{% url 'proposals:delete' proposal.pk %}" class="btn btn-outline-danger">Delete</a>
+            <a href="{% url 'proposals:proposal_update' proposal.pk %}" class="btn btn-outline-secondary">Edit</a>
+            <a href="{% url 'proposals:proposal_delete' proposal.pk %}" class="btn btn-outline-danger">Delete</a>
         {% endif %}
     </div>
 </div>

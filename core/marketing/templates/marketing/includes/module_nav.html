@@ -1,0 +1,106 @@
+<div class="section-title">MARKETING</div>
+
+<!-- Marketing Campaign Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#marketingCampaignMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-megaphone nav-icon"></i>
+        <span>Campaign Management</span>
+    </div>
+    <i class="bi bi-chevron-down"></i>
+</a>
+<div class="collapse" id="marketingCampaignMenu">
+    <a class="nav-link" href="{% url 'marketing:campaign_list' %}">Campaigns</a>
+    <a class="nav-link" href="{% url 'marketing:campaign_calendar' %}">Calendar</a>
+    <a class="nav-link" href="{% url 'marketing:drip_campaign_list' %}">Drip Campaigns</a>
+    <a class="nav-link" href="{% url 'marketing:campaign_create' %}">Create Campaign</a>
+</div>
+
+<!-- Analytics & ROI Dropdown -->
+<a class="nav-link dropdown-toggle {% if '/marketing/analytics/' in request.path %}show{% endif %}" href="#"
+    data-bs-toggle="collapse" data-bs-target="#analyticsMenu"
+    aria-expanded="{% if '/marketing/analytics/' in request.path %}true{% else %}false{% endif %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-graph-up-arrow nav-icon"></i>
+        <span>Analytics & ROI</span>
+    </div>
+    <i class="bi bi-chevron-down"></i>
+</a>
+<div class="collapse {% if '/marketing/analytics/' in request.path %}show{% endif %}" id="analyticsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'campaign_performance' %}active{% endif %}"
+        href="{% url 'marketing:campaign_performance' %}">Performance</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'budget_vs_actual' %}active{% endif %}"
+        href="{% url 'marketing:budget_vs_actual' %}">Budget vs Actual</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'pipeline_influence' %}active{% endif %}"
+        href="{% url 'marketing:pipeline_influence' %}">Pipeline Influence</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'roi_calculator' %}active{% endif %}"
+        href="{% url 'marketing:roi_calculator' %}">ROI Calculator</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'deliverability_report' %}active{% endif %}"
+        href="{% url 'marketing:deliverability_report' %}">Deliverability</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'cac_analytics' %}active{% endif %}"
+        href="{% url 'marketing:cac_analytics' %}">CAC Analytics</a>
+</div>
+
+<!-- Email Marketing Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#emailMarketingMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-envelope-at nav-icon"></i>
+        <span>Email Marketing</span>
+    </div>
+    <i class="bi bi-chevron-down"></i>
+</a>
+<div class="collapse" id="emailMarketingMenu">
+    <a class="nav-link" href="{% url 'marketing:email_campaign_list' %}">Email Campaigns</a>
+    <a class="nav-link" href="{% url 'marketing:email_template_list' %}">Email Templates</a>
+    <a class="nav-link" href="{% url 'marketing:segment_list' %}">Audience Segments</a>
+    <a class="nav-link" href="{% url 'marketing:nurture_campaign_list' %}">Nurture Campaigns</a>
+</div>
+
+<!-- Content Management Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#contentMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-layout-text-window-reverse nav-icon"></i>
+        <span>Content Management</span>
+    </div>
+    <i class="bi bi-chevron-down"></i>
+</a>
+<div class="collapse" id="contentMenu">
+    <a class="nav-link" href="{% url 'marketing:landing_page_block_list' %}">Landing Pages</a>
+    <a class="nav-link" href="{% url 'marketing:message_template_list' %}">Message Templates</a>
+</div>
+
+<!-- AB Testing Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#abTestingMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-bezier2 nav-icon"></i>
+        <span>A/B Testing</span>
+    </div>
+    <i class="bi bi-chevron-down"></i>
+</a>
+<div class="collapse" id="abTestingMenu">
+    <a class="nav-link" href="{% url 'marketing:ab_test_list' %}">Standard Tests</a>
+    <a class="nav-link" href="{% url 'marketing:ab_automated_test_list' %}">Automated Tests</a>
+    <a class="nav-link" href="{% url 'marketing:ab_test_create' %}">Create Test</a>
+</div>
+
+<!-- Configuration Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#configMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-gear nav-icon"></i>
+        <span>Configuration</span>
+    </div>
+    <i class="bi bi-chevron-down"></i>
+</a>
+<div class="collapse" id="configMenu">
+    <a class="nav-link" href="{% url 'marketing:email_integration_list' %}">Email Integrations</a>
+    <a class="nav-link" href="{% url 'marketing:campaign_status_list' %}">Campaign Statuses</a>
+    <a class="nav-link" href="{% url 'marketing:email_provider_list' %}">Email Providers</a>
+    <a class="nav-link" href="{% url 'marketing:block_type_list' %}">Block Types</a>
+    <a class="nav-link" href="{% url 'marketing:email_category_list' %}">Email Categories</a>
+    <a class="nav-link" href="{% url 'marketing:message_type_list' %}">Message Types</a>
+    <a class="nav-link" href="{% url 'marketing:message_category_list' %}">Message Categories</a>
+</div>

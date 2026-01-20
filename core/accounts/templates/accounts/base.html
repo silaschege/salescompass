@@ -11,6 +11,10 @@
     </div>
 </a>
 <div class="collapse" id="accountsMenu">
+        <a class="nav-link {% if request.resolver_match.url_name == 'accounts_dashboard' %}active{% endif %}" 
+       href="{% url 'accounts:accounts_dashboard' %}">
+        Accounts Dashboard
+    </a>
     <a class="nav-link {% if request.resolver_match.url_name == 'account_list' %}active{% endif %}" 
        href="{% url 'accounts:account_list' %}">
         Account List
@@ -27,14 +31,8 @@
        href="{% url 'accounts:bulk_import_upload' %}">
         Upload Accounts
     </a>
-    <a class="nav-link {% if request.resolver_match.url_name == 'accounts_dashboard' %}active{% endif %}" 
-       href="{% url 'accounts:accounts_dashboard' %}">
-        Accounts Dashboard
-    </a>
-    <a class="nav-link {% if request.resolver_match.url_name == 'account_analytics' %}active{% endif %}" 
-       href="{% url 'accounts:accounts_dashboard' %}">
-        Account Analytics
-    </a>
+
+
 </div>
 
 <!-- Contacts Dropdown -->

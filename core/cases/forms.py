@@ -9,7 +9,7 @@ PRIORITY_CHOICES = [
     ('medium', 'Medium'),
     ('high', 'High'),
     ('critical', 'Critical'),
-]
+] 
 
 class CaseForm(forms.ModelForm):
     """

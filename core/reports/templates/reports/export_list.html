@@ -12,7 +12,7 @@
 
 <div class="container">
     <div class="d-flex justify-content-between mb-4">
-        <a href="{% url 'reports:list' %}" class="btn btn-outline-secondary">Back to Reports</a>
+        <a href="{% url 'reports:report_list' %}" class="btn btn-outline-secondary">Back to Reports</a>
     </div>
 
     {% if exports %}
@@ -32,7 +32,7 @@
                 {% for export in exports %}
                 <tr>
                     <td>
-                        <a href="{% url 'reports:detail' export.report.pk %}">
+                        <a href="{% url 'reports:report_detail' export.report.pk %}">
                             {{ export.report.report_name }}
                         </a>
                     </td>

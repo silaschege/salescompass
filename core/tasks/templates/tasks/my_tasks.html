@@ -14,7 +14,7 @@
     <!-- Action Buttons and Filters -->
     <div class="row mb-3">
         <div class="col-md-6">
-            <a href="{% url 'tasks:create' %}" class="btn btn-primary">+ New Task</a>
+            <a href="{% url 'tasks:task_create' %}" class="btn btn-primary">+ New Task</a>
         </div>
         <div class="col-md-6">
             <form method="get" class="d-flex gap-2 flex-wrap">
@@ -65,7 +65,7 @@
                     {% for task in tasks %}
                     <tr class="{% if task.is_overdue %}table-danger{% elif task.status == 'completed' %}table-success{% endif %}">
                         <td>
-                            <a href="{% url 'tasks:detail' task.pk %}">
+                            <a href="{% url 'tasks:task_detail' task.pk %}">
                                 {{ task.title }}
                             </a>
                             <br>
@@ -125,7 +125,7 @@
                                         <button type="submit" class="btn btn-sm btn-success">Complete</button>
                                     </form>
                                 {% endif %}
-                                <a href="{% url 'tasks:detail' task.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                <a href="{% url 'tasks:task_detail' task.pk %}" class="btn btn-sm btn-outline-primary">View</a>
                             </div>
                         </td>
                     </tr>
@@ -179,7 +179,7 @@
             </div>
             <h3 class="text-muted">No tasks assigned to you</h3>
             <p class="text-muted mb-4">You don't have any tasks assigned to you right now.</p>
-            <a href="{% url 'tasks:create' %}" class="btn btn-primary">Create Task</a>
+            <a href="{% url 'tasks:task_create' %}" class="btn btn-primary">Create Task</a>
         </div>
     {% endif %}
 </div>

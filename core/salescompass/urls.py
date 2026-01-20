@@ -44,7 +44,9 @@ urlpatterns = [
     path('commissions/', include('commissions.urls')),
     path('communication/', include('communication.urls')),
     path('developer/', include('developer.urls')),
-    # path('api/v1/ml/', include('ml_models.infrastructure.api.urls')), # Decoupled to standalone service
+    
+      # Access Control
+    path('access-control/', include('access_control.urls')),
     
     # Control Plane Apps
     path('infrastructure/', include('infrastructure.urls')),
@@ -54,6 +56,9 @@ urlpatterns = [
     
     # Telephony Integration
     path('wazo/', include('wazo.urls')),
+    
+    # Legacy URLs (Compatibility)
+    path('legacy/communication/', include('communication.urls_legacy')),
     
     # API Documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

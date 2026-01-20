@@ -8,7 +8,10 @@ from django.utils import timezone
 from django.http import JsonResponse, HttpResponseRedirect
 from django.db.models import Q
 from django.utils import timezone
-
+from core.views import (
+    TenantAwareViewMixin, SalesCompassListView, SalesCompassDetailView,
+    SalesCompassCreateView, SalesCompassUpdateView, SalesCompassDeleteView
+)
 import json
 from uuid import UUID
 
@@ -41,9 +44,9 @@ from .utils import (
     get_nps_by_segment,
     identify_promoter_referral_opportunities
 )
+ 
 
-
-class NpsDashboardView(PermissionRequiredMixin, TemplateView):
+class NpsDashboardView(TenantAwareViewMixin, TemplateView):
     template_name = 'nps/nps_dashboard.html'
     required_permission = 'engagement:read'
 
@@ -160,7 +163,7 @@ class NpsDashboardView(PermissionRequiredMixin, TemplateView):
         return context
 
 
-class NpsTrendChartsView(PermissionRequiredMixin, TemplateView):
+class NpsTrendChartsView(TenantAwareViewMixin, TemplateView):
     template_name = 'nps/nps_trend_chart.html'
     required_permission = 'engagement:read'
 
@@ -177,7 +180,7 @@ class NpsTrendChartsView(PermissionRequiredMixin, TemplateView):
         return context
 
 
-class NpsResponsesView(PermissionRequiredMixin, ListView):
+class NpsResponsesView(TenantAwareViewMixin, ListView):
     model = NpsResponse
     template_name = 'nps/nps_responses.html'
     context_object_name = 'responses'
@@ -190,7 +193,7 @@ class NpsResponsesView(PermissionRequiredMixin, ListView):
         return super().get_queryset().select_related('account', 'survey').filter(tenant=tenant)
 
 
-class NpsSurveyCreateView(PermissionRequiredMixin, CreateView):
+class NpsSurveyCreateView(TenantAwareViewMixin, CreateView):
     model = NpsSurvey
     form_class = NpsSurveyForm
     template_name = 'nps/nps_survey_form.html'
@@ -238,7 +241,7 @@ class NpsSurveyCreateView(PermissionRequiredMixin, CreateView):
             return self.render_to_response(self.get_context_data(form=form))
 
 
-class DetractorKanbanView(PermissionRequiredMixin, TemplateView):
+class DetractorKanbanView(TenantAwareViewMixin, TemplateView):
     template_name = 'nps/detractor_kanban.html'
     required_permission = 'engagement:read'
 
@@ -421,7 +424,7 @@ class SubmitNPSView(View):
             return HttpResponseRedirect(reverse('nps:nps_dashboard'))
 
 
-class CreateNpsAbTestView(PermissionRequiredMixin, CreateView):
+class CreateNpsAbTestView(TenantAwareViewMixin, CreateView):
     """
     Create a new NPS A/B test with variants.
     """
@@ -521,7 +524,7 @@ class EmbedNPSWidgetView(TemplateView):
         return context
 
 
-class PromoterAdvocacyView(PermissionRequiredMixin, TemplateView):
+class PromoterAdvocacyView(TenantAwareViewMixin, TemplateView):
     template_name = 'nps/promoter_advocacy.html'
     required_permission = 'engagement:read'
 
@@ -578,7 +581,7 @@ class PromoterAdvocacyView(PermissionRequiredMixin, TemplateView):
         return context
 
 
-class PromoterReferralListView(PermissionRequiredMixin, ListView):
+class PromoterReferralListView(TenantAwareViewMixin, ListView):
     model = NpsPromoterReferral
     template_name = 'nps/promoter_referral_list.html'
     context_object_name = 'referrals'
@@ -596,7 +599,7 @@ class PromoterReferralListView(PermissionRequiredMixin, ListView):
         ).order_by('-created_at')
 
 
-class PromoterReferralUpdateView(PermissionRequiredMixin, UpdateView):
+class PromoterReferralUpdateView(TenantAwareViewMixin, UpdateView):
     model = NpsPromoterReferral
     template_name = 'nps/promoter_referral_form.html'
     fields = [
@@ -630,7 +633,7 @@ class PromoterReferralUpdateView(PermissionRequiredMixin, UpdateView):
         return reverse('nps:promoter_referrals')
 
 
-class NpsEscalationRuleListView(PermissionRequiredMixin, ListView):
+class NpsEscalationRuleListView(TenantAwareViewMixin, ListView):
     model = NpsEscalationRule
     template_name = 'nps/escalation_rule_list.html'
     context_object_name = 'rules'
@@ -642,7 +645,7 @@ class NpsEscalationRuleListView(PermissionRequiredMixin, ListView):
         return NpsEscalationRule.objects.filter(tenant=tenant).order_by('-is_active', 'name')
 
 
-class NpsEscalationRuleCreateView(PermissionRequiredMixin, CreateView):
+class NpsEscalationRuleCreateView(TenantAwareViewMixin, CreateView):
     model = NpsEscalationRule
     form_class = NpsEscalationRuleForm
     template_name = 'nps/escalation_rule_form.html'
@@ -681,7 +684,7 @@ class NpsEscalationRuleCreateView(PermissionRequiredMixin, CreateView):
         return reverse('nps:escalation_rules')
 
 
-class NpsEscalationRuleUpdateView(PermissionRequiredMixin, UpdateView):
+class NpsEscalationRuleUpdateView(TenantAwareViewMixin, UpdateView):
     model = NpsEscalationRule
     form_class = NpsEscalationRuleForm
     template_name = 'nps/escalation_rule_form.html'
@@ -719,7 +722,7 @@ class NpsEscalationRuleUpdateView(PermissionRequiredMixin, UpdateView):
 
 
 
-class NpsEscalationActionListView(PermissionRequiredMixin, ListView):
+class NpsEscalationActionListView(TenantAwareViewMixin, ListView):
     model = NpsEscalationAction
     template_name = 'nps/escalation_action_list.html'
     context_object_name = 'actions'
@@ -731,7 +734,7 @@ class NpsEscalationActionListView(PermissionRequiredMixin, ListView):
         return NpsEscalationAction.objects.filter(tenant=tenant).order_by('order', 'name')
 
 
-class NpsEscalationActionCreateView(PermissionRequiredMixin, CreateView):
+class NpsEscalationActionCreateView(TenantAwareViewMixin, CreateView):
     model = NpsEscalationAction
     form_class = NpsEscalationActionForm
     template_name = 'nps/escalation_action_form.html'
@@ -745,7 +748,7 @@ class NpsEscalationActionCreateView(PermissionRequiredMixin, CreateView):
         return reverse('nps:escalation_actions')
 
 
-class NpsEscalationActionUpdateView(PermissionRequiredMixin, UpdateView):
+class NpsEscalationActionUpdateView(TenantAwareViewMixin, UpdateView):
     model = NpsEscalationAction
     form_class = NpsEscalationActionForm
     template_name = 'nps/escalation_action_form.html'
@@ -754,7 +757,7 @@ class NpsEscalationActionUpdateView(PermissionRequiredMixin, UpdateView):
     def get_success_url(self):
         return reverse('nps:escalation_actions')
 
-class NpsEscalationActionLogListView(PermissionRequiredMixin, ListView):
+class NpsEscalationActionLogListView(TenantAwareViewMixin, ListView):
     model = NpsEscalationActionLog
     template_name = 'nps/escalation_action_log_list.html'
     context_object_name = 'action_logs'
@@ -773,7 +776,7 @@ class NpsEscalationActionLogListView(PermissionRequiredMixin, ListView):
             'nps_response__survey'
         ).order_by('-created_at')
 
-class NpsTrendSnapshotListView(PermissionRequiredMixin, ListView):
+class NpsTrendSnapshotListView(TenantAwareViewMixin, ListView):
     model = NpsTrendSnapshot
     template_name = 'nps/trend_snapshot_list.html'
     context_object_name = 'snapshots'

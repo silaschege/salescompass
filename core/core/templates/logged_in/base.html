@@ -2,29 +2,71 @@
 <html lang="en">
 
 <head>
-    <title>{% block title %}{% if white_label_settings %}{{ white_label_settings.brand_name }}{% else %}SalesCompass{%endif %}{% endblock %}</title>
+    <title>{% block title %}{% if white_label_settings %}{{ white_label_settings.brand_name }}{% else
+        %}SalesCompass{%endif %}{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    
+
     {% if white_label_settings %}
     <style>
         :root {
-            --primary-color: {{ white_label_settings.primary_color }};
-            --secondary-color: {{ white_label_settings.secondary_color }};
-            --accent-color: {{ white_label_settings.accent_color }};
-            --background-color: {{ white_label_settings.background_color }};
+            --primary-color: {
+                    {
+                    white_label_settings.primary_color
+                }
+            }
+
+            ;
+
+            --secondary-color: {
+                    {
+                    white_label_settings.secondary_color
+                }
+            }
+
+            ;
+
+            --accent-color: {
+                    {
+                    white_label_settings.accent_color
+                }
+            }
+
+            ;
+
+            --background-color: {
+                    {
+                    white_label_settings.background_color
+                }
+            }
+
+            ;
         }
 
         body {
-            background: linear-gradient(135deg, {{ white_label_settings.login_background_color|slice:":7" }} 0%, {{ white_label_settings.background_color|slice:":7" }} 100%);
-            font-family: 'Segoe UI', Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            overflow-x: hidden;
+            background: linear-gradient(135deg, {
+                    {
+                    white_label_settings.login_background_color|slice:":7"
+                }
+            }
+
+            0%, {
+                {
+                white_label_settings.background_color|slice:":7"
+            }
+        }
+
+        100%);
+        font-family: 'Segoe UI',
+        Arial,
+        sans-serif;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        overflow-x: hidden;
         }
 
         /* --- Sidebar Styling (Matches Dashboard) --- */
@@ -106,6 +148,7 @@
             transform: rotate(180deg);
             transition: transform 0.3s ease;
         }
+
         .bi-chevron-down {
             transition: transform 0.3s ease;
             font-size: 0.8em;
@@ -149,6 +192,7 @@
             background-color: var(--primary-color);
             border-color: var(--primary-color);
         }
+
         .btn-primary:hover {
             background-color: var(--secondary-color);
             border-color: var(--secondary-color);
@@ -156,10 +200,22 @@
 
         /* Mobile Responsive */
         @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.visible { transform: translateX(0); }
-            .main-content { margin-left: 0; }
-            .main-content > .container-fluid { padding-left: 1rem; padding-right: 1rem; }
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.visible {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .main-content>.container-fluid {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
         }
     </style>
     {% else %}
@@ -252,6 +308,7 @@
             transform: rotate(180deg);
             transition: transform 0.3s ease;
         }
+
         .bi-chevron-down {
             transition: transform 0.3s ease;
             font-size: 0.8em;
@@ -295,6 +352,7 @@
             background-color: #6f42c1;
             border-color: #6f42c1;
         }
+
         .btn-primary:hover {
             background-color: #5a34a0;
             border-color: #5a34a0;
@@ -302,10 +360,22 @@
 
         /* Mobile Responsive */
         @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.visible { transform: translateX(0); }
-            .main-content { margin-left: 0; }
-            .main-content > .container-fluid { padding-left: 1rem; padding-right: 1rem; }
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.visible {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .main-content>.container-fluid {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
         }
     </style>
     {% endif %}
@@ -334,17 +404,17 @@
         <nav class="nav flex-column">
             <!-- General Section -->
             <div class="section-title">GENERAL</div>
-            <a class="nav-link {% if request.resolver_match.url_name == 'app_selection' %}active{% endif %}" 
-               href="{% url 'core:app_selection' %}">
+            <a class="nav-link {% if request.resolver_match.url_name == 'app_selection' %}active{% endif %}"
+                href="{% url 'core:app_selection' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-grid nav-icon"></i> 
+                    <i class="bi bi-grid nav-icon"></i>
                     <span>All Apps</span>
                 </div>
             </a>
-            <a class="nav-link {% if request.resolver_match.url_name == 'clv_dashboard' %}active{% endif %}" 
-               href="{% url 'core:clv_dashboard' %}">
+            <a class="nav-link {% if request.resolver_match.url_name == 'clv_dashboard' %}active{% endif %}"
+                href="{% url 'core:clv_dashboard' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-bar-chart nav-icon"></i> 
+                    <i class="bi bi-bar-chart nav-icon"></i>
                     <span>CLV Dashboard</span>
                 </div>
             </a>
@@ -356,41 +426,41 @@
             {% if leads_access or sales_access %}
             <div class="section-title">REVENUE OPERATIONS</div>
             {% if leads_access %}
-            <a class="nav-link {% if request.resolver_match.url_name == 'lead_list' %}active{% endif %}" 
-               href="{% url 'leads:lead_list' %}">
+            <a class="nav-link {% if request.resolver_match.url_name == 'lead_list' %}active{% endif %}"
+                href="{% url 'leads:lead_list' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-person-plus nav-icon"></i> 
+                    <i class="bi bi-person-plus nav-icon"></i>
                     <span>Leads</span>
                 </div>
             </a>
             {% endif %}
             {% if sales_access %}
-            <a class="nav-link {% if request.resolver_match.url_name == 'sale_list' %}active{% endif %}" 
-               href="{% url 'sales:sale_list' %}">
+            <a class="nav-link {% if request.resolver_match.url_name == 'sale_list' %}active{% endif %}"
+                href="{% url 'sales:sale_list' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-currency-dollar nav-icon"></i> 
+                    <i class="bi bi-currency-dollar nav-icon"></i>
                     <span>Sales</span>
                 </div>
             </a>
             {% endif %}
-            <a class="nav-link {% if request.resolver_match.url_name == 'opportunity_list' %}active{% endif %}" 
-               href="{% url 'opportunities:opportunity_list' %}">
+            <a class="nav-link {% if request.resolver_match.url_name == 'opportunity_list' %}active{% endif %}"
+                href="{% url 'opportunities:opportunity_list' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-lightbulb nav-icon"></i> 
+                    <i class="bi bi-lightbulb nav-icon"></i>
                     <span>Opportunities</span>
                 </div>
             </a>
-            <a class="nav-link {% if request.resolver_match.url_name == 'account_list' %}active{% endif %}" 
-               href="{% url 'accounts:account_list' %}">
+            <a class="nav-link {% if request.resolver_match.url_name == 'account_list' %}active{% endif %}"
+                href="{% url 'accounts:account_list' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-building nav-icon"></i> 
+                    <i class="bi bi-building nav-icon"></i>
                     <span>Accounts</span>
                 </div>
             </a>
-            <a class="nav-link {% if request.resolver_match.url_name == 'contact_list' %}active{% endif %}" 
-               href="{% url 'accounts:contact_list' %}">
+            <a class="nav-link {% if request.resolver_match.url_name == 'contact_list' %}active{% endif %}"
+                href="{% url 'accounts:contact_list' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-people nav-icon"></i> 
+                    <i class="bi bi-people nav-icon"></i>
                     <span>Contacts</span>
                 </div>
             </a>
@@ -400,25 +470,32 @@
             {% has_module_access 'engagement' as engagement_access %}
             {% if engagement_access %}
             <div class="section-title">CUSTOMER ENGAGEMENT</div>
-            <a class="nav-link {% if request.resolver_match.url_name == 'campaign_list' %}active{% endif %}" 
-               href="{% url 'marketing:campaign_list' %}">
+            <a class="nav-link {% if request.resolver_match.url_name == 'campaign_list' %}active{% endif %}"
+                href="{% url 'marketing:campaign_list' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-megaphone nav-icon"></i> 
+                    <i class="bi bi-megaphone nav-icon"></i>
                     <span>Campaigns</span>
                 </div>
             </a>
-            <a class="nav-link {% if request.resolver_match.url_name == 'campaign_calendar' %}active{% endif %}" 
-               href="{% url 'marketing:campaign_calendar' %}">
+            <a class="nav-link {% if request.resolver_match.url_name == 'campaign_calendar' %}active{% endif %}"
+                href="{% url 'marketing:campaign_calendar' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-calendar3 nav-icon"></i> 
+                    <i class="bi bi-calendar3 nav-icon"></i>
                     <span>Marketing Calendar</span>
                 </div>
             </a>
-            <a class="nav-link {% if request.resolver_match.url_name == 'nps_dashboard' %}active{% endif %}" 
-               href="{% url 'nps:nps_dashboard' %}">
+            <a class="nav-link {% if request.resolver_match.url_name == 'nps_dashboard' %}active{% endif %}"
+                href="{% url 'nps:nps_dashboard' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-heart nav-icon"></i> 
+                    <i class="bi bi-heart nav-icon"></i>
                     <span>NPS Dashboard</span>
+                </div>
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' and request.resolver_match.app_name == 'communication' %}active{% endif %}"
+                href="{% url 'communication:dashboard' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-chat-dots nav-icon"></i>
+                    <span>Communications</span>
                 </div>
             </a>
             {% endif %}
@@ -427,24 +504,17 @@
             {% has_module_access 'cases' as cases_access %}
             {% if cases_access %}
             <div class="section-title">SERVICE DELIVERY</div>
-            <a class="nav-link {% if request.resolver_match.url_name == 'case_list' %}active{% endif %}" 
-               href="{% url 'cases:case_list' %}">
+            <a class="nav-link {% if request.resolver_match.url_name == 'case_list' %}active{% endif %}"
+                href="{% url 'cases:case_list' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-headset nav-icon"></i> 
+                    <i class="bi bi-headset nav-icon"></i>
                     <span>Service Cases</span>
                 </div>
             </a>
-            <a class="nav-link {% if request.resolver_match.url_name == 'knowledge_base' %}active{% endif %}" 
-               href="{% url 'cases:knowledge_base' %}">
+            <a class="nav-link {% if request.resolver_match.url_name == 'task_list' %}active{% endif %}"
+                href="{% url 'tasks:task_list' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-journal-text nav-icon"></i> 
-                    <span>Knowledge Base</span>
-                </div>
-            </a>
-            <a class="nav-link {% if request.resolver_match.url_name == 'task_list' %}active{% endif %}" 
-               href="{% url 'tasks:list' %}">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-check2-square nav-icon"></i> 
+                    <i class="bi bi-check2-square nav-icon"></i>
                     <span>Tasks</span>
                 </div>
             </a>
@@ -454,24 +524,24 @@
             {% has_module_access 'reports' as reports_access %}
             {% if reports_access %}
             <div class="section-title">INTELLIGENCE & REPORTS</div>
-            <a class="nav-link {% if request.resolver_match.url_name == 'reports_dashboard' %}active{% endif %}" 
-               href="{% url 'reports:dashboard' %}">
+            <a class="nav-link {% if request.resolver_match.url_name == 'reports_dashboard' %}active{% endif %}"
+                href="{% url 'reports:dashboard' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-speedometer2 nav-icon"></i> 
+                    <i class="bi bi-speedometer2 nav-icon"></i>
                     <span>Reports Dashboard</span>
                 </div>
             </a>
-            <a class="nav-link {% if request.resolver_match.url_name == 'report_list' %}active{% endif %}" 
-               href="{% url 'reports:report_list' %}">
+            <a class="nav-link {% if request.resolver_match.url_name == 'report_list' %}active{% endif %}"
+                href="{% url 'reports:report_list' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-file-earmark-bar-graph nav-icon"></i> 
+                    <i class="bi bi-file-earmark-bar-graph nav-icon"></i>
                     <span>All Reports</span>
                 </div>
             </a>
-            <a class="nav-link {% if request.resolver_match.url_name == 'export_list' %}active{% endif %}" 
-               href="{% url 'reports:export_list' %}">
+            <a class="nav-link {% if request.resolver_match.url_name == 'export_list' %}active{% endif %}"
+                href="{% url 'reports:export_list' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-download nav-icon"></i> 
+                    <i class="bi bi-download nav-icon"></i>
                     <span>Export Logs</span>
                 </div>
             </a>
@@ -480,9 +550,10 @@
             <!-- Configuration & Dynamic Choices (Superuser Only) -->
             {% if user.is_superuser %}
             <div class="section-title">CONFIGURATION</div>
-            
+
             <!-- Dynamic Choices Dropdown -->
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#configMenu" aria-expanded="false">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#configMenu"
+                aria-expanded="false">
                 <div class="d-flex align-items-center">
                     <i class="bi bi-sliders nav-icon"></i>
                     <span>Dynamic Choices</span>
@@ -542,7 +613,8 @@
             </div>
 
             <!-- System Admin Dropdown -->
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#adminMenu" aria-expanded="false">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#adminMenu"
+                aria-expanded="false">
                 <div class="d-flex align-items-center">
                     <i class="bi bi-gear-wide nav-icon"></i>
                     <span>System Admin</span>
@@ -563,7 +635,8 @@
             </div>
 
             <!-- Security Dropdown -->
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#securityMenu" aria-expanded="false">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#securityMenu"
+                aria-expanded="false">
                 <div class="d-flex align-items-center">
                     <i class="bi bi-shield-lock nav-icon"></i>
                     <span>Security</span>
@@ -634,10 +707,10 @@
 
         <!-- Content Block -->
         {% block content %}{% endblock %}
-        
+
         <footer class="footer-bar mt-auto py-3 bg-light border-top">
             <div class="container-fluid text-center">
-                <span>&copy; 2025 {% if white_label_settings and white_label_settings.copyright_text %}{{white_label_settings.copyright_text }}{% else %}SalesCompass{%endif%}. {% if white_label_settings and white_label_settings.show_tagline %}{{ white_label_settings.tagline }}{%endif%}</span>
+                <span>&copy; 2025 {% if white_label_settings and white_label_settings.copyright_text%}{{white_label_settings.copyright_text }}{% else %}SalesCompass{%endif%}. {% if white_label_settings and white_label_settings.show_tagline %}{{ white_label_settings.tagline }}{%endif%}</span>
             </div>
         </footer>
     </div>

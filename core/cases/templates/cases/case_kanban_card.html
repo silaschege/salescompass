@@ -2,34 +2,36 @@
     <div class="card-body p-2">
         <div class="d-flex justify-content-between align-items-start">
             <h6 class="card-title mb-1">
-                <a href="{% url 'cases:detail' case.pk %}" class="text-decoration-none">
+                <a href="{% url 'cases:case_detail' case.pk %}" class="text-decoration-none">
                     {{ case.subject|truncatechars:25 }}
                 </a>
             </h6>
             {% if case.is_overdue %}
-                <span class="badge bg-danger overdue-badge">Overdue</span>
+            <span class="badge bg-danger overdue-badge">Overdue</span>
             {% endif %}
         </div>
         <p class="card-text small mb-1">
             <strong>Account:</strong> {{ case.account.name|truncatechars:20 }}
         </p>
         <p class="card-text small mb-1">
-            <span class="priority-badge badge bg-{% if case.priority == 'critical' %}danger{% elif case.priority == 'high' %}warning{% elif case.priority == 'medium' %}info{% else %}secondary{% endif %}">
+            <span
+                class="priority-badge badge bg-{% if case.priority == 'critical' %}danger{% elif case.priority == 'high' %}warning{% elif case.priority == 'medium' %}info{% else %}secondary{% endif %}">
                 {{ case.get_priority_display }}
             </span>
             {% if case.csat_score %}
-                <span class="badge bg-{% if case.csat_score >= 4 %}success{% elif case.csat_score >= 3 %}warning{% else %}danger{% endif %} ms-1">
-                    {{ case.csat_score }}/5
-                </span>
+            <span
+                class="badge bg-{% if case.csat_score >= 4 %}success{% elif case.csat_score >= 3 %}warning{% else %}danger{% endif %} ms-1">
+                {{ case.csat_score }}/5
+            </span>
             {% endif %}
         </p>
         <p class="card-text small mb-0">
             <strong>Owner:</strong> {{ case.owner.email|default:"Unassigned" }}
         </p>
         {% if case.sla_remaining_hours is not None and not case.is_overdue %}
-            <p class="card-text small mb-0">
-                <small class="text-muted">SLA: {{ case.sla_remaining_hours }}h remaining</small>
-            </p>
+        <p class="card-text small mb-0">
+            <small class="text-muted">SLA: {{ case.sla_remaining_hours }}h remaining</small>
+        </p>
         {% endif %}
     </div>
 </div>

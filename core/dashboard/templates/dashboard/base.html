@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -8,109 +8,215 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    
+
     {% block extra_css %}
     <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --sidebar-bg: #ffffff;
+            --sidebar-hover: rgba(102, 126, 234, 0.08);
+            --sidebar-active: rgba(102, 126, 234, 0.12);
+            --text-primary: #212529;
+            --text-muted: #6c757d;
+            --border-color: #e9ecef;
+            --accent-color: #667eea;
+        }
+
         body {
-            background: linear-gradient(135deg, #f7f8fc 0%, #e3e6f3 100%);
-            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 0;
             min-height: 100vh;
             overflow-x: hidden;
         }
 
-        /* --- Sidebar Styling (Matches Billing) --- */
+        /* --- Modern Sidebar --- */
         .sidebar {
-            width: 250px;
-            background: #fff;
-            border-right: 1px solid #e3e6f3;
-            padding: 1.5rem 1rem;
+            width: 260px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
             position: fixed;
             top: 0;
             bottom: 0;
             left: 0;
             overflow-y: auto;
             z-index: 1000;
-            transition: transform 0.3s ease;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.03);
+            display: flex;
+            flex-direction: column;
         }
 
         .sidebar.hidden {
             transform: translateX(-100%);
         }
 
-        .sidebar .navbar-brand {
-            color: #6f42c1 !important; /* Purple Brand */
-            font-weight: bold;
+        /* Brand Logo */
+        .sidebar-brand {
+            padding: 20px 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-brand a {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .sidebar-brand i {
             font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            margin-bottom: 2rem;
-            text-decoration: none;
+            margin-right: 10px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
+        /* Navigation Container */
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+            overflow-y: auto;
+        }
+
+        /* Section Title */
+        .nav-section-title {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            padding: 16px 12px 8px;
+            margin-top: 8px;
+        }
+
+        /* Navigation Links */
         .sidebar .nav-link {
-            color: #333;
-            margin-bottom: 0.5rem;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            transition: all 0.2s ease;
-            text-decoration: none;
             display: flex;
             align-items: center;
-            justify-content: space-between; /* Ensures chevron aligns right */
-        }
-
-        /* Navigation Hover & Active States */
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link:focus,
-        .sidebar .nav-link.active {
-            color: #6f42c1;
-            background-color: #f0e6ff; /* Light Purple Background */
+            justify-content: space-between;
+            padding: 12px 14px;
+            margin: 2px 0;
+            border-radius: 10px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
             font-weight: 500;
+            transition: all 0.2s ease;
         }
 
-        /* Icon Styling */
-        .sidebar .nav-link i.nav-icon {
-            margin-right: 0.75rem;
-            font-size: 1.1rem;
+        .sidebar .nav-link:hover {
+            background: var(--sidebar-hover);
+            color: var(--accent-color);
+        }
+
+        .sidebar .nav-link.active {
+            background: var(--sidebar-active);
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .sidebar .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 24px;
+            background: var(--primary-gradient);
+            border-radius: 0 3px 3px 0;
+        }
+
+        /* Nav Icon */
+        .nav-icon {
             width: 20px;
             text-align: center;
+            margin-right: 12px;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            transition: color 0.2s ease;
         }
 
-        /* Submenu items indentation */
-        .sidebar .collapse .nav-link {
-            padding-left: 2.75rem; /* Indent children */
-            font-size: 0.95rem;
+        .sidebar .nav-link:hover .nav-icon,
+        .sidebar .nav-link.active .nav-icon {
+            color: var(--accent-color);
         }
 
-        /* Section Dividers */
-        .sidebar .section-title {
-            color: #6c757d;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 1.5rem 0 0.5rem 1rem;
+        /* Dropdown Items */
+        .nav-dropdown-content {
+            padding-left: 8px;
+            margin-top: 4px;
+        }
+
+        .nav-dropdown-content .nav-link {
+            padding: 10px 14px 10px 44px;
+            font-size: 0.85rem;
+            font-weight: 400;
+            position: relative;
+        }
+
+        .nav-dropdown-content .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 26px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--border-color);
+            transition: background 0.2s ease;
+        }
+
+        .nav-dropdown-content .nav-link:hover::before,
+        .nav-dropdown-content .nav-link.active::before {
+            background: var(--accent-color);
         }
 
         /* Chevron Rotation */
-        .sidebar .nav-link[aria-expanded="true"] .bi-chevron-down {
-            transform: rotate(180deg);
+        .nav-chevron {
+            font-size: 0.7rem;
+            color: var(--text-muted);
             transition: transform 0.3s ease;
         }
-        .bi-chevron-down {
-            transition: transform 0.3s ease;
-            font-size: 0.8em;
+
+        .nav-link[aria-expanded="true"] .nav-chevron {
+            transform: rotate(180deg);
+        }
+
+        /* Footer */
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+            margin-top: auto;
+        }
+
+        .sidebar-footer .nav-link {
+            color: #dc3545;
+        }
+
+        .sidebar-footer .nav-link:hover {
+            background: rgba(220, 53, 69, 0.08);
+            color: #dc3545;
+        }
+
+        .sidebar-footer .nav-link .nav-icon {
+            color: #dc3545;
         }
 
         /* --- Main Content --- */
         .main-content {
-            margin-left: 250px;
+            margin-left: 260px;
             min-height: 100vh;
-            transition: margin-left 0.3s ease;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
+            padding: 24px;
         }
 
         .main-content.sidebar-hidden {
@@ -120,63 +226,87 @@
         /* Toggle Button */
         .toggle-sidebar {
             position: fixed;
-            top: 1rem;
-            left: 1rem;
+            top: 20px;
+            left: 20px;
             z-index: 1001;
-            background: #6f42c1;
+            background: var(--primary-gradient);
             color: white;
             border: none;
-            border-radius: 0.5rem;
-            width: 40px;
-            height: 40px;
+            border-radius: 10px;
+            width: 42px;
+            height: 42px;
             font-size: 1.2rem;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
         }
 
-        /* Dashboard Specific: Cards */
+        .toggle-sidebar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Dashboard Cards */
         .widget-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 1.5rem;
-            padding: 1.5rem;
         }
 
         .widget-card {
             background: white;
-            border-radius: 1rem;
-            box-shadow: 0 2px 16px rgba(111, 66, 193, 0.08); /* Purple shadow hint */
-            transition: transform 0.2s, box-shadow 0.2s;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
             border: none;
+            overflow: hidden;
         }
 
         .widget-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(111, 66, 193, 0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.15);
         }
 
-        /* Helper Classes */
+        /* Gradient Buttons */
         .btn-primary {
-            background-color: #6f42c1;
-            border-color: #6f42c1;
+            background: var(--primary-gradient);
+            border: none;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
+
         .btn-primary:hover {
-            background-color: #5a34a0;
-            border-color: #5a34a0;
+            background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Alert Styling */
+        .alert {
+            border: none;
+            border-radius: 12px;
         }
 
         /* Mobile Responsive */
         @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.visible { transform: translateX(0); }
-            .main-content { margin-left: 0; }
-            .main-content > .container-fluid { padding-left: 1rem; padding-right: 1rem; }
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.visible {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+            }
+
+            .toggle-sidebar {
+                top: 12px;
+                left: 12px;
+            }
         }
     </style>
     {% endblock %}
@@ -192,30 +322,36 @@
 
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
-        <a class="navbar-brand" href="{% url 'core:app_selection' %}">
-            <i class="bi bi-compass me-2"></i> SalesCompass
-        </a>
+        <!-- Brand -->
+        <div class="sidebar-brand">
+            <a href="{% url 'core:app_selection' %}">
+                <i class="bi bi-compass"></i>
+                <span>SalesCompass</span>
+            </a>
+        </div>
 
-        <nav class="nav flex-column">
-            
-            <!-- 1. Cockpit (Dashboard Home) -->
-            <a class="nav-link {% if request.resolver_match.url_name == 'cockpit' %}active{% endif %}" 
-               href="{% url 'dashboard:cockpit' %}">
+        <!-- Navigation -->
+        <nav class="sidebar-nav">
+            <!-- Main Navigation -->
+            <a class="nav-link {% if request.resolver_match.url_name == 'cockpit' %}active{% endif %}"
+                href="{% url 'dashboard:cockpit' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-speedometer2 nav-icon"></i> 
+                    <i class="bi bi-speedometer2 nav-icon"></i>
                     <span>Cockpit</span>
                 </div>
             </a>
 
-            <!-- 2. BI Suite Dropdown -->
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#biSuiteMenu" aria-expanded="false">
+            <!-- BI Suite Dropdown -->
+            <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#biSuiteMenu"
+                aria-expanded="{% if request.resolver_match.url_name in 'bi_dashboard,data_explorer,drill_down,bi_builder' %}true{% else %}false{% endif %}">
                 <div class="d-flex align-items-center">
                     <i class="bi bi-graph-up-arrow nav-icon"></i>
                     <span>BI Suite</span>
                 </div>
-                <i class="bi bi-chevron-down"></i>
+                <i class="bi bi-chevron-down nav-chevron"></i>
             </a>
-            <div class="collapse" id="biSuiteMenu">
+            <div class="collapse nav-dropdown-content {% if request.resolver_match.url_name in 'bi_dashboard,data_explorer,drill_down,bi_builder' %}show{% endif %}"
+                id="biSuiteMenu">
                 <a class="nav-link {% if request.resolver_match.url_name == 'bi_dashboard' %}active{% endif %}"
                     href="{% url 'dashboard:bi_dashboard' %}">
                     Dashboard
@@ -234,16 +370,18 @@
                 </a>
             </div>
 
-            <!-- 3. Admin Dropdown -->
+            <!-- Admin Dropdown (Role-based) -->
             {% if user.role.name == 'Admin' or user.is_superuser %}
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#adminMenu" aria-expanded="false">
+            <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#adminMenu"
+                aria-expanded="{% if request.resolver_match.url_name in 'admin_dashboard,widget_type_list,widget_category_list,dynamic_choices_dashboard' %}true{% else %}false{% endif %}">
                 <div class="d-flex align-items-center">
                     <i class="bi bi-shield-lock nav-icon"></i>
                     <span>Admin</span>
                 </div>
-                <i class="bi bi-chevron-down"></i>
+                <i class="bi bi-chevron-down nav-chevron"></i>
             </a>
-            <div class="collapse" id="adminMenu">
+            <div class="collapse nav-dropdown-content {% if request.resolver_match.url_name in 'admin_dashboard,widget_type_list,widget_category_list,dynamic_choices_dashboard' %}show{% endif %}"
+                id="adminMenu">
                 <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}"
                     href="{% url 'dashboard:admin_dashboard' %}">
                     Overview
@@ -263,11 +401,11 @@
             </div>
             {% endif %}
 
-            <!-- 4. Role Based Views -->
+            <!-- Role Based Views Section -->
             {% if user.role.name == 'Manager' or user.role.name == 'Admin' or user.is_superuser %}
-            <div class="section-title">ROLES</div>
+            <div class="nav-section-title">Roles</div>
             <a class="nav-link {% if request.resolver_match.url_name == 'manager_dashboard' %}active{% endif %}"
-               href="{% url 'dashboard:manager_dashboard' %}">
+                href="{% url 'dashboard:manager_dashboard' %}">
                 <div class="d-flex align-items-center">
                     <i class="bi bi-briefcase nav-icon"></i>
                     <span>Manager View</span>
@@ -277,7 +415,7 @@
 
             {% if user.role.name == 'Support' or user.role.name == 'Admin' or user.is_superuser %}
             <a class="nav-link {% if request.resolver_match.url_name == 'support_dashboard' %}active{% endif %}"
-               href="{% url 'dashboard:support_dashboard' %}">
+                href="{% url 'dashboard:support_dashboard' %}">
                 <div class="d-flex align-items-center">
                     <i class="bi bi-headset nav-icon"></i>
                     <span>Support View</span>
@@ -285,32 +423,32 @@
             </a>
             {% endif %}
 
-            <!-- System Navigation -->
-            <div class="section-title mt-4">SYSTEM</div>
-
+            <!-- System Section -->
+            <div class="nav-section-title">System</div>
             <a class="nav-link" href="{% url 'core:app_selection' %}">
                 <div class="d-flex align-items-center">
                     <i class="bi bi-grid nav-icon"></i>
                     <span>Control Plane</span>
                 </div>
             </a>
-
-            <div class="mt-auto pt-4 border-top">
-                <a class="nav-link text-danger" href="{% url 'core:logout' %}">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-box-arrow-right nav-icon"></i>
-                        <span>Log Out</span>
-                    </div>
-                </a>
-            </div>
         </nav>
+
+        <!-- Footer -->
+        <div class="sidebar-footer">
+            <a class="nav-link" href="{% url 'core:logout' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-box-arrow-right nav-icon"></i>
+                    <span>Log Out</span>
+                </div>
+            </a>
+        </div>
     </div>
 
     <!-- Main Content -->
     <div class="main-content" id="mainContent">
         <!-- Messages -->
         {% if messages %}
-        <div class="container-fluid pt-4">
+        <div class="mb-4">
             {% for message in messages %}
             <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
                 {{ message }}
@@ -337,11 +475,18 @@
             const mainContent = document.getElementById('mainContent');
             const toggleBtn = document.getElementById('toggleSidebar');
 
+            // Toggle sidebar
             toggleBtn.addEventListener('click', function () {
                 sidebar.classList.toggle('hidden');
                 mainContent.classList.toggle('sidebar-hidden');
+
+                // On mobile, toggle visible class instead
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.toggle('visible');
+                }
             });
 
+            // Close sidebar on mobile when clicking outside
             if (window.innerWidth <= 768) {
                 document.addEventListener('click', function (e) {
                     if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
@@ -349,7 +494,19 @@
                     }
                 });
             }
+
+            // Auto-expand dropdowns containing active items
+            document.querySelectorAll('.nav-dropdown-content').forEach(dropdown => {
+                if (dropdown.querySelector('.nav-link.active')) {
+                    dropdown.classList.add('show');
+                    const toggle = dropdown.previousElementSibling;
+                    if (toggle) {
+                        toggle.setAttribute('aria-expanded', 'true');
+                    }
+                }
+            });
         });
     </script>
 </body>
+
 </html>

@@ -1,10 +1,11 @@
 from django.db import models
-from core.models import User as Account
-from core.models import User as Account
+from core.models import User as CoreUser, TimeStampedModel
+from accounts.models import Account
 from tenants.models import TenantTerritory, TenantMember
 from django.db.models import Sum, Count, Avg
 from products.models import Product
 from tenants.models import TenantAwareModel as TenantModel
+
 
 SALE_TYPE_CHOICES = [
     ('new_business', 'New Business'),
@@ -64,7 +65,8 @@ class SalesCommissionRule(models.Model):
         return True
 
 
-class Sale(models.Model):
+
+class Sale(TenantModel, TimeStampedModel):
     """
     Represents a completed sale transaction.
     """
@@ -92,8 +94,7 @@ class Sale(models.Model):
     notes = models.TextField(blank=True)
 
     def __str__(self):
-        return f"{self.product.name} for {self.account.name}"
-    
+        return f"{self.product.product_name} for {self.account.account_name}"
     def calculate_commission(self, sales_rep=None):
         """
         Calculate commission for this sale.

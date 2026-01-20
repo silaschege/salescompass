@@ -136,8 +136,58 @@ class EngagementEvent(TenantModel, TimeStampedModel):
         if not (0 <= self.engagement_score <= 100):
             raise ValidationError("Engagement score must be between 0 and 100.")
 
+    @property
+    def primary_entity(self):
+        """Returns the primary CRM entity associated with this event."""
+        if self.contact:
+            return self.contact
+        if self.lead:
+            return self.lead
+        if self.account_company:
+            return self.account_company
+        if self.account:
+            return self.account
+        return None
+
+    @property
+    def primary_entity_name(self):
+        """Returns the name of the primary entity."""
+        entity = self.primary_entity
+        if not entity:
+            return "Unknown Entity"
+        
+        if hasattr(entity, 'get_full_name'):
+            return entity.get_full_name()
+        if hasattr(entity, 'name'):
+            return entity.name
+        if hasattr(entity, 'first_name') and hasattr(entity, 'last_name'):
+            return f"{entity.first_name} {entity.last_name}"
+        return str(entity)
+
+    @property
+    def icon(self):
+        """Returns a Bootstrap icon class based on the event type."""
+        icon_map = {
+            'email_sent': 'bi-envelope',
+            'email_opened': 'bi-envelope-open',
+            'link_clicked': 'bi-link-45deg',
+            'call_completed': 'bi-telephone',
+            'lead_created': 'bi-person-plus',
+            'lead_contacted': 'bi-person-lines-fill',
+            'whatsapp_sent': 'bi-whatsapp',
+            'whatsapp_received': 'bi-whatsapp',
+            'task_assigned': 'bi-list-task',
+            'opportunity_created': 'bi-gem',
+            'opportunity_won': 'bi-trophy',
+            'proposal_sent': 'bi-file-earmark-text',
+            'nps_submitted': 'bi-star',
+            'website_visit': 'bi-globe',
+        }
+        # Default icon if not in map
+        return icon_map.get(self.event_type, 'bi-record-circle')
+
     def __str__(self):
-        return f"{self.get_event_type_display()} - {self.account.email}"
+        return f"{self.get_event_type_display()} - {self.primary_entity_name}"
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -153,6 +203,29 @@ class EngagementEvent(TenantModel, TimeStampedModel):
                 'engagement_score': self.engagement_score,
                 'tenant_id': self.tenant_id
             })
+
+    def get_event_data_for_websocket(self):
+        """Return serialized data for WebSocket consumers."""
+        return {
+            "id": self.id,
+            "account_name": self.account.get_full_name() if self.account else "Unknown",
+            "title": self.title,
+            "description": self.description,
+            "event_type": self.get_event_type_display(),
+            "created_at": self.created_at.isoformat(),
+            "is_important": self.is_important,
+            "engagement_score": self.engagement_score,
+            "icon_class": self.get_icon_class()
+        }
+
+    def get_icon_class(self):
+        """Return FontAwesome icon class based on event type."""
+        if 'email' in self.event_type: return 'fas fa-envelope'
+        if 'call' in self.event_type: return 'fas fa-phone'
+        if 'meeting' in self.event_type: return 'fas fa-calendar-check'
+        if 'opportunity' in self.event_type: return 'fas fa-trophy'
+        if 'case' in self.event_type: return 'fas fa-ticket-alt'
+        return 'fas fa-stream'
 
 class EngagementStatus(TenantModel, TimeStampedModel):
     account = models.OneToOneField(User, on_delete=models.CASCADE, related_name='engagement_status')
@@ -279,9 +352,7 @@ class EngagementWorkflowExecution(TenantModel, TimeStampedModel):
         return f"{self.workflow.workflow_name} - {self.account.email}"
 
 class EngagementPlaybook(TenantModel, TimeStampedModel):
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    industry = models.CharField(max_length=50, null=True, blank=True, choices=[
+    INDUSTRY_CHOICES = [
         ('technology', 'Technology'),
         ('healthcare', 'Healthcare'),
         ('finance', 'Finance'),
@@ -291,12 +362,18 @@ class EngagementPlaybook(TenantModel, TimeStampedModel):
         ('government', 'Government'),
         ('nonprofit', 'Non-Profit'),
         ('other', 'Other'),
-    ])
-    playbook_type = models.CharField(max_length=50, choices=[
+    ]
+    
+    PLAYBOOK_TYPES = [
         ('standard', 'Standard'),
         ('industry_best_practice', 'Industry Best Practice'),
         ('template', 'Template'),
-    ], default='standard')
+    ]
+
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    industry = models.CharField(max_length=50, null=True, blank=True, choices=INDUSTRY_CHOICES)
+    playbook_type = models.CharField(max_length=50, choices=PLAYBOOK_TYPES, default='standard')
     is_active = models.BooleanField(default=True)
     is_template = models.BooleanField(default=False)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
@@ -387,6 +464,13 @@ class EngagementScoringConfig(models.Model):
     inactivity_threshold_days = models.IntegerField(default=14)
     rolling_window_days = models.IntegerField(default=30)
 
+    # Specific Action Scores
+    email_open_score = models.FloatField(default=1.0)
+    link_click_score = models.FloatField(default=3.0)
+    reply_score = models.FloatField(default=5.0)
+    meeting_score = models.FloatField(default=10.0)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+
 class EngagementScoreSnapshot(models.Model):
     tenant_id = models.CharField(max_length=50, db_index=True)
     account = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -413,3 +497,71 @@ class WebhookDeliveryLog(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+class EngagementExperiment(TenantModel, TimeStampedModel):
+    """
+    Model for A/B testing engagement strategies.
+    
+    Allows creating experiments to test different engagement approaches (e.g., subject lines, 
+    send times, content variations) and measuring their effectiveness.
+    """
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    experiment_type = models.CharField(max_length=50, choices=[
+        ('email_subject', 'Email Subject Line'),
+        ('email_content', 'Email Content'),
+        ('send_time', 'Send Time'),
+        ('channel', 'Communication Channel'),
+        ('cta', 'Call to Action'),
+        ('workflow_path', 'Workflow Path'),
+    ])
+    status = models.CharField(max_length=20, choices=[
+        ('draft', 'Draft'),
+        ('active', 'Active'),
+        ('paused', 'Paused'),
+        ('completed', 'Completed'),
+        ('archived', 'Archived'),
+    ], default='draft')
+    
+    start_date = models.DateTimeField(null=True, blank=True)
+    end_date = models.DateTimeField(null=True, blank=True)
+    
+    # Success metrics
+    primary_metric = models.CharField(max_length=50, choices=[
+        ('open_rate', 'Open Rate'),
+        ('click_rate', 'Click Rate'),
+        ('reply_rate', 'Reply Rate'),
+        ('conversion_rate', 'Conversion Rate'),
+        ('engagement_score', 'Engagement Score Increase'),
+    ])
+    
+    target_sample_size = models.PositiveIntegerField(help_text="Target number of participants per variant")
+    current_sample_size = models.PositiveIntegerField(default=0)
+    
+    winner_variant = models.ForeignKey('ExperimentVariant', on_delete=models.SET_NULL, null=True, blank=True, related_name='won_experiments')
+    confidence_level = models.FloatField(default=0.0, help_text="Statistical confidence level of the result")
+    
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_experiments')
+    
+    def __str__(self):
+        return self.name
+
+class ExperimentVariant(TenantModel, TimeStampedModel):
+    """
+    A specific variation within an experiment (e.g., control vs treatment).
+    """
+    experiment = models.ForeignKey(EngagementExperiment, on_delete=models.CASCADE, related_name='variants')
+    name = models.CharField(max_length=255, help_text="e.g., 'Variant A', 'Control Group'")
+    description = models.TextField(blank=True)
+    is_control = models.BooleanField(default=False)
+    
+    # Configuration for this variant
+    config = models.JSONField(default=dict, blank=True, help_text="Specific configuration for this variant (e.g., subject line text)")
+    
+    # Performance Stats
+    participants_count = models.PositiveIntegerField(default=0)
+    conversions_count = models.PositiveIntegerField(default=0)
+    conversion_rate = models.FloatField(default=0.0)
+    
+    def __str__(self):
+        return f"{self.experiment.name} - {self.name}"

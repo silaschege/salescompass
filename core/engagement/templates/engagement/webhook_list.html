@@ -1,0 +1,66 @@
+{% extends 'engagement/base.html' %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 text-gray-800">Webhooks</h1>
+            <p class="text-muted mb-0">Manage outgoing webhooks for engagement events.</p>
+        </div>
+        <a href="{% url 'engagement:webhook_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus mr-1"></i> New Webhook
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="border-top-0">Name</th>
+                            <th class="border-top-0">URL</th>
+                            <th class="border-top-0">Status</th>
+                            <th class="border-top-0">Created At</th>
+                            <th class="border-top-0"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for webhook in webhooks %}
+                        <tr>
+                            <td class="align-middle font-weight-bold">
+                                <a href="{% url 'engagement:webhook_update' webhook.pk %}">{{ webhook.name }}</a>
+                            </td>
+                            <td class="align-middle text-muted small">{{ webhook.url }}</td>
+                            <td class="align-middle">
+                                {% if webhook.is_active %}
+                                <span class="badge badge-success px-2 py-1">Active</span>
+                                {% else %}
+                                <span class="badge badge-secondary px-2 py-1">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td class="align-middle">{{ webhook.created_at|date:"M d, Y" }}</td>
+                            <td class="align-middle text-right">
+                                <a href="{% url 'engagement:webhook_update' webhook.pk %}"
+                                    class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-cog"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="fas fa-globe fa-3x mb-3 text-gray-300"></i>
+                                    <p class="mb-0">No webhooks configured yet.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

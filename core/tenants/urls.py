@@ -139,4 +139,56 @@ urlpatterns = [
     path('members/<int:pk>/edit/', views.TenantMemberUpdateView.as_view(), name='member_update'),
     path('members/<int:pk>/delete/', views.TenantMemberDeleteView.as_view(), name='member_delete'),
 
+    # New CRUD URLs
+    path('lifecycle-events/', views.TenantLifecycleEventListView.as_view(), name='lifecycle_event_list'),
+    path('lifecycle-events/<int:pk>/', views.TenantLifecycleEventDetailView.as_view(), name='lifecycle_event_detail'),
+    path('lifecycle-events/create/', views.TenantLifecycleEventCreateView.as_view(), name='lifecycle_event_create'),
+
+    path('migration-records/', views.TenantMigrationRecordListView.as_view(), name='migration_record_list'),
+    path('migration-records/<int:pk>/', views.TenantMigrationRecordDetailView.as_view(), name='migration_record_detail'),
+    path('migration-records/create/', views.TenantMigrationRecordCreateView.as_view(), name='migration_record_create'),
+
+    path('preservation-strategies/', views.TenantDataPreservationStrategyListView.as_view(), name='preservation_strategy_list'),
+    path('preservation-strategies/create/', views.TenantDataPreservationStrategyCreateView.as_view(), name='preservation_strategy_create'),
+
+    path('preservation-schedules/', views.TenantDataPreservationScheduleListView.as_view(), name='preservation_schedule_list'),
+    path('preservation-schedules/create/', views.TenantDataPreservationScheduleCreateView.as_view(), name='preservation_schedule_create'),
+
+    path('workflow-executions/', views.TenantLifecycleWorkflowExecutionListView.as_view(), name='workflow_execution_list'),
+    path('workflow-executions/<int:pk>/', views.TenantLifecycleWorkflowExecutionDetailView.as_view(), name='workflow_execution_detail'),
+
+    path('preservations/', views.TenantDataPreservationListView.as_view(), name='preservation_list'),
+    path('preservations/<int:pk>/', views.TenantDataPreservationDetailView.as_view(), name='preservation_detail'),
+
+    path('automated-rules/', views.AutomatedTenantLifecycleRuleListView.as_view(), name='automated_rule_list'),
+    path('automated-rules/create/', views.AutomatedTenantLifecycleRuleCreateView.as_view(), name='automated_rule_create'),
+
+    path('suspension-workflows/', views.TenantSuspensionWorkflowListView.as_view(), name='suspension_workflow_list'),
+    path('termination-workflows/', views.TenantTerminationWorkflowListView.as_view(), name='termination_workflow_list'),
+
+    # Notification Template URLs
+    path('notification-templates/', views.NotificationTemplateListView.as_view(), name='notification_template_list'),
+    path('notification-templates/create/', views.NotificationTemplateCreateView.as_view(), name='notification_template_create'),
+    path('notification-templates/<int:pk>/edit/', views.NotificationTemplateUpdateView.as_view(), name='notification_template_update'),
+    path('notification-templates/<int:pk>/delete/', views.NotificationTemplateDeleteView.as_view(), name='notification_template_delete'),
+
+
+    # Tenant Lifecycle Workflow CRUD URLs
+    path('lifecycle-workflows/', lifecycle_views.TenantLifecycleWorkflowsView.as_view(), name='lifecycle_workflows'),
+    path('lifecycle-workflows/<int:pk>/', views.TenantLifecycleWorkflowDetailView.as_view(), name='lifecycle_workflow_detail'),
+    path('lifecycle-workflows/create/', views.TenantLifecycleWorkflowCreateView.as_view(), name='lifecycle_workflow_create'),
+    path('lifecycle-workflows/<int:pk>/edit/', views.TenantLifecycleWorkflowUpdateView.as_view(), name='lifecycle_workflow_update'),
+    path('lifecycle-workflows/<int:pk>/delete/', views.TenantLifecycleWorkflowDeleteView.as_view(), name='lifecycle_workflow_delete'),
+
+    # Tenant Role URLs
+    path('roles/', views.TenantRoleListView.as_view(), name='role_list'),
+    path('roles/create/', views.TenantRoleCreateView.as_view(), name='role_create'),
+    path('roles/<int:pk>/edit/', views.TenantRoleUpdateView.as_view(), name='role_update'),
+    path('roles/<int:pk>/delete/', views.TenantRoleDeleteView.as_view(), name='role_delete'),
+
+    # Tenant Territory URLs
+    path('territories/', views.TenantTerritoryListView.as_view(), name='territory_list'),
+    path('territories/create/', views.TenantTerritoryCreateView.as_view(), name='territory_create'),
+    path('territories/<int:pk>/edit/', views.TenantTerritoryUpdateView.as_view(), name='territory_update'),
+    path('territories/<int:pk>/delete/', views.TenantTerritoryDeleteView.as_view(), name='territory_delete'),
 ]

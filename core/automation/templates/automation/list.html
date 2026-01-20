@@ -217,7 +217,7 @@
                         {% for automation in automations %}
                         <tr>
                             <td class="ps-4">
-                                <a href="{% url 'automation:detail' automation.id %}"
+                                <a href="{% url 'automation:automation_detail' automation.id %}"
                                     class="text-decoration-none fw-bold text-dark">
                                     {{ automation.automation_name }}
                                 </a>
@@ -239,16 +239,16 @@
                             <td>{{ automation.automation_created_at|date:"M d, Y" }}</td>
                             <td class="text-end pe-4">
                                 <div class="btn-group shadow-sm border rounded">
-                                    <a href="{% url 'automation:detail' automation.id %}"
+                                    <a href="{% url 'automation:automation_detail' automation.id %}"
                                         class="btn btn-sm btn-white text-primary" title="Details">
                                         <i class="bi bi-eye"></i>
                                     </a>
                                     {% if perms.automation.write %}
-                                    <a href="{% url 'automation:update' automation.id %}"
+                                    <a href="{% url 'automation:automation_update' automation.id %}"
                                         class="btn btn-sm btn-white text-warning" title="Edit">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <a href="{% url 'automation:delete' automation.id %}"
+                                    <a href="{% url 'automation:automation_delete' automation.id %}"
                                         class="btn btn-sm btn-white text-danger" title="Delete">
                                         <i class="bi bi-trash"></i>
                                     </a>

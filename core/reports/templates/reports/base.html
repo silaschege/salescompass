@@ -195,7 +195,7 @@
             <div class="collapse {% if 'list' in request.resolver_match.url_name or 'builder' in request.resolver_match.url_name %}show{% endif %}"
                 id="reportsMenu">
                 <a class="nav-link {% if request.resolver_match.url_name == 'list' %}active{% endif %}"
-                    href="{% url 'reports:list' %}">All Reports</a>
+                    href="{% url 'reports:report_list' %}">All Reports</a>
                 <a class="nav-link {% if request.resolver_match.url_name == 'builder' %}active{% endif %}"
                     href="{% url 'reports:builder' %}">Report Builder</a>
                 <a class="nav-link {% if request.resolver_match.url_name == 'sales_analytics' %}active{% endif %}"

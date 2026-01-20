@@ -13,7 +13,7 @@
         <form method="post">
             {% csrf_token %}
             <button type="submit" class="btn btn-warning">Delete</button>
-            <a href="{% url 'proposals:list' %}" class="btn btn-light">Cancel</a>
+            <a href="{% url 'proposals:proposal_list' %}" class="btn btn-light">Cancel</a>
         </form>
     </div>
 </div>

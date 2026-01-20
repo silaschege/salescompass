@@ -92,7 +92,7 @@
                         </div>
                         <span class="badge bg-success fs-6">{{ team_members_count }}</span>
                     </div>
-                    <a href="{% url 'settings_app:team_list' %}" class="btn btn-outline-success btn-sm">
+                    <a href="{% url 'tenants:member_list' %}" class="btn btn-outline-success btn-sm">
                         <i class="bi bi-people"></i> Manage Team
                     </a>
                 </div>
@@ -109,7 +109,7 @@
                         </div>
                         <i class="bi bi-shield-check fs-3 text-success"></i>
                     </div>
-                    <a href="{% url 'settings_app:role_list' %}" class="btn btn-outline-success btn-sm">
+                    <a href="{% url 'tenants:role_list' %}" class="btn btn-outline-success btn-sm">
                         <i class="bi bi-shield"></i> Manage Roles
                     </a>
                 </div>
@@ -246,7 +246,7 @@
                         </div>
                         <i class="bi bi-geo-alt fs-3 text-warning"></i>
                     </div>
-                    <a href="{% url 'settings_app:territory_list' %}" class="btn btn-outline-warning btn-sm">
+                    <a href="{% url 'tenants:territory_list' %}" class="btn btn-outline-warning btn-sm">
                         <i class="bi bi-map"></i> Manage Territories
                     </a>
                 </div>

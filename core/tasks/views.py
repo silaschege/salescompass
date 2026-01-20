@@ -14,7 +14,11 @@ from core.models import User
 from django.core.exceptions import ValidationError
 from django.db.models import Q, Count
 from django.contrib.contenttypes.models import ContentType
-
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.views import View
+import json
 
 class TaskPriorityListView(ListView):
     model = TaskPriority
@@ -399,6 +403,7 @@ class UploadTaskAttachmentView(LoginRequiredMixin, View):
         return redirect('tasks:detail', pk=task_id)
 
 
+
 class TaskDashboardView(LoginRequiredMixin, TemplateView):
     """Tasks dashboard view."""
     template_name = 'tasks/dashboard.html'
@@ -409,32 +414,132 @@ class TaskDashboardView(LoginRequiredMixin, TemplateView):
         tenant_id = user.tenant_id
         
         # Get task statistics
-        context['pending_tasks'] = Task.objects.filter(
-            assigned_to=user, 
-            status='todo',
-            tenant_id=tenant_id
-        )[:5]
-        context['overdue_tasks'] = Task.objects.filter(
-            assigned_to=user, 
+        all_tasks = Task.objects.filter(tenant_id=tenant_id)
+        user_tasks = Task.objects.filter(assigned_to=user, tenant_id=tenant_id)
+        
+        # Calculate stats for all tasks in the tenant
+        context['total_tasks'] = all_tasks.count()
+        context['completed_tasks'] = all_tasks.filter(status='completed').count()
+        context['overdue_tasks'] = all_tasks.filter(
             due_date__lt=timezone.now(),
-            tenant_id=tenant_id
-        ).exclude(status='completed')[:5]
-        context['completed_tasks'] = Task.objects.filter(
-            assigned_to=user,
-            status='completed',
-            tenant_id=tenant_id
+            status__in=['todo', 'in_progress']
         ).count()
-        context['total_tasks'] = Task.objects.filter(
-            assigned_to=user,
-            tenant_id=tenant_id
-        ).count()
+        context['completion_rate'] = round(
+            (context['completed_tasks'] / context['total_tasks'] * 100) if context['total_tasks'] > 0 else 0, 
+            1
+        )
+        
+        # Recent tasks for the current user
+        context['recent_tasks'] = user_tasks.select_related(
+            'assigned_to', 'created_by', 'priority_ref', 'status_ref'
+        ).order_by('-created_at')[:5]
+        
+        # Upcoming tasks for the current user (due in next 7 days)
+        seven_days_ahead = timezone.now() + timezone.timedelta(days=7)
+        context['upcoming_tasks'] = user_tasks.filter(
+            due_date__lte=seven_days_ahead,
+            status__in=['todo', 'in_progress']
+        ).select_related(
+            'assigned_to', 'created_by', 'priority_ref', 'status_ref'
+        ).order_by('due_date')[:5]
+        
+        # Stats for the current user
+        context['user_total_tasks'] = user_tasks.count()
+        context['user_completed_tasks'] = user_tasks.filter(status='completed').count()
+        context['user_pending_tasks'] = user_tasks.filter(status='todo').count()
+        context['user_inprogress_tasks'] = user_tasks.filter(status='in_progress').count()
+        
+        # Get tasks by priority for chart (with fallback for empty values)
+        low_tasks = user_tasks.filter(priority='low').count()
+        medium_tasks = user_tasks.filter(priority='medium').count()
+        high_tasks = user_tasks.filter(priority='high').count()
+        critical_tasks = user_tasks.filter(priority='critical').count()
+        
+        context['tasks_by_priority'] = {
+            'low': low_tasks,
+            'medium': medium_tasks,
+            'high': high_tasks,
+            'critical': critical_tasks,
+        }
+        
+        # Get tasks by status for chart (with fallback for empty values)
+        todo_tasks = user_tasks.filter(status='todo').count()
+        in_progress_tasks = user_tasks.filter(status='in_progress').count()
+        completed_tasks = user_tasks.filter(status='completed').count()
+        cancelled_tasks = user_tasks.filter(status='cancelled').count()
+        
+        context['tasks_by_status'] = {
+            'todo': todo_tasks,
+            'in_progress': in_progress_tasks,
+            'completed': completed_tasks,
+            'cancelled': cancelled_tasks,
+        }
+        
+        # Get weekly task completion trend
+        week_ago = timezone.now() - timezone.timedelta(days=7)
+        context['weekly_completion_trend'] = []
+        for i in range(7):
+            day = week_ago + timezone.timedelta(days=i)
+            day_end = day.replace(hour=23, minute=59, second=59)
+            completed_count = user_tasks.filter(
+                status='completed',
+                completed_at__date=day.date()
+            ).count()
+            context['weekly_completion_trend'].append({
+                'date': day.strftime('%b %d'),
+                'completed': completed_count
+            })
+        
+        # Get task distribution by type
+        task_types = user_tasks.values('task_type').annotate(count=Count('id'))
+        context['task_types'] = {item['task_type']: item['count'] for item in task_types}
+        
+        # Get overdue tasks for alert section
+        context['overdue_user_tasks'] = user_tasks.filter(
+            due_date__lt=timezone.now(),
+            status__in=['todo', 'in_progress']
+        ).select_related('priority_ref', 'status_ref').order_by('due_date')
         
         return context
+
+
+
 
 
 class TaskCalendarView(LoginRequiredMixin, TemplateView):
     """Tasks calendar view."""
     template_name = 'tasks/calendar.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        tenant_id = user.tenant_id
+        
+        # Get tasks for the current user
+        tasks = Task.objects.filter(
+            tenant_id=tenant_id,
+            assigned_to=user
+        ).select_related('priority_ref', 'status_ref')
+        
+        # Prepare tasks data for FullCalendar
+        tasks_data = []
+        for task in tasks:
+            task_data = {
+                'id': task.id,
+                'title': task.title,
+                'start': task.due_date.isoformat() if task.due_date else None,
+                'status': task.status,
+                'priority': task.priority,
+                'priority_color': task.priority_ref.color if task.priority_ref else '#6c757d',
+                'status_label': task.status_ref.label if task.status_ref else task.get_status_display(),
+                'priority_label': task.priority_ref.label if task.priority_ref else task.get_priority_display(),
+            }
+            tasks_data.append(task_data)
+        
+        import json
+        context['tasks_json'] = json.dumps(tasks_data)
+        
+        return context
 
 
 class MyTasksView(LoginRequiredMixin, ListView):
@@ -461,7 +566,7 @@ class TaskKanbanView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         
         # Group tasks by status for kanban view
-        statuses = TaskStatus.objects.filter(tenant_id=self.request.user.tenant_id)
+        statuses = TaskStatus.objects.filter(tenant_id=self.request.user.tenant_id).order_by('order')
         tasks_by_status = {}
         
         for status in statuses:
@@ -469,14 +574,60 @@ class TaskKanbanView(LoginRequiredMixin, TemplateView):
                 assigned_to=self.request.user,
                 status_ref=status,
                 tenant_id=self.request.user.tenant_id
-            ).select_related('priority_ref', 'task_type_ref')
+            ).select_related('priority_ref', 'task_type_ref', 'created_by', 'assigned_to').order_by('-created_at')
         
         context['tasks_by_status'] = tasks_by_status
         context['statuses'] = statuses
         
+        # Add user stats for the header
+        user_tasks = Task.objects.filter(
+            assigned_to=self.request.user,
+            tenant_id=self.request.user.tenant_id
+        )
+        
+        context['user_total_tasks'] = user_tasks.count()
+        context['user_completed_tasks'] = user_tasks.filter(status='completed').count()
+        context['user_pending_tasks'] = user_tasks.filter(status='todo').count()
+        context['user_inprogress_tasks'] = user_tasks.filter(status='in_progress').count()
+        
         return context
 
 
+
+
+
+
+class UpdateTaskStatusView(LoginRequiredMixin, View):
+    """API endpoint to update task status via drag and drop."""
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            task_id = data.get('task_id')
+            status_id = data.get('status_id')
+            
+            if not task_id or not status_id:
+                return JsonResponse({'success': False, 'error': 'Task ID and Status ID are required'}, status=400)
+            
+            # Get the task and ensure it belongs to the user's tenant
+            task = get_object_or_404(Task, id=task_id, tenant_id=request.user.tenant_id)
+            
+            # Get the new status and ensure it belongs to the user's tenant
+            new_status = get_object_or_404(TaskStatus, id=status_id, tenant_id=request.user.tenant_id)
+            
+            # Update the task status
+            task.status_ref = new_status
+            task.status = new_status.status_name  # Update the status field as well
+            task.save(update_fields=['status_ref', 'status'])
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Task status updated successfully',
+                'task_id': task_id,
+                'new_status_id': status_id
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
 # Task Template Views
 class TaskTemplateListView(LoginRequiredMixin, ListView):
     """Task templates list."""

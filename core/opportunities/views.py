@@ -29,6 +29,7 @@ class OpportunityListView(LoginRequiredMixin, TenantAwareViewMixin, ListView):
     model = Opportunity
     template_name = 'opportunities/opportunity_list.html'
     context_object_name = 'opportunities'
+    paginate_by = 20  # Add pagination
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -36,11 +37,66 @@ class OpportunityListView(LoginRequiredMixin, TenantAwareViewMixin, ListView):
             queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
         return queryset.select_related('account', 'stage', 'owner')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Calculate total value
+        opportunities = self.get_queryset()
+        total_value = sum(float(opp.amount) for opp in opportunities)
+        context['total_value'] = total_value
+        
+        # Calculate weighted value
+        weighted_value = sum(float(opp.weighted_value) for opp in opportunities)
+        context['weighted_value'] = weighted_value
+        
+        # Calculate win rate
+        total_opportunities = opportunities.count()
+        won_opportunities = opportunities.filter(stage__is_won=True).count()
+        win_rate = (won_opportunities / total_opportunities * 100) if total_opportunities > 0 else 0
+        context['win_rate'] = win_rate
+        
+        # Add stages for filter dropdown
+        if hasattr(self.request.user, 'tenant_id'):
+            context['stages'] = OpportunityStage.objects.filter(
+                tenant_id=self.request.user.tenant_id
+            ).order_by('order')
+            
+            # Add owners for filter dropdown
+            context['owners'] = User.objects.filter(
+                tenant_id=self.request.user.tenant_id
+            ).distinct()
+            
+            # Add accounts for filter dropdown
+            from accounts.models import Account
+            context['accounts'] = Account.objects.filter(
+                tenant_id=self.request.user.tenant_id
+            ).distinct()
+        else:
+            context['stages'] = OpportunityStage.objects.none()
+            context['owners'] = User.objects.none()
+            from accounts.models import Account
+            context['accounts'] = Account.objects.none()
+        
+        return context
+
+
 
 class OpportunityDetailView(LoginRequiredMixin, TenantAwareViewMixin, DetailView):
     model = Opportunity
     template_name = 'opportunities/opportunity_detail.html'
     context_object_name = 'opportunity'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get all stages for this tenant
+        stages = OpportunityStage.objects.filter(
+            tenant_id=self.request.user.tenant_id
+        ).order_by('order')
+        
+        context['stages'] = stages
+        return context
+
 
 
 
@@ -71,24 +127,8 @@ class OpportunityCreateView(LoginRequiredMixin, TenantAwareViewMixin, CreateView
         messages.success(self.request, 'Opportunity created successfully.')
         response = super().form_valid(form)
         
-        # Log engagement event for opportunity creation
-        try:
-            log_engagement_event(
-                tenant_id=self.request.user.tenant_id if hasattr(self.request.user, 'tenant_id') else None,
-                event_type='opportunity_created',
-                description=f"Opportunity '{self.object.name}' created with value ${self.object.amount}",
-                opportunity=self.object,
-                account=self.object.owner if hasattr(self.object, 'owner') else None,
-                account_company=self.object.account if hasattr(self.object, 'account') else None,
-                title="Opportunity Created",
-                engagement_score=4,
-                created_by=self.request.user if self.request.user.is_authenticated else None
-            )
-        except Exception as e:
-            # Don't fail opportunity creation if engagement logging fails
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.warning(f"Failed to log engagement event for opportunity creation: {e}")
+
+        return response
         
         return response
 
@@ -482,7 +522,7 @@ class OpportunityFunnelAnalysisView(DashboardBaseView):
             current_count = opportunities.filter(stage=stage).count()
             conversion_rate = (current_count / previous_count * 100) if previous_count > 0 else 0
             funnel_data.append({
-                'stage': stage.name,
+                'stage': stage.opportunity_stage_name,
                 'count': current_count,
                 'conversion_rate': conversion_rate
             })
@@ -556,14 +596,14 @@ class PipelineKanbanView(ObjectPermissionRequiredMixin, TemplateView):
             for opp in stage_opps:
                 opp_list.append({
                     'id': opp.id,
-                    'name': opp.name,
+                    'name': opp.opportunity_name,
                     'amount': opp.amount,
                     'probability': opp.probability,
                     'probability_percent': int(opp.probability * 100),
                     'close_date': opp.close_date,
                     'is_overdue': opp.close_date < today if opp.close_date else False,
                     'account': {
-                        'name': opp.account.name if opp.account else 'No Account'
+                        'name': opp.account.account_name if opp.account else 'No Account'
                     }
                 })
             
@@ -571,7 +611,7 @@ class PipelineKanbanView(ObjectPermissionRequiredMixin, TemplateView):
             
             stage_data.append({
                 'id': stage.id,
-                'name': stage.name,
+                'name': stage.opportunity_stage_name,
                 'order': stage.order,
                 'probability': stage.probability,
                 'is_won': stage.is_won,
@@ -633,47 +673,12 @@ def update_opportunity_stage(request, opportunity_id):
         
         opportunity.save()
         
-        # Log engagement event for stage change
-        try:
-            event_type = 'opportunity_stage_changed'
-            engagement_score = 4
-            
-            # Check if opportunity was won or lost
-            if new_stage.is_won:
-                event_type = 'opportunity_won'
-                engagement_score = 10
-            elif new_stage.is_lost:
-                event_type = 'opportunity_lost'
-                engagement_score = 1
-            
-            log_engagement_event(
-                tenant_id=request.user.tenant_id if hasattr(request.user, 'tenant_id') else None,
-                event_type=event_type,
-                description=f"Opportunity '{opportunity.name}' moved from {old_stage.name if old_stage else 'None'} to {new_stage.name}",
-                opportunity=opportunity,
-                account=opportunity.owner if hasattr(opportunity, 'owner') else None,
-                account_company=opportunity.account if hasattr(opportunity, 'account') else None,
-                title=f"Opportunity Stage: {new_stage.name}",
-                engagement_score=engagement_score,
-                created_by=request.user if request.user.is_authenticated else None,
-                metadata={
-                    'old_stage': old_stage.name if old_stage else None,
-                    'new_stage': new_stage.name,
-                    'probability': opportunity.probability,
-                    'amount': float(opportunity.amount) if opportunity.amount else 0
-                }
-            )
-        except Exception as e:
-            # Don't fail stage update if engagement logging fails
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.warning(f"Failed to log engagement event for stage change: {e}")
-        
+
         return JsonResponse({
             'success': True,
-            'message': f'Moved to {new_stage.name}',
-            'old_stage': old_stage.name if old_stage else None,
-            'new_stage': new_stage.name,
+            'message': f'Moved to {new_stage.opportunity_stage_name}',
+            'old_stage': old_stage.opportunity_stage_name if old_stage else None,
+            'new_stage': new_stage.opportunity_stage_name,
             'new_probability': opportunity.probability
         })
         

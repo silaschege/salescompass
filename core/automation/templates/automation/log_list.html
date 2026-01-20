@@ -6,125 +6,219 @@
 {% block content %}
 <div class="header-bar mb-4">
     <div class="container">
-        <h1 class="block-title">Automation Execution Logs</h1>
-        <p class="text-white text-center lead">Monitor and troubleshoot automation executions</p>
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <div>
+                <h1 class="block-title">Automation Execution Logs</h1>
+                <p class="text-white text-center text-md-start lead mb-0">Monitor and troubleshoot automation executions</p>
+            </div>
+            <a href="{% url 'automation:automation_list' %}" class="btn btn-outline-light">
+                <i class="bi bi-arrow-left me-1"></i>Back to Automations
+            </a>
+        </div>
     </div>
 </div>
 
 <div class="container">
-    <!-- Filters and Actions -->
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <select name="status" class="form-select" onchange="this.form.submit()">
-                <option value="">All Statuses</option>
-                <option value="triggered" {% if request.GET.status=='triggered' %}selected{% endif %}>Triggered</option>
-                <option value="conditions_evaluated" {% if request.GET.status=='conditions_evaluated' %}selected{% endif
-                    %}>Conditions Evaluated</option>
-                <option value="executing" {% if request.GET.status=='executing' %}selected{% endif %}>Executing</option>
-                <option value="completed" {% if request.GET.status=='completed' %}selected{% endif %}>Completed</option>
-                <option value="failed" {% if request.GET.status=='failed' %}selected{% endif %}>Failed</option>
-                <option value="skipped" {% if request.GET.status=='skipped' %}selected{% endif %}>Skipped</option>
-            </select>
+    <!-- Filters and Search -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" id="filter-form">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="status" class="form-label fw-bold">Status</label>
+                        <select name="status" class="form-select" id="status">
+                            <option value="">All Statuses</option>
+                            <option value="triggered" {% if request.GET.status == 'triggered' %}selected{% endif %}>Triggered</option>
+                            <option value="conditions_evaluated" {% if request.GET.status == 'conditions_evaluated' %}selected{% endif %}>Conditions Evaluated</option>
+                            <option value="executing" {% if request.GET.status == 'executing' %}selected{% endif %}>Executing</option>
+                            <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
+                            <option value="failed" {% if request.GET.status == 'failed' %}selected{% endif %}>Failed</option>
+                            <option value="skipped" {% if request.GET.status == 'skipped' %}selected{% endif %}>Skipped</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label for="automation_name" class="form-label fw-bold">Automation Name</label>
+                        <input type="text" name="automation_name" class="form-control" placeholder="Search automations..." 
+                               value="{{ request.GET.automation_name }}">
+                    </div>
+                    
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2 flex-fill">
+                            <i class="bi bi-search me-1"></i>Filter
+                        </button>
+                        <a href="?" class="btn btn-outline-secondary flex-fill">
+                            <i class="bi bi-x-lg me-1"></i>Reset
+                        </a>
+                    </div>
+                </div>
+            </form>
         </div>
-        <div class="col-md-6 text-end">
-            <a href="{% url 'automation:list' %}" class="btn btn-outline-secondary">← Back to Automations</a>
+    </div>
+
+    <!-- Summary Cards -->
+    {% if logs %}
+    <div class="row mb-4">
+        <div class="col-md-2 col-6 mb-3">
+            <div class="card text-center border-primary">
+                <div class="card-body">
+                    <h5 class="card-title">{{ total_logs_count|default:'0' }}</h5>
+                    <p class="card-text text-muted">Total Logs</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6 mb-3">
+            <div class="card text-center border-success">
+                <div class="card-body">
+                    <h5 class="card-title">{{ completed_count|default:'0' }}</h5>
+                    <p class="card-text text-muted">Completed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6 mb-3">
+            <div class="card text-center border-danger">
+                <div class="card-body">
+                    <h5 class="card-title">{{ failed_count|default:'0' }}</h5>
+                    <p class="card-text text-muted">Failed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6 mb-3">
+            <div class="card text-center border-info">
+                <div class="card-body">
+                    <h5 class="card-title">{{ executing_count|default:'0' }}</h5>
+                    <p class="card-text text-muted">Executing</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6 mb-3">
+            <div class="card text-center border-warning">
+                <div class="card-body">
+                    <h5 class="card-title">{{ skipped_count|default:'0' }}</h5>
+                    <p class="card-text text-muted">Skipped</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6 mb-3">
+            <div class="card text-center border-secondary">
+                <div class="card-body">
+                    <h5 class="card-title">{{ triggered_count|default:'0' }}</h5>
+                    <p class="card-text text-muted">Triggered</p>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Logs Table -->
-    {% if logs %}
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Automation</th>
-                    <th>Status</th>
-                    <th>Trigger</th>
-                    <th>Executed By</th>
-                    <th>Execution Time</th>
-                    <th>Duration</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for log in logs %}
-                <tr
-                    class="{% if log.status == 'failed' %}table-danger{% elif log.status == 'completed' %}table-success{% elif log.status == 'skipped' %}table-warning{% endif %}">
-                    <td>
-                        <a href="{% url 'automation:detail' log.automation.pk %}">
-                            {{ log.automation.name|truncatechars:25 }}
-                        </a>
-                    </td>
-                    <td>
-                        <span
-                            class="badge bg-{% if log.status == 'failed' %}danger{% elif log.status == 'completed' %}success{% elif log.status == 'skipped' %}warning{% elif log.status == 'executing' %}info{% else %}secondary{% endif %}">
-                            {{ log.get_status_display }}
-                        </span>
-                    </td>
-                    <td>{{ log.trigger_payload|dict_to_json|truncatechars:30 }}</td>
-                    <td>
-                        {% if log.executed_by %}
-                        {{ log.executed_by.email|truncatechars:20 }}
-                        {% else %}
-                        <span class="text-muted">System</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ log.created_at|date:"M d, Y H:i:s" }}</td>
-                    <td>
-                        {% if log.execution_time_ms %}
-                        {{ log.execution_time_ms }}ms
-                        {% else %}
-                        <span class="text-muted">—</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a href="{% url 'automation:log_detail' log.pk %}"
-                            class="btn btn-sm btn-outline-primary">View</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Execution Logs</h5>
+                <small class="text-muted">{{ logs.count }} of {{ page_obj.paginator.count }} logs</small>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="20%">Automation</th>
+                            <th width="10%">Status</th>
+                            <th width="20%">Trigger</th>
+                            <th width="15%">Executed By</th>
+                            <th width="15%">Execution Time</th>
+                            <th width="10%">Duration</th>
+                            <th width="10%" class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr class="{% if log.status == 'failed' %}table-danger{% elif log.status == 'completed' %}table-success{% elif log.status == 'skipped' %}table-warning{% endif %}">
+                            <td>
+                                <a href="{% url 'automation:automation_detail' log.automation.pk %}" class="fw-medium">
+                                    {{ log.automation.name|truncatechars:30 }}
+                                </a>
+                                <div class="text-muted small">
+                                    ID: {{ log.id }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill 
+                                    {% if log.status == 'failed' %}bg-danger{% elif log.status == 'completed' %}bg-success{% elif log.status == 'skipped' %}bg-warning text-dark{% elif log.status == 'executing' %}bg-info{% elif log.status == 'triggered' %}bg-primary{% else %}bg-secondary{% endif %}">
+                                    {{ log.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="text-break">
+                                <div class="text-truncate" style="max-width: 200px;">
+                                    {{ log.trigger_payload|dict_to_json|truncatechars:50 }}
+                                </div>
+                            </td>
+                            <td>
+                                {% if log.executed_by %}
+                                    <span class="text-truncate d-block" style="max-width: 150px;">
+                                        {{ log.executed_by.email|truncatechars:20 }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">System</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ log.created_at|date:"M d, Y H:i:s" }}</td>
+                            <td>
+                                {% if log.execution_time_ms %}
+                                    <span class="badge bg-secondary">{{ log.execution_time_ms }}ms</span>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'automation:log_detail' log.pk %}" 
+                                   class="btn btn-sm btn-outline-primary d-inline-flex align-items-center justify-content-center">
+                                    <i class="bi bi-eye me-1"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- Pagination -->
     {% if is_paginated %}
-    <nav aria-label="Page navigation">
+    <nav aria-label="Page navigation" class="mt-4">
         <ul class="pagination justify-content-center">
             {% if page_obj.has_previous %}
             <li class="page-item">
-                <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
-                    aria-label="First">
+                <a class="page-link" href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.automation_name %}&automation_name={{ request.GET.automation_name }}{% endif %}" 
+                   aria-label="First">
                     <span aria-hidden="true">&laquo;&laquo;</span>
                 </a>
             </li>
             <li class="page-item">
-                <a class="page-link"
-                    href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
-                    aria-label="Previous">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.automation_name %}&automation_name={{ request.GET.automation_name }}{% endif %}" 
+                   aria-label="Previous">
                     <span aria-hidden="true">&laquo;</span>
                 </a>
             </li>
             {% endif %}
 
-            <li class="page-item active">
-                <span class="page-link">
-                    {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            <li class="page-item disabled">
+                <span class="page-link bg-transparent border-0">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
                 </span>
             </li>
 
             {% if page_obj.has_next %}
             <li class="page-item">
-                <a class="page-link"
-                    href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
-                    aria-label="Next">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.automation_name %}&automation_name={{ request.GET.automation_name }}{% endif %}" 
+                   aria-label="Next">
                     <span aria-hidden="true">&raquo;</span>
                 </a>
             </li>
             <li class="page-item">
-                <a class="page-link"
-                    href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
-                    aria-label="Last">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.automation_name %}&automation_name={{ request.GET.automation_name }}{% endif %}" 
+                   aria-label="Last">
                     <span aria-hidden="true">&raquo;&raquo;</span>
                 </a>
             </li>
@@ -133,13 +227,17 @@
     </nav>
     {% endif %}
     {% else %}
-    <div class="text-center">
-        <div class="mb-4">
-            <i class="bi bi-journal-text display-1 text-muted"></i>
+    <div class="card shadow-sm">
+        <div class="card-body text-center py-5">
+            <div class="mb-4">
+                <i class="bi bi-journal-text display-1 text-muted"></i>
+            </div>
+            <h3 class="text-muted">No execution logs found</h3>
+            <p class="text-muted mb-4">Automations will create logs when they execute.</p>
+            <a href="{% url 'automation:automation_list' %}" class="btn btn-primary">
+                <i class="bi bi-play-circle me-1"></i>Run an Automation
+            </a>
         </div>
-        <h3 class="text-muted">No execution logs found</h3>
-        <p class="text-muted mb-4">Automations will create logs when they execute.</p>
-        <a href="{% url 'automation:list' %}" class="btn btn-primary">View Automations</a>
     </div>
     {% endif %}
 </div>
@@ -150,6 +248,7 @@
     </div>
 </div>
 {% endblock %}
+
 {% block extra_head %}
 <style>
     .table-hover tbody tr:hover {
@@ -165,5 +264,52 @@
         padding: 0.25rem 0.5rem;
         font-size: 0.875rem;
     }
+
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    .header-bar {
+        background: linear-gradient(135deg, #6f42c1, #4e3fc5);
+        color: white;
+        padding: 1.5rem 0;
+    }
+
+    .text-truncate {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    @media (max-width: 768px) {
+        .table-responsive th,
+        .table-responsive td {
+            min-width: 120px;
+        }
+        
+        .d-flex.flex-column.flex-md-row {
+            flex-direction: column !important;
+        }
+        
+        .text-center.text-md-start {
+            text-align: center !important;
+        }
+    }
+    
+    .badge.rounded-pill {
+        font-weight: 500;
+    }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statusSelect = document.getElementById('status');
+    if (statusSelect) {
+        statusSelect.addEventListener('change', function() {
+            document.getElementById('filter-form').submit();
+        });
+    }
+});
+</script>
 {% endblock %}

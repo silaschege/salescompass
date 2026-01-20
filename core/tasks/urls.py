@@ -5,13 +5,13 @@ app_name = 'tasks'
 
 urlpatterns = [
     # Task CRUD
-    path('', views.TaskListView.as_view(), name='list'),
+    path('', views.TaskListView.as_view(), name='task_list'),
     path('undone/', views.UndoneWorkView.as_view(), name='undone_work'),
-    path('create/', views.TaskCreateView.as_view(), name='create'),
-    path('<int:pk>/', views.TaskDetailView.as_view(), name='detail'),
-    path('<int:pk>/edit/', views.TaskUpdateView.as_view(), name='update'),
-    path('<int:pk>/delete/', views.TaskDeleteView.as_view(), name='delete'),
-    
+    path('create/', views.TaskCreateView.as_view(), name='task_create'),
+    path('<int:pk>/', views.TaskDetailView.as_view(), name='task_detail'),
+    path('<int:pk>/edit/', views.TaskUpdateView.as_view(), name='task_update'),
+    path('<int:pk>/delete/', views.TaskDeleteView.as_view(), name='task_delete'),
+    path('update', views.UpdateTaskStatusView.as_view(), name='update_task_status_api'),
     # Task actions
     path('api/complete/', views.CompleteTaskView.as_view(), name='complete_task'),
     path('<int:task_id>/comments/add/', views.AddTaskCommentView.as_view(), name='add_comment'),

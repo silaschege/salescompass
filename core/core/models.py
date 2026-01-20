@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from django.core.validators import MinLengthValidator
 from django.conf import settings
-
+ 
 class TimeStampedModel(models.Model):
     """
     An abstract model for adding created_at and updated_at timestamps
@@ -18,7 +18,7 @@ class User(AbstractUser):
     id = models.AutoField(primary_key=True)
     email = models.EmailField(unique=True)
     tenant = models.ForeignKey('tenants.Tenant', on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
-    role = models.ForeignKey('accounts.Role', on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
+    role = models.ForeignKey('access_control.Role', on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
     mfa_enabled = models.BooleanField(default=False)
     mfa_secret = models.CharField(max_length=32, blank=True, null=True)
     last_mfa_login = models.DateTimeField(null=True, blank=True)

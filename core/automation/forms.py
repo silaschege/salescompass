@@ -45,6 +45,7 @@ class AutomationForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
         super().__init__(*args, **kwargs)
         # Disable the is_system field for editing
         if self.instance.pk:
@@ -98,6 +99,7 @@ class AutomationConditionForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         automation = kwargs.pop('automation', None)
+        self.tenant = kwargs.pop('tenant', None)
         super().__init__(*args, **kwargs)
         self.automation = automation
         
@@ -173,6 +175,7 @@ class AutomationActionForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         automation = kwargs.pop('automation', None)
+        self.tenant = kwargs.pop('tenant', None)
         super().__init__(*args, **kwargs)
         self.automation = automation
         
@@ -328,6 +331,10 @@ class CustomCodeSnippetForm(forms.ModelForm):
             }),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
     
     def clean_code_content(self):
         code_content = self.cleaned_data.get('code_content')

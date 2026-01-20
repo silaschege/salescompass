@@ -133,12 +133,14 @@ class ForbiddenAccessMiddleware(MiddlewareMixin):
                     'message': 'You do not have permission to access this page.',
                     'contact_admin': True,
                 }
-                return TemplateResponse(
+                response = TemplateResponse(
                     request, 
                     'core/403.html', 
                     context, 
                     status=403
                 )
+                response.render()
+                return response
             else:
                 # User is not logged in, redirect to login page
                 # Preserve the next parameter so they can be redirected back after login
@@ -149,5 +151,7 @@ class ForbiddenAccessMiddleware(MiddlewareMixin):
                 return redirect(redirect_url)
                 
         return response
+
+
 
 

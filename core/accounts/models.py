@@ -11,24 +11,11 @@ from tenants.models import TenantAwareModel as TenantModel
  
 
 
-class Role(models.Model):
-    """Model for managing user roles and permissions"""
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True)
-    permissions = models.ManyToManyField('auth.Permission', blank=True)
-    is_system_role = models.BooleanField(default=False)
-    is_assignable = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        verbose_name = "Role"
-        verbose_name_plural = "Roles"
-        ordering = ['name']
-    
-    def __str__(self):
-        return self.name
+
+
+# Role model has been moved to access_control.role_models
+# Import for backward compatibility
+from access_control.role_models import Role
 
 
 class UserActivityLog(models.Model):
@@ -282,9 +269,37 @@ class Account(TenantModel, TimeStampedModel):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     tier = models.CharField(max_length=20, choices=TIER_CHOICES, default='free')
     
+    # Address Fields
+    billing_address_line1 = models.CharField(max_length=255, blank=True)
+    billing_address_line2 = models.CharField(max_length=255, blank=True)
+    billing_city = models.CharField(max_length=100, blank=True)
+    billing_state = models.CharField(max_length=100, blank=True)
+    billing_postal_code = models.CharField(max_length=20, blank=True)
+
+    # Business Details
+    description = models.TextField(blank=True)
+    annual_revenue = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, help_text="Annual revenue")
+    number_of_employees = models.PositiveIntegerField(null=True, blank=True)
+    
+    # Social Media
+    linkedin_url = models.URLField(blank=True)
+    twitter_url = models.URLField(blank=True)
+    facebook_url = models.URLField(blank=True)
+
+    # Meta
+    tags = models.JSONField(default=list, blank=True, help_text="List of tags")
+    last_activity_at = models.DateTimeField(null=True, blank=True)
+
     # KPIs/Health
     health_score = models.DecimalField(max_digits=5, decimal_places=2, default=100.00)
     esg_engagement = models.CharField(max_length=20, choices=ESG_CHOICES, default='low')
+
+    # ESG Related Fields - Added to support template
+    overall_esg_score = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, help_text="Overall ESG score")
+    csr_ready = models.BooleanField(default=False, help_text="Whether the account is ready for CSR reporting")
+    tco2e_saved = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Tonnes of CO2 equivalent saved")
+    sustainability_goals = models.TextField(blank=True, help_text="Sustainability goals for the account")
+    esg_certified = models.BooleanField(default=False, help_text="Whether the account has ESG certification")
 
     # Compliance
     gdpr_consent = models.BooleanField(default=False)
@@ -292,10 +307,61 @@ class Account(TenantModel, TimeStampedModel):
     
     # Relationships
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_accounts')
+    # Hierarchy
+    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='subsidiaries', help_text="Parent account for hierarchy")
+    
+    # Team
+    users = models.ManyToManyField(User, related_name='associated_accounts', blank=True, through='AccountTeamMember')
+    
+    # Market Intelligence
+    partners = models.JSONField(default=list, blank=True, help_text="List of partners involved with this account")
+    competitors = models.JSONField(default=list, blank=True, help_text="List of competitors for this account")
+    
     is_active = models.BooleanField(default=True)
     
     def __str__(self):
         return self.account_name
+
+
+class AccountsUserProfile(models.Model):
+    """
+    Extension of the User model specifically for the Accounts applet.
+    Stores user preferences and settings for the accounts module.
+    """
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='accounts_profile')
+    favorite_accounts = models.ManyToManyField(Account, blank=True, related_name='favorited_by')
+    settings = models.JSONField(default=dict, blank=True, help_text="User preferences for the accounts app UI")
+    
+    def __str__(self):
+        return f"Accounts Profile for {self.user.email}"
+
+
+class AccountTeamMember(TenantModel):
+    """
+    Through-model for Account users (Team Members) with roles.
+    """
+    ROLE_CHOICES = [
+        ('account_manager', 'Account Manager'),
+        ('sales_engineer', 'Sales Engineer'),
+        ('executive_sponsor', 'Executive Sponsor'),
+        ('customer_success', 'Customer Success Manager'),
+        ('support_lead', 'Support Lead'),
+        ('other', 'Member'),
+    ]
+
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    role = models.CharField(max_length=50, choices=ROLE_CHOICES, default='other')
+    is_primary = models.BooleanField(default=False, help_text="Is this the primary contact for this role?")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['account', 'user']
+        verbose_name = "Account Team Member"
+        verbose_name_plural = "Account Team Members"
+
+    def __str__(self):
+        return f"{self.user} - {self.role} ({self.account})"
 
 
 class Contact(TenantModel, TimeStampedModel):
@@ -333,21 +399,6 @@ class Contact(TenantModel, TimeStampedModel):
         return f"{self.first_name} {self.last_name}"
 
 
-class RoleAppPermission(models.Model):
-    """
-    Model definition for RoleAppPermission
-    Controls which apps are visible to which roles.
-    """
-    role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name='app_permissions')
-    app_identifier = models.CharField(max_length=100, help_text="Unique identifier for the app (e.g., 'reachout', 'tenants')")
-    is_visible = models.BooleanField(default=True, help_text="Whether this app is visible to the role")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        unique_together = ['role', 'app_identifier']
-        verbose_name = 'Role App Permission'
-        verbose_name_plural = 'Role App Permissions'
-
-    def __str__(self):
-        return f"{self.role.name} - {self.app_identifier}: {'Visible' if self.is_visible else 'Hidden'}"  
+# RoleAppPermission has been replaced by AccessControl in access_control app
+# This class is deprecated and will be removed in a future version

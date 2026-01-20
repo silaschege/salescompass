@@ -60,8 +60,8 @@ def case_webhook_signal(sender, instance, created, **kwargs):
         'subject': instance.subject,
         'status': instance.status,
         'priority': instance.priority,
-        'account': instance.account.email if instance.account else None,
-        'created_at': instance.created_at.isoformat()
+        'account': instance.account.account_name if instance.account else None,
+        'created_at': instance.created_at.isoformat() if hasattr(instance, 'created_at') and instance.created_at else None
     }
     
     trigger_webhook.delay(event_type, payload, instance.tenant_id)

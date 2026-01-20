@@ -6,7 +6,7 @@ from datetime import timedelta
 from django.utils import timezone
 from core.managers import VisibilityAwareManager
 from settings_app.models import AssignmentRuleType
-
+ 
 PRIORITY_CHOICES = [
     ('low', 'Low'),
     ('medium', 'Medium'),
@@ -28,7 +28,7 @@ ESCALATION_LEVEL_CHOICES = [
     ('executive', 'Executive'),
 ]
 
-class Case(TenantModel):
+class Case(TenantModel, TimeStampedModel):
     """
     Customer support case with SLA and CSAT.
     """
@@ -139,7 +139,7 @@ class Case(TenantModel):
         if self.priority in ['high', 'critical']:
             Task.objects.create(
                 title=f"Escalation required: {self.subject}",
-                case_description=f"High priority case requires immediate attention",
+                task_description=f"High priority case requires immediate attention",
                 assigned_to=self.owner,
                 case=self,
                 priority='critical',
@@ -173,58 +173,6 @@ class CaseAttachment(TenantModel):
 
     def __str__(self):
         return self.file.name
-
-
-class KnowledgeBaseArticle(TenantModel):
-    """
-    Internal knowledge base for support agents.
-    """
-    TITLE_MAX_LENGTH = 200
-    
-    title = models.CharField(max_length=TITLE_MAX_LENGTH)
-    content = models.TextField(help_text="Markdown or HTML content")
-    category = models.CharField(max_length=100, blank=True)
-    tags = models.CharField(max_length=255, blank=True, help_text="Comma-separated tags")
-    is_published = models.BooleanField(default=True)
-    views = models.IntegerField(default=0)  # internal view count
-
-    def __str__(self):
-        return self.title
-
-    def get_tags_list(self):
-        return [tag.strip() for tag in self.tags.split(',') if tag.strip()]
-
-    def save(self, *args, **kwargs):
-        is_new = self.pk is None
-        was_published = False
-        
-        if not is_new:
-            try:
-                old_instance = KnowledgeBaseArticle.objects.get(pk=self.pk)
-                was_published = old_instance.is_published
-            except KnowledgeBaseArticle.DoesNotExist:
-                pass
-        
-        super().save(*args, **kwargs)
-        
-        from automation.utils import emit_event
-        
-        payload = {
-            'article_id': self.id,
-            'title': self.title,
-            'category': self.category,
-            'is_published': self.is_published,
-            'tenant_id': self.tenant.id if self.tenant else None
-        }
-        
-        if is_new:
-            emit_event('knowledge_base.article_created', payload)
-            
-        if self.is_published and (is_new or not was_published):
-            emit_event('knowledge_base.article_published', payload)
-            
-        if not is_new:
-            emit_event('knowledge_base.article_updated', payload)
 
 
 class CsatSurvey(TenantModel):

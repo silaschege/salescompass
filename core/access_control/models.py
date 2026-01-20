@@ -1,10 +1,14 @@
+
 from django.db import models
 from core.models import User
 from tenants.models import Tenant
+from .role_models import Role
+
 
 class AccessControl(models.Model):
     """
-    Unified model for permissions, feature toggles, and feature entitlements
+    Master definition for permissions, feature toggles, and feature entitlements.
+    Does NOT store assignments to specific tenants/users/roles.
     """
     ACCESS_TYPES = [
         ('permission', 'Permission - User/Role Specific'),
@@ -12,68 +16,100 @@ class AccessControl(models.Model):
         ('entitlement', 'Feature Entitlement - Plan Based'),
     ]
     
-    SCOPE_TYPES = [
-        ('user', 'User Specific'),
-        ('role', 'Role Based'),
-        ('tenant', 'Tenant Wide'),
-        ('system', 'System Wide'),
-    ]
-    
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255, help_text="Display name for the access control")
-    key = models.CharField(max_length=255, unique=True, help_text="Unique identifier")
+    key = models.CharField(max_length=255, unique=True, help_text="Unique identifier") 
     description = models.TextField(blank=True)
     
     access_type = models.CharField(max_length=20, choices=ACCESS_TYPES)
-    scope_type = models.CharField(max_length=20, choices=SCOPE_TYPES)
     
-    # Target references (depending on scope_type)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    role = models.ForeignKey('accounts.Role', on_delete=models.CASCADE, null=True, blank=True)
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, null=True, blank=True)
+    # Defaults
+    default_enabled = models.BooleanField(default=True, help_text="Default state when assigned")
     
-    # State and configuration
-    is_enabled = models.BooleanField(default=True)
-    rollout_percentage = models.IntegerField(default=100, help_text="For feature toggles")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    # Additional configuration
-    config_data = models.JSONField(default=dict, help_text="Additional configuration options")
+    # Valid configuration schema (optional)
+    config_schema = models.JSONField(default=dict, blank=True, help_text="JSON Schema for config_data validation")
     
     class Meta:
-        unique_together = [
-            ['key', 'user'], 
-            ['key', 'role'], 
-            ['key', 'tenant'], 
-            # Note: unique_together with 'scope_type' might be redundant if key is unique globally?
-            # User specified: ['key', 'scope_type'] in unique_together list.
-            # But key is generic. Actually user's snippet said key is unique=True which conflicts with unique_together.
-            # If key is unique globally, then one key implies one rule. 
-            # But "Unified Access Controller" logic filters by key + scope + tenant.
-            # So key MUST NOT be unique globally if we want multiple rules for same feature (e.g. tenant A has it, tenant B doesn't).
-            # I will REMOVE unique=True from key to allow multiple rules for the same resource key.
-        ]
-        verbose_name = "Access Control"
-        verbose_name_plural = "Access Controls"
+        verbose_name = "Access Control Definition"
+        verbose_name_plural = "Access Control Definitions"
     
     def __str__(self):
-        return f"{self.name} ({self.key}) - {self.get_access_type_display()}"
+        return f"{self.name} ({self.key}) [{self.get_access_type_display()}]"
+
+
+class TenantAccessControl(models.Model):
+    """
+    Assigns an Access Control to a Tenant (Entitlements, Feature Flags)
+    """
+    id = models.AutoField(primary_key=True)
+    access_control = models.ForeignKey(AccessControl, on_delete=models.CASCADE, related_name='tenant_assignments')
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='access_controls')
     
-    def is_accessible_to_user(self, user):
-        """
-        Check if this access control applies to the given user
-        """
-        if not self.is_enabled:
-            return False
+    is_enabled = models.BooleanField(default=True)
+    config_data = models.JSONField(default=dict, blank=True, help_text="Configuration specific to this tenant assignment")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['access_control', 'tenant'], name='unique_tenant_access_assignment')
+        ]
+        verbose_name = "Tenant Access Assignment"
+        verbose_name_plural = "Tenant Access Assignments"
+
+    def __str__(self):
+        return f"{self.tenant.name} -> {self.access_control.name}"
+
+
+class RoleAccessControl(models.Model):
+    """
+    Assigns an Access Control (Permission) to a Role
+    """
+    id = models.AutoField(primary_key=True)
+    access_control = models.ForeignKey(AccessControl, on_delete=models.CASCADE, related_name='role_assignments')
+    role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name='permissions')
+    
+    is_enabled = models.BooleanField(default=True)
+    config_data = models.JSONField(default=dict, blank=True, help_text="Configuration specific to this role assignment (e.g. field-level permissions)")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['access_control', 'role'], name='unique_role_access_assignment')
+        ]
+        verbose_name = "Role Permission"
+        verbose_name_plural = "Role Permissions"
         
-        if self.scope_type == 'system':
-            return True
-        elif self.scope_type == 'tenant':
-            return user.tenant == self.tenant
-        elif self.scope_type == 'role':
-            return user.role == self.role and user.tenant == self.role.tenant
-        elif self.scope_type == 'user':
-            return user == self.user
-        
-        return False
+    def __str__(self):
+        return f"{self.role.name} -> {self.access_control.name}"
+
+
+class UserAccessControl(models.Model):
+    """
+    Assigns an Access Control (Permission) directly to a User
+    """
+    id = models.AutoField(primary_key=True)
+    access_control = models.ForeignKey(AccessControl, on_delete=models.CASCADE, related_name='user_assignments')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='access_controls')
+    
+    is_enabled = models.BooleanField(default=True)
+    config_data = models.JSONField(default=dict, blank=True, help_text="Configuration specific to this user assignment")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['access_control', 'user'], name='unique_user_access_assignment')
+        ]
+        verbose_name = "User Permission"
+        verbose_name_plural = "User Permissions"
+
+    def __str__(self):
+        return f"{self.user.username} -> {self.access_control.name}"

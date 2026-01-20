@@ -78,7 +78,7 @@ else:
 # Application definition
 
 INSTALLED_APPS = [
-    
+    # Django Core
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -87,50 +87,53 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     
-    # Core apps
-    'core',
-    'tenants',
-    'accounts',
-    'dashboard',
-    'billing',
+    # --- Platform Foundation ---
+    'core',                 # Base users and utils
+    'tenants',              # Multi-tenancy isolation
+    'dashboard',            # Main UI shell
+    'access_control',       # RBAC/ABAC Policies
+    'infrastructure',       # Metrics & health
+    'audit_logs',           # Compliance logging
+    'feature_flags',        # Feature toggles
+    'global_alerts',        # System notifications
+    'settings_app',         # Tenant config UI
     
-    # Feature apps
-    'sales',
+    # --- CRM Core 🤝 ---
+    'accounts',
     'leads',
-    'products',
     'opportunities',
+    'sales',
+    
+    # --- Finance & Commerce 💰 ---
+    'billing',
+    'commissions',
     'proposals',
-    'cases',
+    'products',
+    
+    # --- Communication & Engagement 💬 ---
     'communication',
     'engagement',
-    'nps',
     'marketing',
-    'reports',
-    'automation',
-    'settings_app',
-    'learn',
-    'tasks',
-    'commissions',
-    'developer',
-    'access_control',
+    'nps',
+    'wazo',                # Telephony
     
+    # --- Support & Success 🆘 ---
+    'cases',
+    'learn',               # LMS
     
-    # Control Plane apps
-    'infrastructure',
-    'audit_logs',
-    'feature_flags',
-    'global_alerts',
-    
-    # Telephony Integration
-    'wazo',
+    # --- Tools & Reporting 🛠️ ---
+    'automation',          # Workflow engine
+    'reports',             # Analytics engine
+    'tasks',               # User tasks
+    'developer',           # Dev tools & API introspection
 
-    # Third party
+    # --- Third Party ---
     'rest_framework',
     'rest_framework.authtoken',
     'channels',
     'django_celery_beat',
     'drf_spectacular',
-    'drf_spectacular_sidecar',  # for front-end
+    'drf_spectacular_sidecar',
     'django_filters',
     'crispy_forms',
 ]
@@ -203,6 +206,7 @@ TEMPLATES = [
                 'dashboard.context_processors.user_dashboards',
                 'core.feature_flag_middleware.feature_flag_context_processor',
                 'tenants.context_processor.white_label_context',
+                'access_control.context_processors.access_control',
             ],
         },
     },

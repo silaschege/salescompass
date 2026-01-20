@@ -10,7 +10,7 @@
     
     <p>I'm excited to share our proposal: <strong>{{ proposal.title }}</strong></p>
     
-    <p><a href="{% url 'proposals:track_click' click_token %}?url={% url 'proposals:detail' proposal.pk %}" 
+    <p><a href="{% url 'proposals:track_click' click_token %}?url={% url 'proposals:proposal_detail' proposal.pk %}" 
           style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
         View Proposal
     </a></p>

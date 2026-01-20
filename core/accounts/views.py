@@ -5,13 +5,13 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.http import JsonResponse
 from core.object_permissions import AccountObjectPolicy, OBJECT_POLICIES
 from core.permissions import ObjectPermissionRequiredMixin
-from .models import Contact, RoleAppPermission
+from .models import Contact
 from .forms import AccountForm, ContactForm, BulkImportUploadForm
 from django.contrib.auth.views import LoginView
 from django.shortcuts import get_object_or_404, redirect, render
 from django.db import transaction, models
 
-from .utils import parse_accounts_csv, get_account_kpi_data, get_accounts_summary, get_top_performing_accounts, calculate_account_health, calculate_account_engagement_score, analyze_account_revenue, get_account_health_history, get_quarter_date_range, calculate_revenue_trend, calculate_win_rate, get_account_analytics_data
+from .utils import parse_accounts_csv, get_account_kpi_data, get_accounts_summary, get_top_performing_accounts, calculate_account_health, calculate_account_engagement_score, analyze_account_revenue, get_account_health_history, get_quarter_date_range, calculate_revenue_trend, calculate_win_rate, get_account_analytics_data, get_account_billing_summary
 
 from leads.models import Lead
 from opportunities.models import Opportunity
@@ -95,6 +95,20 @@ class AccountDetailView(ObjectPermissionRequiredMixin, DetailView):
         context['total_opportunities'] = Opportunity.objects.filter(account=account).count()
         context['total_cases'] = Case.objects.filter(account=account).count()
         
+        # Add billing summary (Phase 9)
+        context['billing_summary'] = get_account_billing_summary(account)
+        
+        # Add address for display
+        address_parts = [
+            account.billing_address_line1,
+            account.billing_address_line2,
+            account.billing_city,
+            account.billing_state,
+            account.billing_postal_code,
+            account.country
+        ]
+        context['address'] = ', '.join([part for part in address_parts if part])
+        
         return context
 
     def get_timeline_events(self, account):
@@ -125,7 +139,6 @@ class AccountDetailView(ObjectPermissionRequiredMixin, DetailView):
             'type': event_type,
             'description': str(item)
         } for item in items]
-
 
 
 
@@ -201,6 +214,7 @@ class AccountAnalyticsView(ObjectPermissionRequiredMixin, TemplateView):
 
 
 
+
 class AccountsDashboardView(ObjectPermissionRequiredMixin, TemplateView):
     """
     View for displaying overall accounts dashboard.
@@ -220,12 +234,55 @@ class AccountsDashboardView(ObjectPermissionRequiredMixin, TemplateView):
         # Get top performing accounts
         top_accounts = get_top_performing_accounts(limit=5)
         
+        # Calculate percentages
+        total_accounts = accounts_summary['total_accounts']
+        if total_accounts > 0:
+            accounts_summary['active_percentage'] = (accounts_summary['active_accounts'] / total_accounts) * 100
+            accounts_summary['at_risk_percentage'] = (accounts_summary['at_risk_accounts'] / total_accounts) * 100
+            accounts_summary['churned_percentage'] = (accounts_summary['churned_accounts'] / total_accounts) * 100
+        else:
+            accounts_summary['active_percentage'] = 0
+            accounts_summary['at_risk_percentage'] = 0
+            accounts_summary['churned_percentage'] = 0
+            
+        # Add ESG-related metrics
+        accounts = Account.objects.all()
+        if self.request.user.tenant_id:
+            accounts = accounts.filter(tenant_id=self.request.user.tenant_id)
+        
+        accounts_summary['esg_certified'] = accounts.filter(esg_certified=True).count()
+        accounts_summary['avg_esg_score'] = accounts.aggregate(avg_score=models.Avg('overall_esg_score'))['avg_score'] or 0
+        accounts_summary['high_esg_risk'] = accounts.filter(esg_engagement='high').count()
+        accounts_summary['total_co2_saved'] = accounts.aggregate(total=models.Sum('tco2e_saved'))['total'] or 0
+        
+        # ESG distribution counts
+        accounts_summary['high_esg_count'] = accounts.filter(overall_esg_score__gte=75).count()
+        accounts_summary['medium_esg_count'] = accounts.filter(overall_esg_score__lt=75, overall_esg_score__gte=50).count()
+        accounts_summary['low_esg_count'] = accounts.filter(overall_esg_score__lt=50).count()
+        
+        # Industry distribution
+        industry_distribution = accounts.values('industry').annotate(
+            count=models.Count('id')
+        ).order_by('-count')[:5]
+        
+        accounts_summary['top_industries'] = [item['industry'].title() for item in industry_distribution if item['industry']]
+        accounts_summary['top_industries_counts'] = [item['count'] for item in industry_distribution if item['industry']]
+        
+        # Add average health score
+        avg_health = accounts.aggregate(avg_health=models.Avg('health_score'))['avg_health'] or 0
+        accounts_summary['avg_health_score'] = avg_health
+        
+        # Add total revenue (sum of annual_revenue)
+        total_revenue = accounts.aggregate(total_rev=models.Sum('annual_revenue'))['total_rev'] or 0
+        accounts_summary['total_revenue'] = total_revenue
+        
         context['accounts_summary'] = accounts_summary
         context['top_accounts'] = top_accounts
         context['industry_choices'] = Account.INDUSTRY_CHOICES
         context['esg_choices'] = Account.ESG_CHOICES
         
         return context
+
 
 
 
@@ -429,6 +486,9 @@ class ContactListView(ObjectPermissionRequiredMixin, ListView):
         context['search_term'] = self.request.GET.get('search', '')
         context['selected_account'] = self.request.GET.get('account_id', '')
         
+  
+        contacts = self.get_queryset()
+        context['primary_contacts_count'] = contacts.filter(is_primary=True).count()
         # Get accounts for filter dropdown
         if self.request.user.is_authenticated:
             from core.object_permissions import AccountObjectPolicy
@@ -670,3 +730,36 @@ def get_health_history(request, account_id):
         return JsonResponse({'error': 'Account not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+def export_accounts_csv(request):
+    """
+    Export accounts to CSV.
+    """
+    import csv
+    from django.http import HttpResponse
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="accounts_export.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Name', 'Industry', 'Country', 'Status', 'Tier', 'Owner', 'Phone', 'Website', 'Health Score'])
+
+    # Filter based on user
+    from core.object_permissions import AccountObjectPolicy
+    queryset = AccountObjectPolicy.get_viewable_queryset(request.user, Account.objects.all())
+
+    for account in queryset:
+        writer.writerow([
+            account.account_name,
+            account.get_industry_display(),
+            account.country,
+            account.get_status_display(),
+            account.get_tier_display(),
+            account.owner.get_full_name() if account.owner else '',
+            account.phone,
+            account.website,
+            account.health_score if hasattr(account, 'health_score') else ''
+        ])
+
+    return response

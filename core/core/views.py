@@ -7,7 +7,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy, reverse
 from django.contrib.messages.views import SuccessMessageMixin
 from core.apps_registry import SUPERUSER_ONLY_CATEGORIES, AVAILABLE_APPS
-from accounts.models import RoleAppPermission
 from core.models import (
     User, ModuleLabel, ModuleChoice, ModelChoice, FieldType, AssignmentRuleType,
     SystemConfigType, SystemConfigCategory, SystemEventType, SystemEventSeverity,
@@ -17,7 +16,7 @@ from core.models import (
 from core.forms import (
     ModuleLabelForm, ModuleChoiceForm, ModelChoiceForm, FieldTypeForm, AssignmentRuleTypeForm
 )
-from tenants.models import Tenant as TenantModel
+from tenants.models import Tenant as TenantModel, TenantFeatureEntitlement
 from leads.models import Lead
 from opportunities.models import Opportunity
 
@@ -38,7 +37,26 @@ class TenantAwareViewMixin:
              return None 
              
         if hasattr(self.request.user, 'tenant_id') and self.request.user.tenant_id:
-            return queryset.filter(tenant_id=self.request.user.tenant_id)
+            # Only filter if the model actually has a tenant field to avoid FieldErrors
+            # for global models (like WorkflowTemplate)
+            from django.core.exceptions import FieldDoesNotExist
+            try:
+                # Use queryset.model to ensure we're checking the actual model being queried
+                # This is safer than self.model which might be None in some generic views
+                model = queryset.model
+                
+                # Check for 'tenant' field (standard FK in TenantModel)
+                model._meta.get_field('tenant')
+                return queryset.filter(tenant_id=self.request.user.tenant_id)
+            except FieldDoesNotExist:
+                try:
+                    # Fallback: check for direct 'tenant_id' field
+                    model._meta.get_field('tenant_id')
+                    return queryset.filter(tenant_id=self.request.user.tenant_id)
+                except FieldDoesNotExist:
+                    # Model is not tenant-aware, return unfiltered queryset
+                    pass
+                    
         return queryset
 
     def get_form_kwargs(self):
@@ -175,8 +193,7 @@ def calculate_clv_simple(request):
 
 # --- Application Selection Views ---
 
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import TemplateView
+from access_control.controller import UnifiedAccessController
 
 class AppSelectionView(LoginRequiredMixin, TemplateView):
     template_name = 'logged_in/app_selection.html'
@@ -199,29 +216,28 @@ class AppSelectionView(LoginRequiredMixin, TemplateView):
         
         has_any_apps = False
         
-        # 2. Get permissions for Standard Users
-        hidden_apps_ids = set()
-        if user.role and not user.is_superuser:
-            permissions = RoleAppPermission.objects.filter(role=user.role)
-            for perm in permissions:
-                if not perm.is_visible:
-                    hidden_apps_ids.add(perm.app_identifier)
+        # 2. Get accessible resources via Unified Access Control
+        # This handles entitlements, feature flags, and permissions in one go
+        accessible_feature_keys = set()
+        if not user.is_superuser:
+            available_resources = UnifiedAccessController.get_available_resources(user)
+            accessible_feature_keys = {r['key'] for r in available_resources}
+
+        # Apps that are always available if the URL reverses
+        ALWAYS_VISIBLE_APPS = ['home', 'dashboard']
 
         for app in AVAILABLE_APPS:
             app_id = app['id']
             app_category = app['category']
 
-            # --- CHECK 1: Database/Role Permissions (Standard Users) ---
-            if app_id in hidden_apps_ids:
-                continue
-
-            # --- CHECK 2: Restricted Categories (Superuser Only) ---
-            # We strictly call the category here. 
-            # If the app belongs to a restricted category and user is NOT superuser -> Skip.
-            if app_category in RESTRICTED_CATEGORIES and not user.is_superuser:
-                continue
+            # --- CHECK 1: Tenant Feature Entitlements & Permissions via Unified Access Control ---
+            # If it's not a core app and not explicitly in accessible features, skip it for non-superusers
+            # We allow superusers to see everything regardless of tenant features for overrides/debugging
+            if not user.is_superuser and app_id not in ALWAYS_VISIBLE_APPS:
+                if app_id not in accessible_feature_keys:
+                    continue
                 
-            # --- CHECK 3: Add to group if URL resolves ---
+            # --- CHECK 4: Add to group if URL resolves ---
             try:
                 url = reverse(app['url_name'])
                 
@@ -260,17 +276,21 @@ class AppSettingsView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         from core.apps_registry import AVAILABLE_APPS
-        from accounts.models import Role, RoleAppPermission
+        from access_control.role_models import Role
+        from access_control.models import AccessControl
         
         roles = Role.objects.all()
         # Include ALL apps for configuration, including control apps
         configurable_apps = AVAILABLE_APPS
         
-        # Build a matrix of role -> app -> is_visible
+        # Build a matrix of role -> app -> is_visible using AccessControl
         permission_matrix = {}
         
-        all_perms = RoleAppPermission.objects.all()
-        perm_lookup = {(p.role_id, p.app_identifier): p.is_visible for p in all_perms}
+        all_perms = AccessControl.objects.filter(
+            scope_type='role',
+            access_type='permission'
+        )
+        perm_lookup = {(p.role_id, p.key): p.is_enabled for p in all_perms}
         
         for role in roles:
             role_perms = []
@@ -291,7 +311,8 @@ class AppSettingsView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
-        from accounts.models import Role, RoleAppPermission
+        from access_control.role_models import Role
+        from access_control.models import AccessControl
         
         # Process form submission
         # Expected format: perm_{role_id}_{app_id} = 'on' (if checked)
@@ -306,11 +327,16 @@ class AppSettingsView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                 field_name = f"perm_{role.id}_{app['id']}"
                 is_visible = request.POST.get(field_name) == 'on'
                 
-                # Update or create
-                RoleAppPermission.objects.update_or_create(
+                # Update or create using AccessControl
+                AccessControl.objects.update_or_create(
+                    key=app['id'],
+                    scope_type='role',
                     role=role,
-                    app_identifier=app['id'],
-                    defaults={'is_visible': is_visible}
+                    access_type='permission',
+                    defaults={
+                        'name': f"{app['name']} Permission",
+                        'is_enabled': is_visible
+                    }
                 )
         
         from django.contrib import messages

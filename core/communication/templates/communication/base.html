@@ -1,5 +1,9 @@
-{% extends "dashboard/base.html" %}
+{% extends 'core/base_module.html' %}
 {% load static %}
+
+{% block module_nav %}
+{% include "communication/includes/module_nav.html" %}
+{% endblock %}
 
 {% block extra_css %}
 {{ block.super }}
@@ -122,8 +126,7 @@
 <div class="header-bar mb-4">
     <div class="container">
         <h1 class="block-title">{% block comm_title %}Communication Center{% endblock %}</h1>
-        <p class="text-white opacity-75 lead">{% block comm_subtitle %}Manage interactions across all channels{%
-            endblock %}</p>
+        <p class="text-white opacity-75 lead">{% block comm_subtitle %}Manage interactions across all channels{% endblock %}</p>
 
         <div class="d-flex justify-content-center gap-3 mt-4">
             {% block comm_actions %}{% endblock %}

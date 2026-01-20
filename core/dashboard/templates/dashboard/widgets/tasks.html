@@ -30,7 +30,7 @@ Shows user's assigned tasks
 
         <div class="list-group list-group-flush">
             {% for task in tasks %}
-            <a href="{% url 'tasks:detail' task.pk %}" class="list-group-item list-group-item-action py-2">
+            <a href="{% url 'tasks:task_detail' task.pk %}" class="list-group-item list-group-item-action py-2">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="flex-grow-1">
                         <h6 class="mb-0">{{ task.title|truncatewords:8 }}</h6>

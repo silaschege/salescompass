@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import Permission
-from accounts.models import Role
+from access_control.role_models import Role
 
 
 class SystemConfigurationForm(forms.Form):
@@ -109,24 +109,13 @@ class SystemConfigurationForm(forms.Form):
 
 
 class RoleManagementForm(forms.ModelForm):
-    permissions = forms.ModelMultipleChoiceField(
-        queryset=Permission.objects.select_related('content_type').all(),
-        required=False,
-        widget=forms.CheckboxSelectMultiple
-    )
-
     class Meta:
         model = Role
-        fields = ('name', 'description', 'permissions')
+        fields = ('name', 'description', 'tenant', 'is_system_role', 'is_assignable')
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Limit permission choices to relevant permissions
-        self.fields['permissions'].queryset = Permission.objects.select_related('content_type').all()
 
 
 class DataExportForm(forms.Form):

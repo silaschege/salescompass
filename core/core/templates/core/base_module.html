@@ -1,30 +1,3 @@
-{% comment %} {% extends "logged_in/base.html" %}
-
-{% block sidebar_nav %}
-<!-- Module Navigation Override -->
-<div class="sidebar-nav">
-    <div class="nav-section-label">Navigation</div>
-    <a class="nav-link" href="{% url 'core:app_selection' %}">
-        <i class="bi bi-grid-fill"></i> All Apps
-    </a>
-
-    <div class="nav-section-label mt-3">Module Menu</div>
-    {% block module_nav %}
-    <!-- Module Links Injected Here -->
-    {% endblock %}
-</div>
-{% endblock %}
-
-{% block extra_css %}
-<!-- Add any module specific CSS here if needed -->
-{% endblock %}
-
-{% block extra_js %}
-<!-- Add any module specific JS here if needed -->
-{% endblock %}
- {% endcomment %}
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -194,6 +167,33 @@
         .btn-primary:hover {
             background-color: #5a34a0;
             border-color: #5a34a0;
+        }
+        
+        /* Override Bootstrap primary color to purple */
+        .bg-primary {
+            background-color: #6f42c1 !important;
+        }
+        .text-primary {
+            color: #6f42c1 !important;
+        }
+        .border-primary {
+            border-color: #6f42c1 !important;
+        }
+        .btn-outline-primary {
+            color: #6f42c1;
+            border-color: #6f42c1;
+        }
+        .btn-outline-primary:hover {
+            background-color: #6f42c1;
+            border-color: #6f42c1;
+        }
+        .badge.bg-primary {
+            background-color: #6f42c1 !important;
+        }
+        .alert-primary {
+            background-color: #e2d9f3;
+            border-color: #d4c6eb;
+            color: #4d2d86;
         }
 
         /* Mobile Responsive */

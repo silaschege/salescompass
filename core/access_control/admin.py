@@ -1,10 +1,14 @@
 from django.contrib import admin
-from .models import AccessControl
+from .models import AccessControl, TenantAccessControl, RoleAccessControl, UserAccessControl
+
+class TenantAccessControlInline(admin.TabularInline):
+    model = TenantAccessControl
+    extra = 0
 
 @admin.register(AccessControl)
 class AccessControlAdmin(admin.ModelAdmin):
-    list_display = ['name', 'key', 'access_type', 'scope_type', 'is_enabled', 'tenant', 'role', 'user']
-    list_filter = ['access_type', 'scope_type', 'is_enabled', 'tenant']
+    list_display = ['name', 'key', 'access_type', 'default_enabled']
+    list_filter = ['access_type', 'default_enabled']
     search_fields = ['name', 'key']
     readonly_fields = ['created_at', 'updated_at']
     
@@ -13,13 +17,7 @@ class AccessControlAdmin(admin.ModelAdmin):
             'fields': ('name', 'key', 'description')
         }),
         ('Access Configuration', {
-            'fields': ('access_type', 'scope_type', 'is_enabled', 'rollout_percentage')
-        }),
-        ('Target', {
-            'fields': ('user', 'role', 'tenant')
-        }),
-        ('Configuration', {
-            'fields': ('config_data',)
+            'fields': ('access_type', 'default_enabled', 'config_schema')
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
@@ -27,27 +25,25 @@ class AccessControlAdmin(admin.ModelAdmin):
         })
     )
     
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        
-        # Dynamically adjust fields based on scope_type
-        if 'scope_type' in form.base_fields:
-            # Note: Checking request.GET or obj might not work perfectly in all cases but works for standard admin
-            scope_type = request.GET.get('scope_type')
-            if obj and obj.scope_type:
-                scope_type = obj.scope_type
-            
-            if scope_type == 'user':
-                form.base_fields['user'].required = True
-                form.base_fields['role'].required = False
-                form.base_fields['tenant'].required = False
-            elif scope_type == 'role':
-                form.base_fields['role'].required = True
-                form.base_fields['user'].required = False
-                form.base_fields['tenant'].required = True # Role is usually within a tenant
-            elif scope_type == 'tenant':
-                form.base_fields['tenant'].required = True
-                form.base_fields['user'].required = False
-                form.base_fields['role'].required = False
-        
-        return form
+    inlines = [TenantAccessControlInline]
+
+@admin.register(TenantAccessControl)
+class TenantAccessControlAdmin(admin.ModelAdmin):
+    list_display = ['tenant', 'access_control', 'is_enabled']
+    list_filter = ['is_enabled', 'tenant', 'access_control__access_type']
+    search_fields = ['tenant__name', 'access_control__name', 'access_control__key']
+    autocomplete_fields = ['tenant', 'access_control']
+
+@admin.register(RoleAccessControl)
+class RoleAccessControlAdmin(admin.ModelAdmin):
+    list_display = ['role', 'access_control', 'is_enabled']
+    list_filter = ['is_enabled', 'role__tenant', 'access_control__access_type']
+    search_fields = ['role__name', 'access_control__name', 'access_control__key']
+    autocomplete_fields = ['role', 'access_control']
+
+@admin.register(UserAccessControl)
+class UserAccessControlAdmin(admin.ModelAdmin):
+    list_display = ['user', 'access_control', 'is_enabled']
+    list_filter = ['is_enabled', 'access_control__access_type']
+    search_fields = ['user__email', 'access_control__name', 'access_control__key']
+    autocomplete_fields = ['user', 'access_control']

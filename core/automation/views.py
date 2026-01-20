@@ -1,7 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from core.views import (
+    SalesCompassListView, SalesCompassDetailView, SalesCompassCreateView,
+    SalesCompassUpdateView, SalesCompassDeleteView, TenantAwareViewMixin
+)
 from core.permissions import PermissionRequiredMixin, require_permission
 from .models import Automation, AutomationCondition, AutomationAction, Workflow, WorkflowTemplate,WorkflowAction,WorkflowTrigger,WorkflowExecution,WebhookDeliveryLog,WebhookEndpoint, WorkflowApproval, WorkflowVersion, CustomCodeSnippet, CustomCodeExecutionLog
 from .forms import AutomationForm, AutomationConditionForm, AutomationActionForm, CustomCodeSnippetForm
@@ -13,16 +16,16 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import AutomationExecutionLog, WorkflowExecution
 from .utils import emit_event, execute_automation
-
-class WorkflowListView(PermissionRequiredMixin, ListView):
+from django.utils import timezone
+class WorkflowListView(SalesCompassListView):
     model = Workflow
     template_name = 'automation/list.html'
     context_object_name = 'workflows'
-    required_permission = 'automation:read'
     
     def get_queryset(self):
-        # Ensure we're getting all workflows, or apply specific filters
-        return Workflow.objects.all()
+        # SalesCompassListView handles tenant filtering automatically if needed, 
+        # but here we might want specific logic or just rely on default
+        return super().get_queryset()
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -32,40 +35,36 @@ class WorkflowListView(PermissionRequiredMixin, ListView):
         context['inactive_workflows'] = workflows.filter(workflow_is_active=False).count()
         return context
 
-class WorkflowDetailView(PermissionRequiredMixin, DetailView):
+class WorkflowDetailView(SalesCompassDetailView):
     model = Workflow
     template_name = 'automation/detail.html'
-    required_permission = 'automation:read'
 
-class WorkflowUpdateView(PermissionRequiredMixin, UpdateView):
+class WorkflowUpdateView(SalesCompassUpdateView):
     model = Workflow
     fields = ['workflow_name', 'workflow_description', 'workflow_trigger_type', 'workflow_is_active', 'workflow_builder_data']
     template_name = 'automation/form.html'
     success_url = '/automation/'
-    required_permission = 'automation:write'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['trigger_types'] = get_available_triggers()
         return context
 
-class WorkflowCreateView(PermissionRequiredMixin, CreateView):
+class WorkflowCreateView(SalesCompassCreateView):
     model = Workflow
     fields = ['workflow_name', 'workflow_description', 'workflow_trigger_type', 'workflow_is_active', 'workflow_builder_data']
     template_name = 'automation/form.html'
     success_url = '/automation/'
-    required_permission = 'automation:write'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['trigger_types'] = get_available_triggers()
         return context
 
-class WorkflowDeleteView(PermissionRequiredMixin, DeleteView):
+class WorkflowDeleteView(SalesCompassDeleteView):
     model = Workflow
     template_name = 'automation/confirm_delete.html'
     success_url = '/automation/'
-    required_permission = 'automation:delete'
     
     def delete(self, request, *args, **kwargs):
         workflow = self.get_object()
@@ -76,12 +75,11 @@ class WorkflowDeleteView(PermissionRequiredMixin, DeleteView):
         messages.success(request, f"Workflow '{workflow.workflow_name}' deleted.")
         return super().delete(request, *args, **kwargs)
 
-# Standard views for the older Automation model
-class AutomationListView(PermissionRequiredMixin, ListView):
+# Standard views for the older Automation model# Standard views for the older Automation model
+class AutomationListView(SalesCompassListView):
     model = Automation
     template_name = 'automation/list.html'
     context_object_name = 'automations'
-    required_permission = 'automation:read'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -98,32 +96,28 @@ class AutomationListView(PermissionRequiredMixin, ListView):
         context['active_workflows'] = workflows.filter(workflow_is_active=True).count()
         return context
 
-class AutomationDetailView(PermissionRequiredMixin, DetailView):
+class AutomationDetailView(SalesCompassDetailView):
     model = Automation
     template_name = 'automation/detail.html'
-    required_permission = 'automation:read'
 
-class AutomationUpdateView(PermissionRequiredMixin, UpdateView):
+class AutomationUpdateView(SalesCompassUpdateView):
     model = Automation
     fields = ['automation_name', 'automation_description', 'automation_is_active', 'trigger_type', 'trigger_config']
     template_name = 'automation/form.html'
     success_url = '/automation/'
-    required_permission = 'automation:write'
 
-class AutomationCreateView(PermissionRequiredMixin, CreateView):
+class AutomationCreateView(SalesCompassCreateView):
     model = Automation
     fields = ['automation_name', 'automation_description', 'automation_is_active', 'trigger_type', 'trigger_config']
     template_name = 'automation/form.html'
     success_url = '/automation/'
-    required_permission = 'automation:write'
 
-class AutomationDeleteView(PermissionRequiredMixin, DeleteView):
+class AutomationDeleteView(SalesCompassDeleteView):
     model = Automation
     template_name = 'automation/confirm_delete.html'
     success_url = '/automation/'
-    required_permission = 'automation:delete'
 
-class TriggerAutomationView(View):
+class TriggerAutomationView(TenantAwareViewMixin, View):
     """API endpoint to trigger automations from other modules."""
     
     @method_decorator(csrf_exempt)
@@ -140,8 +134,10 @@ class TriggerAutomationView(View):
                 return JsonResponse({'error': 'trigger_type is required'}, status=400)
             
             # Add tenant_id to payload if not present
-            if 'tenant_id' not in payload and hasattr(request.user, 'tenant_id'):
-                payload['tenant_id'] = request.user.tenant_id
+            if 'tenant_id' not in payload and hasattr(request, 'tenant'):
+                payload['tenant_id'] = request.tenant.id
+            elif 'tenant_id' not in payload and hasattr(request.user, 'tenant_id'):
+                 payload['tenant_id'] = request.user.tenant_id
             
             # Emit the event (this will trigger automations)
             emit_event(trigger_type, payload)
@@ -153,7 +149,7 @@ class TriggerAutomationView(View):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
 
-class ExecuteAutomationView(View):
+class ExecuteAutomationView(TenantAwareViewMixin, View):
     """API endpoint to execute a specific automation."""
     
     def post(self, request, automation_id):
@@ -180,68 +176,61 @@ class ExecuteAutomationView(View):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=40)
 
-class WorkflowExecutionListView(PermissionRequiredMixin, ListView):
+class WorkflowExecutionListView(SalesCompassListView):
     """List all workflow execution logs."""
     model = WorkflowExecution
     template_name = 'automation/log_list.html'
     context_object_name = 'logs'
     paginate_by = 50
-    required_permission = 'automation:read'
 
     def get_queryset(self):
         return super().get_queryset().select_related('workflow')
 
-class AutomationLogListView(PermissionRequiredMixin, ListView):
+class AutomationLogListView(SalesCompassListView):
     """List all automation execution logs."""
     model = AutomationExecutionLog
     template_name = 'automation/log_list.html'
     context_object_name = 'logs'
     paginate_by = 50
-    required_permission = 'automation:read'
 
     def get_queryset(self):
         return super().get_queryset().select_related('automation', 'executed_by')
 
-class WorkflowExecutionDetailView(PermissionRequiredMixin, DetailView):
+class WorkflowExecutionDetailView(SalesCompassDetailView):
     """Detail view for workflow execution logs."""
     model = WorkflowExecution
     template_name = 'automation/log_detail.html'
-    required_permission = 'automation:read'
 
-class AutomationLogDetailView(PermissionRequiredMixin, DetailView):
+class AutomationLogDetailView(SalesCompassDetailView):
     """Detail view for automation execution logs."""
     model = AutomationExecutionLog
     template_name = 'automation/log_detail.html'
-    required_permission = 'automation:read'
 
-class WebhookDeliveryLogListView(PermissionRequiredMixin, ListView):
+class WebhookDeliveryLogListView(SalesCompassListView):
     """List all webhook delivery logs."""
     model = WebhookDeliveryLog
     template_name = 'automation/webhook_log_list.html'
     context_object_name = 'logs'
     paginate_by = 50
-    required_permission = 'automation:read'
 
     def get_queryset(self):
         return super().get_queryset().select_related('webhook_endpoint')
 
-class WebhookDeliveryLogDetailView(PermissionRequiredMixin, DetailView):
+class WebhookDeliveryLogDetailView(SalesCompassDetailView):
     """Detail view for webhook delivery logs."""
     model = WebhookDeliveryLog
     template_name = 'automation/webhook_log_detail.html'
     context_object_name = 'log'
-    required_permission = 'automation:read'
 
-class WorkflowApprovalListView(PermissionRequiredMixin, ListView):
+class WorkflowApprovalListView(SalesCompassListView):
     """List all pending workflow approval requests."""
     model = WorkflowApproval
     template_name = 'automation/approval_list.html'
     context_object_name = 'approvals'
-    required_permission = 'automation:read'
 
     def get_queryset(self):
         return WorkflowApproval.objects.filter(
-            tenant_id=self.request.tenant.id,
+            tenant_id=self.request.user.tenant_id,
             approval_status='pending'
         ).select_related('workflow_execution', 'workflow_execution__workflow', 'workflow_action')
 
@@ -251,7 +240,7 @@ def respond_to_workflow_approval(request, approval_id):
     from .models import WorkflowApproval
     from .engine import WorkflowEngine
     
-    approval = get_object_or_404(WorkflowApproval, id=approval_id, tenant_id=request.tenant.id)
+    approval = get_object_or_404(WorkflowApproval, id=approval_id, tenant_id=request.user.tenant_id)
     
     if request.method == 'POST':
         action = request.POST.get('action') # 'approve' or 'reject'
@@ -289,12 +278,11 @@ def respond_to_workflow_approval(request, approval_id):
         
     return render(request, 'automation/approval_response.html', {'approval': approval})
 
-class SystemAutomationListView(PermissionRequiredMixin, ListView):
+class SystemAutomationListView(SalesCompassListView):
     """List system automations (cannot be deleted)."""
     model = Automation
     template_name = 'automation/system_list.html'
     context_object_name = 'automations'
-    required_permission = 'automation:read'
 
     def get_queryset(self):
         return Automation.objects.filter(is_system=True)
@@ -314,15 +302,14 @@ def export_automation_view(request):
         from django.http import JsonResponse
         # ... export logic ...
         return JsonResponse({'message': 'Export functionality placeholder'})
-    return redirect('automation:list')
+    return redirect('automation:log_list')
 
 # In your views.py, update the form handling
 
-class AutomationConditionCreateView(PermissionRequiredMixin, CreateView):
+class AutomationConditionCreateView(SalesCompassCreateView):
     model = AutomationCondition
     form_class = AutomationConditionForm
     template_name = 'automation/condition_form.html'
-    required_permission = 'automation:write'
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -336,11 +323,10 @@ class AutomationConditionCreateView(PermissionRequiredMixin, CreateView):
         form.instance.automation_id = automation_id
         return super().form_valid(form)
 
-class AutomationActionCreateView(PermissionRequiredMixin, CreateView):
+class AutomationActionCreateView(SalesCompassCreateView):
     model = AutomationAction
     form_class = AutomationActionForm
     template_name = 'automation/action_form.html'
-    required_permission = 'automation:write'
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -472,11 +458,10 @@ def load_workflow(request, workflow_id):
         return JsonResponse({'error': str(e)}, status=500)
 
 # Additional views for Workflow models
-class WorkflowActionCreateView(PermissionRequiredMixin, CreateView):
+class WorkflowActionCreateView(SalesCompassCreateView):
     model = WorkflowAction
     fields = ['workflow_action_type', 'workflow_action_parameters', 'workflow_action_order', 'workflow_action_is_active']
     template_name = 'automation/workflow_action_form.html'
-    required_permission = 'automation:write'
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -491,23 +476,12 @@ class WorkflowActionCreateView(PermissionRequiredMixin, CreateView):
         form.instance.workflow_id = workflow_id
         return super().form_valid(form)
 
-class WorkflowActionUpdateView(PermissionRequiredMixin, UpdateView):
-    model = WorkflowAction
-    fields = ['workflow_action_type', 'workflow_action_parameters', 'workflow_action_order', 'workflow_action_is_active']
-    template_name = 'automation/action_form.html'
-    required_permission = 'automation:write'
 
-class WorkflowActionDeleteView(PermissionRequiredMixin, DeleteView):
-    model = WorkflowAction
-    template_name = 'automation/confirm_delete.html'
-    success_url = '/automation/'
-    required_permission = 'automation:delete'
 
-class WorkflowTriggerCreateView(PermissionRequiredMixin, CreateView):
+class WorkflowTriggerCreateView(SalesCompassCreateView):
     model = WorkflowTrigger
     fields = ['workflow_trigger_event', 'workflow_trigger_conditions', 'workflow_trigger_is_active']
     template_name = 'automation/workflow_trigger_form.html'
-    required_permission = 'automation:write'
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -522,142 +496,101 @@ class WorkflowTriggerCreateView(PermissionRequiredMixin, CreateView):
         form.instance.workflow_id = workflow_id
         return super().form_valid(form)
 
-class WorkflowTriggerUpdateView(PermissionRequiredMixin, UpdateView):
-    model = WorkflowTrigger
-    fields = ['workflow_trigger_event', 'workflow_trigger_conditions', 'workflow_trigger_is_active']
-    template_name = 'automation/condition_form.html'
-    required_permission = 'automation:write'
-
-class WorkflowTriggerDeleteView(PermissionRequiredMixin, DeleteView):
-    model = WorkflowTrigger
-    template_name = 'automation/confirm_delete.html'
-    success_url = '/automation/'
-    required_permission = 'automation:delete'
 
 
 # Additional views for Workflow models
-class WorkflowActionListView(PermissionRequiredMixin, ListView):
+
+class WorkflowActionListView(SalesCompassListView):
     model = WorkflowAction
     template_name = 'automation/workflow_action_list.html'
     context_object_name = 'workflow_actions'
-    required_permission = 'automation:read'
 
     def get_queryset(self):
         return super().get_queryset().select_related('workflow')
 
-
-class WorkflowActionDetailView(PermissionRequiredMixin, DetailView):
+class WorkflowActionDetailView(SalesCompassDetailView):
     model = WorkflowAction
     template_name = 'automation/workflow_action_detail.html'
-    required_permission = 'automation:read'
 
-
-class WorkflowActionUpdateView(PermissionRequiredMixin, UpdateView):
+class WorkflowActionUpdateView(SalesCompassUpdateView):
     model = WorkflowAction
     fields = ['workflow_action_type', 'workflow_action_parameters', 'workflow_action_order', 'workflow_action_is_active']
     template_name = 'automation/workflow_action_form.html'
     success_url = '/automation/workflow-actions/'
-    required_permission = 'automation:write'
 
-
-class WorkflowActionDeleteView(PermissionRequiredMixin, DeleteView):
+class WorkflowActionDeleteView(SalesCompassDeleteView):
     model = WorkflowAction
     template_name = 'automation/confirm_delete.html'
     success_url = '/automation/workflow-actions/'
-    required_permission = 'automation:delete'
 
-
-class WorkflowExecutionListView(PermissionRequiredMixin, ListView):
+class WorkflowExecutionListView(SalesCompassListView):
     model = WorkflowExecution
     template_name = 'automation/workflow_execution_list.html'
     context_object_name = 'workflow_executions'
-    required_permission = 'automation:read'
 
     def get_queryset(self):
         return super().get_queryset().select_related('workflow')
 
-
-class WorkflowExecutionDetailView(PermissionRequiredMixin, DetailView):
+class WorkflowExecutionDetailView(SalesCompassDetailView):
     model = WorkflowExecution
     template_name = 'automation/workflow_execution_detail.html'
-    required_permission = 'automation:read'
 
-
-class WorkflowExecutionUpdateView(PermissionRequiredMixin, UpdateView):
+class WorkflowExecutionUpdateView(SalesCompassUpdateView):
     model = WorkflowExecution
     fields = ['workflow_execution_status', 'workflow_execution_error_message', 'workflow_execution_completed_at']
     template_name = 'automation/workflow_execution_form.html'
     success_url = '/automation/workflow-executions/'
-    required_permission = 'automation:write'
 
-
-class WorkflowTriggerListView(PermissionRequiredMixin, ListView):
+class WorkflowTriggerListView(SalesCompassListView):
     model = WorkflowTrigger
     template_name = 'automation/workflow_trigger_list.html'
     context_object_name = 'workflow_triggers'
-    required_permission = 'automation:read'
 
     def get_queryset(self):
         return super().get_queryset().select_related('workflow')
 
-
-class WorkflowTriggerDetailView(PermissionRequiredMixin, DetailView):
+class WorkflowTriggerDetailView(SalesCompassDetailView):
     model = WorkflowTrigger
     template_name = 'automation/workflow_trigger_detail.html'
-    required_permission = 'automation:read'
 
-
-class WorkflowTriggerUpdateView(PermissionRequiredMixin, UpdateView):
+class WorkflowTriggerUpdateView(SalesCompassUpdateView):
     model = WorkflowTrigger
     fields = ['workflow_trigger_event', 'workflow_trigger_conditions', 'workflow_trigger_is_active']
     template_name = 'automation/workflow_trigger_form.html'
     success_url = '/automation/workflow-triggers/'
-    required_permission = 'automation:write'
 
-
-class WorkflowTriggerDeleteView(PermissionRequiredMixin, DeleteView):
+class WorkflowTriggerDeleteView(SalesCompassDeleteView):
     model = WorkflowTrigger
     template_name = 'automation/confirm_delete.html'
     success_url = '/automation/workflow-triggers/'
-    required_permission = 'automation:delete'
 
-
-class WorkflowTemplateListView(PermissionRequiredMixin, ListView):
+class WorkflowTemplateListView(SalesCompassListView):
     model = WorkflowTemplate
     template_name = 'automation/workflow_template_list.html'
     context_object_name = 'workflow_templates'
-    required_permission = 'automation:read'
 
-
-class WorkflowTemplateDetailView(PermissionRequiredMixin, DetailView):
+class WorkflowTemplateDetailView(SalesCompassDetailView):
     model = WorkflowTemplate
     template_name = 'automation/workflow_template_detail.html'
-    required_permission = 'automation:read'
 
-
-class WorkflowTemplateUpdateView(PermissionRequiredMixin, UpdateView):
+class WorkflowTemplateUpdateView(SalesCompassUpdateView):
     model = WorkflowTemplate
     fields = ['workflow_template_name', 'workflow_template_description', 'workflow_template_trigger_type', 'workflow_template_builder_data', 'workflow_template_is_active']
     template_name = 'automation/workflow_template_form.html'
     success_url = '/automation/workflow-templates/'
-    required_permission = 'automation:write'
 
-
-class WorkflowTemplateDeleteView(PermissionRequiredMixin, DeleteView):
+class WorkflowTemplateDeleteView(SalesCompassDeleteView):
     model = WorkflowTemplate
     template_name = 'automation/confirm_delete.html'
     success_url = '/automation/workflow-templates/'
-    required_permission = 'automation:delete'
-
 
 # ============================================================================
 # Analytics Dashboard Views
 # ============================================================================
 
-class WorkflowAnalyticsDashboardView(PermissionRequiredMixin, View):
+class WorkflowAnalyticsDashboardView(TenantAwareViewMixin, View):
     """Main analytics dashboard view."""
     template_name = 'automation/analytics_dashboard.html'
-    required_permission = 'automation:read'
     
     def get(self, request):
         from .analytics import analytics_service
@@ -690,10 +623,8 @@ class WorkflowAnalyticsDashboardView(PermissionRequiredMixin, View):
         
         return render(request, self.template_name, context)
 
-
-class WorkflowAnalyticsAPIView(PermissionRequiredMixin, View):
+class WorkflowAnalyticsAPIView(TenantAwareViewMixin, View):
     """API endpoint for analytics data (JSON)."""
-    required_permission = 'automation:read'
     
     def get(self, request):
         from .analytics import analytics_service
@@ -726,14 +657,12 @@ class WorkflowAnalyticsAPIView(PermissionRequiredMixin, View):
         
         return JsonResponse(data)
 
-
 # ============================================================================
 # Execution Replay Views
 # ============================================================================
 
-class ReplayWorkflowExecutionView(PermissionRequiredMixin, View):
+class ReplayWorkflowExecutionView(TenantAwareViewMixin, View):
     """Replay a workflow execution."""
-    required_permission = 'automation:write'
     
     def post(self, request, pk):
         from .models import WorkflowExecution
@@ -773,17 +702,15 @@ class ReplayWorkflowExecutionView(PermissionRequiredMixin, View):
         
         return redirect('automation:workflow_execution_detail', pk=replay_execution.id)
 
-
 # ============================================================================
 # Version History Views
 # ============================================================================
 
-class WorkflowVersionListView(PermissionRequiredMixin, ListView):
+class WorkflowVersionListView(SalesCompassListView):
     """List all versions of a workflow."""
     model = WorkflowVersion
     template_name = 'automation/version_history.html'
     context_object_name = 'versions'
-    required_permission = 'automation:read'
     
     def get_queryset(self):
         from .models import WorkflowVersion
@@ -795,8 +722,7 @@ class WorkflowVersionListView(PermissionRequiredMixin, ListView):
         context['workflow'] = get_object_or_404(Workflow, pk=self.kwargs.get('workflow_id'))
         return context
 
-
-class WorkflowRollbackView(PermissionRequiredMixin, View):
+class WorkflowRollbackView(TenantAwareViewMixin, View):
     """Rollback workflow to a previous version."""
     required_permission = 'automation:write'
     
@@ -833,70 +759,59 @@ class WorkflowRollbackView(PermissionRequiredMixin, View):
 # Custom Code Snippet Views
 # ============================================================================
 
-class CustomCodeSnippetListView(PermissionRequiredMixin, ListView):
+class CustomCodeSnippetListView(SalesCompassListView):
     """List all custom code snippets."""
     model = CustomCodeSnippet
     template_name = 'automation/custom_code_snippet_list.html'
     context_object_name = 'snippets'
-    required_permission = 'automation:read'
 
     def get_queryset(self):
         return super().get_queryset().select_related('created_by')
 
-
-class CustomCodeSnippetDetailView(PermissionRequiredMixin, DetailView):
+class CustomCodeSnippetDetailView(SalesCompassDetailView):
     """View a custom code snippet."""
     model = CustomCodeSnippet
     template_name = 'automation/custom_code_snippet_detail.html'
-    required_permission = 'automation:read'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['execution_logs'] = self.object.execution_logs.all()[:10]
         return context
 
-
-class CustomCodeSnippetCreateView(PermissionRequiredMixin, CreateView):
+class CustomCodeSnippetCreateView(SalesCompassCreateView):
     """Create a new custom code snippet."""
     model = CustomCodeSnippet
     form_class = CustomCodeSnippetForm
     template_name = 'automation/custom_code_snippet_form.html'
     success_url = '/automation/custom-code-snippets/'
-    required_permission = 'automation:write'
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         messages.success(self.request, "Custom code snippet created successfully.")
         return super().form_valid(form)
 
-
-class CustomCodeSnippetUpdateView(PermissionRequiredMixin, UpdateView):
+class CustomCodeSnippetUpdateView(SalesCompassUpdateView):
     """Update a custom code snippet."""
     model = CustomCodeSnippet
     form_class = CustomCodeSnippetForm
     template_name = 'automation/custom_code_snippet_form.html'
     success_url = '/automation/custom-code-snippets/'
-    required_permission = 'automation:write'
 
     def form_valid(self, form):
         messages.success(self.request, "Custom code snippet updated successfully.")
         return super().form_valid(form)
 
-
-class CustomCodeSnippetDeleteView(PermissionRequiredMixin, DeleteView):
+class CustomCodeSnippetDeleteView(SalesCompassDeleteView):
     """Delete a custom code snippet."""
     model = CustomCodeSnippet
     template_name = 'automation/confirm_delete.html'
     success_url = '/automation/custom-code-snippets/'
-    required_permission = 'automation:delete'
 
-
-class CustomCodeExecutionLogListView(PermissionRequiredMixin, ListView):
+class CustomCodeExecutionLogListView(SalesCompassListView):
     """List custom code execution logs."""
     model = CustomCodeExecutionLog
     template_name = 'automation/custom_code_execution_log_list.html'
     context_object_name = 'logs'
-    required_permission = 'automation:read'
     paginate_by = 50
 
     def get_queryset(self):

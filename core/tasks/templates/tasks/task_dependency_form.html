@@ -63,7 +63,7 @@
                         <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-4 pt-3 border-top">
                             <div>
                                 {% if object %}
-                                <a href="{% url 'tasks:detail' object.predecessor.pk %}" class="btn btn-outline-primary">
+                                <a href="{% url 'tasks:task_detail' object.predecessor.pk %}" class="btn btn-outline-primary">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
                                         <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 0 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
                                     </svg>
@@ -72,7 +72,7 @@
                                 {% endif %}
                             </div>
                             <div class="d-flex gap-2">
-                                <a href="{% url 'tasks:detail' task_id %}" class="btn btn-light">Cancel</a>
+                                <a href="{% url 'tasks:task_detail' task_id %}" class="btn btn-light">Cancel</a>
                                 <button type="submit" class="btn btn-primary">
                                     {% if object %}
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle me-1" viewBox="0 0 16 16">

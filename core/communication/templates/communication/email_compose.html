@@ -3,8 +3,8 @@
 
 {% block title %}Compose Email - Communication{% endblock %}
 
-{% block comm_title %}✉️ Compose New Email{% endblock %}
-{% block comm_subtitle %}Send professional communications to your leads and accounts{% endblock %}
+{% block comm_title %}<span style="color: black; text-align: center; display: block;">✉️ Compose New Email</span>{% endblock %}
+{% block comm_subtitle %}<span style="color: black; text-align: center; display: block;">Send professional communications to your leads and accounts</span>{% endblock %}
 
 {% block comm_actions %}
 <a href="{% url 'communication:email_list' %}" class="btn btn-light fw-bold px-4 shadow-sm">
@@ -52,8 +52,7 @@
                         <select class="form-select" id="signature-selector">
                             <option value="">-- No signature --</option>
                             {% for signature in signatures %}
-                            <option value="{{ signature.id }}" data-content="{{ signature.content_html }}" {% if
-                                signature.is_default %}selected{% endif %}>{{ signature.name }}</option>
+                            <option value="{{ signature.id }}" data-content="{{ signature.content_html }}" {% if signature.is_default %}selected{% endif %}>{{ signature.name }}</option>
                             {% endfor %}
                         </select>
                     </div>

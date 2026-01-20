@@ -12,7 +12,12 @@ from .models import (
     TenantFeatureEntitlement, OverageAlert, NotificationTemplate, 
     Notification, AlertThreshold, TenantDataIsolationAudit, 
     TenantDataIsolationViolation, DataResidencySettings,
-    TenantRole, TenantTerritory, TenantMember
+    TenantRole, TenantTerritory, TenantMember, TenantLifecycleEvent,
+    TenantMigrationRecord, TenantDataPreservation, TenantDataRestoration,
+    TenantDataPreservationStrategy, TenantDataPreservationSchedule,
+    AutomatedTenantLifecycleRule, AutomatedTenantLifecycleEvent,
+    TenantLifecycleWorkflow, TenantLifecycleWorkflowExecution,
+    TenantSuspensionWorkflow, TenantTerminationWorkflow
 )
 from .forms import (
     TenantSignupForm, TenantBrandingForm, TenantDomainForm, TenantSettingsForm, 
@@ -20,33 +25,34 @@ from .forms import (
     OnboardingTenantInfoForm, OnboardingBrandingForm, TenantExportForm,
       TenantImportForm, TenantCloneForm, WhiteLabelSettingsForm, 
       TenantUsageMetricForm, TenantUsageReportForm, TenantFeatureEntitlementForm, 
-      FeatureAccessForm, BulkFeatureEntitlementForm, OverageAlertForm, NotificationForm, AlertThresholdForm, 
+      FeatureAccessForm, BulkFeatureEntitlementForm, OverageAlertForm, NotificationForm, AlertThresholdForm, NotificationTemplateForm,
       TenantDataIsolationAuditForm, TenantDataIsolationViolationForm, DataIsolationAuditFilterForm, DataResidencySettingsForm,
-      OnboardingUserSignupForm, SuperuserProvisionForm, TenantMemberForm
+      OnboardingUserSignupForm, SuperuserProvisionForm, TenantMemberForm,
+    TenantLifecycleEventForm, TenantMigrationRecordForm, TenantDataPreservationForm,
+    TenantDataRestorationForm, TenantDataPreservationStrategyForm,
+    TenantDataPreservationScheduleForm, AutomatedTenantLifecycleRuleForm,
+    AutomatedTenantLifecycleEventForm, TenantLifecycleWorkflowForm,
+    TenantLifecycleWorkflowExecutionForm, TenantSuspensionWorkflowForm,
+    TenantTerminationWorkflowForm, TenantRoleForm, TenantTerritoryForm
 )
 from .utils import track_usage, get_current_usage, get_usage_trend, check_usage_limits, generate_usage_report, check_feature_access, enforce_feature_access, get_accessible_features, perform_data_isolation_audit
 import datetime
 
 from billing.models import Plan, Subscription
 from core.models import User
-from accounts.models import Role
+
 from django.contrib.messages.views import SuccessMessageMixin # Import SuccessMessageMixin
 import json
 from django.http import JsonResponse
 from django.shortcuts import redirect
 import django.db.models as models
 from core.permissions import ObjectPermissionRequiredMixin
+from core.views import (TenantAwareViewMixin, SalesCompassListView, SalesCompassDetailView, SalesCompassCreateView, SalesCompassUpdateView, SalesCompassDeleteView)
 
-
-class SettingTypeDeleteView(LoginRequiredMixin, DeleteView):
+class SettingTypeDeleteView(SalesCompassDeleteView):
     model = SettingType
     template_name = 'tenants/setting_type_confirm_delete.html'
     success_url = reverse_lazy('tenants:setting_type_list')
-
-    def get_queryset(self):
-        return SettingType.objects.filter(tenant=self.request.user.tenant)
-
-
 # Onboarding Wizard Views
 
 class OnboardingSignupView(CreateView):
@@ -939,14 +945,13 @@ class TenantDataImportView(LoginRequiredMixin, TemplateView):
             context['form'] = form
             return self.render_to_response(context)
 
-
-class TenantListView(LoginRequiredMixin, ListView):
+class TenantListView(SalesCompassListView):
     template_name = 'tenants/tenant_list.html'
     model = Tenant
     context_object_name = 'tenants'
     paginate_by = 20
 
-class TenantCreateView(LoginRequiredMixin, CreateView):
+class TenantCreateView(SalesCompassCreateView):
     template_name = 'tenants/signup.html'
     form_class = TenantSignupForm
     success_url = reverse_lazy('tenants:tenant_list')
@@ -965,7 +970,7 @@ class TenantCreateView(LoginRequiredMixin, CreateView):
         login(self.request, user)
         return super().form_valid(form)
 
-class TenantSearchView(LoginRequiredMixin, ListView):
+class TenantSearchView(SalesCompassListView):
     template_name = 'tenants/search.html'
     model = Tenant
     context_object_name = 'tenants'
@@ -977,21 +982,20 @@ class TenantSearchView(LoginRequiredMixin, ListView):
             return Tenant.objects.filter(name__icontains=query)
         return Tenant.objects.none()
 
-class TenantUpdateView(UpdateView):
+class TenantUpdateView(SalesCompassUpdateView):
     model = Tenant
     template_name = 'tenants/tenant_form.html'
     fields = ['name', 'subdomain', 'is_active']
     success_url = reverse_lazy('tenants:tenant_list')
 
-class TenantDeleteView(DeleteView):
+class TenantDeleteView(SalesCompassDeleteView):
     model = Tenant
     template_name = 'tenants/tenant_confirm_delete.html'
     success_url = reverse_lazy('tenants:tenant_list')
 
-class TenantDetailView(DetailView):
+class TenantDetailView(SalesCompassDetailView):
     model = Tenant
     template_name = 'tenants/tenant_detail.html'
-
 class TenantActivateView(View):
     def post(self, request, pk):
         tenant = get_object_or_404(Tenant, pk=pk)
@@ -1342,7 +1346,7 @@ class SubscriptionOverviewView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class RevenueAnalyticsView(LoginRequiredMixin, TemplateView):
+class RevenueAnalyticsView(LoginRequiredMixin, TenantAwareViewMixin, TemplateView):
     template_name = 'tenants/revenue_analytics.html'
     
     def get_context_data(self, **kwargs):
@@ -1355,9 +1359,8 @@ class RevenueAnalyticsView(LoginRequiredMixin, TemplateView):
         context['subscriptions'] = subscriptions
         return context
 
-
 # Setting Views
-class SettingListView(LoginRequiredMixin, ListView):
+class SettingListView(SalesCompassListView):
     model = Setting
     template_name = 'tenants/setting_list.html'
     context_object_name = 'settings'
@@ -1366,7 +1369,7 @@ class SettingListView(LoginRequiredMixin, ListView):
         return Setting.objects.filter(tenant=self.request.user.tenant).select_related('group')
 
 
-class SettingCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class SettingCreateView(SalesCompassCreateView):
     model = Setting
     form_class = SettingForm
     template_name = 'tenants/setting_form.html'
@@ -1385,7 +1388,7 @@ class SettingCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
         return super().form_valid(form)
 
 
-class SettingUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class SettingUpdateView(SalesCompassUpdateView):
     model = Setting
     form_class = SettingForm
     template_name = 'tenants/setting_form.html'
@@ -1402,7 +1405,7 @@ class SettingUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         return kwargs
 
 
-class SettingDeleteView(LoginRequiredMixin, DeleteView):
+class SettingDeleteView(SalesCompassDeleteView):
     model = Setting
     template_name = 'tenants/setting_confirm_delete.html'
     success_url = reverse_lazy('tenants:setting_list')
@@ -1412,7 +1415,7 @@ class SettingDeleteView(LoginRequiredMixin, DeleteView):
 
 
 # Setting Group Views
-class SettingGroupListView(LoginRequiredMixin, ListView):
+class SettingGroupListView(SalesCompassListView):
     model = SettingGroup
     template_name = 'tenants/setting_group_list.html'
     context_object_name = 'groups'
@@ -1421,7 +1424,7 @@ class SettingGroupListView(LoginRequiredMixin, ListView):
         return SettingGroup.objects.filter(tenant=self.request.user.tenant)
 
 
-class SettingGroupCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class SettingGroupCreateView(SalesCompassCreateView):
     model = SettingGroup
     form_class = SettingGroupForm
     template_name = 'tenants/setting_group_form.html'
@@ -1434,7 +1437,7 @@ class SettingGroupCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView
         return super().form_valid(form)
 
 
-class SettingGroupUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class SettingGroupUpdateView(SalesCompassUpdateView):
     model = SettingGroup
     form_class = SettingGroupForm
     template_name = 'tenants/setting_group_form.html'
@@ -1445,7 +1448,7 @@ class SettingGroupUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView
         return SettingGroup.objects.filter(tenant=self.request.user.tenant)
 
 
-class SettingGroupDeleteView(LoginRequiredMixin, DeleteView):
+class SettingGroupDeleteView(SalesCompassDeleteView):
     model = SettingGroup
     template_name = 'tenants/setting_group_confirm_delete.html'
     success_url = reverse_lazy('tenants:setting_group_list')
@@ -1455,7 +1458,7 @@ class SettingGroupDeleteView(LoginRequiredMixin, DeleteView):
 
 
 # Setting Type Views
-class SettingTypeListView(LoginRequiredMixin, ListView):
+class SettingTypeListView(SalesCompassListView):
     model = SettingType
     template_name = 'tenants/setting_type_list.html'
     context_object_name = 'types'
@@ -1464,7 +1467,7 @@ class SettingTypeListView(LoginRequiredMixin, ListView):
         return SettingType.objects.filter(tenant=self.request.user.tenant)
 
 
-class SettingTypeCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class SettingTypeCreateView(SalesCompassCreateView):
     model = SettingType
     form_class = SettingTypeForm
     template_name = 'tenants/setting_type_form.html'
@@ -1477,7 +1480,7 @@ class SettingTypeCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView)
         return super().form_valid(form)
 
 
-class SettingTypeUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class SettingTypeUpdateView(SalesCompassUpdateView):
     model = SettingType
     form_class = SettingTypeForm
     template_name = 'tenants/setting_type_form.html'
@@ -1486,9 +1489,7 @@ class SettingTypeUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
 
     def get_queryset(self):
         return SettingType.objects.filter(tenant=self.request.user.tenant)
-
-
-class WhiteLabelSettingsView(LoginRequiredMixin, UpdateView):
+class WhiteLabelSettingsView(SalesCompassUpdateView):
     """View for managing white-label branding settings"""
     model = WhiteLabelSettings
     form_class = WhiteLabelSettingsForm
@@ -1525,8 +1526,7 @@ class WhiteLabelSettingsView(LoginRequiredMixin, UpdateView):
         })
         return context
 
-
-class TenantUsageMetricsView(LoginRequiredMixin, ListView):
+class TenantUsageMetricsView(SalesCompassListView):
     """View for displaying tenant usage metrics"""
     model = TenantUsageMetric
     template_name = 'tenants/usage_metrics.html'
@@ -1556,7 +1556,7 @@ class TenantUsageMetricsView(LoginRequiredMixin, ListView):
         return context
 
 
-class TenantUsageReportView(LoginRequiredMixin, TemplateView):
+class TenantUsageReportView(LoginRequiredMixin, TenantAwareViewMixin, TemplateView):
     """View for generating usage reports"""
     template_name = 'tenants/usage_report.html'
     
@@ -1603,7 +1603,7 @@ class TenantUsageReportView(LoginRequiredMixin, TemplateView):
         context['form'] = form
         return self.render_to_response(context)
 
-class TenantUsageAlertsView(LoginRequiredMixin, TemplateView):
+class TenantUsageAlertsView(LoginRequiredMixin, TenantAwareViewMixin, TemplateView):
     """View for managing usage alerts and limits"""
     template_name = 'tenants/usage_alerts.html'
     
@@ -1674,7 +1674,7 @@ class TenantUsageIntegrationView(View):
         return sum([m.value for m in metrics])
 
 
-class TenantFeatureEntitlementView(LoginRequiredMixin, ListView):
+class TenantFeatureEntitlementView(SalesCompassListView):
     """View for displaying tenant feature entitlements"""
     model = TenantFeatureEntitlement
     template_name = 'tenants/feature_entitlements.html'
@@ -1682,8 +1682,8 @@ class TenantFeatureEntitlementView(LoginRequiredMixin, ListView):
     paginate_by = 20
     
     def get_queryset(self):
-        # Filter feature entitlements for the current user's tenant
-        return TenantFeatureEntitlement.objects.filter(tenant=self.request.user.tenant).order_by('feature_name')
+        # Base class handles filtering, but we want a specific order
+        return super().get_queryset().order_by('feature_name')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1694,7 +1694,7 @@ class TenantFeatureEntitlementView(LoginRequiredMixin, ListView):
         return context
 
 
-class TenantFeatureEntitlementCreateView(LoginRequiredMixin, CreateView):
+class TenantFeatureEntitlementCreateView(SalesCompassCreateView):
     """View for creating new feature entitlements"""
     model = TenantFeatureEntitlement
     form_class = TenantFeatureEntitlementForm
@@ -1702,8 +1702,7 @@ class TenantFeatureEntitlementCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('tenants:feature_entitlements')
     
     def form_valid(self, form):
-        # Set the tenant to the current user's tenant
-        form.instance.tenant = self.request.user.tenant
+        # Tenant is assigned automatically by SalesCompassCreateView
         messages.success(self.request, f'Feature entitlement "{form.instance.feature_name}" created successfully.')
         return super().form_valid(form)
     
@@ -1717,15 +1716,14 @@ class TenantFeatureEntitlementCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class TenantFeatureEntitlementUpdateView(LoginRequiredMixin, UpdateView):
+class TenantFeatureEntitlementUpdateView(SalesCompassUpdateView):
     """View for updating existing feature entitlements"""
     model = TenantFeatureEntitlement
     form_class = TenantFeatureEntitlementForm
     template_name = 'tenants/feature_entitlement_form.html'
     success_url = reverse_lazy('tenants:feature_entitlements')
     
-    def get_queryset(self):
-        return TenantFeatureEntitlement.objects.filter(tenant=self.request.user.tenant)
+    # get_queryset is handled by SalesCompassUpdateView via TenantAwareViewMixin
     
     def form_valid(self, form):
         messages.success(self.request, f'Feature entitlement "{form.instance.feature_name}" updated successfully.')
@@ -1741,21 +1739,20 @@ class TenantFeatureEntitlementUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
 
-class TenantFeatureEntitlementDeleteView(LoginRequiredMixin, DeleteView):
+class TenantFeatureEntitlementDeleteView(SalesCompassDeleteView):
     """View for deleting feature entitlements"""
     model = TenantFeatureEntitlement
     template_name = 'tenants/feature_entitlement_confirm_delete.html'
     success_url = reverse_lazy('tenants:feature_entitlements')
     
-    def get_queryset(self):
-        return TenantFeatureEntitlement.objects.filter(tenant=self.request.user.tenant)
+    # get_queryset is handled by SalesCompassDeleteView via TenantAwareViewMixin
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, f'Feature entitlement "{self.get_object().feature_name}" deleted successfully.')
         return super().delete(request, *args, **kwargs)
 
 
-class TenantFeatureAccessCheckView(LoginRequiredMixin, TemplateView):
+class TenantFeatureAccessCheckView(LoginRequiredMixin, TenantAwareViewMixin, TemplateView):
     """View for checking feature access"""
     template_name = 'tenants/feature_access_check.html'
     
@@ -1789,7 +1786,7 @@ class TenantFeatureAccessCheckView(LoginRequiredMixin, TemplateView):
             return self.render_to_response(context)
 
 
-class TenantBulkFeatureEntitlementView(LoginRequiredMixin, FormView):
+class TenantBulkFeatureEntitlementView(LoginRequiredMixin, TenantAwareViewMixin, FormView):
     """View for bulk feature entitlement management"""
     template_name = 'tenants/bulk_feature_entitlement.html'
     form_class = BulkFeatureEntitlementForm
@@ -1867,9 +1864,7 @@ class FeatureEnforcementMiddleware:
                 raise PermissionError(f"Trial for feature '{feature_key}' has expired.")
         except TenantFeatureEntitlement.DoesNotExist:
             pass
-
-
-class OverageAlertListView(LoginRequiredMixin, ListView):
+class OverageAlertListView(SalesCompassListView):
     """View for displaying overage alerts"""
     model = OverageAlert
     template_name = 'tenants/overage_alerts.html'
@@ -1889,7 +1884,7 @@ class OverageAlertListView(LoginRequiredMixin, ListView):
         return context
 
 
-class AlertThresholdListView(LoginRequiredMixin, ListView):
+class AlertThresholdListView(SalesCompassListView):
     """View for displaying alert thresholds"""
     model = AlertThreshold
     template_name = 'tenants/alert_thresholds.html'
@@ -1908,7 +1903,7 @@ class AlertThresholdListView(LoginRequiredMixin, ListView):
         return context
 
 
-class AlertThresholdCreateView(LoginRequiredMixin, CreateView):
+class AlertThresholdCreateView(SalesCompassCreateView):
     """View for creating alert thresholds"""
     model = AlertThreshold
     form_class = AlertThresholdForm
@@ -1931,7 +1926,7 @@ class AlertThresholdCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class AlertThresholdUpdateView(LoginRequiredMixin, UpdateView):
+class AlertThresholdUpdateView(SalesCompassUpdateView):
     """View for updating alert thresholds"""
     model = AlertThreshold
     form_class = AlertThresholdForm
@@ -1955,7 +1950,7 @@ class AlertThresholdUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
 
-class NotificationListView(LoginRequiredMixin, ListView):
+class NotificationListView(SalesCompassListView):
     """View for displaying notifications"""
     model = Notification
     template_name = 'tenants/notifications.html'
@@ -1984,9 +1979,7 @@ class NotificationListView(LoginRequiredMixin, ListView):
             'unread_count': unread_count,
         })
         return context
-
-
-class NotificationMarkReadView(LoginRequiredMixin, View):
+class NotificationMarkReadView(LoginRequiredMixin, TenantAwareViewMixin, View):
     """View for marking notifications as read"""
     def post(self, request, *args, **kwargs):
         notification_id = request.POST.get('notification_id')
@@ -2008,7 +2001,7 @@ class NotificationMarkReadView(LoginRequiredMixin, View):
         return redirect('tenants:notifications')
 
 
-class NotificationMarkAllReadView(LoginRequiredMixin, View):
+class NotificationMarkAllReadView(LoginRequiredMixin, TenantAwareViewMixin, View):
     """View for marking all notifications as read"""
     def post(self, request, *args, **kwargs):
         Notification.objects.filter(
@@ -2021,7 +2014,7 @@ class NotificationMarkAllReadView(LoginRequiredMixin, View):
         return redirect('tenants:notifications')
 
 
-class TenantDataExportView(LoginRequiredMixin, TemplateView):
+class TenantDataExportView(LoginRequiredMixin, TenantAwareViewMixin, TemplateView):
     """View for exporting tenant data"""
     template_name = 'tenants/data_export.html'
     
@@ -2171,7 +2164,7 @@ class OverageAlertService:
             return False
 
 
-class ResolveOverageAlertView(LoginRequiredMixin, View):
+class ResolveOverageAlertView(LoginRequiredMixin, TenantAwareViewMixin, View):
     """View for resolving an overage alert"""
     def post(self, request, *args, **kwargs):
         alert_id = kwargs.get('pk')
@@ -2184,55 +2177,7 @@ class ResolveOverageAlertView(LoginRequiredMixin, View):
         
         return redirect('tenants:overage_alerts')
 
-
-class TenantDataIsolationAuditListView(LoginRequiredMixin, ListView):
-    """View for displaying tenant data isolation audits"""
-    model = TenantDataIsolationAudit
-    template_name = 'tenants/data_isolation_audits.html'
-    context_object_name = 'audits'
-    paginate_by = 20
-    
-    def get_queryset(self):
-        # Filter audits for the current user's tenant
-        queryset = TenantDataIsolationAudit.objects.filter(tenant=self.request.user.tenant)
-        
-        # Apply filters from the form
-        audit_type = self.request.GET.get('audit_type', '')
-        status = self.request.GET.get('status', '')
-        date_from = self.request.GET.get('date_from', '')
-        date_to = self.request.GET.get('date_to', '')
-        
-        if audit_type:
-            queryset = queryset.filter(audit_type=audit_type)
-        
-        if status:
-            queryset = queryset.filter(status=status)
-        
-        if date_from:
-            from django.utils.dateparse import parse_datetime
-            parsed_date = parse_datetime(date_from + ":00")  # Add seconds if not present
-            if parsed_date:
-                queryset = queryset.filter(audit_date__gte=parsed_date)
-        
-        if date_to:
-            from django.utils.dateparse import parse_datetime
-            parsed_date = parse_datetime(date_to + ":00")  # Add seconds if not present
-            if parsed_date:
-                queryset = queryset.filter(audit_date__lte=parsed_date)
-        
-        return queryset.order_by('-audit_date')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({
-            'title': 'Data Isolation Audits',
-            'subtitle': 'Audit logs for tenant data isolation',
-            'filter_form': DataIsolationAuditFilterForm(self.request.GET),
-        })
-        return context
-
-
-class TenantDataIsolationAuditCreateView(LoginRequiredMixin, CreateView):
+class TenantDataIsolationAuditCreateView(SalesCompassCreateView):
     """View for creating a new data isolation audit"""
     model = TenantDataIsolationAudit
     form_class = TenantDataIsolationAuditForm
@@ -2240,8 +2185,7 @@ class TenantDataIsolationAuditCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('tenants:data_isolation_audits')
     
     def form_valid(self, form):
-        # Set the tenant and auditor
-        form.instance.tenant = self.request.user.tenant
+        # Tenant is assigned automatically by SalesCompassCreateView
         form.instance.auditor = self.request.user
         form.instance.status = 'in_progress'
         
@@ -2305,8 +2249,54 @@ class TenantDataIsolationAuditCreateView(LoginRequiredMixin, CreateView):
         })
         return context
 
+class TenantDataIsolationAuditListView(SalesCompassListView):
+    """View for displaying tenant data isolation audits"""
+    model = TenantDataIsolationAudit
+    template_name = 'tenants/data_isolation_audits.html'
+    context_object_name = 'audits'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        # Filter audits for the current user's tenant
+        queryset = TenantDataIsolationAudit.objects.filter(tenant=self.request.user.tenant)
+        
+        # Apply filters from the form
+        audit_type = self.request.GET.get('audit_type', '')
+        status = self.request.GET.get('status', '')
+        date_from = self.request.GET.get('date_from', '')
+        date_to = self.request.GET.get('date_to', '')
+        
+        if audit_type:
+            queryset = queryset.filter(audit_type=audit_type)
+        
+        if status:
+            queryset = queryset.filter(status=status)
+        
+        if date_from:
+            from django.utils.dateparse import parse_datetime
+            parsed_date = parse_datetime(date_from + ":00")  # Add seconds if not present
+            if parsed_date:
+                queryset = queryset.filter(audit_date__gte=parsed_date)
+        
+        if date_to:
+            from django.utils.dateparse import parse_datetime
+            parsed_date = parse_datetime(date_to + ":00")  # Add seconds if not present
+            if parsed_date:
+                queryset = queryset.filter(audit_date__lte=parsed_date)
+        
+        return queryset.order_by('-audit_date')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'title': 'Data Isolation Audits',
+            'subtitle': 'Audit logs for tenant data isolation',
+            'filter_form': DataIsolationAuditFilterForm(self.request.GET),
+        })
+        return context
 
-class TenantDataIsolationAuditDetailView(LoginRequiredMixin, DetailView):
+
+class TenantDataIsolationAuditDetailView(SalesCompassDetailView):
     """View for displaying details of a specific data isolation audit"""
     model = TenantDataIsolationAudit
     template_name = 'tenants/data_isolation_audit_detail.html'
@@ -2325,7 +2315,7 @@ class TenantDataIsolationAuditDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class TenantDataIsolationViolationListView(LoginRequiredMixin, ListView):
+class TenantDataIsolationViolationListView(SalesCompassListView):
     """View for displaying data isolation violations"""
     model = TenantDataIsolationViolation
     template_name = 'tenants/data_isolation_violations.html'
@@ -2345,9 +2335,7 @@ class TenantDataIsolationViolationListView(LoginRequiredMixin, ListView):
             'subtitle': 'List of data isolation violations found',
         })
         return context
-
-
-class RunDataIsolationAuditView(LoginRequiredMixin, View):
+class RunDataIsolationAuditView(LoginRequiredMixin, TenantAwareViewMixin, View):
     """View for running a data isolation audit"""
     def post(self, request, *args, **kwargs):
         # Create a new audit
@@ -2366,7 +2354,7 @@ class RunDataIsolationAuditView(LoginRequiredMixin, View):
         return redirect('tenants:data_isolation_audits')
 
 
-class DataResidencySettingsView(LoginRequiredMixin, UpdateView):
+class DataResidencySettingsView(SalesCompassUpdateView):
     """View for managing data residency settings for a tenant"""
     model = DataResidencySettings
     form_class = DataResidencySettingsForm
@@ -2395,351 +2383,8 @@ class DataResidencySettingsView(LoginRequiredMixin, UpdateView):
         return super().form_invalid(form)
 
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import CreateView, TemplateView, ListView, View, UpdateView, FormView, DetailView, DeleteView
-from django.contrib.auth import login
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
-from django.db import transaction
-from django.contrib import messages
-from django.utils import timezone
-from .models import Tenant, Setting, SettingGroup, SettingType, TenantSettings, TenantCloneHistory, WhiteLabelSettings, TenantUsageMetric, TenantFeatureEntitlement, OverageAlert, NotificationTemplate, Notification, AlertThreshold, TenantDataIsolationAudit, TenantDataIsolationViolation, DataResidencySettings, TenantDataPreservation, TenantDataRestoration, TenantDataPreservationStrategy, TenantDataPreservationSchedule, AutomatedTenantLifecycleRule, AutomatedTenantLifecycleEvent, TenantLifecycleWorkflow, TenantLifecycleWorkflowExecution, TenantSuspensionWorkflow, TenantTerminationWorkflow
-from .forms import (
-    TenantSignupForm, TenantBrandingForm, TenantDomainForm, TenantSettingsForm, 
-    FeatureToggleForm, SettingForm, SettingGroupForm, SettingTypeForm,
-    OnboardingTenantInfoForm, OnboardingBrandingForm, TenantExportForm,
-      TenantImportForm, TenantCloneForm, WhiteLabelSettingsForm, 
-      TenantUsageMetricForm, TenantUsageReportForm, TenantFeatureEntitlementForm, 
-      FeatureAccessForm, BulkFeatureEntitlementForm, OverageAlertForm, NotificationForm, AlertThresholdForm, 
-      TenantDataIsolationAuditForm, TenantDataIsolationViolationForm, DataIsolationAuditFilterForm, DataResidencySettingsForm
-)
-from .utils import track_usage, get_current_usage, get_usage_trend, check_usage_limits, generate_usage_report, check_feature_access, enforce_feature_access, get_accessible_features, perform_data_isolation_audit
-import datetime
 
-from billing.models import Plan, Subscription
-from core.models import User
-from accounts.models import Role
-from django.contrib.messages.views import SuccessMessageMixin # Import SuccessMessageMixin
-import json
-from django.http import JsonResponse
-from django.shortcuts import redirect
-import django.db.models as models
-
-
-class TenantLifecycleDashboardView(LoginRequiredMixin, TemplateView):
-    """Dashboard view for tenant lifecycle management"""
-    template_name = 'tenants/lifecycle_dashboard.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['tenants'] = Tenant.objects.all()
-        context['active_tenants'] = Tenant.objects.filter(is_active=True).count()
-        context['suspended_tenants'] = Tenant.objects.filter(is_suspended=True).count()
-        context['archived_tenants'] = Tenant.objects.filter(is_archived=True).count()
-        context['automated_rules'] = AutomatedTenantLifecycleRule.objects.filter(is_active=True).count()
-        context['recent_events'] = AutomatedTenantLifecycleEvent.objects.select_related('tenant', 'rule').order_by('-triggered_at')[:10]
-        return context
-
-
-class TenantStatusManagementView(LoginRequiredMixin, ListView):
-    """View for managing tenant statuses"""
-    template_name = 'tenants/status_management.html'
-    model = Tenant
-    context_object_name = 'tenants'
-    paginate_by = 20
-    
-    def get_queryset(self):
-        queryset = Tenant.objects.all()
-        status_filter = self.request.GET.get('status')
-        if status_filter:
-            if status_filter == 'active':
-                queryset = queryset.filter(is_active=True, is_suspended=False, is_archived=False)
-            elif status_filter == 'suspended':
-                queryset = queryset.filter(is_suspended=True)
-            elif status_filter == 'archived':
-                queryset = queryset.filter(is_archived=True)
-            elif status_filter == 'inactive':
-                queryset = queryset.filter(is_active=False)
-        return queryset
-
-
-class TenantSuspensionWorkflowView(LoginRequiredMixin, CreateView):
-    """View for initiating tenant suspension workflow"""
-    template_name = 'tenants/suspension_workflow.html'
-    model = TenantSuspensionWorkflow
-    fields = ['tenant', 'suspension_reason']
-    success_url = reverse_lazy('tenants:suspension-workflows')
-    
-    def form_valid(self, form):
-        form.instance.initiated_by = self.request.user
-        messages.success(self.request, f'Suspension workflow initiated for {form.instance.tenant.name}.')
-        return super().form_valid(form)
-
-
-class TenantTerminationWorkflowView(LoginRequiredMixin, CreateView):
-    """View for initiating tenant termination workflow"""
-    template_name = 'tenants/termination_workflow.html'
-    model = TenantTerminationWorkflow
-    fields = ['tenant', 'termination_reason', 'data_preservation_required']
-    success_url = reverse_lazy('tenants:termination-workflows')
-    
-    def form_valid(self, form):
-        form.instance.initiated_by = self.request.user
-        messages.success(self.request, f'Termination workflow initiated for {form.instance.tenant.name}.')
-        return super().form_valid(form)
-
-
-class AutomatedLifecycleRulesView(LoginRequiredMixin, ListView):
-    """View for managing automated lifecycle rules"""
-    template_name = 'tenants/automated_lifecycle_rules.html'
-    model = AutomatedTenantLifecycleRule
-    context_object_name = 'rules'
-    paginate_by = 20
-    
-    def get_queryset(self):
-        return AutomatedTenantLifecycleRule.objects.select_related('created_by').all()
-
-
-class CreateAutomatedLifecycleRuleView(LoginRequiredMixin, CreateView):
-    """View for creating automated lifecycle rules"""
-    template_name = 'tenants/create_automated_rule.html'
-    model = AutomatedTenantLifecycleRule
-    fields = ['name', 'description', 'condition_type', 'condition_field', 'condition_operator', 'condition_value', 'action_type', 'action_parameters', 'evaluation_frequency']
-    success_url = reverse_lazy('tenants:automated-lifecycle-rules')
-    
-    def form_valid(self, form):
-        form.instance.created_by = self.request.user
-        messages.success(self.request, f'Automated lifecycle rule "{form.instance.name}" created successfully.')
-        return super().form_valid(form)
-
-
-class TenantDataPreservationView(LoginRequiredMixin, ListView):
-    """View for managing tenant data preservation"""
-    template_name = 'tenants/data_preservation.html'
-    model = TenantDataPreservation
-    context_object_name = 'preservation_records'
-    paginate_by = 20
-    
-    def get_queryset(self):
-        return TenantDataPreservation.objects.select_related('tenant', 'created_by').all()
-
-
-class TenantDataRestorationView(LoginRequiredMixin, ListView):
-    """View for managing tenant data restoration"""
-    template_name = 'tenants/data_restoration.html'
-    model = TenantDataRestoration
-    context_object_name = 'restoration_records'
-    paginate_by = 20
-    
-    def get_queryset(self):
-        return TenantDataRestoration.objects.select_related('tenant', 'preservation_record').all()
-
-
-class TenantLifecycleWorkflowsView(LoginRequiredMixin, ListView):
-    """View for managing tenant lifecycle workflows"""
-    template_name = 'tenants/lifecycle_workflows.html'
-    model = TenantLifecycleWorkflow
-    context_object_name = 'workflows'
-    paginate_by = 20
-    
-    def get_queryset(self):
-        return TenantLifecycleWorkflow.objects.select_related('created_by').all()
-
-
-class ApproveSuspensionWorkflowView(LoginRequiredMixin, View):
-    """View for approving suspension workflows"""
-    def post(self, request, workflow_id):
-        workflow = get_object_or_404(TenantSuspensionWorkflow, id=workflow_id)
-        notes = request.POST.get('approval_notes', '')
-        
-        workflow.approve(request.user, notes)
-        messages.success(request, f'Suspension workflow for {workflow.tenant.name} approved.')
-        
-        return redirect('tenants:suspension-workflows')
-
-
-class ApproveTerminationWorkflowView(LoginRequiredMixin, View):
-    """View for approving termination workflows"""
-    def post(self, request, workflow_id):
-        workflow = get_object_or_404(TenantTerminationWorkflow, id=workflow_id)
-        notes = request.POST.get('approval_notes', '')
-        
-        workflow.approve(request.user, notes)
-        messages.success(request, f'Termination workflow for {workflow.tenant.name} approved.')
-        
-        return redirect('tenants:termination-workflows')
-
-
-class TenantLifecycleEventLogView(LoginRequiredMixin, ListView):
-    """View for viewing tenant lifecycle event logs"""
-    template_name = 'tenants/lifecycle_event_log.html'
-    model = AutomatedTenantLifecycleEvent
-    context_object_name = 'events'
-    paginate_by = 20
-    
-    def get_queryset(self):
-        return AutomatedTenantLifecycleEvent.objects.select_related('tenant', 'rule', 'executed_by').order_by('-triggered_at')
-
-
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required
-from django.utils import timezone
-from datetime import timedelta
-
-@method_decorator(csrf_exempt, name='dispatch')
-class ExecuteLifecycleRuleView(LoginRequiredMixin, View):
-    """API view for executing lifecycle rules"""
-    def post(self, request, rule_id):
-        rule = get_object_or_404(AutomatedTenantLifecycleRule, id=rule_id)
-        
-        # In a real implementation, this would execute the rule logic
-        # For now, we'll just log that the rule was executed
-        tenants = Tenant.objects.all()
-        executed_count = 0
-        
-        for tenant in tenants:
-            # Evaluate the rule condition for each tenant
-            # This is a simplified version - in a real implementation, 
-            # you would have more complex logic to evaluate the condition
-            condition_met = self.evaluate_condition(tenant, rule)
-            
-            if condition_met:
-                # Execute the action for this tenant
-                self.execute_action(tenant, rule)
-                
-                # Log the event
-                AutomatedTenantLifecycleEvent.objects.create(
-                    rule=rule,
-                    tenant=tenant,
-                    event_type='action_taken',
-                    status='success',
-                    details=f'Action {rule.action_type} taken for tenant {tenant.name}',
-                    executed_by=request.user
-                )
-                executed_count += 1
-        
-        # Update the rule's last evaluation time
-        rule.last_evaluated = timezone.now()
-        rule.next_evaluation = self.calculate_next_evaluation(rule)
-        rule.save()
-        
-        return JsonResponse({
-            'success': True,
-            'message': f'Rule {rule.name} executed for {executed_count} tenants',
-            'executed_count': executed_count
-        })
-    
-    def evaluate_condition(self, tenant, rule):
-        """Evaluate if the condition is met for a tenant"""
-        # This is a simplified condition evaluation
-        # In a real implementation, you would have more complex logic
-        if rule.condition_type == 'usage_based':
-            if rule.condition_field == 'storage_used' and rule.condition_operator == 'greater_than':
-                # This would check the actual storage usage
-                return False  # Placeholder
-        elif rule.condition_type == 'billing_based':
-            if rule.condition_field == 'subscription_status' and rule.condition_operator == 'equals':
-                return getattr(tenant, rule.condition_field) == rule.condition_value
-        elif rule.condition_type == 'time_based':
-            if rule.condition_field == 'trial_end_date' and rule.condition_operator == 'less_than':
-                return tenant.trial_end_date and tenant.trial_end_date < timezone.now()
-        
-        return False
-    
-    def execute_action(self, tenant, rule):
-        """Execute the action for a tenant"""
-        if rule.action_type == 'suspend':
-            tenant.suspend(reason=f'Automated suspension by rule: {rule.name}', triggered_by=self.request.user)
-        elif rule.action_type == 'terminate':
-            tenant.soft_delete(triggered_by=self.request.user)
-        elif rule.action_type == 'archive':
-            tenant.archive(triggered_by=self.request.user)
-        elif rule.action_type == 'reactivate':
-            tenant.reactivate(triggered_by=self.request.user)
-        # Add more actions as needed
-    
-    def calculate_next_evaluation(self, rule):
-        """Calculate the next evaluation time based on frequency"""
-        from django.utils import timezone
-        from datetime import timedelta
-        
-        now = timezone.now()
-        if rule.evaluation_frequency == 'hourly':
-            return now + timedelta(hours=1)
-        elif rule.evaluation_frequency == 'daily':
-            return now + timedelta(days=1)
-        elif rule.evaluation_frequency == 'weekly':
-            return now + timedelta(weeks=1)
-        elif rule.evaluation_frequency == 'monthly':
-            return now + timedelta(days=30)
-        
-        return now + timedelta(days=1)  # Default to daily
-
-
-class TenantRestorationView(LoginRequiredMixin, View):
-    """View for initiating tenant data restoration"""
-    def get(self, request, preservation_id):
-        preservation = get_object_or_404(TenantDataPreservation, id=preservation_id)
-        return render(request, 'tenants/initiate_restoration.html', {'preservation': preservation})
-    
-    def post(self, request, preservation_id):
-        preservation = get_object_or_404(TenantDataPreservation, id=preservation_id)
-        
-        # Create a restoration record
-        restoration = TenantDataRestoration.objects.create(
-            tenant=preservation.tenant,
-            preservation_record=preservation,
-            description=f'Restoration from {preservation.preservation_type} at {preservation.preservation_date}',
-            initiated_by=request.user
-        )
-        
-        # In a real implementation, this would trigger the actual restoration process
-        # For now, we'll just update the status
-        restoration.status = 'completed'
-        restoration.completed_at = timezone.now()
-        restoration.completed_by = request.user
-        restoration.total_records = 100  # Placeholder
-        restoration.restored_records = 100  # Placeholder
-        restoration.progress_percentage = 10.0
-        restoration.save()
-        
-        messages.success(request, f'Data restoration completed for {preservation.tenant.name}.')
-        return redirect('tenants:data-restoration')
-    
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import CreateView, TemplateView, ListView, View, UpdateView, FormView, DetailView, DeleteView
-from django.contrib.auth import login
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
-from django.db import transaction
-from django.contrib import messages
-from django.utils import timezone
-from .models import Tenant, Setting, SettingGroup, SettingType, TenantSettings, TenantCloneHistory, WhiteLabelSettings, TenantUsageMetric, TenantFeatureEntitlement, OverageAlert, NotificationTemplate, Notification, AlertThreshold, TenantDataIsolationAudit, TenantDataIsolationViolation, DataResidencySettings, TenantDataPreservation, TenantDataRestoration, TenantDataPreservationStrategy, TenantDataPreservationSchedule, AutomatedTenantLifecycleRule, AutomatedTenantLifecycleEvent, TenantLifecycleWorkflow, TenantLifecycleWorkflowExecution, TenantSuspensionWorkflow, TenantTerminationWorkflow
-from .forms import (
-    TenantSignupForm, TenantBrandingForm, TenantDomainForm, TenantSettingsForm, 
-    FeatureToggleForm, SettingForm, SettingGroupForm, SettingTypeForm,
-    OnboardingTenantInfoForm, OnboardingBrandingForm, TenantExportForm,
-      TenantImportForm, TenantCloneForm, WhiteLabelSettingsForm, 
-      TenantUsageMetricForm, TenantUsageReportForm, TenantFeatureEntitlementForm, 
-      FeatureAccessForm, BulkFeatureEntitlementForm, OverageAlertForm, NotificationForm, AlertThresholdForm, 
-      TenantDataIsolationAuditForm, TenantDataIsolationViolationForm, DataIsolationAuditFilterForm, DataResidencySettingsForm
-)
-from .utils import track_usage, get_current_usage, get_usage_trend, check_usage_limits, generate_usage_report, check_feature_access, enforce_feature_access, get_accessible_features, perform_data_isolation_audit
-import datetime
-
-from billing.models import Plan, Subscription
-from core.models import User
-from accounts.models import Role
-from django.contrib.messages.views import SuccessMessageMixin # Import SuccessMessageMixin
-import json
-from django.http import JsonResponse
-from django.shortcuts import redirect
-import django.db.models as models
-
-
-class TenantUsageMetricListView(LoginRequiredMixin, ListView):
+class TenantUsageMetricListView(SalesCompassListView):
     """View for displaying tenant usage metrics"""
     model = TenantUsageMetric
     template_name = 'tenants/usage_metric_list.html'
@@ -2759,7 +2404,7 @@ class TenantUsageMetricListView(LoginRequiredMixin, ListView):
         return context
 
 
-class TenantUsageMetricCreateView(LoginRequiredMixin, CreateView):
+class TenantUsageMetricCreateView(SalesCompassCreateView):
     """View for creating new usage metrics"""
     model = TenantUsageMetric
     form_class = TenantUsageMetricForm
@@ -2787,7 +2432,7 @@ class TenantUsageMetricCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class TenantUsageMetricUpdateView(LoginRequiredMixin, UpdateView):
+class TenantUsageMetricUpdateView(SalesCompassUpdateView):
     """View for updating existing usage metrics"""
     model = TenantUsageMetric
     form_class = TenantUsageMetricForm
@@ -2816,7 +2461,7 @@ class TenantUsageMetricUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
 
-class TenantUsageMetricDeleteView(LoginRequiredMixin, DeleteView):
+class TenantUsageMetricDeleteView(SalesCompassDeleteView):
     """View for deleting usage metrics"""
     model = TenantUsageMetric
     template_name = 'tenants/usage_metric_confirm_delete.html'
@@ -2830,7 +2475,7 @@ class TenantUsageMetricDeleteView(LoginRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class TenantDataIsolationViolationUpdateView(LoginRequiredMixin, UpdateView):
+class TenantDataIsolationViolationUpdateView(SalesCompassUpdateView):
     """View for updating data isolation violations"""
     model = TenantDataIsolationViolation
     form_class = TenantDataIsolationViolationForm
@@ -2854,7 +2499,7 @@ class TenantDataIsolationViolationUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
 
-class OverageAlertCreateView(LoginRequiredMixin, CreateView):
+class OverageAlertCreateView(SalesCompassCreateView):
     """View for creating overage alerts"""
     model = OverageAlert
     form_class = OverageAlertForm
@@ -2877,7 +2522,7 @@ class OverageAlertCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class OverageAlertUpdateView(LoginRequiredMixin, UpdateView):
+class OverageAlertUpdateView(SalesCompassUpdateView):
     """View for updating overage alerts"""
     model = OverageAlert
     form_class = OverageAlertForm
@@ -2901,7 +2546,7 @@ class OverageAlertUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
 
-class NotificationCreateView(LoginRequiredMixin, CreateView):
+class NotificationCreateView(SalesCompassCreateView):
     """View for creating notifications"""
     model = Notification
     form_class = NotificationForm
@@ -2925,7 +2570,7 @@ class NotificationCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class NotificationUpdateView(LoginRequiredMixin, UpdateView):
+class NotificationUpdateView(SalesCompassUpdateView):
     """View for updating notifications"""
     model = Notification
     form_class = NotificationForm
@@ -2948,11 +2593,9 @@ class NotificationUpdateView(LoginRequiredMixin, UpdateView):
         })
         return context
 
-
-
 # Tenant Member Views
 
-class TenantMemberListView(LoginRequiredMixin, ObjectPermissionRequiredMixin, ListView):
+class TenantMemberListView(ObjectPermissionRequiredMixin, SalesCompassListView):
     model = TenantMember
     template_name = 'tenants/member_list.html'
     context_object_name = 'members'
@@ -2971,7 +2614,7 @@ class TenantMemberListView(LoginRequiredMixin, ObjectPermissionRequiredMixin, Li
         return context
 
 
-class TenantMemberCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class TenantMemberCreateView(SalesCompassCreateView):
     model = TenantMember
     form_class = TenantMemberForm
     template_name = 'tenants/member_form.html'
@@ -2997,7 +2640,7 @@ class TenantMemberCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView
         return context
 
 
-class TenantMemberUpdateView(LoginRequiredMixin, ObjectPermissionRequiredMixin, SuccessMessageMixin, UpdateView):
+class TenantMemberUpdateView(ObjectPermissionRequiredMixin, SalesCompassUpdateView):
     model = TenantMember
     form_class = TenantMemberForm
     template_name = 'tenants/member_form.html'
@@ -3021,7 +2664,7 @@ class TenantMemberUpdateView(LoginRequiredMixin, ObjectPermissionRequiredMixin, 
         return context
 
 
-class TenantMemberDeleteView(LoginRequiredMixin, ObjectPermissionRequiredMixin, SuccessMessageMixin, DeleteView):
+class TenantMemberDeleteView(ObjectPermissionRequiredMixin, SuccessMessageMixin, SalesCompassDeleteView):
     model = TenantMember
     template_name = 'tenants/member_confirm_delete.html'
     success_url = reverse_lazy('tenants:member_list')
@@ -3034,5 +2677,475 @@ class TenantMemberDeleteView(LoginRequiredMixin, ObjectPermissionRequiredMixin, 
         context.update({
             'title': 'Delete Member',
             'subtitle': f'Are you sure you want to delete {self.object.user.email}?'
+        })
+        return context
+
+
+# --- Lifecycle Event CRUD ---
+ 
+class TenantLifecycleEventListView(SalesCompassListView):
+    model = TenantLifecycleEvent
+    template_name = 'tenants/lifecycle_event_list.html'
+    context_object_name = 'events'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return TenantLifecycleEvent.objects.filter(tenant=self.request.user.tenant).order_by('-timestamp')
+
+
+class TenantLifecycleEventDetailView(SalesCompassDetailView):
+    model = TenantLifecycleEvent
+    template_name = 'tenants/lifecycle_event_detail.html'
+    context_object_name = 'event'
+
+    def get_queryset(self):
+        return TenantLifecycleEvent.objects.filter(tenant=self.request.user.tenant)
+
+
+class TenantLifecycleEventCreateView(SalesCompassCreateView):
+    model = TenantLifecycleEvent
+    form_class = TenantLifecycleEventForm
+    template_name = 'tenants/lifecycle_event_form.html'
+    success_url = reverse_lazy('tenants:lifecycle_event_list')
+    success_message = "Lifecycle event created successfully."
+
+    def form_valid(self, form):
+        form.instance.tenant = self.request.user.tenant
+        return super().form_valid(form)
+
+
+# --- Migration Record CRUD ---
+
+class TenantMigrationRecordListView(SalesCompassListView):
+    model = TenantMigrationRecord
+    template_name = 'tenants/migration_record_list.html'
+    context_object_name = 'migrations'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return TenantMigrationRecord.objects.filter(
+            models.Q(source_tenant=self.request.user.tenant) | 
+            models.Q(destination_tenant=self.request.user.tenant)
+        ).order_by('-started_at')
+
+
+class TenantMigrationRecordDetailView(SalesCompassDetailView):
+    model = TenantMigrationRecord
+    template_name = 'tenants/migration_record_detail.html'
+    context_object_name = 'migration'
+
+
+class TenantMigrationRecordCreateView(SalesCompassCreateView):
+    model = TenantMigrationRecord
+    form_class = TenantMigrationRecordForm
+    template_name = 'tenants/migration_record_form.html'
+    success_url = reverse_lazy('tenants:migration_record_list')
+    success_message = "Migration record created successfully."
+
+
+# --- Data Preservation Strategy CRUD ---
+
+class TenantDataPreservationStrategyListView(SalesCompassListView):
+    model = TenantDataPreservationStrategy
+    template_name = 'tenants/preservation_strategy_list.html'
+    context_object_name = 'strategies'
+    paginate_by = 20
+
+
+class TenantDataPreservationStrategyCreateView(SalesCompassCreateView):
+    model = TenantDataPreservationStrategy
+    form_class = TenantDataPreservationStrategyForm
+    template_name = 'tenants/preservation_strategy_form.html'
+    success_url = reverse_lazy('tenants:preservation_strategy_list')
+    success_message = "Preservation strategy created successfully."
+
+
+# --- Data Preservation Schedule CRUD ---
+
+class TenantDataPreservationScheduleListView(SalesCompassListView):
+    model = TenantDataPreservationSchedule
+    template_name = 'tenants/preservation_schedule_list.html'
+    context_object_name = 'schedules'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return TenantDataPreservationSchedule.objects.filter(tenant=self.request.user.tenant)
+
+
+class TenantDataPreservationScheduleCreateView(SalesCompassCreateView):
+    model = TenantDataPreservationSchedule
+    form_class = TenantDataPreservationScheduleForm
+    template_name = 'tenants/preservation_schedule_form.html'
+    success_url = reverse_lazy('tenants:preservation_schedule_list')
+    success_message = "Preservation schedule created successfully."
+
+    def form_valid(self, form):
+        form.instance.tenant = self.request.user.tenant
+        return super().form_valid(form)
+
+
+# --- Lifecycle Workflow Execution CRUD ---
+
+class TenantLifecycleWorkflowExecutionListView(SalesCompassListView):
+    model = TenantLifecycleWorkflowExecution
+    template_name = 'tenants/workflow_execution_list.html'
+    context_object_name = 'executions'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return TenantLifecycleWorkflowExecution.objects.filter(tenant=self.request.user.tenant).order_by('-started_at')
+
+
+class TenantLifecycleWorkflowExecutionDetailView(SalesCompassDetailView):
+    model = TenantLifecycleWorkflowExecution
+    template_name = 'tenants/workflow_execution_detail.html'
+    context_object_name = 'execution'
+
+
+# --- Data Preservation CRUD ---
+
+class TenantDataPreservationListView(SalesCompassListView):
+    model = TenantDataPreservation
+    template_name = 'tenants/preservation_list.html'
+    context_object_name = 'preservations'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return TenantDataPreservation.objects.filter(tenant=self.request.user.tenant)
+
+
+class TenantDataPreservationDetailView(SalesCompassDetailView):
+    model = TenantDataPreservation
+    template_name = 'tenants/preservation_detail.html'
+    context_object_name = 'preservation'
+
+
+# --- Automated Rules CRUD ---
+
+class AutomatedTenantLifecycleRuleListView(SalesCompassListView):
+    model = AutomatedTenantLifecycleRule
+    template_name = 'tenants/automated_rule_list.html'
+    context_object_name = 'rules'
+    paginate_by = 20
+
+
+class AutomatedTenantLifecycleRuleCreateView(SalesCompassCreateView):
+    model = AutomatedTenantLifecycleRule
+    form_class = AutomatedTenantLifecycleRuleForm
+    template_name = 'tenants/automated_rule_form.html'
+    success_url = reverse_lazy('tenants:automated_rule_list')
+    success_message = "Automated rule created successfully."
+
+
+# --- Notification Template Views ---
+
+class NotificationTemplateListView(SalesCompassListView):
+    """View for displaying notification templates"""
+    model = NotificationTemplate
+    template_name = 'tenants/notification_template_list.html'
+    context_object_name = 'notification_templates'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return NotificationTemplate.objects.all().order_by('-created_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'title': 'Notification Templates',
+            'subtitle': 'Manage system-wide notification templates',
+        })
+        return context
+
+
+class NotificationTemplateCreateView(SalesCompassCreateView):
+    """View for creating a new notification template"""
+    model = NotificationTemplate
+    form_class = NotificationTemplateForm
+    template_name = 'tenants/notification_template_form.html'
+    success_url = reverse_lazy('tenants:notification_template_list')
+    success_message = "Notification template created successfully."
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'title': 'Create Notification Template',
+            'subtitle': 'Create a new notification template',
+            'action': 'create'
+        })
+        return context
+
+
+class NotificationTemplateUpdateView(SalesCompassUpdateView):
+    """View for updating a notification template"""
+    model = NotificationTemplate
+    form_class = NotificationTemplateForm
+    template_name = 'tenants/notification_template_form.html'
+    success_url = reverse_lazy('tenants:notification_template_list')
+    success_message = "Notification template updated successfully."
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'title': 'Update Notification Template',
+            'subtitle': 'Update existing notification template',
+            'action': 'update'
+        })
+        return context
+
+
+class NotificationTemplateDeleteView(SuccessMessageMixin, SalesCompassDeleteView):
+    """View for deleting a notification template"""
+    model = NotificationTemplate
+    template_name = 'tenants/notification_template_confirm_delete.html'
+    success_url = reverse_lazy('tenants:notification_template_list')
+    success_message = "Notification template deleted successfully."
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'title': 'Delete Notification Template',
+            'subtitle': f'Are you sure you want to delete "{self.object.name}"?',
+        })
+        return context
+
+
+# --- Tenant Lifecycle Workflow CRUD Views ---
+
+class TenantLifecycleWorkflowDetailView(SalesCompassDetailView):
+    """View for showing details of a specific lifecycle workflow"""
+    model = TenantLifecycleWorkflow
+    template_name = 'tenants/lifecycle_workflow_detail.html'
+    context_object_name = 'workflow'
+
+
+class TenantLifecycleWorkflowCreateView(SalesCompassCreateView):
+    """View for creating a new lifecycle workflow"""
+    model = TenantLifecycleWorkflow
+    form_class = TenantLifecycleWorkflowForm
+    template_name = 'tenants/lifecycle_workflow_form.html'
+    success_url = reverse_lazy('tenants:lifecycle_workflows')
+    success_message = "Lifecycle workflow created successfully."
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        return super().form_valid(form)
+
+
+class TenantLifecycleWorkflowUpdateView(SalesCompassUpdateView):
+    """View for updating a lifecycle workflow"""
+    model = TenantLifecycleWorkflow
+    form_class = TenantLifecycleWorkflowForm
+    template_name = 'tenants/lifecycle_workflow_form.html'
+    success_url = reverse_lazy('tenants:lifecycle_workflows')
+    success_message = "Lifecycle workflow updated successfully."
+
+
+class TenantLifecycleWorkflowDeleteView(SuccessMessageMixin, SalesCompassDeleteView):
+    """View for deleting a lifecycle workflow"""
+    model = TenantLifecycleWorkflow
+    template_name = 'tenants/lifecycle_workflow_confirm_delete.html'
+    success_url = reverse_lazy('tenants:lifecycle_workflows')
+    success_message = "Lifecycle workflow deleted successfully."
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'title': 'Delete Lifecycle Workflow',
+            'subtitle': f'Are you sure you want to delete "{self.object.name}"?'
+        })
+        return context
+
+
+# --- Suspension/Termination Workflows ---
+
+class TenantSuspensionWorkflowListView(SalesCompassListView):
+    model = TenantSuspensionWorkflow
+    template_name = 'tenants/suspension_workflow_list.html'
+    context_object_name = 'workflows'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return TenantSuspensionWorkflow.objects.filter(tenant=self.request.user.tenant)
+
+
+class TenantTerminationWorkflowListView(SalesCompassListView):
+    model = TenantTerminationWorkflow
+    template_name = 'tenants/termination_workflow_list.html'
+    context_object_name = 'workflows'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return TenantTerminationWorkflow.objects.filter(tenant=self.request.user.tenant)
+
+
+# Tenant Role Views
+class TenantRoleListView(SalesCompassListView):
+    """List view for tenant roles"""
+    model = TenantRole
+    template_name = 'tenants/role_list.html'
+    context_object_name = 'roles'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return TenantRole.objects.filter(tenant=self.request.user.tenant).order_by('order', 'name')
+
+
+class TenantRoleCreateView(SalesCompassCreateView):
+    """Create view for tenant roles"""
+    model = TenantRole
+    form_class = TenantRoleForm
+    template_name = 'tenants/role_form.html'
+    success_url = reverse_lazy('tenants:role_list')
+    success_message = "Role created successfully."
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['tenant'] = self.request.user.tenant
+        return kwargs
+
+    def form_valid(self, form):
+        form.instance.tenant = self.request.user.tenant
+        messages.success(self.request, f'Role "{form.instance.name}" created successfully.')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'title': 'Create Role',
+            'subtitle': 'Add a new role to your organization',
+            'action': 'create'
+        })
+        return context
+
+
+class TenantRoleUpdateView(SalesCompassUpdateView):
+    """Update view for tenant roles"""
+    model = TenantRole
+    form_class = TenantRoleForm
+    template_name = 'tenants/role_form.html'
+    success_url = reverse_lazy('tenants:role_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['tenant'] = self.request.user.tenant
+        return kwargs
+
+    def get_queryset(self):
+        return TenantRole.objects.filter(tenant=self.request.user.tenant)
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Role "{form.instance.name}" updated successfully.')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'title': f'Update {self.object.name}',
+            'subtitle': 'Modify role details',
+            'action': 'update'
+        })
+        return context
+
+
+class TenantRoleDeleteView(SalesCompassDeleteView):
+    """Delete view for tenant roles"""
+    model = TenantRole
+    template_name = 'tenants/role_confirm_delete.html'
+    success_url = reverse_lazy('tenants:role_list')
+
+    def get_queryset(self):
+        return TenantRole.objects.filter(tenant=self.request.user.tenant)
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, f'Role "{self.get_object().name}" deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'title': 'Delete Role',
+            'subtitle': f'Are you sure you want to delete "{self.object.name}"?'
+        })
+        return context
+
+
+# Tenant Territory Views
+class TenantTerritoryListView(SalesCompassListView):
+    """List view for tenant territories"""
+    model = TenantTerritory
+    template_name = 'tenants/territory_list.html'
+    context_object_name = 'territories'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return TenantTerritory.objects.filter(tenant=self.request.user.tenant).order_by('order', 'name')
+
+
+class TenantTerritoryCreateView(SalesCompassCreateView):
+    """Create view for tenant territories"""
+    model = TenantTerritory
+    form_class = TenantTerritoryForm
+    template_name = 'tenants/territory_form.html'
+    success_url = reverse_lazy('tenants:territory_list')
+    success_message = "Territory created successfully."
+
+    def form_valid(self, form):
+        form.instance.tenant = self.request.user.tenant
+        messages.success(self.request, f'Territory "{form.instance.name}" created successfully.')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'title': 'Create Territory',
+            'subtitle': 'Add a new territory to your organization',
+            'action': 'create'
+        })
+        return context
+
+
+class TenantTerritoryUpdateView(SalesCompassUpdateView):
+    """Update view for tenant territories"""
+    model = TenantTerritory
+    form_class = TenantTerritoryForm
+    template_name = 'tenants/territory_form.html'
+    success_url = reverse_lazy('tenants:territory_list')
+
+    def get_queryset(self):
+        return TenantTerritory.objects.filter(tenant=self.request.user.tenant)
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Territory "{form.instance.name}" updated successfully.')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'title': f'Update {self.object.name}',
+            'subtitle': 'Modify territory details',
+            'action': 'update'
+        })
+        return context
+
+
+class TenantTerritoryDeleteView(SalesCompassDeleteView):
+    """Delete view for tenant territories"""
+    model = TenantTerritory
+    template_name = 'tenants/territory_confirm_delete.html'
+    success_url = reverse_lazy('tenants:territory_list')
+
+    def get_queryset(self):
+        return TenantTerritory.objects.filter(tenant=self.request.user.tenant)
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, f'Territory "{self.get_object().name}" deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'title': 'Delete Territory',
+            'subtitle': f'Are you sure you want to delete "{self.object.name}"?'
         })
         return context

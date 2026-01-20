@@ -1,5 +1,9 @@
 from django.views.generic import ListView, DetailView, TemplateView
-from core.permissions import PermissionRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
+from core.views import (
+    TenantAwareViewMixin, SalesCompassListView, SalesCompassDetailView,
+    SalesCompassCreateView, SalesCompassUpdateView, SalesCompassDeleteView
+)
 from .models import EngagementEvent, NextBestAction, EngagementStatus
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
@@ -8,9 +12,15 @@ from django.contrib import messages
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.views import View
-from core.permissions import PermissionRequiredMixin
-from .models import NextBestAction, EngagementEvent,EngagementWorkflow,EngagementEventComment,PlaybookExecution,PlaybookStepExecution,PlaybookStep,EngagementPlaybook,NextBestActionComment,WebhookDeliveryLog
-from .forms import NextBestActionForm, EngagementEventForm,EngagementWorkflowForm
+# from core.permissions import PermissionRequiredMixin # Removed
+from .models import (
+    NextBestAction, EngagementEvent, EngagementWorkflow, EngagementEventComment,
+    PlaybookExecution, PlaybookStepExecution, PlaybookStep, EngagementPlaybook,
+    NextBestActionComment, WebhookDeliveryLog, EngagementScoringConfig,
+    EngagementWebhook, AutoNBARule, EngagementExperiment, ExperimentVariant,
+    EngagementStatus
+)
+from .forms import NextBestActionForm, EngagementEventForm,EngagementWorkflowForm, EngagementScoringConfigForm
 from .services import DuplicateDetectionService, EventMergingService
 from django.shortcuts import get_object_or_404
 from accounts.models import Account
@@ -38,7 +48,7 @@ from django.db.models.functions import ExtractHour, ExtractWeekDay
 from datetime import timedelta
 
 
-class EngagementLeaderboardView(PermissionRequiredMixin, TemplateView):
+class EngagementLeaderboardView(LoginRequiredMixin, TenantAwareViewMixin, TemplateView):
     """
     Display a leaderboard of team members based on their engagement activities.
     
@@ -46,7 +56,7 @@ class EngagementLeaderboardView(PermissionRequiredMixin, TemplateView):
     various engagement events. It provides motivation and visibility into team performance.
     """
     template_name = 'engagement/leaderboard.html'
-    required_permission = 'engagement:read'
+    # required_permission = 'engagement:read' # Removed
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -81,18 +91,30 @@ class EngagementLeaderboardView(PermissionRequiredMixin, TemplateView):
         return context
 
 
-class EngagementFeedView(PermissionRequiredMixin, ListView):
+class EngagementFeedView(SalesCompassListView):
     model = EngagementEvent
     template_name = 'engagement/feed.html'
     context_object_name = 'events'
     paginate_by = 50
-    required_permission = 'engagement:read'
 
     def get_queryset(self):
         queryset = super().get_queryset().select_related(
-            'account', 'account_company', 'lead', 'task', 'opportunity', 'created_by', 'contact', 'case'
+            'account', 'account_company', 'lead', 'task', 'opportunity', 
+            'created_by', 'contact', 'case', 'proposal', 'nps_response'
         )
         
+        # Search
+        q = self.request.GET.get('q')
+        if q:
+            queryset = queryset.filter(
+                Q(title__icontains=q) |
+                Q(description__icontains=q) |
+                Q(account__first_name__icontains=q) |
+                Q(account__last_name__icontains=q) |
+                Q(contact__first_name__icontains=q) |
+                Q(contact__last_name__icontains=q)
+            )
+
         # Filters
         event_type = self.request.GET.get('event_type')
         if event_type:
@@ -102,20 +124,149 @@ class EngagementFeedView(PermissionRequiredMixin, ListView):
         if account_id:
             queryset = queryset.filter(account_id=account_id)
             
-        # Filter by tenant
-        if hasattr(self.request.user, 'tenant_id'):
-            queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
+        date_from = self.request.GET.get('date_from')
+        if date_from:
+            queryset = queryset.filter(created_at__date__gte=date_from)
+
+        date_to = self.request.GET.get('date_to')
+        if date_to:
+            queryset = queryset.filter(created_at__date__lte=date_to)
+
+        priority = self.request.GET.get('priority')
+        if priority:
+            queryset = queryset.filter(priority=priority)
             
         return queryset.order_by('-created_at')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['event_types'] = EngagementEvent._meta.get_field('event_type').choices
+        user = self.request.user
+        tenant_id = getattr(user, 'tenant_id', None)
+        now = timezone.now()
+        
+        # Date range for KPIs (default 30 days)
+        days = 30
+        start_date = now - timedelta(days=days)
+        
+        # KPI calculations (similar to dashboard)
+        events_qs = EngagementEvent.objects.filter(
+            tenant_id=tenant_id,
+            created_at__gte=start_date
+        )
+        
+        context['total_events'] = events_qs.count()
+        context['important_events'] = events_qs.filter(is_important=True).count()
+        context['engagement_score'] = events_qs.aggregate(avg=Avg('engagement_score'))['avg'] or 0.0
+        
+        # Trend calculations
+        prev_start = start_date - timedelta(days=days)
+        prev_events = EngagementEvent.objects.filter(
+            tenant_id=tenant_id,
+            created_at__gte=prev_start,
+            created_at__lt=start_date
+        )
+        prev_total = prev_events.count()
+        prev_important = prev_events.filter(is_important=True).count()
+        prev_avg_score = prev_events.aggregate(avg=Avg('engagement_score'))['avg'] or 0.0
+        
+        context['events_trend'] = self.calculate_trend(context['total_events'], prev_total)
+        context['important_events_trend'] = self.calculate_trend(context['important_events'], prev_important)
+        context['engagement_score_trend'] = self.calculate_trend(context['engagement_score'], prev_avg_score)
+        
+        # Pending Actions for sidebar
+        pending_actions = NextBestAction.objects.filter(
+            tenant_id=tenant_id,
+            completed=False
+        ).select_related('account', 'assigned_to', 'contact')
+        
+        context['pending_actions'] = pending_actions[:10]
+        context['pending_actions_count'] = pending_actions.count()
+        context['overdue_actions'] = pending_actions.filter(due_date__lt=now).count()
+        
+        # Alias events for template compatibility if needed
+        context['recent_events'] = context['events']
+        
+        context['event_types'] = EngagementEvent.EVENT_TYPES
+        context['priorities'] = EngagementEvent.PRIORITY_CHOICES
+        context['now'] = now
+        
         return context
 
-class EngagementDashboardView(PermissionRequiredMixin, TemplateView):
+    def calculate_trend(self, current, previous):
+        """Calculate percentage trend."""
+        if previous == 0:
+            return 100 if current > 0 else 0
+        return round(((current - previous) / previous) * 100, 1)
+ 
+class EngagementEventBulkActionView(LoginRequiredMixin, TenantAwareViewMixin, View):
+    """Handle bulk actions on engagement events."""
+    
+    def post(self, request, *args, **kwargs):
+        event_ids = request.POST.getlist('event_ids')
+        action = request.POST.get('action')
+        
+        if not event_ids or not action:
+            messages.error(request, "No events selected or action specified.")
+            return redirect('engagement:feed')
+
+        events = EngagementEvent.objects.filter(
+            id__in=event_ids, 
+            tenant_id=request.user.tenant_id
+        )
+        
+        count = events.count()
+        if action == 'delete':
+            events.delete()
+            messages.success(request, f"{count} events deleted.")
+        elif action == 'mark_important':
+            events.update(is_important=True)
+            messages.success(request, f"{count} events marked as important.")
+        elif action == 'mark_unimportant':
+            events.update(is_important=False)
+            messages.success(request, f"{count} events marked as unimportant.")
+        else:
+            messages.warning(request, "Unknown action.")
+
+        return redirect('engagement:feed')
+
+class EngagementReportExportView(LoginRequiredMixin, TenantAwareViewMixin, View):
+    """Export engagement data to CSV."""
+    
+    def get(self, request, *args, **kwargs):
+        import csv
+        from django.http import HttpResponse
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="engagement_report_{timezone.now().date()}.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Date', 'Type', 'Title', 'Description', 'User', 'Score', 'Account'])
+
+        events = EngagementEvent.objects.filter(
+            tenant_id=request.user.tenant_id
+        ).select_related('account').order_by('-created_at')
+
+        # Apply same filters as feed if needed (simplified here)
+        date_from = request.GET.get('date_from')
+        if date_from:
+            events = events.filter(created_at__date__gte=date_from)
+        
+        for event in events:
+            writer.writerow([
+                event.created_at.strftime("%Y-%m-%d %H:%M"),
+                event.get_event_type_display(),
+                event.title,
+                event.description,
+                event.created_by.email if event.created_by else 'System',
+                event.engagement_score,
+                event.account.email if event.account else 'N/A'
+            ])
+
+        return response
+
+class EngagementDashboardView(LoginRequiredMixin, TenantAwareViewMixin, TemplateView):
     template_name = 'engagement/dashboard.html'
-    required_permission = 'engagement:read'
+    # required_permission = 'engagement:read' # Removed
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -261,16 +412,16 @@ class EngagementDashboardView(PermissionRequiredMixin, TemplateView):
             tenant_id=tenant_id,
             created_at__gte=start_date
         ).values(
-            'account_id',
+            'account_company_id',
             'event_type'
         ).annotate(
             event_count=Count('id')
-        ).order_by('account_id', 'created_at')
+        ).order_by('account_company_id', 'created_at')
         
         # Process into journey paths
         journeys = {}
         for event in journey_data:
-            account_id = event['account_id']
+            account_id = event['account_company_id']
             if account_id not in journeys:
                 journeys[account_id] = []
             journeys[account_id].append({
@@ -296,7 +447,8 @@ class EngagementDashboardView(PermissionRequiredMixin, TemplateView):
         events = EngagementEvent.objects.filter(
             tenant_id=tenant_id,
             created_at__gte=start_date
-        ).order_by('account_id', 'created_at')
+
+        ).order_by('account_company_id', 'created_at')
         
         transitions = {}
         prev_event_type = None
@@ -306,13 +458,13 @@ class EngagementDashboardView(PermissionRequiredMixin, TemplateView):
         
         for event in events:
             current_type = event_type_display.get(event.event_type, event.event_type)
-            if prev_account_id == event.account_id and prev_event_type:
+            if prev_account_id == event.account_company_id and prev_event_type:
                 if prev_event_type != current_type: # Only track transitions between different types
                     transition_key = (prev_event_type, current_type)
                     transitions[transition_key] = transitions.get(transition_key, 0) + 1
                 
             prev_event_type = current_type
-            prev_account_id = event.account_id
+            prev_account_id = event.account_company_id
             
         # Format for Sankey diagram
         nodes_list = []
@@ -347,13 +499,14 @@ class EngagementDashboardView(PermissionRequiredMixin, TemplateView):
         active_account_ids = EngagementEvent.objects.filter(
             tenant_id=tenant_id,
             created_at__gte=start_date
-        ).values_list('account_id', flat=True).distinct()
+
+        ).values_list('account_company_id', flat=True).distinct()
         
         accounts = Account.objects.filter(tenant_id=tenant_id, id__in=active_account_ids)
         events = EngagementEvent.objects.filter(
             tenant_id=tenant_id,
             created_at__gte=start_date
-        ).select_related('account', 'contact')
+        ).select_related('account_company', 'contact')
         
         nodes = []
         links = []
@@ -364,7 +517,7 @@ class EngagementDashboardView(PermissionRequiredMixin, TemplateView):
             node_id = f"account_{account.id}"
             nodes.append({
                 'id': node_id,
-                'name': account.name,
+                'name': account.account_name,
                 'type': 'account',
                 'size': 25
             })
@@ -373,9 +526,9 @@ class EngagementDashboardView(PermissionRequiredMixin, TemplateView):
         # Add contact nodes and links
         link_counts = {}
         for event in events:
-            if event.contact and event.account:
+            if event.contact and event.account_company:
                 contact_node_id = f"contact_{event.contact.id}"
-                account_node_id = f"account_{event.account.id}"
+                account_node_id = f"account_{event.account_company.id}"
                 
                 # Add contact node if not exists
                 if contact_node_id not in node_ids:
@@ -423,7 +576,7 @@ class EngagementDashboardView(PermissionRequiredMixin, TemplateView):
         for account in top_accounts:
             # Get engagement events for this account over time
             events = EngagementEvent.objects.filter(
-                account=account,
+                account_company=account,
                 tenant_id=tenant_id,
                 created_at__gte=start_date
             ).extra(select={'date': 'date(created_at)'}).values('date').annotate(
@@ -431,7 +584,7 @@ class EngagementDashboardView(PermissionRequiredMixin, TemplateView):
             ).order_by('date')
             
             timeline_data.append({
-                'account_name': account.name,
+                'account_name': account.account_name,
                 'data': list(events)
             })
             
@@ -464,7 +617,7 @@ class EngagementDashboardView(PermissionRequiredMixin, TemplateView):
             
             contact_data.append({
                 'contact_name': f"{contact.first_name} {contact.last_name}",
-                'account_name': contact.account.name if contact.account else "No Account",
+                'account_name': contact.account.account_name if contact.account else "No Account",
                 'total_events': events['total_events'] or 0,
                 'avg_score': round(events['avg_score'] or 0, 2)
             })
@@ -498,7 +651,7 @@ class EngagementDashboardView(PermissionRequiredMixin, TemplateView):
             
             journey_data.append({
                 'opportunity_name': opportunity.opportunity_name,
-                'account_name': opportunity.account.name if opportunity.account else "No Account",
+                'account_name': opportunity.account.account_name if opportunity.account else "No Account",
                 'stage': opportunity.stage.opportunity_stage_name if opportunity.stage else "No Stage",
                 'event_timeline': list(events)
             })
@@ -638,7 +791,7 @@ class EngagementDashboardView(PermissionRequiredMixin, TemplateView):
         return [{'country': c, 'count': v} for c, v in geo_counts.items()]
 
 
-class EngagementAccountBreakdownView(PermissionRequiredMixin, TemplateView):
+class EngagementAccountBreakdownView(LoginRequiredMixin, TenantAwareViewMixin, TemplateView):
     """
     Display detailed account breakdowns for engagement analytics.
     
@@ -646,7 +799,7 @@ class EngagementAccountBreakdownView(PermissionRequiredMixin, TemplateView):
     and opportunities, separated from the main dashboard for better organization.
     """
     template_name = 'engagement/account_breakdowns.html'
-    required_permission = 'engagement:read'
+    # required_permission = 'engagement:read' # Removed
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -685,13 +838,59 @@ class EngagementAccountBreakdownView(PermissionRequiredMixin, TemplateView):
         return context
 
 
-class EngagementEventDetailView(PermissionRequiredMixin, DetailView):
+class EngagementEventDetailView(SalesCompassDetailView):
     model = EngagementEvent
     template_name = 'engagement/event_detail.html'
     context_object_name = 'event'
-    required_permission = 'engagement:read'
 
-class EngagementEventUpdateView(PermissionRequiredMixin, UpdateView):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        event = self.object
+        user = self.request.user
+        tenant_id = getattr(user, 'tenant_id', None)
+
+        # Identify the primary entity
+        entity = event.primary_entity
+        entity_type = entity.__class__.__name__.lower() if entity else None
+
+        # Aggregate all interaction events for this entity
+        if entity:
+            filter_kwargs = {
+                'tenant_id': tenant_id,
+            }
+            # Use the correct field names based on the entity type
+            if entity_type == 'contact':
+                filter_kwargs['contact'] = entity
+            elif entity_type == 'lead':
+                filter_kwargs['lead'] = entity
+            elif entity_type == 'account':
+                # Check if it's the Company Account model or User model
+                from accounts.models import Account as CompanyAccount
+                if isinstance(entity, CompanyAccount):
+                    filter_kwargs['account_company'] = entity
+                else:
+                    filter_kwargs['account'] = entity
+            elif entity_type == 'user':
+                filter_kwargs['account'] = entity
+            
+            # Fetch chronological flow with optimized related fields
+            interaction_flow = EngagementEvent.objects.filter(**filter_kwargs).select_related(
+                'created_by', 'account_company', 'lead', 'contact', 'opportunity', 'task', 'case', 'proposal'
+            ).order_by('-created_at')
+            
+            context['interaction_flow'] = interaction_flow
+            context['primary_entity'] = entity
+            context['entity_type'] = entity_type
+            context['entity_name'] = event.primary_entity_name
+            
+            # Pre-fill interaction shortcuts data
+            context['target_phone'] = getattr(entity, 'phone', '') or getattr(entity, 'mobile', '') or ''
+            context['target_email'] = getattr(entity, 'email', '')
+            context['wazo_user_uuid'] = getattr(user, 'wazo_user_uuid', None)
+
+        return context
+
+class EngagementEventUpdateView(SalesCompassUpdateView):
     """
     Update an existing engagement event.
     
@@ -702,15 +901,6 @@ class EngagementEventUpdateView(PermissionRequiredMixin, UpdateView):
     form_class = EngagementEventForm
     template_name = 'engagement/event_form.html'
     context_object_name = 'event'
-    permission_required = 'engagement.change_engagementevent'
-    raise_exception = True  # Return 403 instead of redirecting to login
-
-    def get_queryset(self):
-        """Ensure users can only access events in their tenant."""
-        qs = super().get_queryset()
-        if hasattr(self.request.user, 'tenant_id'):
-            qs = qs.filter(tenant_id=self.request.user.tenant_id)
-        return qs
 
     def get_form_kwargs(self):
         """Pass user to form for tenant-aware dropdowns."""
@@ -720,10 +910,6 @@ class EngagementEventUpdateView(PermissionRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         """Handle successful form submission."""
-        # Preserve tenant_id if not set in form
-        if not form.instance.tenant_id and hasattr(self.request.user, 'tenant_id'):
-            form.instance.tenant_id = self.request.user.tenant_id
-            
         response = super().form_valid(form)
         messages.success(
             self.request, 
@@ -735,55 +921,24 @@ class EngagementEventUpdateView(PermissionRequiredMixin, UpdateView):
         """Redirect to event detail page after update."""
         return reverse_lazy('engagement:event_detail', kwargs={'pk': self.object.pk})
 
-    def handle_no_permission(self):
-        """Handle permission denied with user-friendly message."""
-        messages.error(
-            self.request, 
-            "You don't have permission to edit this engagement event."
-        )
-        # Redirect to detail page or feed if user can at least view it
-        if self.request.user.has_perm('engagement.view_engagementevent'):
-            event_pk = self.kwargs.get('pk')
-            if event_pk:
-                return redirect('engagement:event_detail', pk=event_pk)
-        return redirect('engagement:feed')
 
 
-
-class NextBestActionListView(PermissionRequiredMixin, ListView):
+class NextBestActionListView(SalesCompassListView):
     """
     Display paginated list of Next Best Actions with filtering capabilities.
-    
-    Features:
-    - Multi-tenant isolation
-    - Comprehensive filtering (completed, priority, action type, overdue, account)
-    - Performance optimization with select_related
-    - User-friendly pagination
     """
     model = NextBestAction
-    template_name = 'engagement/next_best_action.html'
+    template_name = 'engagement/nba_list.html'
     context_object_name = 'actions'
     paginate_by = 25
-    permission_required = 'engagement.view_nextbestaction'
-    raise_exception = True
 
     def get_queryset(self):
         """
         Build filtered queryset with tenant isolation and performance optimization.
-        
-        Filters available:
-        - show_completed: Show/hide completed actions (default: hide)
-        - priority: Filter by priority level
-        - action_type: Filter by action type
-        - overdue: Show only overdue actions
-        - account: Filter by specific account
-        - search: Full-text search across description and account name
         """
-        # Base queryset with tenant isolation and performance optimization
-        queryset = NextBestAction.objects.filter(
-            tenant_id=getattr(self.request.user, 'tenant_id', None)
-        ).select_related(
-            'account', 'opportunity', 'assigned_to', 'contact', 'engagement_event', 'lead'
+        # Base queryset with tenant isolation from SalesCompassListView
+        queryset = super().get_queryset().select_related(
+            'account', 'opportunity', 'assigned_to', 'contact'
         ).order_by('-due_date', 'priority')
 
         
@@ -852,6 +1007,18 @@ class NextBestActionListView(PermissionRequiredMixin, ListView):
         
         # Add accounts for account filter dropdown (limited to avoid performance issues)
         tenant_id = getattr(self.request.user, 'tenant_id', None)
+        
+        # Add summary stats
+        base_qs = NextBestAction.objects.filter(tenant_id=tenant_id)
+        context['total_actions'] = base_qs.count()
+        context['pending_actions'] = base_qs.filter(completed=False).count()
+        context['overdue_actions'] = base_qs.filter(
+            due_date__lt=timezone.now(), 
+            completed=False
+        ).count()
+        context['completed_actions'] = base_qs.filter(completed=True).count()
+        context['now'] = timezone.now()
+
         context['accounts'] = Account.objects.filter(
             tenant_id=tenant_id
         ).order_by('account_name')[:100]  # Limit to 100 accounts
@@ -870,46 +1037,28 @@ class NextBestActionListView(PermissionRequiredMixin, ListView):
         return context
 
 
-class NextBestActionDetailView(PermissionRequiredMixin, DetailView):
+class NextBestActionDetailView(SalesCompassDetailView):
     """
     Display detailed view of a single Next Best Action.
-    
-    Features:
-    - Tenant isolation
-    - Permission checking
-    - Related object prefetching for performance
     """
     model = NextBestAction
     template_name = 'engagement/next_best_action_detail.html'
     context_object_name = 'action'
-    permission_required = 'engagement.view_nextbestaction'
-    raise_exception = True
 
     def get_queryset(self):
         """Ensure tenant isolation and optimize related object loading."""
-        return NextBestAction.objects.filter(
-            tenant_id=getattr(self.request.user, 'tenant_id', None)
-        ).select_related(
-            'account', 'opportunity', 'assigned_to', 'contact', 'engagement_event'
+        return super().get_queryset().select_related(
+            'account', 'opportunity', 'assigned_to', 'contact'
         )
 
 
-class NextBestActionCreateView(PermissionRequiredMixin, CreateView):
+class NextBestActionCreateView(SalesCompassCreateView):
     """
     Create a new Next Best Action with proper defaults and validation.
-    
-    Features:
-    - Automatic tenant assignment
-    - Default assignment to current user
-    - Default source as 'Manual Entry'
-    - Success messaging
-    - Proper redirect handling
     """
     model = NextBestAction
     form_class = NextBestActionForm
     template_name = 'engagement/next_best_action_form.html'
-    permission_required = 'engagement.add_nextbestaction'
-    raise_exception = True
 
     def get_success_url(self):
         """Redirect to NBA detail page after creation for better user experience."""
@@ -971,27 +1120,19 @@ class NextBestActionCreateView(PermissionRequiredMixin, CreateView):
         return super().form_invalid(form)
 
 
-class NextBestActionUpdateView(PermissionRequiredMixin, UpdateView):
+class NextBestActionUpdateView(SalesCompassUpdateView):
     """
     Update an existing Next Best Action with validation and logging.
-    
-    Features:
-    - Tenant isolation
-    - Permission checking
-    - Success messaging
-    - Proper redirect handling
     """
     model = NextBestAction
     form_class = NextBestActionForm
     template_name = 'engagement/next_best_action_form.html'
-    permission_required = 'engagement.change_nextbestaction'
-    raise_exception = True
 
     def get_queryset(self):
         """Ensure tenant isolation."""
-        return NextBestAction.objects.filter(
-            tenant_id=getattr(self.request.user, 'tenant_id', None)
-        )
+        # SalesCompassUpdateView handles basic tenant isolation, but we can be explicit or rely on it.
+        # super().get_queryset() already filters by tenant_id via TenantAwareViewMixin
+        return super().get_queryset()
 
     def get_form_kwargs(self):
         """Pass current user to form for tenant-aware dropdowns."""
@@ -1018,26 +1159,16 @@ class NextBestActionUpdateView(PermissionRequiredMixin, UpdateView):
         return super().form_invalid(form)
 
 
-class NextBestActionDeleteView(PermissionRequiredMixin, DeleteView):
+class NextBestActionDeleteView(SalesCompassDeleteView):
     """
     Delete a Next Best Action with confirmation and logging.
-    
-    Features:
-    - Tenant isolation
-    - Permission checking
-    - Success messaging
-    - Safe deletion with confirmation
     """
     model = NextBestAction
     template_name = 'engagement/next_best_action_confirm_delete.html'
-    permission_required = 'engagement.delete_nextbestaction'
-    raise_exception = True
 
     def get_queryset(self):
         """Ensure tenant isolation."""
-        return NextBestAction.objects.filter(
-            tenant_id=getattr(self.request.user, 'tenant_id', None)
-        )
+        return super().get_queryset()
 
     def get_success_url(self):
         """Redirect to NBA list after deletion."""
@@ -1079,7 +1210,7 @@ class NextBestActionDeleteView(PermissionRequiredMixin, DeleteView):
             return response
 
 logger = logging.getLogger(__name__)
-class CompleteNextBestActionView(PermissionRequiredMixin, View):
+class CompleteNextBestActionView(LoginRequiredMixin, TenantAwareViewMixin, View):
     """
     Unified endpoint to complete a Next Best Action with comprehensive features.
     
@@ -1092,8 +1223,7 @@ class CompleteNextBestActionView(PermissionRequiredMixin, View):
     
     Supports both JSON (AJAX) and form-encoded (traditional POST) requests.
     """
-    permission_required = 'engagement.change_nextbestaction'
-    raise_exception = True
+    # permission_required removed
 
     def post(self, request):
         """
@@ -1123,7 +1253,8 @@ class CompleteNextBestActionView(PermissionRequiredMixin, View):
             )
             
             # Permission check: assigned user or global permission
-            if action.assigned_to != request.user and not request.user.has_perm('engagement.change_nextbestaction'):
+            from access_control.controller import UnifiedAccessController
+            if action.assigned_to != request.user and not UnifiedAccessController.has_access(request.user, 'engagement.change_nextbestaction'):
                 return self._handle_error('Permission denied', 403, request)
             
             # Prevent duplicate completion
@@ -1259,7 +1390,7 @@ def complete_next_best_action_with_note_view(request, pk):
         return redirect('engagement:next_best_action_detail', pk=pk)
 
 
-class DisengagedAccountsView(PermissionRequiredMixin, ListView):
+class DisengagedAccountsView(SalesCompassListView):
     """
     Report view for accounts with low engagement or inactivity.
     """
@@ -1267,7 +1398,7 @@ class DisengagedAccountsView(PermissionRequiredMixin, ListView):
     template_name = 'engagement/disengaged_accounts.html'
     context_object_name = 'statuses'
     paginate_by = 50
-    required_permission = 'engagement:read'
+    # required_permission = 'engagement:read' # Removed
     
     def get_queryset(self):
         # Default thresholds
@@ -1323,11 +1454,11 @@ class DisengagedAccountsView(PermissionRequiredMixin, ListView):
 
 
 
-class DisengagedAccountsExportView(PermissionRequiredMixin, View):
+class DisengagedAccountsExportView(LoginRequiredMixin, TenantAwareViewMixin, View):
     """
     Export disengaged accounts report in various formats.
     """
-    required_permission = 'engagement:read'
+    # required_permission = 'engagement:read' # Removed
     
     def get(self, request, format):
         # Get the same queryset as the main report
@@ -1357,7 +1488,7 @@ class DisengagedAccountsExportView(PermissionRequiredMixin, View):
                 )
                 
                 writer.writerow([
-                    status.account.name,
+                    status.account.account_name,
                     status.account.email,
                     status.last_engaged_at.strftime('%Y-%m-%d %H:%M') if status.last_engaged_at else 'Never',
                     days_since_last_engaged,
@@ -1373,7 +1504,7 @@ class DisengagedAccountsExportView(PermissionRequiredMixin, View):
             return HttpResponse(f"Export format '{format}' not yet implemented", status=501)
 
 
-class TopEngagedAccountsView(PermissionRequiredMixin, ListView):
+class TopEngagedAccountsView(SalesCompassListView):
     """
     Report view for accounts with highest engagement scores.
     """
@@ -1381,7 +1512,7 @@ class TopEngagedAccountsView(PermissionRequiredMixin, ListView):
     template_name = 'engagement/top_engaged_accounts.html'
     context_object_name = 'statuses'
     paginate_by = 50
-    required_permission = 'engagement:read'
+    # required_permission = 'engagement:read' # Removed
     
     def get_queryset(self):
         # Number of top accounts to show
@@ -1418,11 +1549,11 @@ class TopEngagedAccountsView(PermissionRequiredMixin, ListView):
         return context
 
 
-class TopEngagedAccountsExportView(PermissionRequiredMixin, View):
+class TopEngagedAccountsExportView(LoginRequiredMixin, TenantAwareViewMixin, View):
     """
     Export top engaged accounts report in various formats.
     """
-    required_permission = 'engagement:read'
+    # required_permission = 'engagement:read' # Removed
     
     def get(self, request, format):
         # Get the same queryset as the main report
@@ -1444,7 +1575,7 @@ class TopEngagedAccountsExportView(PermissionRequiredMixin, View):
             
             for status in queryset:
                 writer.writerow([
-                    status.account.name,
+                    status.account.account_name,
                     status.account.email,
                     status.last_engaged_at.strftime('%Y-%m-%d %H:%M') if status.last_engaged_at else 'Never',
                     status.engagement_score
@@ -1461,16 +1592,15 @@ class TopEngagedAccountsExportView(PermissionRequiredMixin, View):
 # Playbook Views
 
 
-class EngagementPlaybookListView(PermissionRequiredMixin, ListView):
+class EngagementPlaybookListView(SalesCompassListView):
     model = EngagementPlaybook
     template_name = 'engagement/playbook_list.html'
     context_object_name = 'playbooks'
-    required_permission = 'engagement:read'
+    # required_permission = 'engagement:read' # Removed
 
     def get_queryset(self):
-        queryset = EngagementPlaybook.objects.filter(
-            tenant_id=getattr(self.request.user, 'tenant_id', None)
-        ).order_by('name')
+        # Base Query
+        queryset = super().get_queryset().order_by('name')
         
         # Filter by industry if specified
         industry = self.request.GET.get('industry')
@@ -1499,11 +1629,11 @@ class EngagementPlaybookListView(PermissionRequiredMixin, ListView):
         return context
 
 
-class EngagementPlaybookDetailView(PermissionRequiredMixin, DetailView):
+class EngagementPlaybookDetailView(SalesCompassDetailView):
     model = EngagementPlaybook
     template_name = 'engagement/playbook_detail.html'
     context_object_name = 'playbook'
-    required_permission = 'engagement:read'
+    # required_permission = 'engagement:read' # Removed
 
     def get_queryset(self):
         return EngagementPlaybook.objects.filter(
@@ -1521,12 +1651,11 @@ class EngagementPlaybookDetailView(PermissionRequiredMixin, DetailView):
 
 
 
-class EngagementPlaybookCreateView(PermissionRequiredMixin, CreateView):
+class EngagementPlaybookCreateView(SalesCompassCreateView):
     model = EngagementPlaybook
     form_class = EngagementPlaybookForm
     template_name = 'engagement/playbook_form.html'
-    permission_required = 'engagement.add_engagementplaybook'
-    raise_exception = True
+    # permission_required removed
     success_url = reverse_lazy('engagement:playbook_list')
 
     def form_valid(self, form):
@@ -1536,30 +1665,26 @@ class EngagementPlaybookCreateView(PermissionRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class EngagementPlaybookUpdateView(PermissionRequiredMixin, UpdateView):
+class EngagementPlaybookUpdateView(SalesCompassUpdateView):
     model = EngagementPlaybook
     form_class = EngagementPlaybookForm
     template_name = 'engagement/playbook_form.html'
-    permission_required = 'engagement.change_engagementplaybook'
-    raise_exception = True
+    # permission_required removed
     success_url = reverse_lazy('engagement:playbook_list')
 
     def get_queryset(self):
-        return EngagementPlaybook.objects.filter(
-            tenant_id=getattr(self.request.user, 'tenant_id', None)
-        )
+        return super().get_queryset()
 
     def form_valid(self, form):
         messages.success(self.request, f"Playbook '{form.instance.name}' updated successfully!")
         return super().form_valid(form)
 
 
-class PlaybookStepCreateView(PermissionRequiredMixin, CreateView):
+class PlaybookStepCreateView(SalesCompassCreateView):
     model = PlaybookStep
     form_class = PlaybookStepForm
     template_name = 'engagement/playbook_step_form.html'
-    permission_required = 'engagement.add_playbookstep'
-    raise_exception = True
+    # permission_required removed
 
     def dispatch(self, request, *args, **kwargs):
         self.playbook = get_object_or_404(
@@ -1584,17 +1709,14 @@ class PlaybookStepCreateView(PermissionRequiredMixin, CreateView):
         return reverse_lazy('engagement:playbook_detail', kwargs={'pk': self.playbook.pk})
 
 
-class PlaybookStepUpdateView(PermissionRequiredMixin, UpdateView):
+class PlaybookStepUpdateView(SalesCompassUpdateView):
     model = PlaybookStep
     form_class = PlaybookStepForm
     template_name = 'engagement/playbook_step_form.html'
-    permission_required = 'engagement.change_playbookstep'
-    raise_exception = True
+    # permission_required removed
 
     def get_queryset(self):
-        return PlaybookStep.objects.filter(
-            tenant_id=getattr(self.request.user, 'tenant_id', None)
-        )
+        return super().get_queryset()
 
     def get_success_url(self):
         return reverse_lazy('engagement:playbook_detail', kwargs={'pk': self.object.playbook.pk})
@@ -1604,31 +1726,27 @@ class PlaybookStepUpdateView(PermissionRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class PlaybookStepDeleteView(PermissionRequiredMixin, DeleteView):
+class PlaybookStepDeleteView(SalesCompassDeleteView):
     model = PlaybookStep
     template_name = 'engagement/playbook_step_confirm_delete.html'
-    permission_required = 'engagement.delete_playbookstep'
-    raise_exception = True
+    # permission_required removed
 
     def get_queryset(self):
-        return PlaybookStep.objects.filter(
-            tenant_id=getattr(self.request.user, 'tenant_id', None)
-        )
+        return super().get_queryset()
 
     def get_success_url(self):
         messages.success(self.request, "Step deleted successfully!")
         return reverse_lazy('engagement:playbook_detail', kwargs={'pk': self.object.playbook.pk})
 
 
-class PlaybookExecutionStartView(PermissionRequiredMixin, CreateView):
+class PlaybookExecutionStartView(SalesCompassCreateView):
     """
     Start executing a playbook for a specific account.
     """
     model = PlaybookExecution
     template_name = 'engagement/playbook_execution_start.html'
     fields = ['account', 'notes']
-    permission_required = 'engagement.add_playbookexecution'
-    raise_exception = True
+    # permission_required removed
 
     def dispatch(self, request, *args, **kwargs):
         self.playbook = get_object_or_404(
@@ -1669,7 +1787,7 @@ class PlaybookExecutionStartView(PermissionRequiredMixin, CreateView):
         
         messages.success(
             self.request, 
-            f"Started executing playbook '{self.playbook.name}' for {form.instance.account.name}"
+            f"Started executing playbook '{self.playbook.name}' for {form.instance.account.account_name}"
         )
         return response
 
@@ -1677,31 +1795,26 @@ class PlaybookExecutionStartView(PermissionRequiredMixin, CreateView):
         return reverse_lazy('engagement:playbook_execution_detail', kwargs={'pk': self.object.pk})
 
 
-class PlaybookExecutionDetailView(PermissionRequiredMixin, DetailView):
+class PlaybookExecutionDetailView(SalesCompassDetailView):
     """
     View details of a playbook execution.
     """
     model = PlaybookExecution
     template_name = 'engagement/playbook_execution_detail.html'
     context_object_name = 'execution'
-    permission_required = 'engagement.view_playbookexecution'
-    raise_exception = True
 
     def get_queryset(self):
-        return PlaybookExecution.objects.filter(
-            tenant_id=getattr(self.request.user, 'tenant_id', None)
-        ).select_related('playbook', 'account', 'started_by')
+        return super().get_queryset().select_related('playbook', 'account', 'started_by')
 
 
-class PlaybookExecutionCompleteView(PermissionRequiredMixin, UpdateView):
+class PlaybookExecutionCompleteView(SalesCompassUpdateView):
     """
     Complete a playbook execution and update metrics.
     """
     model = PlaybookExecution
     template_name = 'engagement/playbook_execution_complete.html'
     fields = ['completion_rate', 'effectiveness_score', 'notes']
-    permission_required = 'engagement.change_playbookexecution'
-    raise_exception = True
+    # permission_required removed
 
     def form_valid(self, form):
         form.instance.status = 'completed'
@@ -1714,7 +1827,7 @@ class PlaybookExecutionCompleteView(PermissionRequiredMixin, UpdateView):
         
         messages.success(
             self.request, 
-            f"Completed execution of playbook '{form.instance.playbook.name}' for {form.instance.account.name}"
+            f"Completed execution of playbook '{form.instance.playbook.name}' for {form.instance.account.account_name}"
         )
         return response
 
@@ -1722,15 +1835,14 @@ class PlaybookExecutionCompleteView(PermissionRequiredMixin, UpdateView):
         return reverse_lazy('engagement:playbook_execution_detail', kwargs={'pk': self.object.pk})
 
 
-class PlaybookCloneView(PermissionRequiredMixin, CreateView):
+class PlaybookCloneView(SalesCompassCreateView):
     """
     Clone a playbook template to create a new playbook instance.
     """
     model = EngagementPlaybook
     template_name = 'engagement/playbook_clone.html'
     fields = ['name', 'description']
-    permission_required = 'engagement.add_engagementplaybook'
-    raise_exception = True
+    # permission_required removed
 
     def dispatch(self, request, *args, **kwargs):
         self.template_playbook = get_object_or_404(
@@ -1779,35 +1891,33 @@ class PlaybookCloneView(PermissionRequiredMixin, CreateView):
 
 # ... existing code ...
 
-class EngagementWorkflowListView(PermissionRequiredMixin, ListView):
+class EngagementWorkflowListView(SalesCompassListView):
     """
     List all engagement workflows with filtering capabilities.
     """
     model = EngagementWorkflow
     template_name = 'engagement/workflow_list.html'
     context_object_name = 'workflows'
-    required_permission = 'engagement:read'
+    # required_permission = 'engagement:read' # Removed
 
     def get_queryset(self):
-        queryset = EngagementWorkflow.objects.filter(
-            tenant_ptr_id=getattr(self.request.user, 'tenant_id', None)
-        ).order_by('workflow_name')
+        queryset = super().get_queryset().order_by('workflow_name')
         return queryset
 
 
 
-class EngagementWorkflowCreateView(PermissionRequiredMixin, CreateView):
+class EngagementWorkflowCreateView(SalesCompassCreateView):
     """
     Create a new engagement workflow.
     """
     model = EngagementWorkflow
     form_class = EngagementWorkflowForm
     template_name = 'engagement/workflow_form.html'
-    required_permission = 'engagement:add_engagementworkflow'
+    # required_permission removed
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
-        form.instance.tenant_ptr_id = getattr(self.request.user, 'tenant_id', None)
+        form.instance.tenant_id = getattr(self.request.user, 'tenant_id', None)
         messages.success(self.request, f"Workflow '{form.instance.workflow_name}' created successfully!")
         return super().form_valid(form)
 
@@ -1815,14 +1925,14 @@ class EngagementWorkflowCreateView(PermissionRequiredMixin, CreateView):
         return reverse_lazy('engagement:workflow_list')
 
 
-class EngagementWorkflowUpdateView(PermissionRequiredMixin, UpdateView):
+class EngagementWorkflowUpdateView(SalesCompassUpdateView):
     """
     Update an existing engagement workflow.
     """
     model = EngagementWorkflow
     form_class = EngagementWorkflowForm
     template_name = 'engagement/workflow_form.html'
-    required_permission = 'engagement:change_engagementworkflow'
+    # required_permission removed
 
     def form_valid(self, form):
         messages.success(self.request, f"Workflow '{form.instance.workflow_name}' updated successfully!")
@@ -1834,13 +1944,13 @@ class EngagementWorkflowUpdateView(PermissionRequiredMixin, UpdateView):
 
 
 
-class EngagementWorkflowDeleteView(PermissionRequiredMixin, DeleteView):
+class EngagementWorkflowDeleteView(SalesCompassDeleteView):
     """
     Delete an engagement workflow.
     """
     model = EngagementWorkflow
     template_name = 'engagement/workflow_confirm_delete.html'
-    required_permission = 'engagement:delete_engagementworkflow'
+    # required_permission removed
 
     def delete(self, request, *args, **kwargs):
         workflow = self.get_object()
@@ -1852,12 +1962,12 @@ class EngagementWorkflowDeleteView(PermissionRequiredMixin, DeleteView):
 
 
 
-class AttributionReportView(PermissionRequiredMixin, TemplateView):
+class AttributionReportView(LoginRequiredMixin, TenantAwareViewMixin, TemplateView):
     """
     Display attribution reports for campaigns and sources.
     """
     template_name = 'engagement/attribution_report.html'
-    required_permission = 'engagement:read'
+    # required_permission = 'engagement:read' # Removed
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1914,15 +2024,14 @@ class AttributionReportView(PermissionRequiredMixin, TemplateView):
         return context
 
 
-class EngagementEventCommentCreateView(PermissionRequiredMixin, CreateView):
+class EngagementEventCommentCreateView(SalesCompassCreateView):
     """
     Create a comment on an engagement event with mention support.
     """
     model = EngagementEventComment
     fields = ['content']
     template_name = 'engagement/event_comment_form.html'
-    permission_required = 'engagement.add_engagementeventcomment'
-    raise_exception = True
+    # permission_required removed
 
     def dispatch(self, request, *args, **kwargs):
         self.event = get_object_or_404(
@@ -2006,15 +2115,14 @@ class EngagementEventCommentCreateView(PermissionRequiredMixin, CreateView):
         return reverse_lazy('engagement:event_detail', kwargs={'pk': self.event.pk})
 
 
-class NextBestActionCommentCreateView(PermissionRequiredMixin, CreateView):
+class NextBestActionCommentCreateView(SalesCompassCreateView):
     """
     Create a comment on a Next Best Action with mention support.
     """
     model = NextBestActionComment
     fields = ['content']
     template_name = 'engagement/nba_comment_form.html'
-    permission_required = 'engagement.add_nextbestactioncomment'
-    raise_exception = True
+    # permission_required removed
 
     def dispatch(self, request, *args, **kwargs):
         self.nba = get_object_or_404(
@@ -2205,12 +2313,12 @@ class IncomingWebhookView(View):
             
             return JsonResponse({'error': f'Error processing webhook: {str(e)}'}, status=500)
 
-class EngagementMergeView(PermissionRequiredMixin, View):
+class EngagementMergeView(LoginRequiredMixin, TenantAwareViewMixin, View):
     """
     View for merging duplicate engagement events.
     Expected POST params: primary_id (int), secondary_ids (list of ints)
     """
-    required_permission = 'engagement:update'
+    # required_permission = 'engagement:update' # Removed
 
     def post(self, request, *args, **kwargs):
         try:
@@ -2234,12 +2342,12 @@ class EngagementMergeView(PermissionRequiredMixin, View):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
-class EngagementDataQualityView(PermissionRequiredMixin, TemplateView):
+class EngagementDataQualityView(LoginRequiredMixin, TenantAwareViewMixin, TemplateView):
     """
     Dashboard for monitoring engagement data quality metrics.
     """
     template_name = 'engagement/data_quality.html'
-    required_permission = 'engagement:read'
+    # required_permission = 'engagement:read' # Removed
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -2270,3 +2378,97 @@ class EngagementDataQualityView(PermissionRequiredMixin, TemplateView):
         context['recent_logs'] = WebhookDeliveryLog.objects.filter(tenant_id=tenant_id)[:10]
         
         return context
+
+# === New Configuration Views ===
+
+class EngagementConfigurationView(LoginRequiredMixin, TenantAwareViewMixin, UpdateView):
+    """
+    Manage engagement scoring and general settings.
+    """
+    model = EngagementScoringConfig
+    form_class = EngagementScoringConfigForm
+    template_name = 'engagement/configuration.html'
+    success_url = reverse_lazy('engagement:configuration')
+
+    def get_object(self, queryset=None):
+        # ensure config exists for tenant
+        obj, created = EngagementScoringConfig.objects.get_or_create(
+            tenant_id=getattr(self.request.user, 'tenant_id', None),
+            defaults={'created_by': self.request.user}
+        )
+        return obj
+
+    def form_valid(self, form):
+        messages.success(self.request, "Engagement configuration updated successfully.")
+        return super().form_valid(form)
+
+# === Webhook Management Views ===
+
+class EngagementWebhookListView(SalesCompassListView):
+    model = EngagementWebhook
+    template_name = 'engagement/webhook_list.html'
+    context_object_name = 'webhooks'
+
+class EngagementWebhookCreateView(SalesCompassCreateView):
+    model = EngagementWebhook
+    fields = ['name', 'url', 'secret', 'event_types', 'is_active']
+    template_name = 'engagement/webhook_form.html'
+    success_url = reverse_lazy('engagement:webhook_list')
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        form.instance.tenant_id = getattr(self.request.user, 'tenant_id', None)
+        messages.success(self.request, "Webhook created successfully.")
+        return super().form_valid(form)
+
+class EngagementWebhookUpdateView(SalesCompassUpdateView):
+    model = EngagementWebhook
+    fields = ['name', 'url', 'secret', 'event_types', 'is_active']
+    template_name = 'engagement/webhook_form.html'
+    success_url = reverse_lazy('engagement:webhook_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, "Webhook updated successfully.")
+        return super().form_valid(form)
+
+# === Automation Rule Views (Placeholder for now) ===
+
+class EngagementAutomationRuleListView(LoginRequiredMixin, TenantAwareViewMixin, TemplateView):
+    template_name = 'engagement/automation_rule_list.html'
+
+class EngagementAutomationRuleCreateView(LoginRequiredMixin, TenantAwareViewMixin, TemplateView):
+    template_name = 'engagement/automation_rule_form.html'
+
+# === Experiment (A/B Testing) Views ===
+
+class ExperimentListView(SalesCompassListView):
+    model = EngagementExperiment
+    template_name = 'engagement/experiment_list.html'
+    context_object_name = 'experiments'
+
+class ExperimentCreateView(SalesCompassCreateView):
+    model = EngagementExperiment
+    fields = ['name', 'description', 'experiment_type', 'primary_metric', 'target_sample_size', 'start_date', 'end_date']
+    template_name = 'engagement/experiment_form.html'
+    success_url = reverse_lazy('engagement:experiment_list')
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        form.instance.tenant_id = getattr(self.request.user, 'tenant_id', None)
+        messages.success(self.request, "Experiment created. Add variants next.")
+        return super().form_valid(form)
+
+class ExperimentDetailView(SalesCompassDetailView):
+    model = EngagementExperiment
+    template_name = 'engagement/experiment_detail.html'
+    context_object_name = 'experiment'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['variants'] = self.object.variants.all()
+        return context
+
+# === Workflow Execution Tracking ===
+
+class WorkflowExecutionListView(LoginRequiredMixin, TenantAwareViewMixin, TemplateView):
+    template_name = 'engagement/workflow_execution_list.html'

@@ -20,4 +20,11 @@ dependencies = [
     "sendgrid>=6.12.5",
     "sqlparse>=0.5.4",
     "stripe>=14.0.1",
+    # Testing dependencies
+    "pytest>=7.0.0",
+    "pytest-django>=4.5.0",
+    "pytest-cov>=4.0.0",
+    "factory-boy>=3.3.0",
+    "faker>=18.0.0",
+    "pytest-timeout>=2.1.0",
 ]

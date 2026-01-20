@@ -1,12 +1,36 @@
 {% extends 'sales/base.html' %}
 
+{% load static %}
+
 {% block title %}Territory Comparison Tool{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+<style>
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 20px;
+    }
+    .filter-section {
+        background-color: #f8f9fc;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <h1 class="h3 mb-2">Territory Comparison Tool</h1>
+            <h1 class="h3 mb-2"><i class="fas fa-chart-bar"></i> Territory Comparison Tool</h1>
             <p class="mb-4">Compare performance metrics across different territories.</p>
         </div>
     </div>
@@ -15,13 +39,23 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card shadow">
-                <div class="card-header py-3">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-primary">Comparison Controls</h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                            <div class="dropdown-header">Options:</div>
+                            <a class="dropdown-item" href="#" onclick="resetComparison()">Reset Filters</a>
+                            <a class="dropdown-item" href="#" onclick="exportComparison()">Export Data</a>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body">
                     <form id="comparisonForm">
-                        <div class="form-row align-items-center">
-                            <div class="col-md-3">
+                        <div class="form-row align-items-end">
+                            <div class="col-md-3 mb-3">
                                 <label for="metricSelect">Compare By:</label>
                                 <select class="form-control" id="metricSelect">
                                     <option value="revenue">Revenue</option>
@@ -30,7 +64,7 @@
                                     <option value="win_rate">Win Rate</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-3 mb-3">
                                 <label for="dateRange">Date Range:</label>
                                 <select class="form-control" id="dateRange">
                                     <option value="last_month">Last Month</option>
@@ -39,20 +73,34 @@
                                     <option value="custom">Custom</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="territoriesSelect">Territories:</label>
-                                <select multiple class="form-control" id="territoriesSelect">
+                                <select multiple class="form-control" id="territoriesSelect" size="4">
                                     {% for td in territory_comparison_data %}
                                         <option value="{{ td.territory.id }}" selected>{{ td.territory.label }}</option>
                                     {% endfor %}
                                 </select>
+                                <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple</small>
                             </div>
-                            <div class="col-md-3">
-                                <label>&nbsp;</label>
-                                <div>
-                                    <button type="button" class="btn btn-primary" onclick="updateComparison()">Compare</button>
-                                    <button type="button" class="btn btn-secondary" onclick="resetComparison()">Reset</button>
-                                </div>
+                            <div class="col-md-2 mb-3">
+                                <button type="button" class="btn btn-primary btn-block" onclick="updateComparison()">
+                                    <i class="fas fa-sync-alt"></i> Update
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-block mt-2" onclick="resetComparison()">
+                                    <i class="fas fa-redo"></i> Reset
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Custom Date Range (initially hidden) -->
+                        <div class="form-row mt-3" id="customDateRange" style="display: none;">
+                            <div class="col-md-3 mb-3">
+                                <label for="startDate">Start Date:</label>
+                                <input type="date" class="form-control" id="startDate">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="endDate">End Date:</label>
+                                <input type="date" class="form-control" id="endDate">
                             </div>
                         </div>
                     </form>
@@ -61,46 +109,123 @@
         </div>
     </div>
 
-    <!-- Comparison Charts -->
-    <div class="row">
-        <div class="col-xl-6 col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Revenue Comparison</h6>
-                </div>
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
                 <div class="card-body">
-                    <canvas id="revenueChart"></canvas>
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Revenue</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_revenue|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
-        <div class="col-xl-6 col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Deals Comparison</h6>
-                </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
                 <div class="card-body">
-                    <canvas id="dealsChart"></canvas>
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Deals</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_deals }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-briefcase fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Avg. Conversion</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ avg_conversion|floatformat:2 }}%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-percentage fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Avg. Win Rate</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ avg_win_rate|floatformat:2 }}%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-trophy fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
+    <!-- Comparison Charts -->
+    <div class="row mb-4">
         <div class="col-xl-6 col-lg-6">
             <div class="card shadow mb-4">
-                <div class="card-header py-3">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Revenue Comparison</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Deals Comparison</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="dealsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-primary">Conversion Rate Comparison</h6>
                 </div>
                 <div class="card-body">
-                    <canvas id="conversionChart"></canvas>
+                    <div class="chart-container">
+                        <canvas id="conversionChart"></canvas>
+                    </div>
                 </div>
             </div>
+        </div>
         <div class="col-xl-6 col-lg-6">
             <div class="card shadow mb-4">
-                <div class="card-header py-3">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-primary">Win Rate Comparison</h6>
                 </div>
                 <div class="card-body">
-                    <canvas id="winRateChart"></canvas>
+                    <div class="chart-container">
+                        <canvas id="winRateChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -110,8 +235,19 @@
     <div class="row">
         <div class="col-12">
             <div class="card shadow mb-4">
-                <div class="card-header py-3">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-primary">Detailed Comparison</h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="dropdownTableMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownTableMenu">
+                            <div class="dropdown-header">Table Options:</div>
+                            <a class="dropdown-item" href="#" onclick="$('#comparisonTable').DataTable().page.len(10).draw()">Show 10</a>
+                            <a class="dropdown-item" href="#" onclick="$('#comparisonTable').DataTable().page.len(25).draw()">Show 25</a>
+                            <a class="dropdown-item" href="#" onclick="$('#comparisonTable').DataTable().page.len(50).draw()">Show 50</a>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -150,11 +286,24 @@
     </div>
 </div>
 
-<!-- Chart.js for visualizations -->
+<!-- Chart.js and DataTables -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
 <script>
     // Initialize comparison data
     const comparisonData = {{ chart_data|safe }};
+    
+    // Toggle custom date range visibility based on selection
+    document.getElementById('dateRange').addEventListener('change', function() {
+        const customDateDiv = document.getElementById('customDateRange');
+        if(this.value === 'custom') {
+            customDateDiv.style.display = 'flex';
+        } else {
+            customDateDiv.style.display = 'none';
+        }
+    });
     
     // Initialize charts
     document.addEventListener('DOMContentLoaded', function() {
@@ -167,12 +316,17 @@
     
     function createRevenueChart() {
         const ctx = document.getElementById('revenueChart').getContext('2d');
-        new Chart(ctx, {
+        // Destroy existing chart if present
+        if(window.revenueChartInstance) {
+            window.revenueChartInstance.destroy();
+        }
+        
+        window.revenueChartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: comparisonData.labels,
                 datasets: [{
-                    label: 'Revenue',
+                    label: 'Revenue ($)',
                     data: comparisonData.revenue_data,
                     backgroundColor: 'rgba(54, 162, 235, 0.2)',
                     borderColor: 'rgba(54, 162, 235, 1)',
@@ -180,6 +334,13 @@
                 }]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
                 scales: {
                     y: {
                         beginAtZero: true,
@@ -196,7 +357,12 @@
     
     function createDealsChart() {
         const ctx = document.getElementById('dealsChart').getContext('2d');
-        new Chart(ctx, {
+        // Destroy existing chart if present
+        if(window.dealsChartInstance) {
+            window.dealsChartInstance.destroy();
+        }
+        
+        window.dealsChartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: comparisonData.labels,
@@ -209,6 +375,13 @@
                 }]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
                 scales: {
                     y: {
                         beginAtZero: true
@@ -220,7 +393,12 @@
     
     function createConversionChart() {
         const ctx = document.getElementById('conversionChart').getContext('2d');
-        new Chart(ctx, {
+        // Destroy existing chart if present
+        if(window.conversionChartInstance) {
+            window.conversionChartInstance.destroy();
+        }
+        
+        window.conversionChartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: comparisonData.labels,
@@ -233,10 +411,22 @@
                 }]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        max: 100
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
                     }
                 }
             }
@@ -245,23 +435,40 @@
     
     function createWinRateChart() {
         const ctx = document.getElementById('winRateChart').getContext('2d');
-        new Chart(ctx, {
+        // Destroy existing chart if present
+        if(window.winRateChartInstance) {
+            window.winRateChartInstance.destroy();
+        }
+        
+        window.winRateChartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: comparisonData.labels,
                 datasets: [{
                     label: 'Win Rate (%)',
-                    data: comparisonData.conversion_data, // Placeholder - would need actual win rate data
+                    data: comparisonData.win_rate_data || comparisonData.conversion_data, // Fixed: Using win_rate_data if available
                     backgroundColor: 'rgba(153, 102, 255, 0.2)',
                     borderColor: 'rgba(153, 102, 255, 1)',
                     borderWidth: 1
                 }]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        max: 100
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
                     }
                 }
             }
@@ -270,31 +477,74 @@
     
     function initializeDataTable() {
         $('#comparisonTable').DataTable({
-            "pageLength": 25,
-            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
+            "pageLength": 10,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "responsive": true,
+            "autoWidth": false
         });
     }
     
     function updateComparison() {
-        // In a real implementation, this would fetch updated data based on form selections
-        // For now, we'll just show an alert
-        alert('Comparison updated based on selected filters!');
+        // Show loading state
+        const btn = document.querySelector('#comparisonForm .btn-primary');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...';
+        btn.disabled = true;
+        
+        // Get selected values
+        const metric = document.getElementById('metricSelect').value;
+        const dateRange = document.getElementById('dateRange').value;
+        const selectedTerritories = Array.from(document.getElementById('territoriesSelect').selectedOptions)
+                                         .map(option => option.value);
+        
+        // In a real implementation, this would make an AJAX request to update the data
+        // For now, we'll simulate an API call with a timeout
+        setTimeout(function() {
+            // Restore button state
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            
+            // Show success message
+            alert(`Updated comparison for ${selectedTerritories.length} territories (${metric}, ${dateRange})`);
+            
+            // Here you would typically reload the chart data based on the selections
+            // For now, we'll just recreate the charts with the existing data
+            createRevenueChart();
+            createDealsChart();
+            createConversionChart();
+            createWinRateChart();
+        }, 1000);
     }
     
     function resetComparison() {
         // Reset form selections to defaults
         document.getElementById('metricSelect').value = 'revenue';
         document.getElementById('dateRange').value = 'last_month';
+        
         const territorySelect = document.getElementById('territoriesSelect');
         for (let i = 0; i < territorySelect.options.length; i++) {
             territorySelect.options[i].selected = true;
         }
+        
+        // Hide custom date range if visible
+        document.getElementById('customDateRange').style.display = 'none';
         
         // Re-initialize charts with original data
         createRevenueChart();
         createDealsChart();
         createConversionChart();
         createWinRateChart();
+        
+        // Reload the table
+        if ($.fn.DataTable.isDataTable('#comparisonTable') ) {
+            $('#comparisonTable').DataTable().destroy();
+        }
+        initializeDataTable();
+    }
+    
+    function exportComparison() {
+        // Placeholder for export functionality
+        alert('Export functionality would go here. In a real implementation, this would generate a report.');
     }
 </script>
 {% endblock %}

@@ -11,7 +11,10 @@ from datetime import timedelta
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 import logging
-
+from core.views import (
+    TenantAwareViewMixin, SalesCompassListView, SalesCompassDetailView,
+    SalesCompassCreateView, SalesCompassUpdateView, SalesCompassDeleteView
+)
 from .models import (Campaign, EmailTemplate, LandingPageBlock, MessageTemplate, EmailCampaign, 
                      CampaignStatus, EmailProvider, BlockType, EmailCategory, MessageType, 
                      MessageCategory, EmailIntegration, ABTest, ABTestVariant, ABAutomatedTest,
@@ -36,7 +39,7 @@ from engagement.utils import log_engagement_event
 logger = logging.getLogger(__name__)
 
 
-class CampaignStatusListView(ListView):
+class CampaignStatusListView(SalesCompassListView):
     model = CampaignStatus
     template_name = 'marketing/campaign_status_list.html'
     context_object_name = 'campaign_statuses'
@@ -49,7 +52,7 @@ class CampaignStatusListView(ListView):
         return queryset
 
 
-class CampaignStatusCreateView(CreateView):
+class CampaignStatusCreateView(SalesCompassCreateView):
     model = CampaignStatus
     form_class = CampaignStatusForm
     template_name = 'marketing/campaign_status_form.html'
@@ -63,7 +66,7 @@ class CampaignStatusCreateView(CreateView):
         return super().form_valid(form)
 
 
-class CampaignStatusUpdateView(UpdateView):
+class CampaignStatusUpdateView(SalesCompassUpdateView):
     model = CampaignStatus
     form_class = CampaignStatusForm
     template_name = 'marketing/campaign_status_form.html'
@@ -74,7 +77,7 @@ class CampaignStatusUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class CampaignStatusDeleteView(DeleteView):
+class CampaignStatusDeleteView(SalesCompassDeleteView):
     model = CampaignStatus
     template_name = 'marketing/campaign_status_confirm_delete.html'
     success_url = reverse_lazy('marketing:campaign_status_list')
@@ -84,7 +87,7 @@ class CampaignStatusDeleteView(DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class EmailProviderListView(ListView):
+class EmailProviderListView(SalesCompassListView):
     model = EmailProvider
     template_name = 'marketing/email_provider_list.html'
     context_object_name = 'email_providers'
@@ -97,7 +100,7 @@ class EmailProviderListView(ListView):
         return queryset
 
 
-class EmailProviderCreateView(CreateView):
+class EmailProviderCreateView(SalesCompassCreateView):
     model = EmailProvider
     form_class = EmailProviderForm
     template_name = 'marketing/email_provider_form.html'
@@ -111,7 +114,7 @@ class EmailProviderCreateView(CreateView):
         return super().form_valid(form)
 
 
-class EmailProviderUpdateView(UpdateView):
+class EmailProviderUpdateView(SalesCompassUpdateView):
     model = EmailProvider
     form_class = EmailProviderForm
     template_name = 'marketing/email_provider_form.html'
@@ -122,7 +125,7 @@ class EmailProviderUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class EmailProviderDeleteView(DeleteView):
+class EmailProviderDeleteView(SalesCompassDeleteView):
     model = EmailProvider
     template_name = 'marketing/email_provider_confirm_delete.html'
     success_url = reverse_lazy('marketing:email_provider_list')
@@ -132,7 +135,7 @@ class EmailProviderDeleteView(DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class BlockTypeListView(ListView):
+class BlockTypeListView(SalesCompassListView):
     model = BlockType
     template_name = 'marketing/block_type_list.html'
     context_object_name = 'block_types'
@@ -145,7 +148,7 @@ class BlockTypeListView(ListView):
         return queryset
 
 
-class BlockTypeCreateView(CreateView):
+class BlockTypeCreateView(SalesCompassCreateView):
     model = BlockType
     form_class = BlockTypeForm
     template_name = 'marketing/block_type_form.html'
@@ -159,7 +162,7 @@ class BlockTypeCreateView(CreateView):
         return super().form_valid(form)
 
 
-class BlockTypeUpdateView(UpdateView):
+class BlockTypeUpdateView(SalesCompassUpdateView):
     model = BlockType
     form_class = BlockTypeForm
     template_name = 'marketing/block_type_form.html'
@@ -170,7 +173,7 @@ class BlockTypeUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class BlockTypeDeleteView(DeleteView):
+class BlockTypeDeleteView(SalesCompassDeleteView):
     model = BlockType
     template_name = 'marketing/block_type_confirm_delete.html'
     success_url = reverse_lazy('marketing:block_type_list')
@@ -180,7 +183,7 @@ class BlockTypeDeleteView(DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class EmailCategoryListView(ListView):
+class EmailCategoryListView(SalesCompassListView):
     model = EmailCategory
     template_name = 'marketing/email_category_list.html'
     context_object_name = 'email_categories'
@@ -193,7 +196,7 @@ class EmailCategoryListView(ListView):
         return queryset
 
 
-class EmailCategoryCreateView(CreateView):
+class EmailCategoryCreateView(SalesCompassCreateView):
     model = EmailCategory
     form_class = EmailCategoryForm
     template_name = 'marketing/email_category_form.html'
@@ -207,7 +210,7 @@ class EmailCategoryCreateView(CreateView):
         return super().form_valid(form)
 
 
-class EmailCategoryUpdateView(UpdateView):
+class EmailCategoryUpdateView(SalesCompassUpdateView):
     model = EmailCategory
     form_class = EmailCategoryForm
     template_name = 'marketing/email_category_form.html'
@@ -218,7 +221,7 @@ class EmailCategoryUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class EmailCategoryDeleteView(DeleteView):
+class EmailCategoryDeleteView(SalesCompassDeleteView):
     model = EmailCategory
     template_name = 'marketing/email_category_confirm_delete.html'
     success_url = reverse_lazy('marketing:email_category_list')
@@ -228,7 +231,7 @@ class EmailCategoryDeleteView(DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class MessageTypeListView(ListView):
+class MessageTypeListView(SalesCompassListView):
     model = MessageType
     template_name = 'marketing/message_type_list.html'
     context_object_name = 'message_types'
@@ -241,7 +244,7 @@ class MessageTypeListView(ListView):
         return queryset
 
 
-class MessageTypeCreateView(CreateView):
+class MessageTypeCreateView(SalesCompassCreateView):
     model = MessageType
     form_class = MessageTypeForm
     template_name = 'marketing/message_type_form.html'
@@ -255,7 +258,7 @@ class MessageTypeCreateView(CreateView):
         return super().form_valid(form)
 
 
-class MessageTypeUpdateView(UpdateView):
+class MessageTypeUpdateView(SalesCompassUpdateView):
     model = MessageType
     form_class = MessageTypeForm
     template_name = 'marketing/message_type_form.html'
@@ -266,7 +269,7 @@ class MessageTypeUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class MessageTypeDeleteView(DeleteView):
+class MessageTypeDeleteView(SalesCompassDeleteView):
     model = MessageType
     template_name = 'marketing/message_type_confirm_delete.html'
     success_url = reverse_lazy('marketing:message_type_list')
@@ -276,7 +279,7 @@ class MessageTypeDeleteView(DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class MessageCategoryListView(ListView):
+class MessageCategoryListView(SalesCompassListView):
     model = MessageCategory
     template_name = 'marketing/message_category_list.html'
     context_object_name = 'message_categories'
@@ -289,7 +292,7 @@ class MessageCategoryListView(ListView):
         return queryset
 
 
-class MessageCategoryCreateView(CreateView):
+class MessageCategoryCreateView(SalesCompassCreateView):
     model = MessageCategory
     form_class = MessageCategoryForm
     template_name = 'marketing/message_category_form.html'
@@ -303,7 +306,7 @@ class MessageCategoryCreateView(CreateView):
         return super().form_valid(form)
 
 
-class MessageCategoryUpdateView(UpdateView):
+class MessageCategoryUpdateView(SalesCompassUpdateView):
     model = MessageCategory
     form_class = MessageCategoryForm
     template_name = 'marketing/message_category_form.html'
@@ -314,7 +317,7 @@ class MessageCategoryUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class MessageCategoryDeleteView(DeleteView):
+class MessageCategoryDeleteView(SalesCompassDeleteView):
     model = MessageCategory
     template_name = 'marketing/message_category_confirm_delete.html'
     success_url = reverse_lazy('marketing:message_category_list')
@@ -324,7 +327,7 @@ class MessageCategoryDeleteView(DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class CampaignListView(ListView):
+class CampaignListView(SalesCompassListView):
     model = Campaign
     template_name = 'marketing/campaign_list.html'
     context_object_name = 'campaigns'
@@ -337,7 +340,7 @@ class CampaignListView(ListView):
         return queryset.select_related('status_ref')
 
 
-class CampaignCreateView(CreateView):
+class CampaignCreateView(SalesCompassCreateView):
     model = Campaign
     form_class = CampaignForm
     template_name = 'marketing/campaign_form.html'
@@ -380,7 +383,7 @@ class CampaignCreateView(CreateView):
         return response
 
 
-class CampaignUpdateView(UpdateView):
+class CampaignUpdateView(SalesCompassUpdateView):
     model = Campaign
     form_class = CampaignForm
     template_name = 'marketing/campaign_form.html'
@@ -418,7 +421,7 @@ class CampaignUpdateView(UpdateView):
         return response
 
 
-class CampaignDeleteView(DeleteView):
+class CampaignDeleteView(SalesCompassDeleteView):
     model = Campaign
     template_name = 'marketing/campaign_confirm_delete.html'
     success_url = reverse_lazy('marketing:campaign_list')
@@ -471,7 +474,7 @@ class EmailTemplateListView(ListView):
         return queryset.select_related('category_ref')
 
 
-class EmailTemplateCreateView(CreateView):
+class EmailTemplateCreateView(SalesCompassCreateView):
     model = EmailTemplate
     form_class = EmailTemplateForm
     template_name = 'marketing/email_template_form.html'
@@ -492,7 +495,7 @@ class EmailTemplateCreateView(CreateView):
         return super().form_valid(form)
 
 
-class EmailTemplateUpdateView(UpdateView):
+class EmailTemplateUpdateView(SalesCompassUpdateView):
     model = EmailTemplate
     form_class = EmailTemplateForm
     template_name = 'marketing/email_template_form.html'
@@ -510,7 +513,7 @@ class EmailTemplateUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class EmailTemplateDeleteView(DeleteView):
+class EmailTemplateDeleteView(SalesCompassDeleteView):
     model = EmailTemplate
     template_name = 'marketing/email_template_confirm_delete.html'
     success_url = reverse_lazy('marketing:email_template_list')
@@ -520,7 +523,7 @@ class EmailTemplateDeleteView(DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class LandingPageBlockListView(ListView):
+class LandingPageBlockListView(SalesCompassListView):
     model = LandingPageBlock
     template_name = 'marketing/landing_page_block_list.html'
     context_object_name = 'landing_page_blocks'
@@ -533,7 +536,7 @@ class LandingPageBlockListView(ListView):
         return queryset.select_related('block_type_ref', 'landing_page')
 
 
-class LandingPageBlockCreateView(CreateView):
+class LandingPageBlockCreateView(SalesCompassCreateView):
     model = LandingPageBlock
     form_class = LandingPageBlockForm
     template_name = 'marketing/landing_page_block_form.html'
@@ -554,7 +557,7 @@ class LandingPageBlockCreateView(CreateView):
         return super().form_valid(form)
 
 
-class LandingPageBlockUpdateView(UpdateView):
+class LandingPageBlockUpdateView(SalesCompassUpdateView):
     model = LandingPageBlock
     form_class = LandingPageBlockForm
     template_name = 'marketing/landing_page_block_form.html'
@@ -572,7 +575,7 @@ class LandingPageBlockUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class LandingPageBlockDeleteView(DeleteView):
+class LandingPageBlockDeleteView(SalesCompassDeleteView):
     model = LandingPageBlock
     template_name = 'marketing/landing_page_block_confirm_delete.html'
     success_url = reverse_lazy('marketing:landing_page_block_list')
@@ -582,7 +585,7 @@ class LandingPageBlockDeleteView(DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class MessageTemplateListView(ListView):
+class MessageTemplateListView(SalesCompassListView):
     model = MessageTemplate
     template_name = 'marketing/message_template_list.html'
     context_object_name = 'message_templates'
@@ -595,7 +598,7 @@ class MessageTemplateListView(ListView):
         return queryset.select_related('message_type_ref', 'category_ref')
 
 
-class MessageTemplateCreateView(CreateView):
+class MessageTemplateCreateView(SalesCompassCreateView):
     model = MessageTemplate
     form_class = MessageTemplateForm
     template_name = 'marketing/message_template_form.html'
@@ -616,7 +619,7 @@ class MessageTemplateCreateView(CreateView):
         return super().form_valid(form)
 
 
-class MessageTemplateUpdateView(UpdateView):
+class MessageTemplateUpdateView(SalesCompassUpdateView):
     model = MessageTemplate
     form_class = MessageTemplateForm
     template_name = 'marketing/message_template_form.html'
@@ -634,7 +637,7 @@ class MessageTemplateUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class MessageTemplateDeleteView(DeleteView):
+class MessageTemplateDeleteView(SalesCompassDeleteView):
     model = MessageTemplate
     template_name = 'marketing/message_template_confirm_delete.html'
     success_url = reverse_lazy('marketing:message_template_list')
@@ -657,7 +660,7 @@ class EmailCampaignListView(ListView):
         return queryset.select_related('campaign', 'email_provider_ref')
 
 
-class EmailCampaignCreateView(CreateView):
+class EmailCampaignCreateView(SalesCompassCreateView):
     model = EmailCampaign
     form_class = EmailCampaignForm
     template_name = 'marketing/email_campaign_form.html'
@@ -699,7 +702,7 @@ class EmailCampaignCreateView(CreateView):
         return response
 
 
-class EmailCampaignUpdateView(UpdateView):
+class EmailCampaignUpdateView(SalesCompassUpdateView):
     model = EmailCampaign
     form_class = EmailCampaignForm
     template_name = 'marketing/email_campaign_form.html'
@@ -717,7 +720,7 @@ class EmailCampaignUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class EmailCampaignDeleteView(DeleteView):
+class EmailCampaignDeleteView(SalesCompassDeleteView):
     model = EmailCampaign
     template_name = 'marketing/email_campaign_confirm_delete.html'
     success_url = reverse_lazy('marketing:email_campaign_list')
@@ -844,7 +847,7 @@ class EmailIntegrationListView(ListView):
         return queryset.select_related('user', 'provider_ref')
 
 
-class EmailIntegrationCreateView(CreateView):
+class EmailIntegrationCreateView(SalesCompassCreateView):
     model = EmailIntegration
     form_class = EmailIntegrationForm
     template_name = 'marketing/email_integration_form.html'
@@ -865,7 +868,7 @@ class EmailIntegrationCreateView(CreateView):
         return super().form_valid(form)
 
 
-class EmailIntegrationUpdateView(UpdateView):
+class EmailIntegrationUpdateView(SalesCompassUpdateView):
     model = EmailIntegration
     form_class = EmailIntegrationForm
     template_name = 'marketing/email_integration_form.html'
@@ -883,7 +886,7 @@ class EmailIntegrationUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class EmailIntegrationDeleteView(DeleteView):
+class EmailIntegrationDeleteView(SalesCompassDeleteView):
     model = EmailIntegration
     template_name = 'marketing/email_integration_confirm_delete.html'
     success_url = reverse_lazy('marketing:email_integration_list')
@@ -898,7 +901,7 @@ def get_marketing_dynamic_choices(request, model_name):
     return JsonResponse({'choices': []})
 
 
-class SegmentListView(LoginRequiredMixin, ListView):
+class SegmentListView(SalesCompassListView):
     model = Segment
     template_name = 'marketing/segment_list.html'
     context_object_name = 'segments'
@@ -910,7 +913,7 @@ class SegmentListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class SegmentCreateView(LoginRequiredMixin, CreateView):
+class SegmentCreateView(SalesCompassCreateView):
     model = Segment
     fields = ['name', 'description', 'segment_type', 'criteria', 'is_active']
     template_name = 'marketing/segment_form.html'
@@ -924,7 +927,7 @@ class SegmentCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class SegmentUpdateView(LoginRequiredMixin, UpdateView):
+class SegmentUpdateView(SalesCompassUpdateView):
     model = Segment
     fields = ['name', 'description', 'segment_type', 'criteria', 'is_active']
     template_name = 'marketing/segment_form.html'
@@ -935,7 +938,7 @@ class SegmentUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class SegmentDeleteView(LoginRequiredMixin, DeleteView):
+class SegmentDeleteView(SalesCompassDeleteView):
     model = Segment
     template_name = 'marketing/segment_confirm_delete.html'
     success_url = reverse_lazy('marketing:segment_list')
@@ -945,7 +948,7 @@ class SegmentDeleteView(LoginRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class NurtureCampaignListView(LoginRequiredMixin, ListView):
+class NurtureCampaignListView(SalesCompassListView):
     model = NurtureCampaign
     template_name = 'marketing/nurture_campaign_list.html'
     context_object_name = 'nurture_campaigns'
@@ -957,7 +960,7 @@ class NurtureCampaignListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class NurtureCampaignCreateView(LoginRequiredMixin, CreateView):
+class NurtureCampaignCreateView(SalesCompassCreateView):
     model = NurtureCampaign
     fields = ['name', 'description', 'target_segment', 'trigger_event', 'is_active']
     template_name = 'marketing/nurture_campaign_form.html'
@@ -981,7 +984,7 @@ class NurtureCampaignCreateView(LoginRequiredMixin, CreateView):
         return reverse_lazy('marketing:nurture_campaign_update', kwargs={'pk': self.object.pk})
 
 
-class NurtureCampaignUpdateView(LoginRequiredMixin, UpdateView):
+class NurtureCampaignUpdateView(SalesCompassUpdateView):
     model = NurtureCampaign
     fields = ['name', 'description', 'target_segment', 'trigger_event', 'is_active']
     template_name = 'marketing/nurture_campaign_form.html'
@@ -999,7 +1002,7 @@ class NurtureCampaignUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class NurtureCampaignDeleteView(LoginRequiredMixin, DeleteView):
+class NurtureCampaignDeleteView(SalesCompassDeleteView):
     model = NurtureCampaign
     template_name = 'marketing/nurture_campaign_confirm_delete.html'
     success_url = reverse_lazy('marketing:nurture_campaign_list')
@@ -1049,7 +1052,7 @@ def remove_segment_member(request, segment_pk, member_pk):
     return redirect('marketing:segment_list')
 
 
-class ABTestListView(ListView):
+class ABTestListView(SalesCompassListView):
     model = ABTest
     template_name = 'marketing/ab_test_list.html'
     context_object_name = 'ab_tests'
@@ -1061,7 +1064,7 @@ class ABTestListView(ListView):
         return queryset
 
 
-class ABTestCreateView(LoginRequiredMixin, CreateView):
+class ABTestCreateView(SalesCompassCreateView):
     model = ABTest
     form_class = ABTestForm
     template_name = 'marketing/ab_test_form.html'
@@ -1090,7 +1093,7 @@ class ABTestCreateView(LoginRequiredMixin, CreateView):
             return self.render_to_response(self.get_context_data(form=form))
 
 
-class ABTestUpdateView(LoginRequiredMixin, UpdateView):
+class ABTestUpdateView(SalesCompassUpdateView):
     model = ABTest
     form_class = ABTestForm
     template_name = 'marketing/ab_test_form.html'
@@ -1117,7 +1120,7 @@ class ABTestUpdateView(LoginRequiredMixin, UpdateView):
             return self.render_to_response(self.get_context_data(form=form))
 
 
-class ABTestDeleteView(DeleteView):
+class ABTestDeleteView(SalesCompassDeleteView):
     model = ABTest
     template_name = 'marketing/ab_test_confirm_delete.html'
     success_url = reverse_lazy('marketing:ab_test_list')
@@ -1161,7 +1164,7 @@ def declare_ab_test_winner(request, pk):
     return redirect('marketing:ab_test_results', pk=pk)
 
 
-class ABAutomatedTestListView(ListView):
+class ABAutomatedTestListView(SalesCompassListView):
     model = ABAutomatedTest
     template_name = 'marketing/ab_automated_test_list.html'
     context_object_name = 'ab_automated_tests'
@@ -1173,7 +1176,7 @@ class ABAutomatedTestListView(ListView):
         return queryset
 
 
-class ABAutomatedTestCreateView(CreateView):
+class ABAutomatedTestCreateView(SalesCompassCreateView):
     model = ABAutomatedTest
     form_class = ABAutomatedTestForm
     template_name = 'marketing/ab_automated_test_form.html'
@@ -1185,14 +1188,14 @@ class ABAutomatedTestCreateView(CreateView):
         return super().form_valid(form)
 
 
-class ABAutomatedTestUpdateView(UpdateView):
+class ABAutomatedTestUpdateView(SalesCompassUpdateView):
     model = ABAutomatedTest
     form_class = ABAutomatedTestForm
     template_name = 'marketing/ab_automated_test_form.html'
     success_url = reverse_lazy('marketing:ab_automated_test_list')
 
 
-class ABAutomatedTestDeleteView(DeleteView):
+class ABAutomatedTestDeleteView(SalesCompassDeleteView):
     model = ABAutomatedTest
     template_name = 'marketing/ab_automated_test_confirm_delete.html'
     success_url = reverse_lazy('marketing:ab_automated_test_list')
@@ -1297,7 +1300,7 @@ def campaign_calendar_view(request):
     })
 
 
-class DripCampaignListView(LoginRequiredMixin, ListView):
+class DripCampaignListView(SalesCompassListView):
     model = DripCampaign
     template_name = 'marketing/drip_campaign_list.html'
     context_object_name = 'drip_campaigns'
@@ -1309,7 +1312,7 @@ class DripCampaignListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class DripCampaignCreateView(LoginRequiredMixin, CreateView):
+class DripCampaignCreateView(SalesCompassCreateView):
     model = DripCampaign
     fields = ['name', 'description', 'status', 'is_active']
     template_name = 'marketing/drip_campaign_form.html'
@@ -1325,7 +1328,7 @@ class DripCampaignCreateView(LoginRequiredMixin, CreateView):
         return reverse_lazy('marketing:drip_campaign_update', kwargs={'pk': self.object.pk})
 
 
-class DripCampaignUpdateView(LoginRequiredMixin, UpdateView):
+class DripCampaignUpdateView(SalesCompassUpdateView):
     model = DripCampaign
     fields = ['name', 'description', 'status', 'is_active']
     template_name = 'marketing/drip_campaign_form.html'
@@ -1338,13 +1341,13 @@ class DripCampaignUpdateView(LoginRequiredMixin, UpdateView):
         return reverse_lazy('marketing:drip_campaign_list')
 
 
-class DripCampaignDeleteView(LoginRequiredMixin, DeleteView):
+class DripCampaignDeleteView(SalesCompassDeleteView):
     model = DripCampaign
     template_name = 'marketing/drip_campaign_confirm_delete.html'
     success_url = reverse_lazy('marketing:drip_campaign_list')
 
 
-class DripStepCreateView(LoginRequiredMixin, CreateView):
+class DripStepCreateView(SalesCompassCreateView):
     model = DripStep
     fields = ['step_type', 'email_template', 'wait_days', 'wait_hours', 'order']
     template_name = 'marketing/drip_step_form.html'
@@ -1365,7 +1368,7 @@ class DripStepCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class DripStepUpdateView(LoginRequiredMixin, UpdateView):
+class DripStepUpdateView(SalesCompassUpdateView):
     model = DripStep
     fields = ['step_type', 'email_template', 'wait_days', 'wait_hours', 'order']
     template_name = 'marketing/drip_step_form.html'
@@ -1378,7 +1381,7 @@ class DripStepUpdateView(LoginRequiredMixin, UpdateView):
         return reverse_lazy('marketing:drip_campaign_update', kwargs={'pk': self.object.drip_campaign.pk})
 
 
-class DripStepDeleteView(LoginRequiredMixin, DeleteView):
+class DripStepDeleteView(SalesCompassDeleteView):
     model = DripStep
     template_name = 'marketing/drip_step_confirm_delete.html'
 

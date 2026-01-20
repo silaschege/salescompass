@@ -1,72 +1,113 @@
 {% extends "cases/base.html" %}
 {% load core_extras task_tags %}
 
-{% block title %}{{ case.subject }} - SalesCompass{% endblock %}
+{% block title %}{{ case.subject }} - Case Details - SalesCompass{% endblock %}
 
 {% block content %}
 <div class="header-bar mb-4">
-    <div class="container">
-        <h1 class="block-title">{{ case.subject }}</h1>
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="block-title">{{ case.subject }}</h1>
+            <div>
+                <a href="{% url 'cases:case_update' case.pk %}" class="btn btn-outline-primary">Edit Case</a>
+                <a href="{% url 'cases:case_list' %}" class="btn btn-outline-secondary ms-2">Back to Cases</a>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="container">
+<div class="container-fluid">
     <div class="row">
-        <div class="col-md-8">
-            <div class="card mb-3">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Case Description</h5>
+                </div>
                 <div class="card-body">
-                    <h5>Case Details</h5>
-                    <p>{{ case.description }}</p>
-
+                    <p class="card-text">{{ case.case_description|linebreaks }}</p>
+                    
                     {% if case.csat_score %}
-                    <div class="mt-3">
-                        <h6>CSAT Feedback</h6>
+                    <div class="mt-4">
+                        <h6>Customer Satisfaction Rating</h6>
                         <div class="d-flex align-items-center">
-                            <div class="progress" style="width: 200px; height: 20px; margin-right: 10px;">
+                            <div class="progress flex-grow-1 me-3" style="height: 25px;">
                                 <div class="progress-bar bg-{% if case.csat_score >= 4 %}success{% elif case.csat_score >= 3 %}warning{% else %}danger{% endif %}"
-                                    style="width: {{ case.csat_score|mul:20 }}%;">
+                                    role="progressbar" 
+                                    style="width: {{ case.csat_score|mul:20 }}%;" 
+                                    aria-valuenow="{{ case.csat_score|mul:20 }}" 
+                                    aria-valuemin="0" 
+                                    aria-valuemax="100">
+                                    {{ case.csat_score }}/5
                                 </div>
                             </div>
-                            <span>{{ case.csat_score }}/5</span>
                         </div>
                         {% if case.csat_comment %}
-                        <p class="mt-2"><strong>Comment:</strong> {{ case.csat_comment }}</p>
+                        <p class="mt-2 text-muted"><strong>Feedback:</strong> {{ case.csat_comment }}</p>
                         {% endif %}
                     </div>
                     {% endif %}
                 </div>
             </div>
 
-            <!-- Comments -->
-            <div class="card">
+            <!-- Case Attachments -->
+            {% if case.attachments.all %}
+            <div class="card mb-4">
                 <div class="card-header">
-                    <h5>Comments ({{ case.comments.count }})</h5>
+                    <h5 class="card-title mb-0">Attachments ({{ case.attachments.count }})</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for attachment in case.attachments.all %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <a href="{{ attachment.file.url }}" target="_blank">{{ attachment.file.name|truncatechars:50 }}</a>
+                                <small class="text-muted d-block">{{ attachment.file.size|filesizeformat }}</small>
+                            </div>
+                            <span class="text-muted">{{ attachment.uploaded_by.email|default:"System" }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    <a href="{% url 'cases:case_attachment_create' %}?case={{ case.pk }}" class="btn btn-sm btn-outline-primary mt-2">
+                        Add Attachment
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Comments Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Comments ({{ case.comments.count }})</h5>
                 </div>
                 <div class="card-body">
                     {% for comment in case.comments.all %}
-                    <div class="mb-3 p-3 bg-light rounded">
+                    <div class="mb-3 p-3 border rounded bg-light">
                         <div class="d-flex justify-content-between">
                             <strong>{{ comment.author.email }}</strong>
-                            <small>{{ comment.created_at|timesince }} ago</small>
+                            <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
                         </div>
-                        <p class="mb-0">{{ comment.content }}</p>
+                        <p class="mb-0 mt-2">{{ comment.content|linebreaks }}</p>
                         {% if comment.is_internal %}
-                        <span class="badge bg-info">Internal</span>
+                        <span class="badge bg-info">Internal Note</span>
+                        {% else %}
+                        <span class="badge bg-success">Public</span>
                         {% endif %}
                     </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No comments yet. Be the first to add one.</p>
                     {% endfor %}
 
                     <!-- Add Comment Form -->
-                    <form method="post" class="mt-3">
+                    <form method="post" class="mt-4">
                         {% csrf_token %}
-                        <div class="mb-2">
+                        <input type="hidden" name="case" value="{{ case.pk }}">
+                        <div class="mb-3">
                             <textarea name="content" class="form-control" rows="3"
-                                placeholder="Add a comment..."></textarea>
+                                placeholder="Add a comment..." required></textarea>
                         </div>
-                        <div class="form-check mb-2">
+                        <div class="form-check mb-3">
                             <input type="checkbox" name="is_internal" id="is_internal" class="form-check-input">
-                            <label class="form-check-label" for="is_internal">Internal comment (not visible to
-                                customer)</label>
+                            <label class="form-check-label" for="is_internal">Internal comment (not visible to customer)</label>
                         </div>
                         <button type="submit" class="btn btn-primary">Add Comment</button>
                     </form>
@@ -74,25 +115,33 @@
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-lg-4">
             <!-- Tasks Widget -->
-            <div class="mb-4">
-                {% render_object_tasks case %}
-            </div>
-            <!-- Tasks Widget -->
-            <div class="mb-4">
-                {% render_object_tasks case %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Related Tasks</h5>
+                </div>
+                <div class="card-body">
+                    {% render_object_tasks case %}
+                </div>
             </div>
 
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h5>Case Information</h5>
+            <!-- Case Information Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Case Information</h5>
                 </div>
                 <div class="card-body">
                     <table class="table table-borderless mb-0">
                         <tr>
-                            <th>Account</th>
-                            <td><a href="{% url 'accounts:detail' case.account.pk %}">{{ case.account.name }}</a></td>
+                            <th width="40%">Account</th>
+                            <td>
+                                {% if case.account %}
+                                    <a href="{% url 'accounts:account_detail' case.account.pk %}">{{ case.account.name }}</a>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
                         </tr>
                         <tr>
                             <th>Contact</th>
@@ -101,8 +150,7 @@
                         <tr>
                             <th>Priority</th>
                             <td>
-                                <span
-                                    class="badge bg-{% if case.priority == 'critical' %}danger{% elif case.priority == 'high' %}warning{% elif case.priority == 'medium' %}info{% else %}secondary{% endif %}">
+                                <span class="badge bg-{% if case.priority == 'critical' %}danger{% elif case.priority == 'high' %}warning{% elif case.priority == 'medium' %}info{% else %}secondary{% endif %} text-uppercase">
                                     {{ case.get_priority_display }}
                                 </span>
                             </td>
@@ -110,8 +158,7 @@
                         <tr>
                             <th>Status</th>
                             <td>
-                                <span
-                                    class="badge bg-{% if case.status == 'closed' %}success{% elif case.status == 'resolved' %}primary{% elif case.status == 'in_progress' %}warning{% else %}secondary{% endif %}">
+                                <span class="badge bg-{% if case.status == 'closed' %}success{% elif case.status == 'resolved' %}primary{% elif case.status == 'in_progress' %}warning{% else %}secondary{% endif %} text-uppercase">
                                     {{ case.get_status_display }}
                                 </span>
                             </td>
@@ -121,55 +168,107 @@
                             <td>{{ case.owner.email|default:"Unassigned" }}</td>
                         </tr>
                         <tr>
+                            <th>Team</th>
+                            <td>{{ case.assigned_team|default:"—" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Created</th>
+                            <td>{{ case.created_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>First Response</th>
+                            <td>{{ case.first_response_at|date:"M d, Y H:i"|default:"—" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Resolved</th>
+                            <td>{{ case.resolved_at|date:"M d, Y H:i"|default:"—" }}</td>
+                        </tr>
+                        <tr>
                             <th>SLA Due</th>
                             <td>
                                 {% if case.is_overdue %}
-                                <span class="text-danger"><strong>Overdue</strong></span>
+                                <span class="text-danger fw-bold"><strong>OVERDUE</strong></span>
                                 {% else %}
-                                {{ case.sla_due|date:"M d, Y H:i" }}
+                                {{ case.sla_due|date:"M d, Y H:i"|default:"—" }}
                                 {% endif %}
                             </td>
+                        </tr>
+                        <tr>
+                            <th>SLA Remaining</th>
+                            <td>{{ case.sla_remaining_hours|default:"—" }} hours</td>
                         </tr>
                     </table>
                 </div>
             </div>
 
+            <!-- Escalation Info -->
             {% if case.escalation_level != 'none' %}
-            <div class="card mb-3">
+            <div class="card mb-4">
                 <div class="card-header bg-warning text-dark">
-                    <h5>Escalation</h5>
+                    <h5 class="card-title mb-0">Escalation Details</h5>
                 </div>
                 <div class="card-body">
-                    <p><strong>Level:</strong> {{ case.get_escalation_level_display }}</p>
-                    <p><strong>Escalated by:</strong> {{ case.escalated_by.email|default:"—" }}</p>
+                    <p class="mb-1"><strong>Level:</strong> {{ case.get_escalation_level_display }}</p>
+                    <p class="mb-0"><strong>Escalated by:</strong> {{ case.escalated_by.email|default:"—" }}</p>
                 </div>
             </div>
             {% endif %}
 
-            <div class="d-grid gap-2">
-                <a href="{% url 'cases:update' case.pk %}" class="btn btn-outline-secondary">Edit Case</a>
-                {% if not case.csat_score %}
-                <button class="btn btn-success" onclick="sendCsatSurvey({{ case.id }})">
-                    Send CSAT Survey
-                </button>
-                {% endif %}
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Actions</h5>
+                </div>
+                <div class="card-body">
+                    {% if case.status != 'closed' %}
+                    <button class="btn btn-warning w-100 mb-2" onclick="updateCaseStatus({{ case.id }}, 'in_progress')">
+                        Mark as In Progress
+                    </button>
+                    <button class="btn btn-primary w-100 mb-2" onclick="updateCaseStatus({{ case.id }}, 'resolved')">
+                        Mark as Resolved
+                    </button>
+                    {% endif %}
+                    
+                    {% if case.status != 'closed' and case.status != 'resolved' %}
+                    <button class="btn btn-danger w-100 mb-2" onclick="updateCaseStatus({{ case.id }}, 'closed')">
+                        Close Case
+                    </button>
+                    {% endif %}
+                    
+                    <a href="{% url 'cases:case_update' case.pk %}" class="btn btn-outline-primary w-100 mb-2">Edit Case</a>
+                    <a href="{% url 'cases:case_delete' case.pk %}" class="btn btn-outline-danger w-100">Delete Case</a>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    function sendCsatSurvey(caseId) {
-        if (confirm('Send CSAT survey to the customer?')) {
-            fetch('/cases/api/send-csat/', {
+    function updateCaseStatus(caseId, newStatus) {
+        if (confirm(`Are you sure you want to change the case status to ${newStatus.replace('_', ' ')}?`)) {
+            fetch('{% url "cases:update_case_status" %}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify({ case_id: caseId })
-            }).then(() => {
-                location.reload();
+                body: JSON.stringify({ 
+                    case_id: caseId,
+                    status: newStatus
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    alert('Case status updated successfully!');
+                    location.reload();
+                } else {
+                    alert('Error updating case status: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the case status.');
             });
         }
     }

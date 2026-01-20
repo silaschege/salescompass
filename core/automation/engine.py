@@ -841,6 +841,67 @@ class WorkflowEngine:
                     raise
 
             
+
+            elif action.action_type == 'convert_lead_to_account':
+                # Convert Lead to Account
+                try:
+                    from accounts.models import Account, Contact
+                    from leads.models import Lead
+                    
+                    lead_id = context.get('lead_id')
+                    lead = None
+                    
+                    if lead_id:
+                         try:
+                             lead = Lead.objects.get(id=lead_id)
+                         except Lead.DoesNotExist:
+                             self.logger.warning(f"Lead {lead_id} not found for conversion.")
+                    elif context.get('object') and isinstance(context.get('object'), Lead):
+                        lead = context.get('object')
+
+                    if lead and not lead.converted_to_account:
+                        with transaction.atomic():
+                            # Create Account
+                            account_name = lead.company if lead.company else f"{lead.first_name} {lead.last_name}"
+                            account = Account.objects.create(
+                                account_name=account_name,
+                                industry=lead.industry,
+                                phone=lead.phone,
+                                website=lead.website if hasattr(lead, 'website') else '',
+                                tenant_id=lead.tenant_id,
+                                owner=lead.owner,
+                                status='active',
+                                health_score=lead.lead_score # Initialize health with lead score
+                            )
+                            
+                            # Create Contact
+                            contact = Contact.objects.create(
+                                first_name=lead.first_name,
+                                last_name=lead.last_name,
+                                email=lead.email,
+                                phone_number=lead.phone,
+                                account=account,
+                                tenant_id=lead.tenant_id,
+                                is_primary=True,
+                                role=lead.job_title
+                            )
+                            
+                            # Update Lead
+                            lead.converted_to_account = account
+                            lead.account = account
+                            lead.status = 'converted'
+                            lead.save()
+                            
+                            self.logger.info(f"Converted Lead {lead.id} to Account {account.id}")
+                            return True
+                    else:
+                        self.logger.info("No valid unconverted lead found in context.")
+                        return False
+                        
+                except Exception as e:
+                    self.logger.error(f"Failed to convert lead to account: {e}")
+                    raise
+
             elif action.action_type == 'send_teams_message':
                 # Send Microsoft Teams message via webhook
                 try:

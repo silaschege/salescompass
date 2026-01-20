@@ -33,7 +33,7 @@
                     {% for automation in automations %}
                     <tr>
                         <td>
-                            <a href="{% url 'automation:detail' automation.pk %}" class="text-decoration-none">
+                            <a href="{% url 'automation:automation_detail' automation.pk %}" class="text-decoration-none">
                                 <strong>{{ automation.name }}</strong>
                             </a>
                             <br>
@@ -50,8 +50,8 @@
                             {% endif %}
                         </td>
                         <td>
-                            <a href="{% url 'automation:detail' automation.pk %}" class="btn btn-sm btn-outline-primary">View</a>
-                            <a href="{% url 'automation:update' automation.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            <a href="{% url 'automation:automation_detail' automation.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                            <a href="{% url 'automation:automation_update' automation.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
                         </td>
                     </tr>
                     {% endfor %}

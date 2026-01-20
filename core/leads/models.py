@@ -122,7 +122,7 @@ class LeadStatus(TenantModel):
     status_name = models.CharField(max_length=50, db_index=True, help_text="e.g., 'new', 'qualified'")  # Renamed from 'name' to avoid conflict
     label = models.CharField(max_length=100)  # e.g., 'New Lead', 'Qualified'
     order = models.IntegerField(default=0)
-    color = models.CharField(max_length=7, default='#6c757d', help_text="Hex color code")
+    color = models.CharField(max_length=7, default="#0e86ef", help_text="Hex color code")
     icon = models.CharField(max_length=50, blank=True)
     status_is_active = models.BooleanField(default=True, help_text="Whether this status is active")  # Renamed from 'is_active' to avoid conflict
     is_system = models.BooleanField(default=False)
@@ -139,7 +139,7 @@ class LeadStatus(TenantModel):
         return self.label
 
 
-class Lead(TenantModel):
+class Lead(TenantModel, TimeStampedModel):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField()

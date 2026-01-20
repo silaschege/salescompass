@@ -1,0 +1,101 @@
+{% extends 'tenants/base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="fw-bold"><i class="bi bi-robot me-2 text-primary"></i>Automated Lifecycle Rules</h2>
+            <p class="text-muted">Define rules that automatically trigger tenant lifecycle actions based on conditions.
+            </p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'tenants:automated_rule_create' %}" class="btn btn-primary shadow-sm rounded-pill px-4">
+                <i class="bi bi-plus-lg me-2"></i>Create Rule
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm glass-card">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="mb-0 fw-bold">Active Rules</h5>
+        </div>
+        <div class="card-body p-4">
+            {% if rules %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light border-0">
+                        <tr>
+                            <th class="border-0">Rule Name</th>
+                            <th class="border-0">Condition</th>
+                            <th class="border-0">Action</th>
+                            <th class="border-0">Frequency</th>
+                            <th class="border-0">Status</th>
+                            <th class="border-0">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-0">
+                        {% for rule in rules %}
+                        <tr class="border-bottom">
+                            <td>
+                                <div class="fw-bold text-dark">{{ rule.name }}</div>
+                                <div class="text-muted small">{{ rule.description|truncatechars:50 }}</div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border px-2 py-1">
+                                    {{ rule.condition_field }} {{ rule.get_condition_operator_display }} {{
+                                    rule.condition_value }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-primary fw-medium"><i class="bi bi-lightning-fill me-1"></i>{{
+                                    rule.get_action_type_display }}</span>
+                            </td>
+                            <td>{{ rule.get_evaluation_frequency_display }}</td>
+                            <td>
+                                {% if rule.is_active %}
+                                <span
+                                    class="badge bg-success-soft text-success px-3 py-2 rounded-pill shadow-none">Active</span>
+                                {% else %}
+                                <span
+                                    class="badge bg-secondary-soft text-secondary px-3 py-2 rounded-pill shadow-none">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-light border-0 rounded-circle p-2" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% include 'includes/pagination.html' %}
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-robot display-4 text-muted mb-3"></i>
+                <h5>No automated rules defined</h5>
+                <p class="text-muted">Automate your tenant lifecycle management by creating rules.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-success-soft {
+        background-color: rgba(25, 135, 84, 0.1);
+    }
+
+    .bg-secondary-soft {
+        background-color: rgba(108, 117, 125, 0.1);
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+</style>
+{% endblock %}

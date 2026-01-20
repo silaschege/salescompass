@@ -18,8 +18,12 @@ def require_permission(perm: str):
         def _wrapped_view(request: HttpRequest, *args, **kwargs):
             if not request.user.is_authenticated:
                 raise PermissionDenied("Authentication required")
-            if not request.user.has_perm(perm):
+                
+            # Use UnifiedAccessController for tenant-aware permission checks
+            from access_control.controller import UnifiedAccessController
+            if not UnifiedAccessController.has_access(request.user, perm):
                 raise PermissionDenied(f"Missing required permission: {perm}")
+                
             return view_func(request, *args, **kwargs)
         return _wrapped_view
     return decorator
@@ -39,8 +43,13 @@ class PermissionRequiredMixin:
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             raise PermissionDenied("Authentication required")
-        if self.required_permission and not request.user.has_perm(self.required_permission):
-            raise PermissionDenied(f"Missing required permission: {self.required_permission}")
+            
+        if self.required_permission:
+            # Use UnifiedAccessController for tenant-aware permission checks
+            from access_control.controller import UnifiedAccessController
+            if not UnifiedAccessController.has_access(request.user, self.required_permission):
+                raise PermissionDenied(f"Missing required permission: {self.required_permission}")
+                
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -118,7 +127,9 @@ class HasPermission(BasePermission):
         if not request.user.is_authenticated:
             return False
 
-        return request.user.has_perm(perm)
+        # Use UnifiedAccessController for tenant-aware permission checks
+        from access_control.controller import UnifiedAccessController
+        return UnifiedAccessController.has_access(request.user, perm)
 
     def has_object_permission(self, request, view, obj):
         # Object-level permissions not implemented here

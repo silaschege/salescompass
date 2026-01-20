@@ -1,4 +1,4 @@
-<!-- sales/templates/sales/sale_list.html -->
+
 {% extends 'sales/base.html' %}
 
 {% block title %}Sales | SalesCompass{% endblock %}
@@ -26,7 +26,13 @@
                 {% for sale in sales %}
                 <tr>
                     <td>{{ sale.product }}</td>
-                    <td>{{ sale.customer.name }}</td>
+                    <td>
+                        {% if sale.account.first_name or sale.account.last_name %}
+                            {{ sale.account.first_name }} {{ sale.account.last_name }}
+                        {% else %}
+                            {{ sale.account.email }}
+                        {% endif %}
+                    </td>
                     <td>{{ sale.get_sale_type_display }}</td>
                     <td>${{ sale.amount }}</td>
                     <td>{{ sale.sale_date|date:"M d, Y" }}</td>

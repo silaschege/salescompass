@@ -1,0 +1,115 @@
+{% extends 'tenants/base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'tenants:migration_record_list' %}">Migrations</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Migration Details</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4 glass-card">
+                <div
+                    class="card-header bg-transparent d-flex justify-content-between align-items-center py-3 px-4 border-0">
+                    <h5 class="mb-0 fw-bold">Migration Information</h5>
+                    <span
+                        class="badge {% if migration.status == 'completed' %}bg-success{% elif migration.status == 'failed' %}bg-danger{% else %}bg-primary{% endif %} px-3 py-2 rounded-pill">
+                        {{ migration.get_status_display }}
+                    </span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row mb-4">
+                        <div class="col-sm-4 text-muted small uppercase fw-bold">Path</div>
+                        <div class="col-sm-8 text-dark">
+                            <span class="fw-bold text-primary">{{ migration.source_tenant.name }}</span>
+                            <i class="bi bi-arrow-right mx-3 text-muted"></i>
+                            <span class="fw-bold text-success">{{ migration.destination_tenant.name }}</span>
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-sm-4 text-muted small uppercase fw-bold">Type</div>
+                        <div class="col-sm-8 text-dark">
+                            {{ migration.get_migration_type_display }}
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-sm-4 text-muted small uppercase fw-bold">Timeline</div>
+                        <div class="col-sm-8 text-dark">
+                            <div><span class="text-muted">Started:</span> {{ migration.started_at|date:"F d, Y H:i" }}
+                            </div>
+                            {% if migration.completed_at %}
+                            <div><span class="text-muted">Completed:</span> {{ migration.completed_at|date:"F d, Y H:i"
+                                }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if migration.error_log %}
+                    <div class="row mb-4">
+                        <div class="col-sm-4 text-muted small uppercase fw-bold">Error Log</div>
+                        <div class="col-sm-8">
+                            <div class="bg-danger-soft text-danger p-3 rounded font-monospace small">
+                                {{ migration.error_log|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="row">
+                        <div class="col-sm-4 text-muted small uppercase fw-bold">Notes</div>
+                        <div class="col-sm-8 text-dark">
+                            <div class="bg-light p-3 rounded">
+                                {{ migration.migration_notes|default:"No notes provided."|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm glass-card mb-4">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="mb-0 fw-bold">Progress</h5>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <div class="display-4 fw-bold text-primary mb-2">{{ migration.progress_percentage|floatformat:1 }}%
+                    </div>
+                    <div class="progress mb-4" style="height: 10px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+                            style="width: {{ migration.progress_percentage }}%"
+                            aria-valuenow="{{ migration.progress_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                    <div class="row text-center small text-muted">
+                        <div class="col-4">
+                            <div class="fw-bold text-dark">{{ migration.processed_records }}</div>
+                            <div>Processed</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold text-danger">{{ migration.failed_records }}</div>
+                            <div>Failed</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold text-dark">{{ migration.total_records }}</div>
+                            <div>Total</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-danger-soft {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+</style>
+{% endblock %}

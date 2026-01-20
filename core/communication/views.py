@@ -513,12 +513,27 @@ class UnifiedInboxView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         tenant = self.request.user.tenant
+        account_id = self.request.GET.get('account_id')
         
-        emails = Email.objects.filter(tenant=tenant).annotate(itype=Value('email', output_field=CharField()))
-        sms_msgs = SMS.objects.filter(tenant=tenant).annotate(itype=Value('sms', output_field=CharField()))
-        calls = CallLog.objects.filter(tenant=tenant).annotate(itype=Value('call', output_field=CharField()))
-        chats = ChatMessage.objects.filter(tenant=tenant).annotate(itype=Value('chat', output_field=CharField()))
-        posts = SocialMediaPost.objects.filter(tenant=tenant).annotate(itype=Value('social', output_field=CharField()))
+        # Base filters
+        email_filters = {'tenant': tenant}
+        sms_filters = {'tenant': tenant}
+        call_filters = {'tenant': tenant}
+        chat_filters = {'tenant': tenant}
+        post_filters = {'tenant': tenant}
+        
+        if account_id:
+            email_filters['account_id'] = account_id
+            sms_filters['account_id'] = account_id
+            call_filters['account_id'] = account_id
+            chat_filters['account_id'] = account_id
+            post_filters['account_id'] = account_id
+        
+        emails = Email.objects.filter(**email_filters).annotate(itype=Value('email', output_field=CharField()))
+        sms_msgs = SMS.objects.filter(**sms_filters).annotate(itype=Value('sms', output_field=CharField()))
+        calls = CallLog.objects.filter(**call_filters).annotate(itype=Value('call', output_field=CharField()))
+        chats = ChatMessage.objects.filter(**chat_filters).annotate(itype=Value('chat', output_field=CharField()))
+        posts = SocialMediaPost.objects.filter(**post_filters).annotate(itype=Value('social', output_field=CharField()))
         
         # Combine and sort by date
         combined = sorted(

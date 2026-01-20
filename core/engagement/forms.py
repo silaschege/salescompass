@@ -8,7 +8,7 @@ from core.templatetags.filters_extras import get
 from nps.models import NpsResponse
 from django.utils import timezone
 from core.models import User as Account
-from .models import EngagementWebhook
+from .models import EngagementWebhook, EngagementScoringConfig
 
 
 class EngagementEventForm(forms.ModelForm):
@@ -58,6 +58,7 @@ class EngagementEventForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
+        kwargs.pop('tenant', None)
         super().__init__(*args, **kwargs)
         
         # Filter dropdowns to user's tenant
@@ -174,6 +175,7 @@ class NextBestActionForm(forms.ModelForm):
             user: Current user for tenant filtering and defaults
         """
         user = kwargs.pop('user', None)
+        kwargs.pop('tenant', None)
         super().__init__(*args, **kwargs)
         
         if user:
@@ -237,6 +239,10 @@ class NextBestActionForm(forms.ModelForm):
 from .models import EngagementPlaybook, PlaybookStep
 
 class EngagementPlaybookForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = EngagementPlaybook
         fields = ['name', 'description', 'is_active']
@@ -247,6 +253,10 @@ class EngagementPlaybookForm(forms.ModelForm):
         }
 
 class PlaybookStepForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = PlaybookStep
         fields = ['day_offset', 'action_type', 'description', 'priority']
@@ -284,6 +294,7 @@ class EngagementWebhookForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
         super().__init__(*args, **kwargs)
         # Add help text for event types
         self.fields['event_types'].help_text = "Select event types that should trigger this webhook"
@@ -344,6 +355,7 @@ class EngagementWorkflowForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
         super().__init__(*args, **kwargs)
         # Add help texts
         self.fields['config'].help_text = "Enter configuration as JSON"
@@ -374,11 +386,20 @@ class EngagementWorkflowForm(forms.ModelForm):
 
     def clean_escalation_recipients(self):
         """Validate escalation_recipients is a valid JSON array."""
-        data = self.cleaned_data['escalation_recipients']
-        if isinstance(data, str):
-            try:
-                import json
-                data = json.loads(data)
-            except json.JSONDecodeError:
-                raise forms.ValidationError("Must be a valid JSON array")
         return data
+
+
+class EngagementScoringConfigForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
+    class Meta:
+        model = EngagementScoringConfig
+        fields = ['email_open_score', 'link_click_score', 'reply_score', 'meeting_score']
+        widgets = {
+            'email_open_score': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1'}),
+            'link_click_score': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1'}),
+            'reply_score': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1'}),
+            'meeting_score': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1'}),
+        }

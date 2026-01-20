@@ -87,7 +87,7 @@
                     <tbody>
                         {% for proposal in proposals %}
                         <tr>
-                            <td><a href="{% url 'proposals:detail' proposal.pk %}">{{ proposal.title|truncatechars:40 }}</a></td>
+                            <td><a href="{% url 'proposals:proposal_detail' proposal.pk %}">{{ proposal.title|truncatechars:40 }}</a></td>
                             <td>{{ proposal.opportunity.name|truncatechars:25 }}</td>
                             <td>
                                 <span class="badge bg-{% if proposal.status == 'approved' %}success{% elif proposal.status == 'rejected' %}danger{% elif proposal.status == 'under_review' %}info{% else %}secondary{% endif %}">

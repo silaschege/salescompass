@@ -117,10 +117,10 @@
             {% endif %}
 
             <div class="mt-3">
-                <a href="{% url 'automation:list' %}" class="btn btn-secondary">Back to List</a>
+                <a href="{% url 'automation:automation_list' %}" class="btn btn-secondary">Back to List</a>
                 {% if perms.automation.write %}
-                <a href="{% url 'automation:update' automation.id %}" class="btn btn-warning">Edit</a>
-                <a href="{% url 'automation:delete' automation.id %}" class="btn btn-danger">Delete</a>
+                <a href="{% url 'automation:automation_update' automation.id %}" class="btn btn-warning">Edit</a>
+                <a href="{% url 'automation:automation_delete' automation.id %}" class="btn btn-danger">Delete</a>
                 {% endif %}
             </div>
         </div>

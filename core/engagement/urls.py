@@ -11,6 +11,8 @@ urlpatterns = [
     
     # Engagement Events
     path('feed/', views.EngagementFeedView.as_view(), name='feed'),
+    path('feed/bulk-action/', views.EngagementEventBulkActionView.as_view(), name='bulk_action'),
+    path('feed/export/', views.EngagementReportExportView.as_view(), name='feed_export'),
     path('events/<int:pk>/', views.EngagementEventDetailView.as_view(), name='event_detail'),
     path('events/<int:pk>/edit/', views.EngagementEventUpdateView.as_view(), name='event_update'),
     path('api/events/merge/', views.EngagementMergeView.as_view(), name='event_merge'),
@@ -100,5 +102,23 @@ urlpatterns = [
     path('api/webhooks/', api_views.EngagementWebhookListCreateAPIView.as_view(), name='api_webhook_list_create'),
     path('api/webhooks/<int:pk>/', api_views.EngagementWebhookDetailAPIView.as_view(), name='api_webhook_detail'),
 
-
+    # Configuration
+    path('settings/', views.EngagementConfigurationView.as_view(), name='configuration'),
+    
+    # Webhook Management (UI)
+    path('webhooks/', views.EngagementWebhookListView.as_view(), name='webhook_list'),
+    path('webhooks/create/', views.EngagementWebhookCreateView.as_view(), name='webhook_create'),
+    path('webhooks/<int:pk>/edit/', views.EngagementWebhookUpdateView.as_view(), name='webhook_update'),
+    
+    # Automation Rules
+    path('automation-rules/', views.EngagementAutomationRuleListView.as_view(), name='automation_rule_list'),
+    path('automation-rules/create/', views.EngagementAutomationRuleCreateView.as_view(), name='automation_rule_create'),
+    
+    # Experiments (A/B Testing)
+    path('experiments/', views.ExperimentListView.as_view(), name='experiment_list'),
+    path('experiments/create/', views.ExperimentCreateView.as_view(), name='experiment_create'),
+    path('experiments/<int:pk>/', views.ExperimentDetailView.as_view(), name='experiment_detail'),
+    
+    # Workflow Executions
+    path('workflow-executions/', views.WorkflowExecutionListView.as_view(), name='workflow_execution_list'),
 ]

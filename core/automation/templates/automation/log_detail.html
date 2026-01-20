@@ -24,7 +24,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <strong>Automation:</strong>
-                                <a href="{% url 'automation:detail' log.automation.pk %}">
+                                <a href="{% url 'automation:automation_detail' log.automation.pk %}">
                                     {{ log.automation.name }}
                                 </a>
                             </div>
@@ -87,7 +87,7 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{% url 'automation:detail' log.automation.pk %}" class="btn btn-outline-primary">
+                        <a href="{% url 'automation:automation_detail' log.automation.pk %}" class="btn btn-outline-primary">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                                 class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
                                 <path fill-rule="evenodd"

@@ -5,8 +5,8 @@
 {% block content %}
 <div class="header-bar mb-4">
     <div class="container">
-        <h1 class="block-title">Analytic Reports</h1>
-        <p class="text-white text-center lead">Access all your business intelligence reports</p>
+        <h1 class="block-title text-center">Analytic Reports</h1>
+        <p class=" text-center lead">Access all your business intelligence reports</p>
     </div>
 </div>
 
@@ -53,7 +53,7 @@
                 {% for report in reports %}
                 <tr>
                     <td>
-                        <a href="{% url 'reports:detail' report.pk %}" class="text-decoration-none">
+                        <a href="{% url 'reports:report_detail' report.pk %}" class="text-decoration-none">
                             <strong>{{ report.report_name }}</strong>
                         </a>
                         <br>
@@ -79,7 +79,7 @@
                     <td>{{ report.report_created_at|date:"M d, Y" }}</td>
                     <td>
                         <div class="d-flex flex-column gap-1">
-                            <a href="{% url 'reports:detail' report.pk %}"
+                            <a href="{% url 'reports:report_detail' report.pk %}"
                                 class="btn btn-sm btn-outline-primary">View</a>
                             <a href="{% url 'reports:export_report' report.pk %}?format=csv"
                                 class="btn btn-sm btn-outline-secondary">Export</a>

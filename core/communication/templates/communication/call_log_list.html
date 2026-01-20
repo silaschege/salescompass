@@ -3,8 +3,8 @@
 
 {% block title %}Call Logs - Communication{% endblock %}
 
-{% block comm_title %}📞 Call History{% endblock %}
-{% block comm_subtitle %}Detailed record of your voice communications and results{% endblock %}
+{% block comm_title %}<span style="color: black; text-align: center; display: block;">📞 Call History</span>{% endblock %}
+{% block comm_subtitle %}<span style="color: black; text-align: center; display: block;">Detailed record of your voice communications and results</span>{% endblock %}
 
 {% block comm_actions %}
 <a href="{% url 'communication:call_analytics' %}" class="btn btn-light fw-bold px-4 shadow-sm border">
@@ -50,8 +50,7 @@
                             {% elif call.call_type == 'missed' %}
                             <span class="badge bg-danger-subtle text-danger rounded-pill px-3">Missed</span>
                             {% else %}
-                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3">{{
-                                call.call_type|title }}</span>
+                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3">{{ call.call_type|title }}</span>
                             {% endif %}
                         </td>
                         <td>{{ call.duration_seconds }}s</td>

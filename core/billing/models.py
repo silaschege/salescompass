@@ -199,9 +199,9 @@ class Subscription(TenantModel):
         on_delete=models.PROTECT,
         null=True,
         blank=True,
-        related_name='subscriptions',
         help_text="Dynamic status (replaces status field)"
     )
+    account = models.ForeignKey('accounts.Account', on_delete=models.SET_NULL, null=True, blank=True, related_name='subscriptions', help_text="Account associated with this subscription")
     start_date = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField(null=True, blank=True)
     subscription_trial_end_date = models.DateTimeField(null=True, blank=True, help_text="End date of subscription trial period")  # Renamed from 'trial_end_date' to avoid conflict with base class
@@ -263,6 +263,7 @@ class Invoice(TenantModel):
     
     invoice_number = models.CharField(max_length=50, unique=True)
     subscription = models.ForeignKey(Subscription, on_delete=models.CASCADE, related_name='invoices')
+    account = models.ForeignKey('accounts.Account', on_delete=models.SET_NULL, null=True, blank=True, related_name='invoices', help_text="Account associated with this invoice")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     due_date = models.DateField()

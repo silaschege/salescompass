@@ -3,8 +3,8 @@
 
 {% block title %}Call Details - Communication{% endblock %}
 
-{% block comm_title %}📞 Call Details{% endblock %}
-{% block comm_subtitle %}Analysis of interaction with {{ call.contact_name|default:call.phone_number }}{% endblock %}
+{% block comm_title %}<span style="color: black; text-align: center; display: block;">📞 Call Details</span>{% endblock %}
+{% block comm_subtitle %}<span style="color: black; text-align: center; display: block;">Analysis of interaction with {{ call.contact_name|default:call.phone_number }}</span>{% endblock %}
 
 {% block comm_actions %}
 <a href="{% url 'communication:call_log_list' %}" class="btn btn-light fw-bold px-4 shadow-sm">
@@ -53,8 +53,7 @@
             <div class="mb-5">
                 <h6 class="fw-bold mb-3"><i class="bi bi-journal-text me-2 text-comm"></i> Notes & Observations</h6>
                 <div class="p-4 border rounded-3 bg-white shadow-sm" style="min-height: 150px;">
-                    {{ call.notes|linebreaks|default:"<span class='text-muted italic'>No notes recorded for this
-                        call.</span>" }}
+                    {{ call.notes|linebreaks|default:"<span class='text-muted italic'>No notes recorded for this call.</span>" }}
                 </div>
             </div>
 
@@ -123,8 +122,7 @@
                 </div>
                 <div class="d-flex justify-content-between">
                     <span>Follow-up Tag</span>
-                    <span>{% if call.follow_up_required %}<span class="text-danger">REQUIRED</span>{% else %}None{%
-                        endif %}</span>
+                    <span>{% if call.follow_up_required %}<span class="text-danger">REQUIRED</span>{% else %}None{%endif %}</span>
                 </div>
             </div>
         </div>

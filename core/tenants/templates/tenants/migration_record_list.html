@@ -1,0 +1,128 @@
+{% extends 'tenants/base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="fw-bold"><i class="bi bi-box-arrow-in-right me-2 text-primary"></i>Tenant Migrations</h2>
+            <p class="text-muted">Monitor and manage data migration activities between tenants.</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'tenants:migration_record_create' %}" class="btn btn-primary shadow-sm rounded-pill px-4">
+                <i class="bi bi-plus-lg me-2"></i>New Migration
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm glass-card">
+        <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold">Recent Migrations</h5>
+            <div class="btn-group">
+                <button type="button" class="btn btn-sm btn-light border-0 dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="bi bi-filter me-1"></i>Filter Status
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">All</a></li>
+                    <li><a class="dropdown-item" href="#">Pending</a></li>
+                    <li><a class="dropdown-item" href="#">Success</a></li>
+                    <li><a class="dropdown-item" href="#">Failed</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            {% if migrations %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light border-0">
+                        <tr>
+                            <th class="border-0">Source</th>
+                            <th class="border-0">Target</th>
+                            <th class="border-0">Status</th>
+                            <th class="border-0">Started</th>
+                            <th class="border-0">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-0">
+                        {% for migration in migrations %}
+                        <tr class="border-bottom">
+                            <td>
+                                <div class="fw-bold text-dark">{{ migration.source_tenant.name }}</div>
+                                <div class="text-muted small">{{ migration.source_tenant.subdomain }}</div>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark">{{ migration.destination_tenant.name }}</div>
+                                <div class="text-muted small">{{ migration.destination_tenant.subdomain }}</div>
+                            </td>
+                            <td>
+                                {% if migration.status == 'success' %}
+                                <span class="badge bg-success-soft text-success px-3 py-2 rounded-pill shadow-none">
+                                    <i class="bi bi-check-circle me-1"></i>Success
+                                </span>
+                                {% elif migration.status == 'failed' %}
+                                <span class="badge bg-danger-soft text-danger px-3 py-2 rounded-pill shadow-none">
+                                    <i class="bi bi-x-circle me-1"></i>Failed
+                                </span>
+                                {% elif migration.status == 'pending' %}
+                                <span class="badge bg-warning-soft text-warning px-3 py-2 rounded-pill shadow-none">
+                                    <i class="bi bi-hourglass-split me-1"></i>Pending
+                                </span>
+                                {% else %}
+                                <span class="badge bg-info-soft text-info px-3 py-2 rounded-pill shadow-none">
+                                    {{ migration.status|title }}
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="text-dark">{{ migration.started_at|date:"M d, Y" }}</div>
+                                <div class="text-muted small">{{ migration.started_at|time:"H:i" }}</div>
+                            </td>
+                            <td>
+                                <div class="btn-group shadow-none">
+                                    <a href="{% url 'tenants:migration_record_detail' migration.id %}"
+                                        class="btn btn-sm btn-light border-0 rounded-circle p-2" title="Details">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% include 'includes/pagination.html' %}
+            {% else %}
+            <div class="text-center py-5">
+                <div class="bg-light d-inline-flex p-4 rounded-circle mb-3">
+                    <i class="bi bi-box-arrow-in-right display-5 text-muted"></i>
+                </div>
+                <h5>No migrations found</h5>
+                <p class="text-muted">Start a new migration to see it appear here.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-success-soft {
+        background-color: rgba(25, 135, 84, 0.1);
+    }
+
+    .bg-danger-soft {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+
+    .bg-warning-soft {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+
+    .bg-info-soft {
+        background-color: rgba(13, 202, 240, 0.1);
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+</style>
+{% endblock %}

@@ -1,5 +1,9 @@
 from django.views import generic
 from django.views.generic import ListView, TemplateView, CreateView, UpdateView, DeleteView, DetailView, View
+from core.views import (
+    SalesCompassListView, SalesCompassDetailView, SalesCompassCreateView,
+    SalesCompassUpdateView, SalesCompassDeleteView, TenantAwareViewMixin
+)
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
@@ -21,7 +25,7 @@ from .forms import CommissionPlanForm, CommissionRuleForm
 from core.models import User
 
 
-class CommissionPlanCreateView(LoginRequiredMixin, CreateView):
+class CommissionPlanCreateView(SalesCompassCreateView):
 
     model = CommissionPlan
     form_class = CommissionPlanForm
@@ -34,11 +38,12 @@ class CommissionPlanCreateView(LoginRequiredMixin, CreateView):
         return context
     
     def form_valid(self, form):
-        form.instance.tenant = self.request.user.tenant if hasattr(self.request.user, 'tenant') else None # Handle tenant awareness if applicable
+        # Tenant assignment matches base class logic but explicit check is fine.
+        # SalesCompassCreateView handles tenant_id assignment automatically.
         return super().form_valid(form)
 
 
-class CommissionPlanUpdateView(LoginRequiredMixin, UpdateView):
+class CommissionPlanUpdateView(SalesCompassUpdateView):
     model = CommissionPlan
     form_class = CommissionPlanForm
     template_name = 'commissions/plan_form.html'
@@ -67,7 +72,7 @@ class CommissionPlanUpdateView(LoginRequiredMixin, UpdateView):
 
 
 
-class CommissionRuleCreateView(LoginRequiredMixin, CreateView):
+class CommissionRuleCreateView(SalesCompassCreateView):
     model = CommissionRule
     form_class = CommissionRuleForm
     template_name = 'commissions/rule_form.html'
@@ -79,7 +84,8 @@ class CommissionRuleCreateView(LoginRequiredMixin, CreateView):
         
         # Set the plan for the rule
         form.instance.commission_rule_plan = plan
-        form.instance.tenant = plan.tenant if hasattr(plan, 'tenant') and plan.tenant else None  # Use the same tenant as the plan
+        # Base class handles tenant, but here we inherit from plan's tenant which is safer
+        form.instance.tenant = plan.tenant if hasattr(plan, 'tenant') and plan.tenant else None
         
         response = super().form_valid(form)
         
@@ -118,7 +124,7 @@ class CommissionRuleCreateView(LoginRequiredMixin, CreateView):
 
 
 
-class CommissionRuleUpdateView(LoginRequiredMixin, UpdateView):
+class CommissionRuleUpdateView(SalesCompassUpdateView):
     model = CommissionRule
     form_class = CommissionRuleForm
     template_name = 'commissions/rule_form.html'
@@ -128,13 +134,10 @@ class CommissionRuleUpdateView(LoginRequiredMixin, UpdateView):
         return reverse_lazy('commissions:plan_update', kwargs={'pk': plan_id})
 
     def get_queryset(self):
-        # Filter by tenant if applicable
-        queryset = super().get_queryset()
-        if hasattr(self.request.user, 'tenant'):
-            return queryset.filter(tenant=self.request.user.tenant)
-        return queryset
+        # TenantAwareViewMixin handles tenant filtering
+        return super().get_queryset()
 
-class CommissionRuleDeleteView(LoginRequiredMixin, DeleteView):
+class CommissionRuleDeleteView(SalesCompassDeleteView):
     model = CommissionRule
 
     def get_success_url(self):
@@ -142,11 +145,8 @@ class CommissionRuleDeleteView(LoginRequiredMixin, DeleteView):
         return reverse_lazy('commissions:plan_update', kwargs={'pk': plan_id})
 
     def get_queryset(self):
-        # Filter by tenant if applicable
-        queryset = super().get_queryset()
-        if hasattr(self.request.user, 'tenant'):
-            return queryset.filter(tenant=self.request.user.tenant)
-        return queryset
+        # TenantAwareViewMixin handles tenant filtering
+        return super().get_queryset()
 
     def delete(self, request, *args, **kwargs):
         # Handle AJAX request
@@ -163,7 +163,7 @@ try:
 except ImportError:
     HTML = None
 
-class DashboardView(LoginRequiredMixin, TemplateView):
+class DashboardView(LoginRequiredMixin, TenantAwareViewMixin, TemplateView):
     template_name = 'commissions/dashboard.html'
 
     def get_context_data(self, **kwargs):
@@ -203,22 +203,20 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
 
 
-class CommissionListView(LoginRequiredMixin, ListView):
+class CommissionListView(SalesCompassListView):
     model = Commission
     template_name = 'commissions/commission_list.html'
     context_object_name = 'commissions'
 
     def get_queryset(self):
-        queryset = Commission.objects.filter(user=self.request.user).order_by('-date_earned')
-        # Filter by tenant if applicable
-        if hasattr(self.request.user, 'tenant'):
-            return queryset.filter(tenant=self.request.user.tenant)
+        # Base implementation plus user filtering
+        queryset = super().get_queryset().filter(user=self.request.user).order_by('-date_earned')
         return queryset
 
 
 
 
-class CommissionStatementView(LoginRequiredMixin, ListView):
+class CommissionStatementView(SalesCompassListView):
     model = Commission
     template_name = 'commissions/commission_statement_pdf.html'
     context_object_name = 'commissions'
@@ -226,11 +224,10 @@ class CommissionStatementView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Commission.objects.filter(user=user).order_by('-date_earned')
-        
-        # Filter by tenant if applicable
-        if hasattr(user, 'tenant'):
-            queryset = queryset.filter(tenant=user.tenant)
+        # Base queryset handled by TenantAwareViewMixin if we called super(), but here we start fresh or need to chain.
+        # TenantAwareViewMixin does: return self.model.objects.all().filter(tenant_id=...)
+        # We can use that:
+        queryset = super().get_queryset().filter(user=user).order_by('-date_earned')
         
         # Add filters
         start_date = self.request.GET.get('start_date')
@@ -260,31 +257,23 @@ class CommissionStatementView(LoginRequiredMixin, ListView):
 
 
 
-class CommissionPaymentListView(LoginRequiredMixin, ListView):
+class CommissionPaymentListView(SalesCompassListView):
     model = CommissionPayment
     template_name = 'commissions/payment_list.html'
     context_object_name = 'payments'
 
     def get_queryset(self):
-        queryset = CommissionPayment.objects.filter(user=self.request.user).order_by('-period_end')
-        # Filter by tenant if applicable
-        if hasattr(self.request.user, 'tenant'):
-            return queryset.filter(tenant=self.request.user.tenant)
-        return queryset
+        return super().get_queryset().filter(user=self.request.user).order_by('-period_end')
 
 
-class CommissionPaymentDetailView(LoginRequiredMixin, generic.DetailView):
+class CommissionPaymentDetailView(SalesCompassDetailView):
     model = CommissionPayment
     template_name = 'commissions/payment_detail.html'
     context_object_name = 'payment'
 
     def get_queryset(self):
         # Ensure user can only see their own payments (or add admin logic later)
-        queryset = CommissionPayment.objects.filter(user=self.request.user)
-        # Filter by tenant if applicable
-        if hasattr(self.request.user, 'tenant'):
-            return queryset.filter(tenant=self.request.user.tenant)
-        return queryset
+        return super().get_queryset().filter(user=self.request.user)
 
     def post(self, request, *args, **kwargs):
         payment = self.get_object()
@@ -307,7 +296,7 @@ class CommissionPaymentDetailView(LoginRequiredMixin, generic.DetailView):
 
 
 
-class StatementExportView(LoginRequiredMixin, View):
+class StatementExportView(LoginRequiredMixin, TenantAwareViewMixin, View):
     def get(self, request, pk, *args, **kwargs):
         payment = get_object_or_404(CommissionPayment, pk=pk)
         
@@ -346,7 +335,7 @@ class StatementExportView(LoginRequiredMixin, View):
             return HttpResponse("PDF generation library not installed (WeasyPrint).", status=500)
 
 
-class QuotaAttainmentView(LoginRequiredMixin, TemplateView):
+class QuotaAttainmentView(LoginRequiredMixin, TenantAwareViewMixin, TemplateView):
     template_name = 'commissions/quota_attainment.html'
 
     def get_context_data(self, **kwargs):
@@ -413,7 +402,7 @@ class QuotaAttainmentView(LoginRequiredMixin, TemplateView):
         else:
             return "behind"
 
-class WhatIfCalculatorView(LoginRequiredMixin, TemplateView):
+class WhatIfCalculatorView(LoginRequiredMixin, TenantAwareViewMixin, TemplateView):
     template_name = 'commissions/what_if_calculator.html'
 
     def get_context_data(self, **kwargs):
@@ -440,22 +429,19 @@ class WhatIfCalculatorView(LoginRequiredMixin, TemplateView):
 
 
 
-class CommissionPlanListView(LoginRequiredMixin, ListView):
+class CommissionPlanListView(SalesCompassListView):
     model = CommissionPlan
     template_name = 'commissions/plan_list.html'
     context_object_name = 'plans'
 
     def get_queryset(self):
-        # Filter by tenant if the user has a tenant
-        queryset = super().get_queryset()
-        if hasattr(self.request.user, 'tenant'):
-            queryset = queryset.filter(tenant=self.request.user.tenant)
-        return queryset
+        # Tenant filtering handled by SalesCompassListView
+        return super().get_queryset()
 
 
 
 
-class CommissionPlanUpdateView(LoginRequiredMixin, UpdateView):
+class CommissionPlanUpdateView(SalesCompassUpdateView):
     model = CommissionPlan
     form_class = CommissionPlanForm
     template_name = 'commissions/plan_form.html'
@@ -486,7 +472,7 @@ class CommissionPlanUpdateView(LoginRequiredMixin, UpdateView):
 
 
 
-class CommissionPlanTemplateView(LoginRequiredMixin, ListView):
+class CommissionPlanTemplateView(SalesCompassListView):
     model = CommissionPlanTemplate
     template_name = 'commissions/plan_templates.html'
     context_object_name = 'templates'
@@ -494,10 +480,6 @@ class CommissionPlanTemplateView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         # Only show active templates by default, but allow all via parameter
         queryset = super().get_queryset()
-        
-        # Filter by tenant if the user has a tenant
-        if hasattr(self.request.user, 'tenant'):
-            queryset = queryset.filter(tenant=self.request.user.tenant)
         
         show_all = self.request.GET.get('show_all', 'false').lower() == 'true'
         
@@ -509,7 +491,7 @@ class CommissionPlanTemplateView(LoginRequiredMixin, ListView):
 
 
 
-class ForecastingView(LoginRequiredMixin, TemplateView):
+class ForecastingView(LoginRequiredMixin, TenantAwareViewMixin, TemplateView):
     template_name = 'commissions/forecasting.html'
 
     def get_context_data(self, **kwargs):
@@ -628,16 +610,21 @@ class ForecastingView(LoginRequiredMixin, TemplateView):
         }
 
 
-class TeamDashboardView(LoginRequiredMixin, TemplateView):
+class TeamDashboardView(LoginRequiredMixin, TenantAwareViewMixin, TemplateView):
     template_name = 'commissions/team_dashboard.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         
+        # Base query for users in the same tenant
+        tenant_users = User.objects.filter(is_active=True)
+        if hasattr(user, 'tenant_id') and user.tenant_id:
+             tenant_users = tenant_users.filter(tenant_id=user.tenant_id)
+        
         # Get team members (users in the same team/department)
         # This assumes some team relationship - you may need to adjust based on your model
-        team_members = User.objects.filter(is_active=True).exclude(id=user.id)[:10]  # Top 10
+        team_members = tenant_users.exclude(id=user.id)[:10]  # Top 10
         
         # Get current period
         today = timezone.now().date()
@@ -660,9 +647,8 @@ class TeamDashboardView(LoginRequiredMixin, TemplateView):
         current_user_performance = get_user_performance(user, start_of_month, end_of_month)
         
         # Create leaderboard
-        all_users = User.objects.filter(is_active=True)
         leaderboard = []
-        for u in all_users:
+        for u in tenant_users:
             perf = get_user_performance(u, start_of_month, end_of_month)
             if perf['commissions_earned'] > 0:  # Only include users with earnings
                 leaderboard.append({
@@ -685,7 +671,7 @@ class TeamDashboardView(LoginRequiredMixin, TemplateView):
         
         return context
     
-class PayrollExportView(LoginRequiredMixin, View):
+class PayrollExportView(LoginRequiredMixin, TenantAwareViewMixin, View):
     @method_decorator(staff_member_required)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
@@ -749,7 +735,7 @@ class PayrollExportView(LoginRequiredMixin, View):
         
         return response
 
-class CommissionAPIExportView(LoginRequiredMixin, View):
+class CommissionAPIExportView(LoginRequiredMixin, TenantAwareViewMixin, View):
     @method_decorator(staff_member_required)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)

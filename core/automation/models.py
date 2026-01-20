@@ -3,7 +3,7 @@ from django.utils import timezone
 from core.models import User
 from tenants.models import Tenant, TenantAwareModel as TenantModel
 
-
+ 
 class Workflow(TenantModel):
     """Model for managing workflow automations"""
     
@@ -61,6 +61,7 @@ class WorkflowAction(TenantModel):
         ('send_sms', 'Send SMS'),
         ('send_teams_message', 'Send Microsoft Teams Message'),
         ('send_whatsapp', 'Send WhatsApp Message'),
+        ('convert_lead_to_account', 'Convert Lead to Account'),
         # Workflow control actions
         ('approval', 'Request Approval'),
         ('delay', 'Delay Execution'),

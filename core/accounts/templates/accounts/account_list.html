@@ -58,6 +58,79 @@
     .filter-chip:hover {
         background-color: #ced4da;
     }
+    
+    .bg-primary-subtle {
+        background-color: #e0e7ff !important;
+        color: #6f42c1 !important;
+    }
+    
+    .bg-secondary-subtle {
+        background-color: #e2e3e5 !important;
+        color: #6c757d !important;
+    }
+    
+    .bg-info-subtle {
+        background-color: #e7f1ff !important;
+        color: #0d6efd !important;
+    }
+    
+    .bg-success-subtle {
+        background-color: #e8f5e9 !important;
+        color: #198754 !important;
+    }
+    
+    .bg-warning-subtle {
+        background-color: #fff3cd !important;
+        color: #856404 !important;
+    }
+    
+    .bg-danger-subtle {
+        background-color: #f8d7da !important;
+        color: #721c24 !important;
+    }
+    
+    .btn-primary {
+        background-color: #6f42c1;
+        border-color: #6f42c1;
+    }
+    
+    .btn-primary:hover {
+        background-color: #5a34a0;
+        border-color: #5a34a0;
+    }
+    
+    .btn-outline-primary {
+        color: #6f42c1;
+        border-color: #6f42c1;
+    }
+    
+    .btn-outline-primary:hover {
+        background-color: #5a34a0;
+        border-color: #5a34a0;
+    }
+    
+    .table th {
+        background-color: #f8f9fa;
+        color: #495057;
+        font-weight: 600;
+    }
+    
+    .table-hover tbody tr:hover {
+        --bs-table-accent-bg: rgba(111, 66, 193, 0.05);
+    }
+    
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .badge.bg-primary {
+        background-color: #6f42c1 !important;
+    }
+    
+    .progress-bar {
+        background-color: #6f42c1;
+    }
 </style>
 {% endblock %}
 
@@ -69,6 +142,10 @@
     </div>
 
     <div class="d-flex gap-2">
+        <a href="{% url 'accounts:account_export' %}" class="btn btn-outline-primary d-flex align-items-center">
+            <i class="bi bi-download me-2"></i> Export
+        </a>
+
         {% if perms.accounts.add_account %}
         <a href="{% url 'accounts:account_create' %}" class="btn btn-primary d-flex align-items-center">
             <i class="bi bi-plus-circle me-2"></i> New Account
@@ -154,48 +231,41 @@
     <div id="filterChips" class="d-flex flex-wrap"></div>
 </div>
 
-<div class="card shadow-sm">
+<div class="card border-0 shadow-sm">
     <div class="card-body p-0">
         {% if accounts %}
         <div class="table-responsive">
             <table id="accountsTable" class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Name</th>
-                        <th>Industry</th>
-                        <th>Tier</th>
-                        <th>Owner</th>
-                        <th class="text-center">Contacts</th>
-                        <th class="text-center">Leads</th>
-                        <th class="text-center">Opportunities</th>
-                        <th>Health</th>
-                        <th>ESG</th>
-                        <th>Last Modified</th>
-                        <th>Actions</th>
+                        <th class="fw-bold">Name</th>
+                        <th class="fw-bold">Industry</th>
+                        <th class="fw-bold">Tier</th>
+                        <th class="fw-bold">Owner</th>
+                        <th class="text-center fw-bold">Contacts</th>
+                        <th class="text-center fw-bold">Leads</th>
+                        <th class="text-center fw-bold">Opportunities</th>
+                        <th class="fw-bold">Health</th>
+                        <th class="fw-bold">ESG</th>
+                        <th class="fw-bold">Last Modified</th>
+                        <th class="fw-bold">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for account in accounts %}
                     <tr>
                         <td>
-                            <a href="{% url 'accounts:account_detail' account.pk %}" class="fw-medium">{{ account.account_name }}</a>
+                            <a href="{% url 'accounts:account_detail' account.pk %}" class="fw-medium text-decoration-none">{{ account.account_name }}</a>
                         </td>
                         <td>{{ account.get_industry_display }}</td>
+                        <td><span class="badge bg-primary-subtle border border-primary-subtle">{{ account.get_tier_display }}</span></td>
                         <td>
-                            <span class="badge bg-soft-primary">{{ account.get_tier_display }}</span>
+                            {% if account.owner %}
+                            {{ account.owner.get_full_name|default:account.owner.email|default:"No Owner Info" }}
+                            {% else %}
+                            <span class="text-muted">No Owner</span>
+                            {% endif %}
                         </td>
-                        <td>
-
- 
-                                    <td>
-                                        {% if account_data.account.owner %}
-                                        {{account_data.account.owner.get_full_name|default:account_data.account.owner.email|default:"No Owner Info"}}
-                                        {% else %}
-                                        <span class="text-muted">No Owner</span>
-                                        {% endif %}
-                                    </td>
-
-
                         <td class="text-center">{{ account.contacts.count }}</td>
                         <td class="text-center">{{ account.lead_set.count }}</td>
                         <td class="text-center">{{ account.opportunity_set.count }}</td>
@@ -214,11 +284,11 @@
                         </td>
                         <td>
                             {% if account.esg_engagement == 'high' %}
-                            <span class="badge bg-success esg-badge">High</span>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">High</span>
                             {% elif account.esg_engagement == 'medium' %}
-                            <span class="badge bg-warning text-dark esg-badge">Medium</span>
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Medium</span>
                             {% else %}
-                            <span class="badge bg-secondary esg-badge">Low</span>
+                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Low</span>
                             {% endif %}
                         </td>
                         <td>{{ account.updated_at|date:"M j, Y" }}</td>
@@ -306,15 +376,17 @@
         </div>
         {% endif %}
         {% else %}
-        <div class="card-footer">
-            <div class="text-center py-5">
-                <p class="text-muted mb-3">No accounts found.</p>
-                {% if perms.accounts.add_account %}
-                <a href="{% url 'accounts:account_create' %}" class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-2"></i>Create your first account
-                </a>
-                {% endif %}
+        <div class="card-body text-center py-5">
+            <div class="mb-4">
+                <i class="bi bi-building text-muted" style="font-size: 3rem;"></i>
             </div>
+            <h4 class="text-muted">No accounts found</h4>
+            <p class="text-muted mb-4">Get started by creating your first account</p>
+            {% if perms.accounts.add_account %}
+            <a href="{% url 'accounts:account_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Create your first account
+            </a>
+            {% endif %}
         </div>
         {% endif %}
     </div>

@@ -183,7 +183,7 @@
                 display: flex;
             }
         }
-        
+
         /* Navigation improvements */
         .nav-section-title {
             font-size: 0.8rem;
@@ -193,7 +193,7 @@
             margin: 1.5rem 0 0.5rem 1rem;
             font-weight: 600;
         }
-        
+
         .sidebar .nav-link.active {
             background-color: #6f42c1;
             color: white;
@@ -231,9 +231,9 @@
             <a class="nav-link ms-3" href="{% url 'engagement:feed' %}">
                 <i class="bi bi-activity me-2"></i> Live Feed
             </a>
-            
+
             <div class="nav-section-title">Actions</div>
-        
+
             <!--Next Action Dropdown -->
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#NextBestAction">
                 <i class="bi bi-lightning me-2"></i> Next Best Actions
@@ -242,7 +242,7 @@
                 <a class="nav-link ms-3" href="{% url 'engagement:next_best_action' %}">List</a>
                 <a class="nav-link ms-3" href="{% url 'engagement:next_best_action_create' %}">Create</a>
             </div>
-            
+
             <!-- Playbooks Dropdown -->
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Playbooks">
                 <i class="bi bi-journal-text me-2"></i> Playbooks
@@ -251,8 +251,8 @@
                 <a class="nav-link ms-3" href="{% url 'engagement:playbook_list' %}">List</a>
                 <a class="nav-link ms-3" href="{% url 'engagement:playbook_create' %}">Create</a>
             </div>
-            
-         
+
+
             <!-- Workflows Dropdown -->
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Workflows">
                 <i class="bi bi-diagram-3 me-2"></i> Workflows
@@ -260,8 +260,9 @@
             <div class="collapse" id="Workflows">
                 <a class="nav-link ms-3" href="{% url 'engagement:workflow_list' %}">List</a>
                 <a class="nav-link ms-3" href="{% url 'engagement:workflow_create' %}">Create</a>
+                <a class="nav-link ms-3" href="{% url 'engagement:workflow_execution_list' %}">Executions</a>
             </div>
-            
+
             <div class="nav-section-title">Reports</div>
             <!-- Reports Dropdown -->
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Reports">
@@ -273,6 +274,25 @@
                 <a class="nav-link ms-3" href="{% url 'engagement:leaderboard' %}">Engagement Leaderboard</a>
                 <a class="nav-link ms-3" href="{% url 'engagement:attribution_report' %}">Attribution Report</a>
                 <a class="nav-link ms-3" href="{% url 'engagement:data_quality' %}">Data Quality</a>
+            </div>
+
+            <div class="nav-section-title">Optimization</div>
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Optimization">
+                <i class="bi bi-flask me-2"></i> A/B Testing
+            </a>
+            <div class="collapse" id="Optimization">
+                <a class="nav-link ms-3" href="{% url 'engagement:experiment_list' %}">Experiments</a>
+                <a class="nav-link ms-3" href="{% url 'engagement:experiment_create' %}">New Experiment</a>
+            </div>
+
+            <div class="nav-section-title">Configuration</div>
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Configuration">
+                <i class="bi bi-gear me-2"></i> Settings
+            </a>
+            <div class="collapse" id="Configuration">
+                <a class="nav-link ms-3" href="{% url 'engagement:configuration' %}">General Settings</a>
+                <a class="nav-link ms-3" href="{% url 'engagement:automation_rule_list' %}">Automation Rules</a>
+                <a class="nav-link ms-3" href="{% url 'engagement:webhook_list' %}">Webhooks</a>
             </div>
         </nav>
     </div>
@@ -306,7 +326,7 @@
                     }
                 });
             }
-            
+
             // Highlight active nav link
             const currentPath = window.location.pathname;
             const navLinks = document.querySelectorAll('.sidebar .nav-link');

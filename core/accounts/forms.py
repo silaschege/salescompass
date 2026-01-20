@@ -17,21 +17,26 @@ class AccountForm(forms.ModelForm):
         help_text="Assign an owner (e.g., Account Executive)"
     )
     
-    # Compliance
-    gdpr_consent = forms.BooleanField(
+    # Hierarchy
+    parent = forms.ModelChoiceField(
+        queryset=Account.objects.none(), # Populated in __init__
         required=False,
-        label="GDPR Consent",
-        help_text="Customer consents to data processing under GDPR"
+        label="Parent Account",
+        help_text="Parent company for this account"
     )
-    ccpa_consent = forms.BooleanField(
+
+    # Team Members (Simple assignment - default role 'other')
+    team_members = forms.ModelMultipleChoiceField(
+        queryset=User.objects.filter(is_active=True),
         required=False,
-        label="CCPA Consent",
-        help_text="Customer consents to data processing under CCPA"
+        label="Team Members",
+        widget=forms.SelectMultiple(attrs={'class': 'form-select', 'data-placeholder': 'Select team members...'}),
+        help_text="Select users to add to the account team"
     )
 
     class Meta:
         model = Account
-        fields = ['account_name', 'industry', 'website', 'phone', 'owner',
+        fields = ['account_name', 'parent', 'industry', 'website', 'phone', 'owner',
                  'gdpr_consent', 'ccpa_consent', 'is_active']
         widgets = {
             'account_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -39,6 +44,7 @@ class AccountForm(forms.ModelForm):
             'website': forms.URLInput(attrs={'class': 'form-control'}),
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
             'owner': forms.Select(attrs={'class': 'form-select'}),
+            'parent': forms.Select(attrs={'class': 'form-select'}),
             'gdpr_consent': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'ccpa_consent': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
@@ -48,11 +54,46 @@ class AccountForm(forms.ModelForm):
         user = kwargs.pop('current_user', None)  # Inject current user for filtering
         super().__init__(*args, **kwargs)
         
+        # Populate parent choices (exclude self to avoid loops if editing)
+        self.fields['parent'].queryset = Account.objects.all()
+        if self.instance and self.instance.pk:
+            self.fields['parent'].queryset = Account.objects.exclude(pk=self.instance.pk)
+            # Initialize team members
+            self.fields['team_members'].initial = self.instance.users.all()
+
         # Only admins can assign owners; others see only themselves
         if user and not user.has_perm('accounts:*'):
             self.fields['owner'].queryset = User.objects.filter(id=user.id)
             self.fields['owner'].initial = user
             self.fields['owner'].disabled = True
+
+    def save(self, commit=True):
+        account = super().save(commit=False)
+        if commit:
+            account.save()
+            
+        if account.pk:
+            # Handle Team Members
+            from .models import AccountTeamMember
+            selected_users = self.cleaned_data.get('team_members', [])
+            current_users = list(account.users.all())
+            
+            # Add new
+            for user in selected_users:
+                if user not in current_users:
+                    AccountTeamMember.objects.create(account=account, user=user, role='other')
+            
+            # Remove unselected (Optional: might want to be careful here not to delete roles)
+            # For this simple UI, we assume "Members" list is authoritative for membership
+            # But converting to through model implies we should probably be careful.
+            # However, simpler requirement: "assign team members in the UI".
+            # Logic: If user was in team but not in selected, remove them.
+            if selected_users:
+                AccountTeamMember.objects.filter(account=account).exclude(user__in=selected_users).delete()
+            else:
+                 AccountTeamMember.objects.filter(account=account).delete()
+
+        return account
 
 
 class ContactForm(forms.ModelForm):

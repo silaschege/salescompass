@@ -294,6 +294,16 @@
                     href="{% url 'tenants:termination-workflows' %}">Termination Workflows</a>
                 <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'lifecycle-workflows' %}active{% endif %}"
                     href="{% url 'tenants:lifecycle-workflows' %}">All Workflows</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'lifecycle_event_list' %}active{% endif %}"
+                    href="{% url 'tenants:lifecycle_event_list' %}">Lifecycle Events</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'migration_record_list' %}active{% endif %}"
+                    href="{% url 'tenants:migration_record_list' %}">Migration Records</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'preservation_strategy_list' %}active{% endif %}"
+                    href="{% url 'tenants:preservation_strategy_list' %}">Preservation Strategies</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'preservation_schedule_list' %}active{% endif %}"
+                    href="{% url 'tenants:preservation_schedule_list' %}">Preservation Schedules</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'workflow_execution_list' %}active{% endif %}"
+                    href="{% url 'tenants:workflow_execution_list' %}">Workflow Executions</a>
             </div>
 
             <!-- Module Entitlements -->
@@ -339,7 +349,8 @@
             </div>
 
             <!-- Billing Oversight -->
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#billingOversightMenu">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse"
+                data-bs-target="#billingOversightMenu">
                 <i class="bi bi-credit-card"></i> Billing Oversight
             </a>
             <div class="collapse" id="billingOversightMenu">
@@ -442,7 +453,7 @@
                     }
                 });
             }
-            
+
             // Set active link based on current URL
             const currentPath = window.location.pathname;
             document.querySelectorAll('.sidebar .nav-link').forEach(link => {

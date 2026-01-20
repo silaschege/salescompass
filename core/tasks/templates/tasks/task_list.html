@@ -2,175 +2,293 @@
 {% load auth_extras math filters_extras %}
 {% block title %}Tasks - SalesCompass{% endblock %}
 
+{% block extra_css %}
+<style>
+    .header-section {
+        background: linear-gradient(135deg, #6f42c1 0%, #4a2d8a 100%);
+        border-radius: 0 0 32px 32px;
+        padding: 4rem 0 3rem 0;
+        margin-bottom: 2rem;
+        color: white;
+    }
+
+    .list-container {
+        background: #ffffff;
+        border-radius: 20px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        overflow: hidden;
+        padding: 0;
+    }
+
+    .filter-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 1.25rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02);
+    }
+
+    .premium-table thead th {
+        background: #f8f9fa;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        font-weight: 700;
+        color: #6c757d;
+        border-bottom: 2px solid #f1f3f5;
+        padding: 16px 20px;
+    }
+
+    .premium-table tbody td {
+        padding: 18px 20px;
+        border-bottom: 1px solid #f1f3f5;
+        vertical-align: middle;
+    }
+
+    .task-title-link {
+        color: #1a1a1a;
+        font-weight: 600;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .task-title-link:hover {
+        color: #6f42c1;
+    }
+
+    .badge-premium {
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    .search-input {
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        padding: 0.6rem 1rem;
+        transition: all 0.2s;
+    }
+
+    .search-input:focus {
+        border-color: #6f42c1;
+        box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.1);
+    }
+
+    .action-btn {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        transition: all 0.2s;
+    }
+
+    .pagination .page-link {
+        border: none;
+        border-radius: 8px;
+        margin: 0 4px;
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #6f42c1;
+        color: white;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="header-bar mb-4">
+<div class="header-section">
     <div class="container">
-        <div class="container">
-            <h1 class="block-title">{{ page_title|default:"Tasks" }}</h1>
-            <p class="text-white text-center lead">{{ page_subtitle|default:"Manage and track all your team's tasks" }}
-            </p>
+        <div class="row align-items-center">
+            <div class="col-lg-6 text-center text-lg-start">
+                <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"Tasks" }}</h1>
+                <p class="opacity-75 lead mb-0">{{ page_subtitle|default:"Manage and track all your team's tasks" }}</p>
+            </div>
+            <div class="col-lg-6 text-center text-lg-end mt-4 mt-lg-0">
+                <div class="d-flex justify-content-center justify-content-lg-end gap-2">
+                    <a href="{% url 'tasks:task_create' %}"
+                        class="btn btn-light fw-bold px-4 py-2 rounded-3 shadow-sm text-primary">
+                        <i class="bi bi-plus-lg me-2"></i> New Task
+                    </a>
+                    <div class="btn-group bg-white rounded-3 p-1 shadow-sm">
+                        <a href="{% url 'tasks:task_list' %}" class="btn btn-primary active rounded-2 px-3"
+                            title="List View">
+                            <i class="bi bi-list-ul"></i>
+                        </a>
+                        <a href="{% url 'tasks:kanban' %}" class="btn btn-link text-dark text-decoration-none px-3"
+                            title="Kanban View">
+                            <i class="bi bi-grid-3x3-gap"></i>
+                        </a>
+                        <a href="{% url 'tasks:calendar' %}" class="btn btn-link text-dark text-decoration-none px-3"
+                            title="Calendar View">
+                            <i class="bi bi-calendar3"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="d-flex gap-2">
-            <a href="{% url 'tasks:create' %}" class="btn btn-primary shadow-sm">
-                <i class="bi bi-plus-lg"></i> New Task
-            </a>
-            <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                    <i class="bi bi-filter"></i> Filters
-                </button>
-                <form class="dropdown-menu p-3 shadow" style="min-width: 300px;">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Search</label>
-                        <input type="text" name="search" class="form-control form-control-sm"
-                            placeholder="Title or description..." value="{{ request.GET.search }}">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Assignee</label>
-                        <select name="assigned_to" class="form-select form-select-sm">
-                            <option value="">All Assignees</option>
-                            {% for member in team_members %}
-                            <option value="{{ member.id }}" {% if request.GET.assigned_to == member.id|to_string%}selected{% endif %}>
-                                {{ member.email }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Status</label>
-                        <select name="status" class="form-select form-select-sm">
-                            <option value="">All Statuses</option>
-                            {% for status in statuses %}
-                            <option value="{{ status.id }}" {% if request.GET.status == status.id|stringformat:"s"%}selected{% endif %}>
-                                {{ status.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-sm w-100">Apply Filters</button>
-                    <a href="{% url 'tasks:list' %}" class="btn btn-link btn-sm w-100 mt-1 text-decoration-none">Clear
-                        All</a>
-                </form>
+<div class="container mb-5">
+    <!-- Filters -->
+    <div class="filter-card mb-4">
+        <form class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small fw-bold text-muted text-uppercase">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 pe-0"><i
+                            class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control border-start-0 search-input ps-2"
+                        placeholder="Task name or description..." value="{{ request.GET.search }}">
+                </div>
             </div>
-            <a href="{% url 'tasks:dashboard' %}" class="btn btn-outline-secondary">Dashboard</a>
-        </div>
-        <div class="d-flex gap-2">
-            <div class="btn-group">
-                <a href="{% url 'tasks:list' %}" class="btn btn-primary active" title="List View">
-                    <i class="bi bi-list-ul"></i>
-                </a>
-                <a href="{% url 'tasks:kanban' %}" class="btn btn-outline-primary" title="Kanban View">
-                    <i class="bi bi-grid-3x3-gap"></i>
-                </a>
-                <a href="{% url 'tasks:calendar' %}" class="btn btn-outline-primary" title="Calendar View">
-                    <i class="bi bi-calendar3"></i>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted text-uppercase">Assignee</label>
+                <select name="assigned_to" class="form-select search-input">
+                    <option value="">All Members</option>
+                    {% for member in team_members %}
+                    <option value="{{ member.id }}" {% if request.GET.assigned_to == member.id|to_string %}selected{% endif %}>
+                        {{ member.email|truncatechars:25 }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted text-uppercase">Status</label>
+                <select name="status" class="form-select search-input">
+                    <option value="">All Statuses</option>
+                    {% for status in statuses %}
+                    <option value="{{ status.id }}" {% if request.GET.status == status.id|stringformat:"s" %}selected{%endif %}>
+                        {{ status.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100 fw-bold py-2 rounded-3">Apply</button>
+                <a href="{% url 'tasks:task_list' %}" class="btn btn-outline-secondary py-2 rounded-3"
+                    title="Clear Filters">
+                    <i class="bi bi-arrow-counterclockwise"></i>
                 </a>
             </div>
-        </div>
+        </form>
     </div>
 
-    <div class="container-fluid mt-3">
-
-        <!-- Tasks Table -->
+    <!-- Table Container -->
+    <div class="list-container">
         {% if tasks %}
-        <div class="o_list_view">
-            <table class="table o_list_table table-hover">
+        <div class="table-responsive">
+            <table class="table premium-table table-hover mb-0">
                 <thead>
                     <tr>
-                        <th>Task</th>
-                        <th>Related To</th>
-                        <th>Assigned To</th>
-                        <th>Due Date</th>
-                        <th>Status</th>
-                        <th>Priority</th>
-                        <th>Actions</th>
+                        <th>Task Details</th>
+                        <th>Connections</th>
+                        <th>Assignee</th>
+                        <th>Timeline</th>
+                        <th>Progress</th>
+                        <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for task in tasks %}
                     <tr data-id="{{ task.id }}">
                         <td>
-                            <a href="{% url 'tasks:detail' task.pk %}" class="fw-bold text-dark text-decoration-none">
-                                {{ task.title }}
+                            <a href="{% url 'tasks:task_detail' task.pk %}" class="task-title-link">
+                                {{ task.title|truncatechars:50 }}
                             </a>
-                            <br>
-                            <small class="text-muted">{{ task.task_description|truncatewords:8 }}</small>
+                            <div class="text-muted small mt-1">
+                                <i class="bi bi-hash small me-1"></i>{{ task.id }} &bull;
+                                {{ task.task_description|truncatewords:6|default:"No description" }}
+                            </div>
                         </td>
                         <td>
                             {% if task.get_related_object_url %}
-                            <a href="{{ task.get_related_object_url }}">
-                                {% if task.account %}
-                                {{ task.account.name }}
-                                {% elif task.opportunity %}
-                                {{ task.opportunity.name }}
-                                {% elif task.lead %}
-                                {{ task.lead.full_name }}
-                                {% elif task.case %}
-                                {{ task.case.subject }}
-                                {% endif %}
+                            <a href="{{ task.get_related_object_url }}" class="text-decoration-none small fw-semibold">
+                                <span class="badge bg-soft-primary text-primary">
+                                    {% if task.account %}<i class="bi bi-building me-1"></i>{{
+                                    task.account.name|truncatechars:15 }}
+                                    {% elif task.opportunity %}<i class="bi bi-cash-stack me-1"></i>{{
+                                    task.opportunity.name|truncatechars:15 }}
+                                    {% elif task.lead %}<i class="bi bi-person-plus me-1"></i>{{
+                                    task.lead.full_name|truncatechars:15 }}
+                                    {% elif task.case %}<i class="bi bi-bag-check me-1"></i>{{
+                                    task.case.subject|truncatechars:15 }}
+                                    {% endif %}
+                                </span>
                             </a>
                             {% else %}
-                            <span class="text-muted">—</span>
+                            <span class="text-muted small">—</span>
                             {% endif %}
                         </td>
                         <td>
                             {% if task.assigned_to %}
-                            {{ task.assigned_to.email }}
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm bg-primary rounded-circle text-white d-flex align-items-center justify-content-center me-2"
+                                    style="width: 28px; height: 28px; font-size: 0.7rem; font-weight: 700;">
+                                    {{ task.assigned_to.email|first|upper }}
+                                </div>
+                                <span class="small fw-medium">{{ task.assigned_to.email|truncatechars:20 }}</span>
+                            </div>
                             {% else %}
-                            <span class="text-muted">Unassigned</span>
+                            <span class="text-muted small">Unassigned</span>
                             {% endif %}
                         </td>
                         <td>
                             {% if task.due_date %}
-                            {{ task.due_date|date:"M d, Y H:i" }}
-                            {% if task.is_overdue %}
-                            <span class="badge bg-danger">Overdue</span>
-                            {% endif %}
+                            <div
+                                class="{% if task.is_overdue %}text-danger{% else %}text-dark{% endif %} small fw-bold">
+                                {{ task.due_date|date:"M d, Y" }}
+                            </div>
+                            <div class="text-muted" style="font-size: 0.7rem;">{{ task.due_date|date:"H:i" }}</div>
                             {% else %}
-                            <span class="text-muted">—</span>
+                            <span class="text-muted small">—</span>
                             {% endif %}
                         </td>
                         <td>
-                            {% if task.status_ref %}
-                            <span class="badge" style="background-color: {{ task.status_ref.color }}; color: white;">
-                                {{ task.status_ref.label }}
-                            </span>
-                            {% else %}
-                            <span
-                                class="badge bg-{% if task.status == 'completed' %}success{% elif task.status == 'cancelled' %}secondary{% elif task.status == 'overdue' %}danger{% else %}warning{% endif %}">
-                                {{ task.get_status_display }}
-                            </span>
-                            {% endif %}
+                            <div class="d-flex flex-column gap-1">
+                                <div>
+                                    {% if task.status_ref %}
+                                    <span class="badge rounded-pill"
+                                        style="background-color: {{ task.status_ref.color|default:'#6c757d' }}20; color: {{ task.status_ref.color|default:'#6c757d' }}; font-size: 0.7rem;">
+                                        {{ task.status_ref.label }}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-light text-dark rounded-pill" style="font-size: 0.7rem;">{{ task.get_status_display }}</span>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    {% if task.priority_ref %}
+                                    <span class="badge rounded-pill"
+                                        style="background-color: {{ task.priority_ref.color|default:'#6c757d' }}20; color: {{ task.priority_ref.color|default:'#6c757d' }}; font-size: 0.7rem;">
+                                        {{ task.priority_ref.label }}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge rounded-pill"
+                                        style="font-size: 0.7rem; background-color: rgba(108, 117, 125, 0.1); color: #6c757d;">{{task.get_priority_display}}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </td>
-                        <td>
-                            {% if task.priority_ref %}
-                            <span class="badge" style="background-color: {{ task.priority_ref.color }}; color: white;">
-                                {{ task.priority_ref.label }}
-                            </span>
-                            {% else %}
-                            <span
-                                class="badge bg-{% if task.priority == 'high' %}danger{% elif task.priority == 'medium' %}warning{% elif task.priority == 'low' %}secondary{% else %}info{% endif %}">
-                                {{ task.get_priority_display }}
-                            </span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="d-flex gap-1">
+                        <td class="text-end">
+                            <div class="d-flex justify-content-end gap-1">
                                 {% if task.status != 'completed' %}
                                 <form method="post" action="{% url 'tasks:complete_task' %}" class="d-inline">
                                     {% csrf_token %}
                                     <input type="hidden" name="task_id" value="{{ task.id }}">
-                                    <button type="submit" class="btn btn-sm btn-success">Complete</button>
+                                    <button type="submit" class="btn btn-soft-success action-btn" title="Complete"><i
+                                            class="bi bi-check-lg"></i></button>
                                 </form>
                                 {% endif %}
-                                <a href="{% url 'tasks:detail' task.pk %}"
-                                    class="btn btn-sm btn-outline-primary">View</a>
-                                <a href="{% url 'tasks:update' task.pk %}"
-                                    class="btn btn-sm btn-outline-secondary">Edit</a>
+                                <a href="{% url 'tasks:task_update' task.pk %}" class="btn btn-soft-primary action-btn"
+                                    title="Edit"><i class="bi bi-pencil"></i></a>
+                                <a href="{% url 'tasks:task_detail' task.pk %}"
+                                    class="btn btn-soft-secondary action-btn" title="View"><i class="bi bi-eye"></i></a>
                             </div>
                         </td>
                     </tr>
@@ -181,60 +299,67 @@
 
         <!-- Pagination -->
         {% if is_paginated %}
-        <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-center">
-                {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
-                        aria-label="First">
-                        <span aria-hidden="true">&laquo;&laquo;</span>
-                    </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link"
-                        href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
-                        aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                    </a>
-                </li>
-                {% endif %}
+        <div class="py-4 border-top">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link shadow-sm"
+                            href="?page=1{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
+                            aria-label="First">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link shadow-sm"
+                            href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
+                            aria-label="Previous">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
 
-                <li class="page-item active">
-                    <span class="page-link">
-                        {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-                    </span>
-                </li>
+                    <li class="page-item active">
+                        <span class="page-link shadow-sm">{{ page_obj.number }} of {{ page_obj.paginator.num_pages
+                            }}</span>
+                    </li>
 
-                {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link"
-                        href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
-                        aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                    </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link"
-                        href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
-                        aria-label="Last">
-                        <span aria-hidden="true">&raquo;&raquo;</span>
-                    </a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link shadow-sm"
+                            href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
+                            aria-label="Next">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link shadow-sm"
+                            href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
+                            aria-label="Last">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
         {% endif %}
         {% else %}
-        <div class="text-center">
+        <div class="text-center py-5">
             <div class="mb-4">
-                <i class="bi bi-check2-square display-1 text-muted"></i>
+                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center"
+                    style="width: 100px; height: 100px;">
+                    <i class="bi bi-clipboard2-check display-4 text-muted"></i>
+                </div>
             </div>
-            <h3 class="text-muted">No tasks found</h3>
-            <p class="text-muted mb-4">Create your first task to get started.</p>
-            <a href="{% url 'tasks:create' %}" class="btn btn-primary">Create Task</a>
+            <h4 class="fw-bold">No tasks found</h4>
+            <p class="text-muted mb-4">You're all caught up! or try adjusting your search filters.</p>
+            <a href="{% url 'tasks:task_create' %}" class="btn btn-primary px-4 py-2 rounded-3">
+                <i class="bi bi-plus-lg me-2"></i>Create First Task
+            </a>
         </div>
         {% endif %}
     </div>
+</div>
 
-
-    {% endblock %}
+{% endblock %}

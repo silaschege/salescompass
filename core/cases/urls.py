@@ -14,9 +14,6 @@ urlpatterns = [
     path('csat/survey/', views.CsatSurveyView.as_view(), name='csat_survey'),
     path('csat/thank-you/', views.CsatThankYouView.as_view(), name='csat_thank_you'),
     
-    # Knowledge Base
-    path('knowledge-base/', views.KnowledgeBaseView.as_view(), name='knowledge_base'),
-    
     # Kanban
     path('kanban/', views.CaseKanbanView.as_view(), name='case_kanban'),
 
@@ -40,13 +37,6 @@ urlpatterns = [
 
     # Assignment Rule Detail (missing)
     path('assignment-rules/<int:pk>/', views.AssignmentRuleDetailView.as_view(), name='assignment_rule_detail'),
-
-    # Knowledge Base Article Management
-    path('knowledge-base/articles/', views.KnowledgeBaseArticleListView.as_view(), name='knowledge_base_article_list'),
-    path('knowledge-base/articles/create/', views.KnowledgeBaseArticleCreateView.as_view(), name='knowledge_base_article_create'),
-    path('knowledge-base/articles/<int:pk>/', views.KnowledgeBaseArticleDetailView.as_view(), name='knowledge_base_article_detail'),
-    path('knowledge-base/articles/<int:pk>/edit/', views.KnowledgeBaseArticleUpdateView.as_view(), name='knowledge_base_article_update'),
-    path('knowledge-base/articles/<int:pk>/delete/', views.KnowledgeBaseArticleDeleteView.as_view(), name='knowledge_base_article_delete'),
     
     # CSAT Response Management
     path('csat-responses/', views.CsatResponseListView.as_view(), name='csat_response_list'),

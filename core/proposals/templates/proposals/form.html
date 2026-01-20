@@ -80,9 +80,9 @@
         <button type="submit" class="btn btn-primary">
             {% if object %}Update Proposal{% else %}Create Proposal{% endif %}
         </button>
-        <a href="{% url 'proposals:list' %}" class="btn btn-secondary">Cancel</a>
+        <a href="{% url 'proposals:proposal_list' %}" class="btn btn-secondary">Cancel</a>
         {% if object %}
-        <a href="{% url 'proposals:detail' object.pk %}" class="btn btn-outline-primary">View Proposal</a>
+        <a href="{% url 'proposals:proposal_detail' object.pk %}" class="btn btn-outline-primary">View Proposal</a>
         {% endif %}
     </div>
 </form>

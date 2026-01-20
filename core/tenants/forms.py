@@ -6,9 +6,14 @@ from core.models import User
 from .models import (
     Tenant, TenantSettings, TenantFeatureEntitlement, Setting, SettingGroup, 
     SettingType, TenantCloneHistory, WhiteLabelSettings, TenantUsageMetric, 
-    OverageAlert, Notification, AlertThreshold, TenantDataIsolationAudit, 
+    OverageAlert, NotificationTemplate, Notification, AlertThreshold, TenantDataIsolationAudit, 
     TenantDataIsolationViolation, DataResidencySettings, TenantRole, 
-    TenantTerritory, TenantMember
+    TenantTerritory, TenantMember, TenantLifecycleEvent, TenantMigrationRecord,
+    TenantDataPreservation, TenantDataRestoration, TenantDataPreservationStrategy,
+    TenantDataPreservationSchedule, AutomatedTenantLifecycleRule,
+    AutomatedTenantLifecycleEvent, TenantLifecycleWorkflow,
+    TenantLifecycleWorkflowExecution, TenantSuspensionWorkflow,
+    TenantTerminationWorkflow
 )
 
 
@@ -873,3 +878,285 @@ class SettingTypeForm(forms.ModelForm):
         model = SettingType
         fields = ['setting_type_name', 'label', 'order', 'setting_type_is_active', 'is_system']
 
+
+class TenantLifecycleEventForm(forms.ModelForm):
+    class Meta:
+        model = TenantLifecycleEvent
+        fields = ['tenant', 'event_type', 'old_value', 'new_value', 'reason', 'triggered_by', 'ip_address']
+        widgets = {
+            'tenant': forms.Select(attrs={'class': 'form-select'}),
+            'event_type': forms.Select(attrs={'class': 'form-select'}),
+            'old_value': forms.TextInput(attrs={'class': 'form-control'}),
+            'new_value': forms.TextInput(attrs={'class': 'form-control'}),
+            'reason': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'triggered_by': forms.Select(attrs={'class': 'form-select'}),
+            'ip_address': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+
+class TenantMigrationRecordForm(forms.ModelForm):
+    class Meta:
+        model = TenantMigrationRecord
+        fields = ['source_tenant', 'destination_tenant', 'migration_type', 'status', 'completed_at', 'initiated_by', 'completed_by', 'progress_percentage', 'total_records', 'processed_records', 'failed_records', 'error_log', 'migration_notes']
+        widgets = {
+            'source_tenant': forms.Select(attrs={'class': 'form-select'}),
+            'destination_tenant': forms.Select(attrs={'class': 'form-select'}),
+            'migration_type': forms.Select(attrs={'class': 'form-select'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'completed_at': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'initiated_by': forms.Select(attrs={'class': 'form-select'}),
+            'completed_by': forms.Select(attrs={'class': 'form-select'}),
+            'progress_percentage': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'total_records': forms.NumberInput(attrs={'class': 'form-control'}),
+            'processed_records': forms.NumberInput(attrs={'class': 'form-control'}),
+            'failed_records': forms.NumberInput(attrs={'class': 'form-control'}),
+            'error_log': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'migration_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+
+class TenantDataPreservationForm(forms.ModelForm):
+    class Meta:
+        model = TenantDataPreservation
+        fields = ['tenant', 'preservation_type', 'status', 'description', 'backup_location', 'file_size_mb', 'preservation_date', 'expires_at', 'created_by', 'retention_period_days', 'modules_included', 'notes']
+        widgets = {
+            'tenant': forms.Select(attrs={'class': 'form-select'}),
+            'preservation_type': forms.Select(attrs={'class': 'form-select'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'backup_location': forms.TextInput(attrs={'class': 'form-control'}),
+            'file_size_mb': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'preservation_date': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'expires_at': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'created_by': forms.Select(attrs={'class': 'form-select'}),
+            'retention_period_days': forms.NumberInput(attrs={'class': 'form-control'}),
+            'modules_included': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+
+
+class TenantDataRestorationForm(forms.ModelForm):
+    class Meta:
+        model = TenantDataRestoration
+        fields = ['tenant', 'preservation_record', 'status', 'completed_at', 'completed_by', 'notes']
+        widgets = {
+            'tenant': forms.Select(attrs={'class': 'form-select'}),
+            'preservation_record': forms.Select(attrs={'class': 'form-select'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'completed_at': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'completed_by': forms.Select(attrs={'class': 'form-select'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+
+
+class TenantDataPreservationStrategyForm(forms.ModelForm):
+    class Meta:
+        model = TenantDataPreservationStrategy
+        fields = ['name', 'description', 'is_active', 'preservation_frequency', 'retention_period_days', 'modules_to_preserve', 'storage_location', 'compression_enabled', 'encryption_enabled', 'created_by']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'preservation_frequency': forms.Select(attrs={'class': 'form-select'}),
+            'retention_period_days': forms.NumberInput(attrs={'class': 'form-control'}),
+            'modules_to_preserve': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'storage_location': forms.TextInput(attrs={'class': 'form-control'}),
+            'compression_enabled': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'encryption_enabled': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'created_by': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+
+class TenantDataPreservationScheduleForm(forms.ModelForm):
+    class Meta:
+        model = TenantDataPreservationSchedule
+        fields = ['strategy', 'tenant', 'next_scheduled_run', 'last_run', 'is_active']
+        widgets = {
+            'strategy': forms.Select(attrs={'class': 'form-select'}),
+            'tenant': forms.Select(attrs={'class': 'form-select'}),
+            'next_scheduled_run': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'last_run': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+class AutomatedTenantLifecycleRuleForm(forms.ModelForm):
+    class Meta:
+        model = AutomatedTenantLifecycleRule
+        fields = ['name', 'description', 'is_active', 'condition_type', 'condition_field', 'condition_operator', 'condition_value', 'action_type', 'action_parameters', 'evaluation_frequency', 'last_evaluated', 'next_evaluation', 'created_by']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'condition_type': forms.Select(attrs={'class': 'form-select'}),
+            'condition_field': forms.TextInput(attrs={'class': 'form-control'}),
+            'condition_operator': forms.Select(attrs={'class': 'form-select'}),
+            'condition_value': forms.TextInput(attrs={'class': 'form-control'}),
+            'action_type': forms.Select(attrs={'class': 'form-select'}),
+            'action_parameters': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'evaluation_frequency': forms.Select(attrs={'class': 'form-select'}),
+            'last_evaluated': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'next_evaluation': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'created_by': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+
+class AutomatedTenantLifecycleEventForm(forms.ModelForm):
+    class Meta:
+        model = AutomatedTenantLifecycleEvent
+        fields = ['rule', 'tenant', 'event_type', 'status', 'details', 'triggered_at', 'executed_by']
+        widgets = {
+            'rule': forms.Select(attrs={'class': 'form-select'}),
+            'tenant': forms.Select(attrs={'class': 'form-select'}),
+            'event_type': forms.Select(attrs={'class': 'form-select'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'details': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'triggered_at': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'executed_by': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+
+class TenantLifecycleWorkflowForm(forms.ModelForm):
+    class Meta:
+        model = TenantLifecycleWorkflow
+        fields = ['name', 'description', 'workflow_type', 'is_active', 'steps', 'created_by']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'workflow_type': forms.Select(attrs={'class': 'form-select'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'steps': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'created_by': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+
+class TenantLifecycleWorkflowExecutionForm(forms.ModelForm):
+    class Meta:
+        model = TenantLifecycleWorkflowExecution
+        fields = ['workflow', 'tenant', 'status', 'completed_at', 'executed_by', 'current_step', 'total_steps', 'progress_percentage', 'execution_log', 'error_message']
+        widgets = {
+            'workflow': forms.Select(attrs={'class': 'form-select'}),
+            'tenant': forms.Select(attrs={'class': 'form-select'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'completed_at': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'executed_by': forms.Select(attrs={'class': 'form-select'}),
+            'current_step': forms.NumberInput(attrs={'class': 'form-control'}),
+            'total_steps': forms.NumberInput(attrs={'class': 'form-control'}),
+            'progress_percentage': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'execution_log': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'error_message': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+
+class TenantSuspensionWorkflowForm(forms.ModelForm):
+    class Meta:
+        model = TenantSuspensionWorkflow
+        fields = ['tenant', 'status', 'initiated_by', 'approved_by', 'suspension_reason', 'approval_notes', 'completed_at', 'approved_at', 'steps_completed', 'total_steps']
+        widgets = {
+            'tenant': forms.Select(attrs={'class': 'form-select'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'initiated_by': forms.Select(attrs={'class': 'form-select'}),
+            'approved_by': forms.Select(attrs={'class': 'form-select'}),
+            'suspension_reason': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'approval_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'completed_at': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'approved_at': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'steps_completed': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'total_steps': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
+
+
+class TenantTerminationWorkflowForm(forms.ModelForm):
+    class Meta:
+        model = TenantTerminationWorkflow
+        fields = ['tenant', 'status', 'initiated_by', 'approved_by', 'termination_reason', 'approval_notes', 'completed_at', 'approved_at', 'steps_completed', 'total_steps', 'data_preservation_required', 'data_preservation_record']
+        widgets = {
+            'tenant': forms.Select(attrs={'class': 'form-select'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'initiated_by': forms.Select(attrs={'class': 'form-select'}),
+            'approved_by': forms.Select(attrs={'class': 'form-select'}),
+            'termination_reason': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'approval_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'completed_at': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'approved_at': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'steps_completed': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'total_steps': forms.NumberInput(attrs={'class': 'form-control'}),
+            'data_preservation_required': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'data_preservation_record': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+
+class NotificationTemplateForm(forms.ModelForm):
+    """Form for managing notification templates"""
+    class Meta:
+        model = NotificationTemplate
+        fields = ['name', 'subject', 'message_body', 'notification_type', 'is_active']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'subject': forms.TextInput(attrs={'class': 'form-control'}),
+            'message_body': forms.Textarea(attrs={'class': 'form-control', 'rows': 6}),
+            'notification_type': forms.Select(attrs={'class': 'form-select'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+
+
+class TenantTerritoryForm(forms.ModelForm):
+    """Form for managing tenant territories"""
+    class Meta:
+        model = TenantTerritory
+        fields = ['name', 'description', 'region_code', 'country_codes', 'is_active', 'order']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'region_code': forms.TextInput(attrs={'class': 'form-control'}),
+            'country_codes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': '["US", "CA", "MX"]'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'order': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
+
+    def clean_country_codes(self):
+        """Validate that country_codes is a valid JSON array of country codes"""
+        import json
+        country_codes_input = self.cleaned_data.get('country_codes')
+        if country_codes_input:
+            try:
+                # Try parsing as JSON
+                countries = json.loads(country_codes_input)
+                if not isinstance(countries, list):
+                    raise forms.ValidationError("Country codes must be a JSON array")
+                # Validate each country code is a valid ISO code (2-3 letters)
+                for country in countries:
+                    if not isinstance(country, str) or len(country) < 2 or len(country) > 3:
+                        raise forms.ValidationError(f"'{country}' is not a valid country code")
+                return countries
+            except json.JSONDecodeError:
+                raise forms.ValidationError("Country codes must be valid JSON array")
+        return []
+
+
+class TenantRoleForm(forms.ModelForm):
+    """Form for managing tenant roles"""
+    class Meta:
+        model = TenantRole
+        fields = ['name', 'description', 'is_system_role', 'is_assignable', 'permissions', 'order']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'is_system_role': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_assignable': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'permissions': forms.SelectMultiple(attrs={'class': 'form-select'}),
+            'order': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        if tenant:
+            # Limit permissions to those relevant to the application
+            from django.contrib.auth.models import Permission
+            self.fields['permissions'].queryset = Permission.objects.all()

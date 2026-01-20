@@ -2,189 +2,370 @@
 
 {% block title %}Report Schedules - SalesCompass{% endblock %}
 
-{% block content %}
-<div class="header-bar mb-4">
-    <div class="container">
-        <h1 class="block-title">Report Schedules</h1>
-        <p class="text-white text-center lead">Manage automated report delivery schedules</p>
-    </div>
-</div>
-
-<div class="container">
-    <!-- Action Buttons -->
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <div class="d-flex gap-2">
-                <a href="{% url 'reports:schedule_create' %}" class="btn btn-primary">+ New Schedule</a>
-                <a href="{% url 'reports:list' %}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left"></i> Back to Reports
-                </a>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <!-- Optional: Add search or filter here if needed in the future -->
-        </div>
-    </div>
-
-    <!-- Schedules Table -->
-    {% if schedules %}
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Report</th>
-                    <th>Frequency</th>
-                    <th>Recipients</th>
-                    <th>Format</th>
-                    <th>Next Run</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for schedule in schedules %}
-                <tr>
-                    <td>
-                        <a href="{% url 'reports:detail' schedule.report.pk %}" class="text-decoration-none">
-                            <strong>{{ schedule.report.report_name }}</strong>
-                        </a>
-                        <br>
-                        <small class="text-muted">{{ schedule.report.get_report_type_display }}</small>
-                    </td>
-                    <td>
-                        <span
-                            class="badge {% if schedule.frequency == 'daily' %}bg-info{% elif schedule.frequency == 'weekly' %}bg-warning text-dark{% elif schedule.frequency == 'monthly' %}bg-success{% else %}bg-primary{% endif %}">
-                            {{ schedule.get_frequency_display }}
-                        </span>
-                    </td>
-                    <td>
-                        {% if schedule.recipients %}
-                        <span title="{{ schedule.recipients|join:', ' }}">
-                            {{ schedule.recipients|join:", "|truncatechars:30 }}
-                        </span>
-                        {% else %}
-                        <span class="text-muted">None</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <span
-                            class="badge {% if schedule.export_format == 'csv' %}bg-secondary{% elif schedule.export_format == 'xlsx' %}bg-success{% else %}bg-danger{% endif %}">
-                            {{ schedule.get_export_format_display }}
-                        </span>
-                    </td>
-                    <td>
-                        {% if schedule.next_run %}
-                        {{ schedule.next_run|date:"M d, Y H:i" }}
-                        {% else %}
-                        <span class="text-muted">Not scheduled</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if schedule.schedule_is_active %}
-                        <span class="badge bg-success">Active</span>
-                        {% else %}
-                        <span class="badge bg-secondary">Inactive</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <div class="d-flex flex-column gap-1">
-                            <a href="{% url 'reports:schedule_update' schedule.pk %}"
-                                class="btn btn-sm btn-outline-primary">Edit</a>
-                            <form method="post" action="{% url 'reports:schedule_delete' schedule.pk %}"
-                                class="d-inline" onsubmit="return confirm('Delete this schedule?')">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Pagination -->
-    {% if is_paginated %}
-    <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center">
-            {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
-                    aria-label="First">
-                    <span aria-hidden="true">&laquo;&laquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link"
-                    href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
-                    aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-            {% endif %}
-
-            <li class="page-item active">
-                <span class="page-link">
-                    {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-                </span>
-            </li>
-
-            {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link"
-                    href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
-                    aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link"
-                    href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
-                    aria-label="Last">
-                    <span aria-hidden="true">&raquo;&raquo;</span>
-                </a>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
-    {% endif %}
-
-    {% else %}
-    <!-- Empty State -->
-    <div class="text-center py-5">
-        <div class="mb-4">
-            <i class="bi bi-alarm display-1 text-muted"></i>
-        </div>
-        <h3 class="text-muted">No schedules found</h3>
-        <p class="text-muted mb-4">Create your first automated report schedule to receive updates via email.</p>
-        <a href="{% url 'reports:schedule_create' %}" class="btn btn-primary">Create Your First Schedule</a>
-    </div>
-    {% endif %}
-</div>
-{% endblock %}
-
-{% block extra_head %}
+{% block extra_css %}
 <style>
-    .table-hover tbody tr:hover {
-        background-color: rgba(111, 66, 193, 0.05);
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --glass-bg: rgba(255, 255, 255, 0.9);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --shadow-soft: 0 8px 32px rgba(31, 38, 135, 0.15);
+        --shadow-hover: 0 12px 40px rgba(31, 38, 135, 0.25);
     }
 
-    .badge {
-        font-size: 0.75em;
-        padding: 0.3em 0.6em;
+    body {
+        background: #f8f9fa;
     }
 
-    .btn-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.875rem;
+    .wrapper {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: calc(100vh - 60px);
+        padding-bottom: 2rem;
     }
 
     .header-bar {
-        background: linear-gradient(45deg, #6f42c1, #4e2a84);
-        padding: 2rem 0;
+        background: var(--primary-gradient);
+        padding: 3rem 0;
+        margin-bottom: -3rem;
         color: white;
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .glass-container {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        box-shadow: var(--shadow-soft);
+        padding: 2rem;
+        margin-top: 1rem;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+        background: white;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        padding: 0.6rem 1rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #764ba2;
+        box-shadow: 0 0 0 4px rgba(118, 75, 162, 0.1);
+    }
+
+    /* Table/List Styles */
+    .table-custom {
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+
+    .table-custom tbody tr {
+        background: white;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .table-custom tbody tr:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        z-index: 1;
+        position: relative;
+    }
+
+    .table-custom td {
+        border: none;
+        padding: 1.25rem 1rem;
+        vertical-align: middle;
+    }
+
+    .table-custom td:first-child {
+        border-top-left-radius: 10px;
+        border-bottom-left-radius: 10px;
+    }
+
+    .table-custom td:last-child {
+        border-top-right-radius: 10px;
+        border-bottom-right-radius: 10px;
+    }
+
+    .badge-pill {
+        border-radius: 50px;
+        padding: 0.4em 0.8em;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    /* Buttons */
+    .btn-create {
+        background: #764ba2;
+        border: 1px solid #764ba2;
+        color: white;
+        backdrop-filter: blur(5px);
+    }
+
+    .btn-create:hover {
+        background: #764ba2;
+        color: white;
+    }
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #764ba2;
+        background: #f8f9fa;
+        transition: all 0.2s;
+    }
+
+    .action-btn:hover {
+        background: #efefef;
+        color: #764ba2;
+    }
+
+    .action-btn.delete:hover {
+        background: #ffecec;
+        color: #dc3545;
     }
 </style>
 {% endblock %}
 
+{% block content %}
+<div class="wrapper">
 
+<div class="header-bar">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="display-6 fw-bold mb-1 text-center">Report Schedules</h1>
+                <p class="mb-0 opacity-75 text-center">Automate your insights delivery</p>
+            </div>
+            <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                <a href="{% url 'reports:report_list' %}" class="btn btn-outline-light me-2 border-0" style="background-color: #6f42c1; border-color: #6f42c1;">
+                    <i class="bi bi-arrow-left me-1"></i> Back
+                </a>
+                <a href="{% url 'reports:schedule_create' %}" class="btn btn-create px-4 py-2 rounded-pill" style="background-color: #6f42c1; border-color: #6f42c1;">
+                    <i class="bi bi-plus-lg me-2"></i> New Schedule
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <div class="container">
+        <div class="glass-container">
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+                <form class="row g-3 align-items-center">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0"><i
+                                    class="bi bi-search text-muted"></i></span>
+                            <input type="text" class="form-control border-start-0 ps-0"
+                                placeholder="Search schedules..." name="search" value="{{ request.GET.search }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="frequency">
+                            <option value="">Frequency: All</option>
+                            <option value="daily" {% if request.GET.frequency == 'daily' %}selected{% endif %}>Daily
+                            </option>
+                            <option value="weekly" {% if request.GET.frequency == 'weekly' %}selected{% endif %}>Weekly
+                            </option>
+                            <option value="monthly" {% if request.GET.frequency == 'monthly' %}selected{% endif %}>Monthly
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="status">
+                            <option value="">Status: All</option>
+                            <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active
+                            </option>
+                            <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">Filter</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Schedules List -->
+            {% if schedules %}
+            <div class="table-responsive" style="overflow-x: visible;">
+                <table class="table table-borderless table-custom mb-0">
+                    <thead class="text-muted small text-uppercase">
+                        <tr>
+                            <th class="ps-4">Report Name</th>
+                            <th>Frequency</th>
+                            <th>Recipients</th>
+                            <th>Format</th>
+                            <th>Next Run</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for schedule in schedules %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-3 text-primary">
+                                        <i class="bi bi-clock-history"></i>
+                                    </div>
+                                    <div>
+                                        <a href="{% url 'reports:report_detail' schedule.report.pk %}"
+                                            class="fw-bold text-dark text-decoration-none stretched-link">
+                                            {{ schedule.report.report_name }}
+                                        </a>
+                                        <div class="small text-muted">{{ schedule.report.get_report_type_display }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge badge-pill 
+                                    {% if schedule.frequency == 'daily' %}bg-info bg-opacity-10 text-info
+                                    {% elif schedule.frequency == 'weekly' %}bg-warning bg-opacity-10 text-warning
+                                    {% else %}bg-success bg-opacity-10 text-success{% endif %}">
+                                    {{ schedule.get_frequency_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center text-muted small">
+                                    <i class="bi bi-people me-2"></i>
+                                    {% if schedule.recipients %}
+                                    <span class="d-inline-block text-truncate" style="max-width: 150px;"
+                                        title="{{ schedule.recipients|join:', ' }}">
+                                        {{ schedule.recipients|length }} recipient(s)
+                                    </span>
+                                    {% else %}
+                                    <span>No recipients</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge badge-pill bg-secondary bg-opacity-10 text-secondary border">
+                                    {{ schedule.get_export_format_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if schedule.next_run %}
+                                <div class="small">
+                                    <div class="fw-bold text-dark">{{ schedule.next_run|date:"M d" }}</div>
+                                    <div class="text-muted">{{ schedule.next_run|date:"H:i" }}</div>
+                                </div>
+                                {% else %}
+                                <span class="text-muted small">Not scheduled</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if schedule.schedule_is_active %}
+                                <span class="badge bg-success rounded-pill pe-3 ps-2">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Active
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary rounded-pill pe-3 ps-2">
+                                    <i class="bi bi-pause-circle-fill me-1"></i> Inactive
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4" style="position: relative; z-index: 2;">
+                                <div class="btn-group">
+                                    <a href="{% url 'reports:schedule_update' schedule.pk %}"
+                                        class="action-btn text-decoration-none" data-bs-toggle="tooltip" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" class="action-btn text-decoration-none"
+                                        data-bs-toggle="tooltip" title="Run Now" onclick="alert('Running schedule...')">
+                                        <i class="bi bi-play-fill text-primary"></i>
+                                    </button>
+                                    <form method="post" action="{% url 'reports:schedule_delete' schedule.pk %}"
+                                        class="d-inline"
+                                        onsubmit="return confirm('Are you sure you want to delete this schedule?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="action-btn delete border-0"
+                                            data-bs-toggle="tooltip" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="d-flex justify-content-center mt-4">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination pagination-sm">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link border-0 rounded-circle mx-1"
+                                href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+                                aria-label="Previous">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        <li class="page-item disabled">
+                            <span class="page-link border-0 text-muted bg-transparent">
+                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link border-0 rounded-circle mx-1"
+                                href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+                                aria-label="Next">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center"
+                        style="width: 80px; height: 80px;">
+                        <i class="bi bi-calendar-event display-6 text-muted opacity-50"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold text-muted">No schedules found</h4>
+                <p class="text-muted mb-4 col-md-6 mx-auto">It looks like you haven't set up any automated report
+                    deliveries yet.</p>
+                <a href="{% url 'reports:schedule_create' %}" class="btn btn-primary px-4 py-2 rounded-pill shadow-sm">
+                    <i class="bi bi-plus-lg me-2"></i> Create Schedule
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
