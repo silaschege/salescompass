@@ -51,6 +51,25 @@
         href="{% url 'communication:sms_send' %}">Send SMS</a>
 </div>
 
+<!-- WhatsApp Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#waMenu"
+    aria-expanded="{% if request.resolver_match.url_name in 'whatsapp_conversation,whatsapp_send,whatsapp_template_list' %}true{% else %}false{% endif %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-whatsapp nav-icon"></i>
+        <span>WhatsApp</span>
+    </div>
+    <i class="bi bi-chevron-down"></i>
+</a>
+<div class="collapse {% if request.resolver_match.url_name in 'whatsapp_conversation,whatsapp_send,whatsapp_template_list' %}show{% endif %}"
+    id="waMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'whatsapp_conversation' %}active{% endif %}"
+        href="{% url 'communication:whatsapp_conversation' %}">All Messages</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'whatsapp_send' %}active{% endif %}"
+        href="{% url 'communication:whatsapp_send' %}">Send Message</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'whatsapp_template_list' %}active{% endif %}"
+        href="{% url 'communication:whatsapp_template_list' %}">Templates</a>
+</div>
+
 <!-- Calls Dropdown -->
 <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#callMenu"
     aria-expanded="{% if request.resolver_match.url_name in 'call_log_list,call_analytics' %}true{% else %}false{% endif %}">

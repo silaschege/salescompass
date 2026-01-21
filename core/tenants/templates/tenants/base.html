@@ -422,6 +422,37 @@
                 <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'run_data_isolation_audit' %}active{% endif %}"
                     href="{% url 'tenants:run_data_isolation_audit' %}">Run Data Audit</a>
             </div>
+
+            <!-- Member Management -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#memberMenu">
+                <i class="bi bi-people"></i> Member Management
+            </a>
+            <div class="collapse" id="memberMenu">
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'member_list' %}active{% endif %}"
+                    href="{% url 'tenants:member_list' %}">All Members</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'member_create' %}active{% endif %}"
+                    href="{% url 'tenants:member_create' %}">Add Member</a>
+            </div>
+
+            <!-- Roles & Territories -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#rolesTerritoryMenu">
+                <i class="bi bi-person-badge"></i> Roles & Territories
+            </a>
+            <div class="collapse" id="rolesTerritoryMenu">
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'role_list' %}active{% endif %}"
+                    href="{% url 'tenants:role_list' %}">Roles</a>
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'territory_list' %}active{% endif %}"
+                    href="{% url 'tenants:territory_list' %}">Territories</a>
+            </div>
+
+            <!-- Templates & Governance -->
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#governanceMenu">
+                <i class="bi bi-file-earmark-text"></i> Templates & Governance
+            </a>
+            <div class="collapse" id="governanceMenu">
+                <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'notification_template_list' %}active{% endif %}"
+                    href="{% url 'tenants:notification_template_list' %}">Notification Templates</a>
+            </div>
         </nav>
     </div>
 

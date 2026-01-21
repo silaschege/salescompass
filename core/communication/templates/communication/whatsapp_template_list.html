@@ -1,0 +1,118 @@
+{% extends "communication/base.html" %}
+
+{% block title %}WhatsApp Templates - Communication{% endblock %}
+
+{% block comm_title %}💬 WhatsApp Templates{% endblock %}
+{% block comm_subtitle %}Manage approved WhatsApp Business API message templates{% endblock %}
+
+{% block comm_actions %}
+<a href="{% url 'communication:whatsapp_template_create' %}" class="btn btn-gold fw-bold px-4 shadow-sm">
+    <i class="bi bi-plus-circle me-1"></i> Create WhatsApp Template
+</a>
+<a href="{% url 'communication:dashboard' %}" class="btn btn-light fw-bold px-4 shadow-sm">
+    <i class="bi bi-arrow-left me-1"></i> Back to Hub
+</a>
+{% endblock %}
+
+{% block comm_content %}
+<div class="comm-card">
+    <div class="card-header bg-transparent border-bottom p-4">
+        <div class="row align-items-center">
+            <div class="col">
+                <h5 class="mb-0 fw-bold">WhatsApp Business Templates</h5>
+            </div>
+            <div class="col-auto">
+                <form class="d-flex" method="GET">
+                    <input class="form-control form-control-sm me-2" type="search" name="search"
+                        placeholder="Search templates..." value="{{ request.GET.search }}">
+                    <button class="btn btn-sm btn-comm" type="submit">Search</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 table-comm">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Template Name</th>
+                        <th>Category</th>
+                        <th>Language</th>
+                        <th>Status</th>
+                        <th>Active</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for template in templates %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-comm">{{ template.template_name }}</div>
+                            <div class="text-muted small">{{ template.body_text|truncatechars:60 }}</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                {{ template.category|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                {{ template.language|upper }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if template.status == 'approved' %}
+                            <span
+                                class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
+                                <i class="bi bi-check-circle me-1"></i> Approved
+                            </span>
+                            {% elif template.status == 'pending' %}
+                            <span
+                                class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill">
+                                <i class="bi bi-clock me-1"></i> Pending
+                            </span>
+                            {% else %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">
+                                <i class="bi bi-x-circle me-1"></i> {{ template.status|title }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if template.is_active %}
+                            <i class="bi bi-check-lg text-success fs-5"></i>
+                            {% else %}
+                            <i class="bi bi-x-lg text-secondary fs-5"></i>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group">
+                                <a href="{% url 'communication:whatsapp_template_edit' template.id %}"
+                                    class="btn btn-sm btn-outline-warning" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'communication:whatsapp_template_delete' template.id %}"
+                                    class="btn btn-sm btn-outline-danger" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-whatsapp display-4 d-block mb-3"></i>
+                            No WhatsApp templates found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% if is_paginated %}
+    <div class="card-footer bg-transparent border-top p-4">
+        {% include "communication/includes/pagination.html" %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

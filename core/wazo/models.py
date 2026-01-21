@@ -170,3 +170,40 @@ class WazoExtension(TenantAwareModel):
     
     def __str__(self):
         return f"{self.user.get_full_name()} - Ext: {self.extension}"
+
+
+class VoicemailTemplate(TenantAwareModel):
+    """
+    Pre-recorded voicemail messages for voicemail drop feature.
+    """
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    audio_file = models.FileField(
+        upload_to='voicemail_templates/', 
+        null=True, 
+        blank=True,
+        help_text="Upload audio file (MP3/WAV)"
+    )
+    audio_url = models.URLField(
+        max_length=500, 
+        blank=True, 
+        help_text="Or provide external audio URL"
+    )
+    duration = models.IntegerField(
+        null=True, 
+        blank=True, 
+        help_text="Duration in seconds"
+    )
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+    
+    def get_audio_url(self):
+        """Return the audio URL (file or external)."""
+        if self.audio_file:
+            return self.audio_file.url
+        return self.audio_url

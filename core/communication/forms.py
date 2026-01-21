@@ -5,6 +5,7 @@ from .models import (
     CustomerSupportTicket, FeedbackAndSurvey, Email, SMS, CallLog,
     SocialMediaPost, ChatMessage, EmailSignature
 )
+from .whatsapp_models import WhatsAppTemplate
 
 
 class NotificationTemplateForm(forms.ModelForm):
@@ -195,4 +196,28 @@ class EmailSignatureForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Signature Name'}),
             'content_html': forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'HTML Content...'}),
             'is_default': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+class WhatsAppTemplateForm(forms.ModelForm):
+    """Form for creating and editing WhatsApp templates"""
+    
+    class Meta:
+        model = WhatsAppTemplate
+        fields = [
+            'template_name', 'category', 'language', 'header_text', 
+            'body_text', 'footer_text', 'buttons', 'variable_count', 
+            'variable_examples', 'is_active'
+        ]
+        widgets = {
+            'template_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. welcome_message'}),
+            'category': forms.Select(attrs={'class': 'form-select'}),
+            'language': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. en'}),
+            'header_text': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Header text (optional)'}),
+            'body_text': forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'Template body with {{1}}, {{2}}...'}),
+            'footer_text': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Footer text (optional)'}),
+            'buttons': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'JSON button configuration'}),
+            'variable_count': forms.NumberInput(attrs={'class': 'form-control'}),
+            'variable_examples': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'JSON list of examples'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }

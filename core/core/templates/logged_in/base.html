@@ -710,7 +710,10 @@
 
         <footer class="footer-bar mt-auto py-3 bg-light border-top">
             <div class="container-fluid text-center">
-                <span>&copy; 2025 {% if white_label_settings and white_label_settings.copyright_text%}{{white_label_settings.copyright_text }}{% else %}SalesCompass{%endif%}. {% if white_label_settings and white_label_settings.show_tagline %}{{ white_label_settings.tagline }}{%endif%}</span>
+                <span>&copy; 2025 {% if white_label_settings and
+                    white_label_settings.copyright_text%}{{white_label_settings.copyright_text }}{% else
+                    %}SalesCompass{%endif%}. {% if white_label_settings and white_label_settings.show_tagline %}{{
+                    white_label_settings.tagline }}{%endif%}</span>
             </div>
         </footer>
     </div>
@@ -739,6 +742,10 @@
             }
         });
     </script>
+
+    {% if user.is_authenticated %}
+    {% include "wazo/components/softphone.html" %}
+    {% endif %}
 </body>
 
 </html>

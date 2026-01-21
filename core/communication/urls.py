@@ -55,6 +55,12 @@ urlpatterns = [
     # Omni-Channel
     path('whatsapp/send/', views.WhatsAppSendView.as_view(), name='whatsapp_send'),
     path('whatsapp/conversation/', views.WhatsAppConversationView.as_view(), name='whatsapp_conversation'),
+    # WhatsApp Templates
+    path('whatsapp/templates/', views.WhatsAppTemplateListView.as_view(), name='whatsapp_template_list'),
+    path('whatsapp/templates/create/', views.WhatsAppTemplateCreateView.as_view(), name='whatsapp_template_create'),
+    path('whatsapp/templates/<int:pk>/edit/', views.WhatsAppTemplateUpdateView.as_view(), name='whatsapp_template_edit'),
+    path('whatsapp/templates/<int:pk>/delete/', views.WhatsAppTemplateDeleteView.as_view(), name='whatsapp_template_delete'),
+    
     path('linkedin/inmail/', views.LinkedInInMailView.as_view(), name='linkedin_inmail'),
     
     # Email Signatures
@@ -66,4 +72,10 @@ urlpatterns = [
     # Tracking
     path('track/open/<str:tracking_id>/', views.EmailOpenView.as_view(), name='email_track_open'),
     path('track/click/<str:tracking_id>/', views.EmailClickView.as_view(), name='email_track_click'),
+    
+    # Twilio Webhooks
+    path('webhooks/twilio/whatsapp/', 
+         __import__('communication.twilio_webhooks', fromlist=['TwilioWhatsAppWebhookView']).TwilioWhatsAppWebhookView.as_view(), 
+         name='twilio_whatsapp_webhook'),
 ]
+

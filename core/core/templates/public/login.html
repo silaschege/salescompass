@@ -6,11 +6,6 @@
 {% block content %}
 <section class="section-large d-flex align-items-center justify-content-center position-relative overflow-hidden"
   style="min-height: 100vh;">
-  <!-- Background Elements -->
-  <div class="hero-glow" style="opacity: 0.3; transform: translate(-30%, -30%);"></div>
-  <div class="hero-glow"
-    style="background: radial-gradient(circle, var(--color-primary-subtle) 0%, transparent 70%); bottom: -20%; right: -10%; opacity: 0.4;">
-  </div>
 
   <div class="container position-relative z-1">
     <div class="row justify-content-center">
@@ -28,7 +23,7 @@
         </div>
 
         <!-- Login Card -->
-        <div class="glass-card p-6 p-lg-8 shadow-3xl bg-white border border-light">
+        <div class="card-clean p-6 p-lg-8 shadow-xl bg-white">
           <form method="post" action="{% url 'core:login' %}">
             {% csrf_token %}
 

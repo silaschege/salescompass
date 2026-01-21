@@ -24,6 +24,10 @@ class TenantSignupForm(UserCreationForm):
     password1 = forms.CharField(widget=forms.PasswordInput, label="Password")
     password2 = forms.CharField(widget=forms.PasswordInput, label="Confirm Password")
 
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = User
         fields = ('email', 'password1', 'password2', 'company_name')
@@ -51,6 +55,10 @@ class OnboardingUserSignupForm(UserCreationForm):
     email = forms.EmailField(required=True, label="Email Access")
     first_name = forms.CharField(required=True, max_length=150)
     last_name = forms.CharField(required=True, max_length=150)
+    
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
     
     class Meta:
         model = User
@@ -107,6 +115,10 @@ class SuperuserProvisionForm(forms.Form):
         return subdomain
  
 class TenantBrandingForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = TenantSettings
         fields = ['logo', 'primary_color', 'secondary_color', 'time_zone', 'date_format', 'default_currency']
@@ -116,6 +128,10 @@ class TenantBrandingForm(forms.ModelForm):
         }
 
 class TenantDomainForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = Tenant
         fields = ['domain', 'subdomain']
@@ -125,11 +141,19 @@ class TenantDomainForm(forms.ModelForm):
         }
 
 class TenantSettingsForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = Tenant
         fields = ['name', 'description', 'primary_color', 'secondary_color', 'user_limit', 'storage_limit_mb', 'api_call_limit']
 
 class FeatureToggleForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     feature_name = forms.CharField(
         max_length=255,
         widget=forms.TextInput(attrs={
@@ -164,17 +188,29 @@ class SettingForm(forms.ModelForm):
             self.fields['group'].queryset = SettingGroup.objects.filter(tenant=tenant)
 
 class SettingGroupForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = SettingGroup
         fields = ['setting_group_name', 'setting_group_description', 'setting_group_is_active']
 
 class SettingTypeForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = SettingType
         fields = ['setting_type_name', 'label', 'order', 'setting_type_is_active', 'is_system']
 
 # New form for onboarding process
 class OnboardingTenantInfoForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     company_name = forms.CharField(
         max_length=255,
         label="Company Name",
@@ -232,6 +268,10 @@ class OnboardingTenantInfoForm(forms.Form):
 
 
 class OnboardingBrandingForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     logo = forms.ImageField(
         required=False,
         label="Upload Logo",
@@ -307,6 +347,10 @@ class OnboardingBrandingForm(forms.Form):
 
 
 class TenantExportForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     """Form for selecting data to export"""
     EXPORT_CHOICES = [
         ('leads', 'Leads'),
@@ -348,6 +392,10 @@ class TenantExportForm(forms.Form):
 
 
 class TenantImportForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     """Form for importing tenant data"""
     import_file = forms.FileField(
         label="Import File",
@@ -880,6 +928,10 @@ class SettingTypeForm(forms.ModelForm):
 
 
 class TenantLifecycleEventForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = TenantLifecycleEvent
         fields = ['tenant', 'event_type', 'old_value', 'new_value', 'reason', 'triggered_by', 'ip_address']
@@ -895,6 +947,10 @@ class TenantLifecycleEventForm(forms.ModelForm):
 
 
 class TenantMigrationRecordForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = TenantMigrationRecord
         fields = ['source_tenant', 'destination_tenant', 'migration_type', 'status', 'completed_at', 'initiated_by', 'completed_by', 'progress_percentage', 'total_records', 'processed_records', 'failed_records', 'error_log', 'migration_notes']
@@ -916,6 +972,10 @@ class TenantMigrationRecordForm(forms.ModelForm):
 
 
 class TenantDataPreservationForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = TenantDataPreservation
         fields = ['tenant', 'preservation_type', 'status', 'description', 'backup_location', 'file_size_mb', 'preservation_date', 'expires_at', 'created_by', 'retention_period_days', 'modules_included', 'notes']
@@ -937,6 +997,10 @@ class TenantDataPreservationForm(forms.ModelForm):
 
 
 class TenantDataRestorationForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = TenantDataRestoration
         fields = ['tenant', 'preservation_record', 'status', 'completed_at', 'completed_by', 'notes']
@@ -952,6 +1016,10 @@ class TenantDataRestorationForm(forms.ModelForm):
 
 
 class TenantDataPreservationStrategyForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = TenantDataPreservationStrategy
         fields = ['name', 'description', 'is_active', 'preservation_frequency', 'retention_period_days', 'modules_to_preserve', 'storage_location', 'compression_enabled', 'encryption_enabled', 'created_by']
@@ -970,6 +1038,10 @@ class TenantDataPreservationStrategyForm(forms.ModelForm):
 
 
 class TenantDataPreservationScheduleForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = TenantDataPreservationSchedule
         fields = ['strategy', 'tenant', 'next_scheduled_run', 'last_run', 'is_active']
@@ -983,6 +1055,10 @@ class TenantDataPreservationScheduleForm(forms.ModelForm):
 
 
 class AutomatedTenantLifecycleRuleForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = AutomatedTenantLifecycleRule
         fields = ['name', 'description', 'is_active', 'condition_type', 'condition_field', 'condition_operator', 'condition_value', 'action_type', 'action_parameters', 'evaluation_frequency', 'last_evaluated', 'next_evaluation', 'created_by']
@@ -1004,6 +1080,10 @@ class AutomatedTenantLifecycleRuleForm(forms.ModelForm):
 
 
 class AutomatedTenantLifecycleEventForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = AutomatedTenantLifecycleEvent
         fields = ['rule', 'tenant', 'event_type', 'status', 'details', 'triggered_at', 'executed_by']
@@ -1019,6 +1099,10 @@ class AutomatedTenantLifecycleEventForm(forms.ModelForm):
 
 
 class TenantLifecycleWorkflowForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = TenantLifecycleWorkflow
         fields = ['name', 'description', 'workflow_type', 'is_active', 'steps', 'created_by']
@@ -1033,6 +1117,10 @@ class TenantLifecycleWorkflowForm(forms.ModelForm):
 
 
 class TenantLifecycleWorkflowExecutionForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = TenantLifecycleWorkflowExecution
         fields = ['workflow', 'tenant', 'status', 'completed_at', 'executed_by', 'current_step', 'total_steps', 'progress_percentage', 'execution_log', 'error_message']
@@ -1051,6 +1139,10 @@ class TenantLifecycleWorkflowExecutionForm(forms.ModelForm):
 
 
 class TenantSuspensionWorkflowForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = TenantSuspensionWorkflow
         fields = ['tenant', 'status', 'initiated_by', 'approved_by', 'suspension_reason', 'approval_notes', 'completed_at', 'approved_at', 'steps_completed', 'total_steps']
@@ -1069,6 +1161,10 @@ class TenantSuspensionWorkflowForm(forms.ModelForm):
 
 
 class TenantTerminationWorkflowForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = TenantTerminationWorkflow
         fields = ['tenant', 'status', 'initiated_by', 'approved_by', 'termination_reason', 'approval_notes', 'completed_at', 'approved_at', 'steps_completed', 'total_steps', 'data_preservation_required', 'data_preservation_record']
@@ -1089,6 +1185,10 @@ class TenantTerminationWorkflowForm(forms.ModelForm):
 
 
 class NotificationTemplateForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     """Form for managing notification templates"""
     class Meta:
         model = NotificationTemplate
@@ -1105,6 +1205,10 @@ class NotificationTemplateForm(forms.ModelForm):
 
 
 class TenantTerritoryForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+
     """Form for managing tenant territories"""
     class Meta:
         model = TenantTerritory

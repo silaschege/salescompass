@@ -22,39 +22,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # In production, you MUST set the SECRET_KEY environment variable
-if os.getenv('REPLIT_DEPLOYMENT') == '1':
-    SECRET_KEY = os.getenv('SECRET_KEY')
-    if not SECRET_KEY:
-        raise ValueError("SECRET_KEY environment variable must be set in production")
-    DEBUG = False
-else:
-    # Development only - use env var or insecure default
-    SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-f4*r+okok01o^i4+vd1**l+rv1snh10zz*mrbk73kb2_exq=qc')
-    DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-f4*r+okok01o^i4+vd1**l+rv1snh10zz*mrbk73kb2_exq=qc')
+DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
 # Configure ALLOWED_HOSTS and CSRF_TRUSTED_ORIGINS
-if os.getenv('REPLIT_DEPLOYMENT') == '1':
-    # Production - use Replit domain
-    allowed_hosts = []
-    csrf_trusted_origins = []
-    
-    if os.getenv('REPL_SLUG') and os.getenv('REPL_OWNER'):
-        host = f"{os.getenv('REPL_SLUG')}.{os.getenv('REPL_OWNER')}.repl.co"
-        allowed_hosts.append(host)
-        csrf_trusted_origins.append(f"https://{host}")
-    
-    if os.getenv('REPLIT_DEV_DOMAIN'):
-        host = os.getenv('REPLIT_DEV_DOMAIN')
-        allowed_hosts.append(host)
-        csrf_trusted_origins.append(f"https://{host}")
-    
-    # Use localhost as fallback
-    if not allowed_hosts:
-        allowed_hosts = ['localhost', '127.0.0.1']
-        csrf_trusted_origins = ['http://localhost', 'https://localhost', 'http://127.0.0.1', 'https://127.0.0.1']
-    
-    ALLOWED_HOSTS = allowed_hosts
-    CSRF_TRUSTED_ORIGINS = csrf_trusted_origins
+if not DEBUG:
+    # Production settings
+    ALLOWED_HOSTS = [h for h in os.getenv('ALLOWED_HOSTS', '').split(',') if h]
+    CSRF_TRUSTED_ORIGINS = [h for h in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if h]
     
     # Security settings for production
     SECURE_SSL_REDIRECT = True
@@ -407,6 +382,34 @@ WAZO_CALL_LOG_URL = os.getenv('WAZO_CALL_LOG_URL', None)
 WAZO_WEBHOOKD_URL = os.getenv('WAZO_WEBHOOKD_URL', None)
 WAZO_WEBHOOK_SECRET = os.getenv('WAZO_WEBHOOK_SECRET', None)
 WAZO_DEFAULT_SMS_NUMBER = os.getenv('WAZO_DEFAULT_SMS_NUMBER', None)
+
+# =============================================================================
+# TWILIO SIP TRUNK CONFIGURATION
+# =============================================================================
+
+TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID', None)
+TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN', None)
+TWILIO_SIP_DOMAIN = os.getenv('TWILIO_SIP_DOMAIN', None)
+TWILIO_SIP_USERNAME = os.getenv('TWILIO_SIP_USERNAME', None)
+TWILIO_SIP_PASSWORD = os.getenv('TWILIO_SIP_PASSWORD', None)
+TWILIO_CALLER_ID = os.getenv('TWILIO_CALLER_ID', None)
+
+# =============================================================================
+# TWILIO WHATSAPP CONFIGURATION
+# =============================================================================
+
+TWILIO_WHATSAPP_NUMBER = os.getenv('TWILIO_WHATSAPP_NUMBER', None)
+TWILIO_WHATSAPP_SANDBOX = os.getenv('TWILIO_WHATSAPP_SANDBOX', 'True').lower() == 'true'
+
+# =============================================================================
+# WEBRTC CONFIGURATION
+# =============================================================================
+
+WEBRTC_ENABLED = os.getenv('WEBRTC_ENABLED', 'False').lower() == 'true'
+STUN_SERVER = os.getenv('STUN_SERVER', 'stun:stun.l.google.com:19302')
+TURN_SERVER = os.getenv('TURN_SERVER', None)
+TURN_USERNAME = os.getenv('TURN_USERNAME', None)
+TURN_PASSWORD = os.getenv('TURN_PASSWORD', None)
 
 # =============================================================================
 # EVENT BUS CONFIGURATION

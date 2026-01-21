@@ -1,5 +1,9 @@
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
+from core.views import (
+    SalesCompassListView, SalesCompassCreateView, SalesCompassUpdateView, 
+    SalesCompassDeleteView, SalesCompassDetailView
+)
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.shortcuts import render, redirect, get_object_or_404
@@ -15,8 +19,9 @@ from .models import (
 from .forms import (
     NotificationTemplateForm, EmailSMSServiceConfigurationForm, CommunicationHistoryForm,
     CustomerSupportTicketForm, FeedbackAndSurveyForm, EmailForm, SMSForm, CallLogForm,
-    EmailSignatureForm
+    EmailSignatureForm, WhatsAppTemplateForm
 )
+from .whatsapp_models import WhatsAppTemplate
 from itertools import chain
 from django.db.models import Value, CharField
 import logging
@@ -96,6 +101,54 @@ class NotificationTemplateDeleteView(LoginRequiredMixin, DeleteView):
 
     def get_queryset(self):
         return NotificationTemplate.objects.filter(tenant=self.request.user.tenant)
+
+
+# ============================================================================
+# WHATSAPP TEMPLATE VIEWS
+# ============================================================================
+
+class WhatsAppTemplateListView(SalesCompassListView):
+    """List all WhatsApp templates for the tenant"""
+    model = WhatsAppTemplate
+    template_name = 'communication/whatsapp_template_list.html'
+    context_object_name = 'templates'
+    paginate_by = 20
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search = self.request.GET.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(template_name__icontains=search) | 
+                Q(category__icontains=search)
+            )
+        return queryset.order_by('category', 'template_name')
+
+
+class WhatsAppTemplateCreateView(SalesCompassCreateView):
+    """Create a new WhatsApp template"""
+    model = WhatsAppTemplate
+    form_class = WhatsAppTemplateForm
+    template_name = 'communication/whatsapp_template_form.html'
+    success_url = reverse_lazy('communication:whatsapp_template_list')
+    success_message = "WhatsApp template created successfully!"
+
+
+class WhatsAppTemplateUpdateView(SalesCompassUpdateView):
+    """Update an existing WhatsApp template"""
+    model = WhatsAppTemplate
+    form_class = WhatsAppTemplateForm
+    template_name = 'communication/whatsapp_template_form.html'
+    success_url = reverse_lazy('communication:whatsapp_template_list')
+    success_message = "WhatsApp template updated successfully!"
+
+
+class WhatsAppTemplateDeleteView(SalesCompassDeleteView):
+    """Delete a WhatsApp template"""
+    model = WhatsAppTemplate
+    template_name = 'communication/whatsapp_template_confirm_delete.html'
+    success_url = reverse_lazy('communication:whatsapp_template_list')
+    success_message = "WhatsApp template deleted successfully!"
 
 
 # ============================================================================
