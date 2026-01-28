@@ -1,0 +1,217 @@
+{% extends 'core/base_module.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'accounting/css/accounting_premium.css' %}">
+<style>
+    /* Module specific styling to match others */
+    .table thead {
+        background-color: #f8f9fa;
+        color: #495057;
+    }
+
+    .nav-icon {
+        margin-right: 0.5rem;
+        font-size: 1.1rem;
+    }
+</style>
+{% endblock %}
+
+{% block module_nav %}
+<!-- Dashboard -->
+<a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+    href="{% url 'accounting:dashboard' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-speedometer2 nav-icon"></i>
+        <span>Dashboard</span>
+    </div>
+</a>
+
+<!-- Chart of Accounts Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#coaMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-list-columns-reverse nav-icon"></i>
+        <span>Accounts</span>
+    </div>
+</a>
+<div class="collapse {% if 'chart-of-accounts' in request.path %}show{% endif %}" id="coaMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'coa_list' %}active{% endif %}"
+        href="{% url 'accounting:coa_list' %}">
+        All Accounts
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'coa_create' %}active{% endif %}"
+        href="{% url 'accounting:coa_create' %}">
+        New Account
+    </a>
+</div>
+
+<!-- Journal Entries Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#journalsMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-journal-text nav-icon"></i>
+        <span>Journals</span>
+    </div>
+</a>
+<div class="collapse {% if 'journals' in request.path %}show{% endif %}" id="journalsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'journal_list' %}active{% endif %}"
+        href="{% url 'accounting:journal_list' %}">
+        All Entries
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'journal_create' %}active{% endif %}"
+        href="{% url 'accounting:journal_create' %}">
+        New Entry
+    </a>
+</div>
+
+<!-- Reconciliations Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#reconMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-bank nav-icon"></i>
+        <span>Reconciliation</span>
+    </div>
+</a>
+<div class="collapse {% if 'reconciliations' in request.path %}show{% endif %}" id="reconMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'reconciliation_list' %}active{% endif %}"
+        href="{% url 'accounting:reconciliation_list' %}">
+        History
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'reconciliation_create' %}active{% endif %}"
+        href="{% url 'accounting:reconciliation_create' %}">
+        Start New
+    </a>
+</div>
+
+<!-- Reports Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#reportsMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-file-earmark-bar-graph nav-icon"></i>
+        <span>Reports</span>
+    </div>
+</a>
+<div class="collapse {% if 'reports' in request.path %}show{% endif %}" id="reportsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'trial_balance' %}active{% endif %}"
+        href="{% url 'accounting:trial_balance' %}">
+        Trial Balance
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'general_ledger' %}active{% endif %}"
+        href="{% url 'accounting:general_ledger' %}">
+        General Ledger
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'balance_sheet' %}active{% endif %}"
+        href="{% url 'accounting:balance_sheet' %}">
+        Balance Sheet
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'income_statement' %}active{% endif %}"
+        href="{% url 'accounting:income_statement' %}">
+        Income Statement
+    </a>
+</div>
+
+<!-- Budgets Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#budgetMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-piggy-bank nav-icon"></i>
+        <span>Budgets</span>
+    </div>
+</a>
+<div class="collapse {% if 'budgets' in request.path %}show{% endif %}" id="budgetMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'budget_list' %}active{% endif %}"
+        href="{% url 'accounting:budget_list' %}">
+        All Budgets
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'budget_create' %}active{% endif %}"
+        href="{% url 'accounting:budget_create' %}">
+        New Budget
+    </a>
+</div>
+
+<!-- Recurring Journals Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#recurringMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-arrow-repeat nav-icon"></i>
+        <span>Recurring</span>
+    </div>
+</a>
+<div class="collapse {% if 'recurring' in request.path %}show{% endif %}" id="recurringMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'recurring_journal_list' %}active{% endif %}"
+        href="{% url 'accounting:recurring_journal_list' %}">
+        Templates
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'recurring_journal_create' %}active{% endif %}"
+        href="{% url 'accounting:recurring_journal_create' %}">
+        New Template
+    </a>
+</div>
+
+<!-- Tax Management Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#taxMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-percent nav-icon"></i>
+        <span>Taxes</span>
+    </div>
+</a>
+<div class="collapse {% if 'taxes' in request.path %}show{% endif %}" id="taxMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'tax_rate_list' %}active{% endif %}"
+        href="{% url 'accounting:tax_rate_list' %}">
+        Tax Rates
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'tax_rate_create' %}active{% endif %}"
+        href="{% url 'accounting:tax_rate_create' %}">
+        New Tax Rate
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'tax_rule_list' %}active{% endif %}"
+        href="{% url 'accounting:tax_rule_list' %}">
+        Tax Rules
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'tax_rule_create' %}active{% endif %}"
+        href="{% url 'accounting:tax_rule_create' %}">
+        New Tax Rule
+    </a>
+</div>
+
+<!-- Configuration Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#configMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-gear nav-icon"></i>
+        <span>Settings</span>
+    </div>
+</a>
+<div class="collapse {% if 'fiscal' in request.path or 'integrations' in request.path %}show{% endif %}"
+    id="configMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'fiscal_year_list' %}active{% endif %}"
+        href="{% url 'accounting:fiscal_year_list' %}">
+        Fiscal Years
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'fiscal_year_create' %}active{% endif %}"
+        href="{% url 'accounting:fiscal_year_create' %}">
+        New Fiscal Year
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'integration_list' %}active{% endif %}"
+        href="{% url 'accounting:integration_list' %}">
+        GL Integrations
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'integration_create' %}active{% endif %}"
+        href="{% url 'accounting:integration_create' %}">
+        New GL Integration
+    </a>
+</div>
+{% endblock %}
+
+{% block module_content %}
+<!-- Content is injected by sub-templates into this block, 
+     but base_module.html expects 'content' block to be filled.
+     Our sub-templates use 'accounting_content' inside a container.
+     To make this work seamlessly with base_module, we can just allow direct content override
+     OR wrap it. Since we already updated sub-templates to use 'accounting_content',
+     we should keep that structure but ensure it flows into 'content'.
+-->
+<div class="container-fluid py-4">
+    {% block accounting_content %}{% endblock %}
+</div>
+{% endblock %}

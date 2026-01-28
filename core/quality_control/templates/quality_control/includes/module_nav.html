@@ -1,0 +1,44 @@
+<!-- Dashboard -->
+<a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+    href="{% url 'quality_control:dashboard' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-speedometer2 nav-icon"></i>
+        <span>Dashboard</span>
+    </div>
+</a>
+
+<!-- Inspection Rules -->
+<a class="nav-link {% if request.resolver_match.url_name == 'rule_list' %}active{% endif %}"
+    href="{% url 'quality_control:rule_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-clipboard-check nav-icon"></i>
+        <span>Inspection Rules</span>
+    </div>
+</a>
+
+<!-- Inspection Logs -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#logsMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-journal-text nav-icon"></i>
+        <span>Inspection Logs</span>
+    </div>
+</a>
+<div class="collapse" id="logsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'log_list' %}active{% endif %}"
+        href="{% url 'quality_control:log_list' %}">
+        All Logs
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'log_create' %}active{% endif %}"
+        href="{% url 'quality_control:log_create' %}">
+        New Inspection
+    </a>
+</div>
+
+<!-- NCRs -->
+<a class="nav-link {% if request.resolver_match.url_name == 'ncr_list' %}active{% endif %}"
+    href="{% url 'quality_control:ncr_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-exclamation-triangle nav-icon"></i>
+        <span>Non-Conformance</span>
+    </div>
+</a>

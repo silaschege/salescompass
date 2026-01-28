@@ -1,0 +1,55 @@
+{% extends "accounting/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block accounting_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Bank Reconciliation: {{ account.account_name }}</h6>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row mb-4">
+                <div class="col-md-4 border-right">
+                    <h5 class="text-info border-bottom pb-2">Statement Info</h5>
+                    {{ form|crispy }}
+                </div>
+                <div class="col-md-8">
+                    <h5 class="text-success border-bottom pb-2">Unreconciled Entries</h5>
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Select</th>
+                                    <th>Date</th>
+                                    <th>Ref</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in unreconciled_entries %}
+                                <tr>
+                                    <td><input type="checkbox" name="entries" value="{{ entry.id }}"></td>
+                                    <td>{{ entry.journal_entry.entry_date }}</td>
+                                    <td>{{ entry.journal_entry.entry_number }}</td>
+                                    <td>{{ entry.description }}</td>
+                                    <td>${{ entry.debit|add:entry.credit|default:0 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">All entries are reconciled!</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="border-top pt-3">
+                <button type="submit" class="btn btn-primary">Complete Reconciliation</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -61,6 +61,9 @@ class Command(BaseCommand):
             {'feature_key': 'proposals_basic', 'feature_name': 'Basic Proposals', 'feature_category': 'proposals', 'is_available': True},
             {'feature_key': 'proposals_create', 'feature_name': 'Create Proposals', 'feature_category': 'proposals', 'is_available': True},
             {'feature_key': 'proposals_edit', 'feature_name': 'Edit Proposals', 'feature_category': 'proposals', 'is_available': True},
+            
+            # Billing features
+            {'feature_key': 'billing_basic', 'feature_name': 'Basic Billing', 'feature_category': 'billing', 'is_available': True},
         ]
         
         # Define features for Starter Plan
@@ -121,6 +124,7 @@ class Command(BaseCommand):
             {'module_name': 'sales', 'module_display_name': 'Sales', 'is_available': True},
             {'module_name': 'engagement', 'module_display_name': 'Engagement', 'is_available': True},
             {'module_name': 'proposals', 'module_display_name': 'Proposals', 'is_available': True},
+            {'module_name': 'billing', 'module_display_name': 'Billing', 'is_available': True},
         ]
         
         # Define modules for Starter Plan
@@ -130,6 +134,7 @@ class Command(BaseCommand):
             {'module_name': 'engagement', 'module_display_name': 'Engagement', 'is_available': True},
             {'module_name': 'proposals', 'module_display_name': 'Proposals', 'is_available': True},
             {'module_name': 'products', 'module_display_name': 'Products', 'is_available': True},
+            {'module_name': 'billing', 'module_display_name': 'Billing', 'is_available': True},
         ]
         
         # Define modules for Premium Plan
@@ -142,6 +147,7 @@ class Command(BaseCommand):
             {'module_name': 'reports', 'module_display_name': 'Reports', 'is_available': True},
             {'module_name': 'analytics', 'module_display_name': 'Analytics', 'is_available': True},
             {'module_name': 'settings', 'module_display_name': 'Settings', 'is_available': True},
+            {'module_name': 'billing', 'module_display_name': 'Billing', 'is_available': True},
         ]
         
         # Create modules for each plan

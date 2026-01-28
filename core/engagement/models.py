@@ -565,3 +565,60 @@ class ExperimentVariant(TenantModel, TimeStampedModel):
     
     def __str__(self):
         return f"{self.experiment.name} - {self.name}"
+class SocialInteraction(TenantModel, TimeStampedModel):
+    """
+    Detailed external social media interaction data.
+    """
+    PLATFORM_CHOICES = [
+        ('twitter', 'Twitter'),
+        ('linkedin', 'LinkedIn'),
+        ('facebook', 'Facebook'),
+        ('instagram', 'Instagram'),
+    ]
+    
+    TYPE_CHOICES = [
+        ('mention', 'Mention'),
+        ('reply', 'Reply'),
+        ('direct_message', 'Direct Message'),
+        ('like', 'Like/Reaction'),
+        ('share', 'Share/Retweet'),
+    ]
+    
+    platform = models.CharField(max_length=20, choices=PLATFORM_CHOICES)
+    interaction_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    external_id = models.CharField(max_length=255, db_index=True)
+    author_handle = models.CharField(max_length=100)
+    author_name = models.CharField(max_length=255, blank=True)
+    content = models.TextField()
+    is_processed = models.BooleanField(default=False)
+    
+    # Matching
+    lead = models.ForeignKey('leads.Lead', on_delete=models.SET_NULL, null=True, blank=True, related_name='social_interactions')
+    contact = models.ForeignKey('accounts.Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='social_interactions')
+    
+    class Meta:
+        unique_together = ['platform', 'external_id']
+
+    def __str__(self):
+        return f"{self.platform} {self.interaction_type} from {self.author_handle}"
+
+    def trigger_engagement_event(self):
+        """Creates an EngagementEvent from this interaction."""
+        from .models import EngagementEvent
+        desc = f"Social {self.interaction_type} on {self.platform}: {self.content[:100]}..."
+        event = EngagementEvent.objects.create(
+            tenant=self.tenant,
+            event_type='social_interaction',
+            title=f"{self.get_platform_display()} {self.get_interaction_type_display()}",
+            description=desc,
+            lead=self.lead,
+            contact=self.contact,
+            metadata={
+                'platform': self.platform,
+                'handle': self.author_handle,
+                'external_id': self.external_id
+            }
+        )
+        self.is_processed = True
+        self.save()
+        return event

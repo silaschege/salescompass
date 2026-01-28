@@ -1,0 +1,36 @@
+<tr>
+    <td style="padding-left: {{ level|add:1 }}rem;">
+        {% if category.children.all %}
+        <i class="feather icon-folder me-1 text-warning"></i>
+        {% else %}
+        <i class="feather icon-list me-1 text-muted"></i>
+        {% endif %}
+        {{ category.name }}
+    </td>
+    <td>{{ category.display_order|default:"-" }}</td>
+    <td>
+        {% if category.is_active %}
+        <span class="badge bg-success">Active</span>
+        {% else %}
+        <span class="badge bg-secondary">Inactive</span>
+        {% endif %}
+    </td>
+    <td>
+        {% if category.children.count > 0 %}
+        <span class="badge bg-info">{{ category.children.count }}</span>
+        {% else %}
+        -
+        {% endif %}
+    </td>
+    <td>
+        <a href="{% url 'products:category_update' category.pk %}" class="btn btn-sm btn-light text-primary me-1" title="Edit">
+            <i class="feather icon-edit"></i>
+        </a>
+        <a href="{% url 'products:category_delete' category.pk %}" class="btn btn-sm btn-light text-danger" title="Delete">
+            <i class="feather icon-trash-2"></i>
+        </a>
+    </td>
+</tr>
+{% for child in category.children.all %}
+{% include "products/partials/category_row.html" with category=child level=level|add:1 %}
+{% endfor %}

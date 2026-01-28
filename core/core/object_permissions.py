@@ -229,6 +229,25 @@ class ProductDependencyObjectPolicy(ObjectPermissionPolicy):
         return queryset.none()  # Or adjust as needed based on business logic
 
 
+class SupplierObjectPolicy(ObjectPermissionPolicy):
+    """
+    Object-level permission policy for Supplier model.
+    """
+    @classmethod
+    def can_view(cls, user: User, obj: Any) -> bool:
+        if user.is_superuser:
+            return True
+        if user.has_perm('products.*') or user.has_perm('purchasing.*'):
+            return True
+        return False
+    
+    @classmethod
+    def _get_policy_queryset(cls, user: User, queryset: models.QuerySet) -> models.QuerySet:
+        if user.is_superuser or user.has_perm('products.*') or user.has_perm('purchasing.*'):
+            return queryset
+        return queryset.none()
+
+
 class OpportunitiesObjectPolicy(ObjectPermissionPolicy):
     """
     Object-level permission policy for opportunities model.
@@ -249,6 +268,25 @@ class OpportunitiesObjectPolicy(ObjectPermissionPolicy):
             return queryset
         # Return only opportunities owned by the user
         return queryset.filter(owner=user)
+
+class PurchasingObjectPolicy(ObjectPermissionPolicy):
+    """
+    Object-level permission policy for Purchasing models.
+    """
+    @classmethod
+    def can_view(cls, user: User, obj: Any) -> bool:
+        if user.is_superuser:
+            return True
+        if user.has_perm('purchasing.*'):
+            return True
+        return False
+    
+    @classmethod
+    def _get_policy_queryset(cls, user: User, queryset: models.QuerySet) -> models.QuerySet:
+        if user.is_superuser or user.has_perm('purchasing.*'):
+            return queryset
+        return queryset.none()
+
 
 # Add the Opportunity policy here
 class OpportunityObjectPolicy(ObjectPermissionPolicy):
@@ -3390,13 +3428,18 @@ OBJECT_POLICIES = {
     'leads.Lead': LeadsObjectPolicy,
     'leads.WebToLeadForm': LeadsObjectPolicy,
     'products.Product': ProductsObjectPolicy,
+    'products.ProductCategory': ProductsObjectPolicy,
     'products.ProductBundle': ProductBundleObjectPolicy,
     'products.CompetitorProduct': CompetitorProductObjectPolicy,
-    'products.ProductDependency': ProductDependencyObjectPolicy,
     'products.ProductComparison': ProductComparisonObjectPolicy,
-    'opportunities.Opportunity': OpportunitiesObjectPolicy,
-    'opportunities.OpportunityStage': OpportunityStageObjectPolicy,
+    'products.ProductDependency': ProductDependencyObjectPolicy,
+    'products.Supplier': SupplierObjectPolicy,
+    'purchasing.PurchaseOrder': PurchasingObjectPolicy,
+    'purchasing.SupplierInvoice': PurchasingObjectPolicy,
+    'purchasing.GoodsReceipt': PurchasingObjectPolicy,
+    'purchasing.SupplierPayment': PurchasingObjectPolicy,
     'opportunities.Opportunity': OpportunityObjectPolicy,
+    'opportunities.OpportunityStage': OpportunityStageObjectPolicy,
     'opportunities.PipelineType': PipelineTypeObjectPolicy,
     'opportunities.AssignmentRule': AssignmentRuleObjectPolicy,
     'proposals.Proposal': ProposalObjectPolicy,

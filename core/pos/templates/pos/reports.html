@@ -1,0 +1,94 @@
+{% extends "pos/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}POS Reports{% endblock %}
+
+{% block pos_content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Reports</h1>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        <div class="col">
+            <a href="{% url 'pos:report_daily' %}" class="card h-100 text-decoration-none text-dark">
+                <div class="card-body text-center p-4">
+                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 80px; height: 80px;">
+                        <i class="feather icon-calendar fa-2x text-primary"></i>
+                    </div>
+                    <h5>Daily Sales Report</h5>
+                    <p class="text-muted mb-0">View sales by day with breakdowns by payment method and cashier.</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a href="{% url 'pos:report_cashier' %}" class="card h-100 text-decoration-none text-dark">
+                <div class="card-body text-center p-4">
+                    <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 80px; height: 80px;">
+                        <i class="feather icon-users fa-2x text-success"></i>
+                    </div>
+                    <h5>Cashier Performance</h5>
+                    <p class="text-muted mb-0">Compare performance across cashiers.</p>
+                </div>
+            </a>
+        </div>
+
+
+        <div class="col">
+            <a href="{% url 'pos:report_product_sales' %}" class="card h-100 text-decoration-none text-dark">
+                <div class="card-body text-center p-4">
+                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 80px; height: 80px;">
+                        <i class="feather icon-shopping-bag fa-2x text-primary"></i>
+                    </div>
+                    <h5>Product Sales</h5>
+                    <p class="text-muted mb-0">Top selling products and sales by category.</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a href="{% url 'pos:report_sales_trends' %}" class="card h-100 text-decoration-none text-dark">
+                <div class="card-body text-center p-4">
+                    <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 80px; height: 80px;">
+                        <i class="feather icon-trending-up fa-2x text-warning"></i>
+                    </div>
+                    <h5>Sales Trends</h5>
+                    <p class="text-muted mb-0">Weekly and monthly sales trends and comparisons.</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a href="{% url 'pos:report_payment_methods' %}" class="card h-100 text-decoration-none text-dark">
+                <div class="card-body text-center p-4">
+                    <div class="bg-danger bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 80px; height: 80px;">
+                        <i class="feather icon-credit-card fa-2x text-danger"></i>
+                    </div>
+                    <h5>Payment Methods</h5>
+                    <p class="text-muted mb-0">Breakdown of payments by method over time.</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a href="{% url 'pos:report_refunds_voids' %}" class="card h-100 text-decoration-none text-dark">
+                <div class="card-body text-center p-4">
+                    <div class="bg-secondary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 80px; height: 80px;">
+                        <i class="feather icon-slash fa-2x text-secondary"></i>
+                    </div>
+                    <h5>Refunds & Voids</h5>
+                    <p class="text-muted mb-0">Analysis of returned items and cancelled sales.</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

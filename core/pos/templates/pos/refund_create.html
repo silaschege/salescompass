@@ -1,0 +1,144 @@
+{% extends "pos/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Create Refund{% endblock %}
+
+{% block pos_content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="feather icon-rotate-ccw me-2"></i>Create Refund
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Original Transaction Info -->
+                    <div class="bg-light rounded p-3 mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small class="text-muted">Original Transaction</small>
+                                <p class="fw-bold mb-0">{{ transaction.transaction_number }}</p>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <small class="text-muted">Total Amount</small>
+                                <p class="fw-bold mb-0">{{ transaction.total_amount|floatformat:2|intcomma }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <!-- Select Items to Refund -->
+                        <h6 class="mb-3">Select Items to Refund</h6>
+                        <div class="table-responsive mb-4">
+                            <table class="table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Product</th>
+                                        <th class="text-center">Original Qty</th>
+                                        <th class="text-center">Refund Qty</th>
+                                        <th class="text-center">Restock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for line in lines %}
+                                    <tr>
+                                        <td>
+                                            {{ line.product_name }}
+                                            <br>
+                                            <small class="text-muted">@ {{ line.unit_price|floatformat:2 }} each</small>
+                                        </td>
+                                        <td class="text-center">{{ line.quantity }}</td>
+                                        <td class="text-center" style="width: 120px;">
+                                            <input type="number" name="refund_qty_{{ line.id }}"
+                                                class="form-control form-control-sm text-center refund-qty" min="0"
+                                                max="{{ line.quantity }}" value="0" data-price="{{ line.unit_price }}"
+                                                data-discount="{{ line.discount_percent }}">
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="form-check d-flex justify-content-center">
+                                                <input class="form-check-input" type="checkbox"
+                                                    name="restock_{{ line.id }}" id="restock_{{ line.id }}" checked>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Refund Summary -->
+                        <div class="bg-danger bg-opacity-10 rounded p-3 mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold">Refund Amount:</span>
+                                <span class="fs-4 fw-bold text-danger" id="refund-total">0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Refund Details -->
+                        <div class="mb-3">
+                            <label for="id_reason" class="form-label">Reason for Refund *</label>
+                            <textarea name="reason" id="id_reason" class="form-control" rows="3" required
+                                placeholder="Describe the reason for this refund..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_refund_method" class="form-label">Refund Method *</label>
+                            <select name="refund_method" id="id_refund_method" class="form-select" required>
+                                <option value="cash">Cash</option>
+                                <option value="card">Card Reversal</option>
+                                <option value="store_credit">Store Credit</option>
+                            </select>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" name="requires_approval"
+                                id="id_requires_approval" checked>
+                            <label class="form-check-label" for="id_requires_approval">
+                                Requires Manager Approval
+                            </label>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="feather icon-rotate-ccw me-2"></i>Submit Refund
+                            </button>
+                            <a href="{% url 'pos:transaction_detail' transaction.pk %}"
+                                class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const qtyInputs = document.querySelectorAll('.refund-qty');
+        const refundTotal = document.getElementById('refund-total');
+
+        function calculateTotal() {
+            let total = 0;
+            qtyInputs.forEach(input => {
+                const qty = parseFloat(input.value) || 0;
+                const price = parseFloat(input.dataset.price) || 0;
+                const discount = parseFloat(input.dataset.discount) || 0;
+                const lineTotal = qty * price * (1 - discount / 100);
+                total += lineTotal;
+            });
+            refundTotal.textContent = total.toFixed(2);
+        }
+
+        qtyInputs.forEach(input => {
+            input.addEventListener('input', calculateTotal);
+        });
+    });
+</script>
+{% endblock %}

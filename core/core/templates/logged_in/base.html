@@ -198,6 +198,43 @@
             border-color: var(--secondary-color);
         }
 
+        /* Standardized Button Scaling */
+        .btn-sm {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .btn-primary {
+            box-shadow: 0 2px 4px rgba(111, 66, 193, 0.2);
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            color: white;
+        }
+
+        /* KPI Card Helpers */
+        .border-left-primary {
+            border-left: 0.25rem solid #6f42c1 !important;
+        }
+
+        .border-left-success {
+            border-left: 0.25rem solid #198754 !important;
+        }
+
+        .border-left-info {
+            border-left: 0.25rem solid #0dcaf0 !important;
+        }
+
+        .border-left-warning {
+            border-left: 0.25rem solid #ffc107 !important;
+        }
+
+        .border-left-danger {
+            border-left: 0.25rem solid #dc3545 !important;
+        }
+
         /* Mobile Responsive */
         @media (max-width: 768px) {
             .sidebar {
@@ -390,6 +427,7 @@
     </button>
 
     <!-- Sidebar -->
+    {% block sidebar_nav %}
     <div class="sidebar" id="sidebar">
         <a class="navbar-brand" href="{% url 'core:app_selection' %}">
             {% if white_label_settings and white_label_settings.logo %}
@@ -419,27 +457,27 @@
                 </div>
             </a>
 
-            <!-- Revenue Operations Dropdown -->
+            <!-- CRM Section -->
             {% load plan_access_tags %}
             {% has_module_access 'leads' as leads_access %}
             {% has_module_access 'sales' as sales_access %}
             {% if leads_access or sales_access %}
-            <div class="section-title">REVENUE OPERATIONS</div>
+            <div class="section-title">CRM</div>
             {% if leads_access %}
             <a class="nav-link {% if request.resolver_match.url_name == 'lead_list' %}active{% endif %}"
                 href="{% url 'leads:lead_list' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-person-plus nav-icon"></i>
+                    <i class="bi bi-funnel nav-icon"></i>
                     <span>Leads</span>
                 </div>
             </a>
             {% endif %}
             {% if sales_access %}
-            <a class="nav-link {% if request.resolver_match.url_name == 'sale_list' %}active{% endif %}"
-                href="{% url 'sales:sale_list' %}">
+            <a class="nav-link {% if request.resolver_match.url_name == 'sales_dashboard' %}active{% endif %}"
+                href="{% url 'sales:sales_dashboard' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-currency-dollar nav-icon"></i>
-                    <span>Sales</span>
+                    <i class="bi bi-graph-up nav-icon"></i>
+                    <span>Sales Dashboard</span>
                 </div>
             </a>
             {% endif %}
@@ -453,45 +491,156 @@
             <a class="nav-link {% if request.resolver_match.url_name == 'account_list' %}active{% endif %}"
                 href="{% url 'accounts:account_list' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-building nav-icon"></i>
+                    <i class="bi bi-briefcase nav-icon"></i>
                     <span>Accounts</span>
-                </div>
-            </a>
-            <a class="nav-link {% if request.resolver_match.url_name == 'contact_list' %}active{% endif %}"
-                href="{% url 'accounts:contact_list' %}">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-people nav-icon"></i>
-                    <span>Contacts</span>
                 </div>
             </a>
             {% endif %}
 
-            <!-- Customer Engagement Dropdown -->
+            <!-- Finance & HR -->
+            {% has_module_access 'billing' as billing_access %}
+            {% has_module_access 'accounting' as accounting_access %}
+            {% has_module_access 'hr' as hr_access %}
+            {% if billing_access or accounting_access or hr_access %}
+            <div class="section-title">FINANCE & HR</div>
+            {% if billing_access %}
+            <a class="nav-link {% if request.resolver_match.app_name == 'billing' %}active{% endif %}"
+                href="{% url 'billing:portal' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-credit-card nav-icon"></i>
+                    <span>Billing & Subscriptions</span>
+                </div>
+            </a>
+            {% endif %}
+            {% if accounting_access %}
+            <a class="nav-link {% if request.resolver_match.app_name == 'accounting' %}active{% endif %}"
+                href="{% url 'accounting:dashboard' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-journal-text nav-icon"></i>
+                    <span>Accounting</span>
+                </div>
+            </a>
+            {% endif %}
+            <a class="nav-link {% if request.resolver_match.app_name == 'expenses' %}active{% endif %}"
+                href="{% url 'expenses:dashboard' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-receipt nav-icon"></i>
+                    <span>Expenses</span>
+                </div>
+            </a>
+            <a class="nav-link {% if request.resolver_match.app_name == 'assets' %}active{% endif %}"
+                href="{% url 'assets:dashboard' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-building nav-icon"></i>
+                    <span>Fixed Assets</span>
+                </div>
+            </a>
+            {% if hr_access %}
+            <a class="nav-link {% if request.resolver_match.app_name == 'hr' %}active{% endif %}"
+                href="{% url 'hr:dashboard' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-people nav-icon"></i>
+                    <span>HR & Payroll</span>
+                </div>
+            </a>
+            {% endif %}
+            {% endif %}
+
+            <!-- Commerce -->
+            <div class="section-title">COMMERCE</div>
+            <a class="nav-link {% if request.resolver_match.app_name == 'products' %}active{% endif %}"
+                href="{% url 'products:product_list' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-box-seam nav-icon"></i>
+                    <span>Products & Catalog</span>
+                </div>
+            </a>
+            <a class="nav-link {% if request.resolver_match.app_name == 'pos' %}active{% endif %}"
+                href="{% url 'pos:dashboard' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-display nav-icon"></i>
+                    <span>Point of Sale</span>
+                </div>
+            </a>
+            <a class="nav-link {% if request.resolver_match.app_name == 'inventory' %}active{% endif %}"
+                href="{% url 'inventory:dashboard' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-boxes nav-icon"></i>
+                    <span>Inventory</span>
+                </div>
+            </a>
+            <a class="nav-link {% if request.resolver_match.app_name == 'proposals' %}active{% endif %}"
+                href="{% url 'proposals:proposal_dashboard' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-file-text nav-icon"></i>
+                    <span>Proposals (CPQ)</span>
+                </div>
+            </a>
+            <a class="nav-link {% if request.resolver_match.app_name == 'ecommerce' %}active{% endif %}"
+                href="{% url 'ecommerce:index' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-shop nav-icon"></i>
+                    <span>Storefront</span>
+                </div>
+            </a>
+
+            <!-- Operations -->
+            <div class="section-title">OPERATIONS</div>
+            <a class="nav-link {% if request.resolver_match.app_name == 'manufacturing' %}active{% endif %}"
+                href="{% url 'manufacturing:dashboard' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-tools nav-icon"></i>
+                    <span>Manufacturing (MRP)</span>
+                </div>
+            </a>
+            <a class="nav-link {% if request.resolver_match.app_name == 'logistics' %}active{% endif %}"
+                href="{% url 'logistics:dashboard' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-truck nav-icon"></i>
+                    <span>Logistics</span>
+                </div>
+            </a>
+            <a class="nav-link {% if request.resolver_match.app_name == 'quality_control' %}active{% endif %}"
+                href="{% url 'quality_control:dashboard' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-check2-all nav-icon"></i>
+                    <span>Quality Management</span>
+                </div>
+            </a>
+            <a class="nav-link {% if request.resolver_match.app_name == 'projects' %}active{% endif %}"
+                href="{% url 'projects:dashboard' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-stack nav-icon"></i>
+                    <span>Projects (PSA)</span>
+                </div>
+            </a>
+
+            <!-- Customer Engagement -->
             {% has_module_access 'engagement' as engagement_access %}
             {% if engagement_access %}
-            <div class="section-title">CUSTOMER ENGAGEMENT</div>
-            <a class="nav-link {% if request.resolver_match.url_name == 'campaign_list' %}active{% endif %}"
+            <div class="section-title">ENGAGEMENT</div>
+            <a class="nav-link {% if request.resolver_match.app_name == 'marketing' %}active{% endif %}"
                 href="{% url 'marketing:campaign_list' %}">
                 <div class="d-flex align-items-center">
                     <i class="bi bi-megaphone nav-icon"></i>
-                    <span>Campaigns</span>
+                    <span>Marketing</span>
                 </div>
             </a>
-            <a class="nav-link {% if request.resolver_match.url_name == 'campaign_calendar' %}active{% endif %}"
-                href="{% url 'marketing:campaign_calendar' %}">
+            <a class="nav-link {% if request.resolver_match.app_name == 'loyalty' %}active{% endif %}"
+                href="{% url 'loyalty:dashboard' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-calendar3 nav-icon"></i>
-                    <span>Marketing Calendar</span>
+                    <i class="bi bi-award nav-icon"></i>
+                    <span>Loyalty</span>
                 </div>
             </a>
-            <a class="nav-link {% if request.resolver_match.url_name == 'nps_dashboard' %}active{% endif %}"
+            <a class="nav-link {% if request.resolver_match.app_name == 'nps' %}active{% endif %}"
                 href="{% url 'nps:nps_dashboard' %}">
                 <div class="d-flex align-items-center">
                     <i class="bi bi-heart nav-icon"></i>
-                    <span>NPS Dashboard</span>
+                    <span>NPS</span>
                 </div>
             </a>
-            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' and request.resolver_match.app_name == 'communication' %}active{% endif %}"
+            <a class="nav-link {% if request.resolver_match.app_name == 'communication' %}active{% endif %}"
                 href="{% url 'communication:dashboard' %}">
                 <div class="d-flex align-items-center">
                     <i class="bi bi-chat-dots nav-icon"></i>
@@ -500,55 +649,53 @@
             </a>
             {% endif %}
 
-            <!-- Service Delivery Dropdown -->
-            {% has_module_access 'cases' as cases_access %}
-            {% if cases_access %}
-            <div class="section-title">SERVICE DELIVERY</div>
-            <a class="nav-link {% if request.resolver_match.url_name == 'case_list' %}active{% endif %}"
+            <!-- Support & Success -->
+            <div class="section-title">SUPPORT & SUCCESS</div>
+            <a class="nav-link {% if request.resolver_match.app_name == 'cases' %}active{% endif %}"
                 href="{% url 'cases:case_list' %}">
                 <div class="d-flex align-items-center">
                     <i class="bi bi-headset nav-icon"></i>
                     <span>Service Cases</span>
                 </div>
             </a>
-            <a class="nav-link {% if request.resolver_match.url_name == 'task_list' %}active{% endif %}"
+            <a class="nav-link {% if request.resolver_match.app_name == 'tasks' %}active{% endif %}"
                 href="{% url 'tasks:task_list' %}">
                 <div class="d-flex align-items-center">
                     <i class="bi bi-check2-square nav-icon"></i>
                     <span>Tasks</span>
                 </div>
             </a>
-            {% endif %}
+            <a class="nav-link {% if request.resolver_match.app_name == 'learn' %}active{% endif %}"
+                href="{% url 'learn:dashboard' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-book nav-icon"></i>
+                    <span>Learning Center</span>
+                </div>
+            </a>
 
-            <!-- Intelligence & Reports Dropdown -->
+            <!-- Intelligence -->
             {% has_module_access 'reports' as reports_access %}
             {% if reports_access %}
-            <div class="section-title">INTELLIGENCE & REPORTS</div>
-            <a class="nav-link {% if request.resolver_match.url_name == 'reports_dashboard' %}active{% endif %}"
+            <div class="section-title">INTELLIGENCE</div>
+            <a class="nav-link {% if request.resolver_match.app_name == 'reports' %}active{% endif %}"
                 href="{% url 'reports:dashboard' %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-speedometer2 nav-icon"></i>
-                    <span>Reports Dashboard</span>
-                </div>
-            </a>
-            <a class="nav-link {% if request.resolver_match.url_name == 'report_list' %}active{% endif %}"
-                href="{% url 'reports:report_list' %}">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-file-earmark-bar-graph nav-icon"></i>
-                    <span>All Reports</span>
-                </div>
-            </a>
-            <a class="nav-link {% if request.resolver_match.url_name == 'export_list' %}active{% endif %}"
-                href="{% url 'reports:export_list' %}">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-download nav-icon"></i>
-                    <span>Export Logs</span>
+                    <i class="bi bi-bar-chart-fill nav-icon"></i>
+                    <span>Analytics & Reports</span>
                 </div>
             </a>
             {% endif %}
 
-            <!-- Configuration & Dynamic Choices (Superuser Only) -->
-            {% if user.is_superuser %}
+            <!-- Automation -->
+            <div class="section-title">AUTOMATION</div>
+            <a class="nav-link {% if request.resolver_match.app_name == 'automation' %}active{% endif %}"
+                href="{% url 'automation:workflow_builder' %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-robot nav-icon"></i>
+                    <span>Workflows</span>
+                </div>
+            </a>
+
             <div class="section-title">CONFIGURATION</div>
 
             <!-- Dynamic Choices Dropdown -->
@@ -562,54 +709,54 @@
             </a>
             <div class="collapse" id="configMenu">
                 <a class="nav-link {% if request.resolver_match.url_name == 'dynamic_choices_dashboard' %}active{% endif %}"
-                    href="{% url 'core:dynamic_choices_dashboard' %}">
+                    href="{% url 'core_system:dynamic_choices_dashboard' %}">
                     Overview
                 </a>
                 <div class="section-title">Module Setup</div>
                 <a class="nav-link {% if request.resolver_match.url_name == 'module_label_list' %}active{% endif %}"
-                    href="{% url 'core:module_label_list' %}">Module Labels</a>
+                    href="{% url 'core_system:module_label_list' %}">Module Labels</a>
                 <a class="nav-link {% if request.resolver_match.url_name == 'module_choice_list' %}active{% endif %}"
-                    href="{% url 'core:module_choice_list' %}">Module Choices</a>
+                    href="{% url 'core_system:module_choice_list' %}">Module Choices</a>
                 <a class="nav-link {% if request.resolver_match.url_name == 'model_choice_list' %}active{% endif %}"
-                    href="{% url 'core:model_choice_list' %}">Model Choices</a>
+                    href="{% url 'core_system:model_choice_list' %}">Model Choices</a>
                 <a class="nav-link {% if request.resolver_match.url_name == 'field_type_list' %}active{% endif %}"
-                    href="{% url 'core:field_type_list' %}">Field Types</a>
+                    href="{% url 'core_system:field_type_list' %}">Field Types</a>
                 <a class="nav-link {% if request.resolver_match.url_name == 'assignment_rule_type_list' %}active{% endif %}"
-                    href="{% url 'core:assignment_rule_type_list' %}">Assignment Rule Types</a>
+                    href="{% url 'core_system:assignment_rule_type_list' %}">Assignment Rule Types</a>
 
                 <div class="section-title">System Config</div>
                 <a class="nav-link {% if request.resolver_match.url_name == 'system_config_type_list' %}active{% endif %}"
-                    href="{% url 'core:system_config_type_list' %}">Config Types</a>
+                    href="{% url 'core_system:system_config_type_list' %}">Config Types</a>
                 <a class="nav-link {% if request.resolver_match.url_name == 'system_config_category_list' %}active{% endif %}"
-                    href="{% url 'core:system_config_category_list' %}">Config Categories</a>
+                    href="{% url 'core_system:system_config_category_list' %}">Config Categories</a>
 
                 <div class="section-title">System Events</div>
                 <a class="nav-link {% if request.resolver_match.url_name == 'system_event_type_list' %}active{% endif %}"
-                    href="{% url 'core:system_event_type_list' %}">Event Types</a>
+                    href="{% url 'core_system:system_event_type_list' %}">Event Types</a>
                 <a class="nav-link {% if request.resolver_match.url_name == 'system_event_severity_list' %}active{% endif %}"
-                    href="{% url 'core:system_event_severity_list' %}">Event Severities</a>
+                    href="{% url 'core_system:system_event_severity_list' %}">Event Severities</a>
 
                 <div class="section-title">Health & Maintenance</div>
                 <a class="nav-link {% if request.resolver_match.url_name == 'health_check_type_list' %}active{% endif %}"
-                    href="{% url 'core:health_check_type_list' %}">Health Check Types</a>
+                    href="{% url 'core_system:health_check_type_list' %}">Health Check Types</a>
                 <a class="nav-link {% if request.resolver_match.url_name == 'health_check_status_list' %}active{% endif %}"
-                    href="{% url 'core:health_check_status_list' %}">Health Check Statuses</a>
+                    href="{% url 'core_system:health_check_status_list' %}">Health Check Statuses</a>
                 <a class="nav-link {% if request.resolver_match.url_name == 'maintenance_type_list' %}active{% endif %}"
-                    href="{% url 'core:maintenance_type_list' %}">Maintenance Types</a>
+                    href="{% url 'core_system:maintenance_type_list' %}">Maintenance Types</a>
                 <a class="nav-link {% if request.resolver_match.url_name == 'maintenance_status_list' %}active{% endif %}"
-                    href="{% url 'core:maintenance_status_list' %}">Maintenance Statuses</a>
+                    href="{% url 'core_system:maintenance_status_list' %}">Maintenance Statuses</a>
 
                 <div class="section-title">Performance</div>
                 <a class="nav-link {% if request.resolver_match.url_name == 'performance_metric_type_list' %}active{% endif %}"
-                    href="{% url 'core:performance_metric_type_list' %}">Metric Types</a>
+                    href="{% url 'core_system:performance_metric_type_list' %}">Metric Types</a>
                 <a class="nav-link {% if request.resolver_match.url_name == 'performance_environment_list' %}active{% endif %}"
-                    href="{% url 'core:performance_environment_list' %}">Environments</a>
+                    href="{% url 'core_system:performance_environment_list' %}">Environments</a>
 
                 <div class="section-title">Notifications</div>
                 <a class="nav-link {% if request.resolver_match.url_name == 'notification_type_list' %}active{% endif %}"
-                    href="{% url 'core:notification_type_list' %}">Notification Types</a>
+                    href="{% url 'core_system:notification_type_list' %}">Notification Types</a>
                 <a class="nav-link {% if request.resolver_match.url_name == 'notification_priority_list' %}active{% endif %}"
-                    href="{% url 'core:notification_priority_list' %}">Notification Priorities</a>
+                    href="{% url 'core_system:notification_priority_list' %}">Notification Priorities</a>
             </div>
 
             <!-- System Admin Dropdown -->
@@ -669,7 +816,7 @@
                 <a class="nav-link {% if request.resolver_match.url_name == 'configuration_audit' %}active{% endif %}"
                     href="{% url 'core:configuration_audit' %}">Configuration Audit</a>
             </div>
-            {% endif %}
+
 
             <!-- System Navigation -->
             <div class="section-title mt-4">SYSTEM</div>
@@ -690,6 +837,7 @@
             </div>
         </nav>
     </div>
+    {% endblock %}
 
     <!-- Main Content -->
     <div class="main-content" id="mainContent">
@@ -710,10 +858,7 @@
 
         <footer class="footer-bar mt-auto py-3 bg-light border-top">
             <div class="container-fluid text-center">
-                <span>&copy; 2025 {% if white_label_settings and
-                    white_label_settings.copyright_text%}{{white_label_settings.copyright_text }}{% else
-                    %}SalesCompass{%endif%}. {% if white_label_settings and white_label_settings.show_tagline %}{{
-                    white_label_settings.tagline }}{%endif%}</span>
+                <span>&copy; 2025 {% if white_label_settings and white_label_settings.copyright_text%}{{white_label_settings.copyright_text }}{% else %}SalesCompass{%endif%}. {% if white_label_settings and white_label_settings.show_tagline %}{{ white_label_settings.tagline }}{%endif%}</span>
             </div>
         </footer>
     </div>
@@ -746,6 +891,8 @@
     {% if user.is_authenticated %}
     {% include "wazo/components/softphone.html" %}
     {% endif %}
+
+    {% include "shared/_loading_spinner.html" %}
 </body>
 
 </html>

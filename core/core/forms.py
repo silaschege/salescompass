@@ -26,6 +26,27 @@ class DynamicChoiceWidget(Select):
         return attrs
 
 
+class TenantAwareModelForm(forms.ModelForm):
+    """
+    Base form class that automatically filters ForeignKey querysets by the current tenant.
+    """
+    def __init__(self, *args, tenant=None, **kwargs):
+        self.tenant = tenant
+        super().__init__(*args, **kwargs)
+        
+        if tenant:
+            for field_name, field in self.fields.items():
+                # Check if field has a queryset and the model has a tenant field being a ForeignKey
+                if hasattr(field, 'queryset') and hasattr(field.queryset.model, 'tenant'):
+                     # We can perform a safe check or a try-except
+                     try:
+                         # Filter by tenant if the model is tenant-aware
+                         field.queryset = field.queryset.filter(tenant=tenant)
+                     except Exception:
+                         pass
+
+
+
 class SystemConfigurationForm(forms.ModelForm):
     class Meta:
         model = SystemConfiguration

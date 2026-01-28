@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Delete Coupon</h1>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="alert alert-danger">
+                Are you sure you want to delete the coupon "<strong>{{ object.code }}</strong>"? This action cannot be
+                undone.
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                <a href="{% url 'products:coupon_list' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

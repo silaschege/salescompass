@@ -4,7 +4,8 @@
 {% block title %}SMS Messages - Communication{% endblock %}
 
 {% block comm_title %}<span style="color: black; text-align: center; display: block;">💬 SMS Center</span>{% endblock %}
-{% block comm_subtitle %}<span style="color: black; text-align: center; display: block;">Mobile interactions and instant alerts</span>{% endblock %}
+{% block comm_subtitle %}<span style="color: black; text-align: center; display: block;">Mobile interactions and instant
+    alerts</span>{% endblock %}
 
 {% block comm_actions %}
 <a href="{% url 'communication:sms_send' %}" class="btn btn-comm fw-bold px-4 shadow-sm">
@@ -29,11 +30,11 @@
             <table class="table table-hover align-middle mb-0 table-comm">
                 <thead class="bg-light">
                     <tr>
-                        <th class="ps-4">Recipient</th>
-                        <th>Message</th>
+                        {% include "components/_table_header.html" with field="recipient_phone" label="Recipient" %}
+                        {% include "components/_table_header.html" with field="message" label="Message" %}
                         <th>Direction</th>
-                        <th>Status</th>
-                        <th>Date</th>
+                        {% include "components/_table_header.html" with field="status" label="Status" %}
+                        {% include "components/_table_header.html" with field="created_at" label="Date" %}
                         <th class="text-end pe-4">Actions</th>
                     </tr>
                 </thead>
@@ -75,25 +76,19 @@
                             <button class="btn btn-sm btn-light border"><i class="bi bi-reply"></i></button>
                         </td>
                     </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center py-5">
-                            <div class="text-muted">
-                                <i class="bi bi-chat-square-text display-4 mb-3 d-block"></i>
-                                <p>No SMS messages found</p>
-                                <a href="{% url 'communication:sms_send' %}" class="btn btn-comm btn-sm">Send your first
-                                    SMS</a>
-                            </div>
-                        </td>
-                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-    {% if is_paginated %}
-    <div class="card-footer bg-transparent border-top p-3 text-center">
-        {% include "communication/includes/pagination.html" %}
+    {% if sms_messages %}
+    <div class="card-footer bg-white border-top py-3">
+        {% include "components/_pagination.html" %}
+    </div>
+    {% else %}
+    <div class="card-body">
+        {% url 'communication:sms_send' as action_url %}
+        {% include "components/_empty_state.html" with icon="bi-chat-square-text" title="No SMS messages found" message="Manage your mobile interactions and instant alerts from here." action_url=action_url action_text="Send SMS" %}
     </div>
     {% endif %}
 </div>

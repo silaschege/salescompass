@@ -1,0 +1,646 @@
+{% extends 'core/base_module.html' %}
+{% load static %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    :root {
+        --pos-primary: #6d28d9;
+        /* Deep Purple */
+        --pos-primary-hover: #5b21b6;
+        --pos-primary-light: rgba(109, 40, 217, 0.1);
+        --pos-accent: #fbbf24;
+        /* Gold */
+        --pos-accent-dark: #d97706;
+        --pos-success: #10b981;
+        --pos-warning: #f59e0b;
+        --pos-danger: #ef4444;
+        --pos-dark: #1e1b4b;
+        /* Dark Navy Purple */
+        --pos-dark-accent: #2e1065;
+        --pos-gray-50: #f8fafc;
+        --pos-gray-100: #f1f5f9;
+        --pos-gray-200: #e2e8f0;
+        --pos-gray-400: #94a3b8;
+        --pos-gray-600: #475569;
+        --pos-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --pos-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .pos-container {
+        display: flex;
+        flex: 1;
+        min-height: calc(100vh - 100px);
+        background: var(--pos-gray-100);
+    }
+
+    /* Category Sidebar */
+    .pos-sidebar {
+        background: linear-gradient(180deg, var(--pos-dark) 0%, var(--pos-dark-accent) 100%);
+        width: 240px;
+        flex-shrink: 0;
+        overflow-y: auto;
+        box-shadow: var(--pos-shadow-lg);
+        margin-right: 15px;
+        border-radius: 0 1.5rem 1.5rem 0;
+    }
+
+    .pos-sidebar .sidebar-header {
+        padding: 1.25rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .pos-sidebar .sidebar-title {
+        color: var(--pos-gray-400);
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+
+    .pos-sidebar .nav-link {
+        color: rgba(255, 255, 255, 0.7);
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.5rem;
+        margin: 0.25rem 0.75rem;
+        transition: all 0.2s ease;
+        font-size: 0.875rem;
+    }
+
+    .pos-sidebar .nav-link:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+
+    .pos-sidebar .nav-link.active {
+        background: linear-gradient(135deg, var(--pos-accent) 0%, var(--pos-accent-dark) 100%);
+        color: var(--pos-dark);
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+    }
+
+    .pos-sidebar .nav-link i {
+        width: 20px;
+        margin-right: 0.75rem;
+    }
+
+    /* Product Grid Area */
+    .pos-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: var(--pos-gray-100);
+        border-radius: 1rem;
+        padding: 1rem;
+    }
+
+    .pos-search-bar {
+        padding: 1rem 1.5rem;
+        background: #fff;
+        border-bottom: 1px solid var(--pos-gray-200);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .pos-search-input {
+        background: var(--pos-gray-100);
+        border: 2px solid transparent;
+        border-radius: 1rem;
+        padding: 0.875rem 1.25rem 0.875rem 3rem;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .pos-search-input:focus {
+        background: #fff;
+        border-color: var(--pos-primary);
+        box-shadow: 0 0 0 4px var(--pos-primary-light);
+    }
+
+    .pos-search-icon {
+        position: absolute;
+        left: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--pos-gray-400);
+    }
+
+    /* Product Grid */
+    .pos-grid {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+    }
+
+    .product-card {
+        background: #fff;
+        border-radius: 1rem;
+        border: none;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .product-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--pos-shadow-lg);
+    }
+
+    .product-card:active {
+        transform: scale(0.98);
+    }
+
+    .product-card .product-image {
+        height: 100px;
+        background: linear-gradient(135deg, var(--pos-gray-100) 0%, var(--pos-gray-200) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .product-card .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .product-card .product-image .placeholder-icon {
+        font-size: 2.5rem;
+        color: var(--pos-gray-400);
+    }
+
+    .product-card .product-info {
+        padding: 0.875rem;
+    }
+
+    .product-card .product-name {
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: var(--pos-dark);
+        margin-bottom: 0.25rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .product-card .product-sku {
+        font-size: 0.75rem;
+        color: var(--pos-gray-400);
+    }
+
+    .product-card .product-price {
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--pos-primary);
+        margin-top: 0.5rem;
+    }
+
+    /* Cart Panel */
+    .pos-cart {
+        width: 380px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .cart-header {
+        padding: 1.25rem;
+        border-bottom: 1px solid var(--pos-gray-200);
+        background: linear-gradient(135deg, var(--pos-dark) 0%, #334155 100%);
+        color: #fff;
+    }
+
+    .cart-header .cart-title {
+        font-weight: 700;
+        font-size: 1.125rem;
+    }
+
+    .cart-customer {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--pos-gray-200);
+        background: var(--pos-gray-50);
+    }
+
+    .customer-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        background: #fff;
+        border-radius: 0.75rem;
+        border: 1px solid var(--pos-gray-200);
+    }
+
+    .customer-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--pos-primary) 0%, #8b5cf6 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+    }
+
+    /* Cart Items */
+    .cart-items {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0.75rem;
+    }
+
+    .cart-item {
+        display: flex;
+        align-items: center;
+        padding: 0.875rem;
+        background: var(--pos-gray-50);
+        border-radius: 0.75rem;
+        margin-bottom: 0.5rem;
+        transition: background 0.2s ease;
+    }
+
+    .cart-item:hover {
+        background: var(--pos-gray-100);
+    }
+
+    .cart-item-image {
+        width: 48px;
+        height: 48px;
+        border-radius: 0.5rem;
+        background: var(--pos-gray-200);
+        margin-right: 0.875rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .cart-item-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .cart-item-name {
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: var(--pos-dark);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .cart-item-price {
+        font-size: 0.75rem;
+        color: var(--pos-gray-600);
+    }
+
+    .cart-item-qty {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .qty-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 0.375rem;
+        border: 1px solid var(--pos-gray-200);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .qty-btn:hover {
+        background: var(--pos-gray-100);
+        border-color: var(--pos-primary);
+        color: var(--pos-primary);
+    }
+
+    .qty-value {
+        font-weight: 600;
+        min-width: 24px;
+        text-align: center;
+    }
+
+    .cart-item-total {
+        font-weight: 700;
+        color: var(--pos-dark);
+        min-width: 60px;
+        text-align: right;
+    }
+
+    /* Cart Summary */
+    .cart-summary {
+        padding: 1.25rem;
+        background: #fff;
+        border-top: 1px solid var(--pos-gray-200);
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        color: var(--pos-gray-600);
+    }
+
+    .summary-row.total {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--pos-dark);
+        padding-top: 1rem;
+        margin-top: 0.5rem;
+        border-top: 2px dashed var(--pos-gray-200);
+    }
+
+    /* Checkout Buttons */
+    .cart-actions {
+        padding: 1.25rem;
+        background: var(--pos-gray-50);
+        border-top: 1px solid var(--pos-gray-200);
+    }
+
+    .btn-checkout {
+        background: linear-gradient(135deg, var(--pos-success) 0%, #059669 100%);
+        border: none;
+        color: #fff;
+        font-weight: 700;
+        font-size: 1.125rem;
+        padding: 1rem;
+        border-radius: 1rem;
+        width: 100%;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-checkout:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+        color: #fff;
+    }
+
+    .btn-checkout:disabled {
+        background: var(--pos-gray-400);
+        box-shadow: none;
+        transform: none;
+    }
+
+    .cart-action-btns {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 0.75rem;
+    }
+
+    .btn-action {
+        flex: 1;
+        padding: 0.75rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+
+    /* Empty Cart State */
+    .empty-cart {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem;
+        text-align: center;
+        color: var(--pos-gray-400);
+    }
+
+    .empty-cart-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+
+    .empty-cart-text {
+        font-size: 1rem;
+        color: var(--pos-gray-600);
+    }
+
+    /* Loading State */
+    .loading-spinner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 4rem;
+    }
+
+    /* Scrollbar Styling */
+    .pos-grid::-webkit-scrollbar,
+    .cart-items::-webkit-scrollbar,
+    .pos-sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .pos-grid::-webkit-scrollbar-track,
+    .cart-items::-webkit-scrollbar-track,
+    .pos-sidebar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .pos-grid::-webkit-scrollbar-thumb,
+    .cart-items::-webkit-scrollbar-thumb {
+        background: var(--pos-gray-300);
+        border-radius: 3px;
+    }
+
+    .pos-sidebar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+    }
+</style>
+{% endblock %}
+
+{% block module_nav %}
+<!-- POS Navigation -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#posTerminalMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-cash-stack nav-icon"></i>
+        <span>POS Terminal</span>
+    </div>
+</a>
+<div class="collapse" id="posTerminalMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:dashboard' or request.resolver_match.url_name == 'pos:terminal' %}active{% endif %}"
+        href="{% url 'pos:dashboard' %}">
+        Terminal Interface
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:terminal_select' %}active{% endif %}"
+        href="{% url 'pos:terminal' %}">
+        Select Terminal
+    </a>
+</div>
+
+<!-- Terminals Management -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#posTerminalsMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-pc-display nav-icon"></i>
+        <span>Terminals</span>
+    </div>
+</a>
+<div class="collapse" id="posTerminalsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:terminal_list' %}active{% endif %}"
+        href="{% url 'pos:terminal_list' %}">
+        Terminal List
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:terminal_create' %}active{% endif %}"
+        href="{% url 'pos:terminal_create' %}">
+        Create Terminal
+    </a>
+</div>
+
+<!-- Sessions -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#posSessionsMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-clock-history nav-icon"></i>
+        <span>Sessions</span>
+    </div>
+</a>
+<div class="collapse" id="posSessionsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:session_list' %}active{% endif %}"
+        href="{% url 'pos:session_list' %}">
+        Session List
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:session_open' %}active{% endif %}"
+        href="{% url 'pos:session_open' %}">
+        Open Session
+    </a>
+</div>
+
+<!-- Transactions -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#posTransactionsMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-receipt nav-icon"></i>
+        <span>Transactions</span>
+    </div>
+</a>
+<div class="collapse" id="posTransactionsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:transaction_list' %}active{% endif %}"
+        href="{% url 'pos:transaction_list' %}">
+        Transaction List
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:transaction_detail' %}active{% endif %}"
+        href="{% url 'pos:transaction_list' %}">
+        Transaction Details
+    </a>
+</div>
+
+<!-- Refunds -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#posRefundsMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-arrow-return-left nav-icon"></i>
+        <span>Refunds</span>
+    </div>
+</a>
+<div class="collapse" id="posRefundsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:refund_list' %}active{% endif %}"
+        href="{% url 'pos:refund_list' %}">
+        Refund List
+    </a>
+    <a class="nav-link" href="{% url 'pos:refund_list' %}">
+        Process Refund
+    </a>
+</div>
+
+<!-- Cash Drawer -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#posCashMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-safe nav-icon"></i>
+        <span>Cash Management</span>
+    </div>
+</a>
+<div class="collapse" id="posCashMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:cash_drawer' %}active{% endif %}"
+        href="{% url 'pos:cash_drawer' %}">
+        Cash Drawer
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:cash_pay_in' %}active{% endif %}"
+        href="{% url 'pos:cash_pay_in' %}">
+        Pay In
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:cash_pay_out' %}active{% endif %}"
+        href="{% url 'pos:cash_pay_out' %}">
+        Pay Out
+    </a>
+</div>
+
+<!-- Reports -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#posReportsMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-graph-up nav-icon"></i>
+        <span>Reports</span>
+    </div>
+</a>
+<div class="collapse" id="posReportsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:reports' %}active{% endif %}"
+        href="{% url 'pos:reports' %}">
+        All Reports
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:report_daily' %}active{% endif %}"
+        href="{% url 'pos:report_daily' %}">
+        Daily Sales
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:report_x' %}active{% endif %}"
+        href="{% url 'pos:report_x' %}">
+        X-Report
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:report_z' %}active{% endif %}"
+        href="{% url 'pos:report_z' %}">
+        Z-Report
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:report_cashier' %}active{% endif %}"
+        href="{% url 'pos:report_cashier' %}">
+        Cashier Report
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:report_product_sales' %}active{% endif %}"
+        href="{% url 'pos:report_product_sales' %}">
+        Product Sales
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:report_sales_trends' %}active{% endif %}"
+        href="{% url 'pos:report_sales_trends' %}">
+        Sales Trends
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:report_payment_methods' %}active{% endif %}"
+        href="{% url 'pos:report_payment_methods' %}">
+        Payment Methods
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'pos:report_refunds_voids' %}active{% endif %}"
+        href="{% url 'pos:report_refunds_voids' %}">
+        Refunds & Voids
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="pos-container">
+    {% block pos_content %}{% endblock %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES' }).format(amount);
+    }
+</script>
+{% endblock %}

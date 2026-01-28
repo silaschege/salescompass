@@ -11,13 +11,13 @@ from core.models import User
 from tenants.models import Tenant
 
 
-class SuperuserRequiredMixin(UserPassesTestMixin):
-    """Mixin to require superuser access"""
-    def test_func(self):
-        return self.request.user.is_superuser
+from core.views import (
+    SalesCompassSuperuserListView, SalesCompassSuperuserCreateView, 
+    SalesCompassSuperuserUpdateView, SalesCompassSuperuserDeleteView,
+    SalesCompassSuperuserTemplateView, SuperuserRequiredMixin
+)
 
-
-class GlobalAlertsDashboardView(LoginRequiredMixin, SuperuserRequiredMixin, TemplateView):
+class GlobalAlertsDashboardView(SalesCompassSuperuserTemplateView):
     template_name = 'global_alerts/dashboard.html'
     
     def get_context_data(self, **kwargs):
@@ -54,13 +54,14 @@ class GlobalAlertsDashboardView(LoginRequiredMixin, SuperuserRequiredMixin, Temp
         return context
 
 
-class AlertConfigurationListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
+class AlertConfigurationListView(SalesCompassSuperuserListView):
     model = AlertConfiguration
     template_name = 'global_alerts/alert_configuration_list.html'
     context_object_name = 'alert_configs'
     paginate_by = 25
     
     def get_queryset(self):
+        # ... keep existing filter logic ...
         queryset = super().get_queryset().select_related('created_by', 'tenant_filter')
         
         # Apply filters
@@ -114,7 +115,7 @@ class AlertConfigurationListView(LoginRequiredMixin, SuperuserRequiredMixin, Lis
         return context
 
 
-class AlertConfigurationCreateView(LoginRequiredMixin, SuperuserRequiredMixin, CreateView):
+class AlertConfigurationCreateView(SalesCompassSuperuserCreateView):
     model = AlertConfiguration
     template_name = 'global_alerts/alert_configuration_form.html'
     fields = [
@@ -123,14 +124,17 @@ class AlertConfigurationCreateView(LoginRequiredMixin, SuperuserRequiredMixin, C
         'escalation_policy', 'alert_recipients', 'tenant_filter'
     ]
     success_url = reverse_lazy('global_alerts:alert_config_list')
+    success_message = "Alert configuration '{name}' created successfully."
     
+    def get_success_message(self, cleaned_data):
+        return self.success_message.format(name=cleaned_data.get('name', ''))
+
     def form_valid(self, form):
         form.instance.created_by = self.request.user
-        messages.success(self.request, f"Alert configuration '{form.instance.name}' created successfully.")
         return super().form_valid(form)
 
 
-class AlertConfigurationUpdateView(LoginRequiredMixin, SuperuserRequiredMixin, UpdateView):
+class AlertConfigurationUpdateView(SalesCompassSuperuserUpdateView):
     model = AlertConfiguration
     template_name = 'global_alerts/alert_configuration_form.html'
     fields = [
@@ -140,25 +144,25 @@ class AlertConfigurationUpdateView(LoginRequiredMixin, SuperuserRequiredMixin, U
     ]
     success_url = reverse_lazy('global_alerts:alert_config_list')
     pk_url_kwarg = 'config_id'
+    success_message = "Alert configuration '{name}' updated successfully."
     
-    def form_valid(self, form):
-        messages.success(self.request, f"Alert configuration '{form.instance.name}' updated successfully.")
-        return super().form_valid(form)
+    def get_success_message(self, cleaned_data):
+        return self.success_message.format(name=cleaned_data.get('name', ''))
 
 
-class AlertConfigurationDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView):
+class AlertConfigurationDeleteView(SalesCompassSuperuserDeleteView):
     model = AlertConfiguration
     template_name = 'global_alerts/alert_configuration_confirm_delete.html'
     success_url = reverse_lazy('global_alerts:alert_config_list')
     pk_url_kwarg = 'config_id'
+    success_message = "Alert configuration deleted successfully."
     
     def delete(self, request, *args, **kwargs):
-        alert_config = self.get_object()
-        messages.success(request, f"Alert configuration '{alert_config.name}' deleted successfully.")
+        messages.success(request, self.success_message)
         return super().delete(request, *args, **kwargs)
 
 
-class AlertInstanceListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
+class AlertInstanceListView(SalesCompassSuperuserListView):
     model = AlertInstance
     template_name = 'global_alerts/alert_instance_list.html'
     context_object_name = 'alerts'
@@ -231,7 +235,7 @@ class AlertInstanceListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView
         return context
 
 
-class AlertInstanceDetailView(LoginRequiredMixin, SuperuserRequiredMixin, TemplateView):
+class AlertInstanceDetailView(SalesCompassSuperuserTemplateView):
     template_name = 'global_alerts/alert_instance_detail.html'
     
     def get_context_data(self, **kwargs):
@@ -244,6 +248,12 @@ class AlertInstanceDetailView(LoginRequiredMixin, SuperuserRequiredMixin, Templa
 
 
 class AcknowledgeAlertView(LoginRequiredMixin, SuperuserRequiredMixin, View):
+    def post(self, request, alert_id):
+        # View is not a generic view, keep as is or minimal mixin change
+        # Base generic views don't apply to View subclasses easily without more work
+        return super().post(request, alert_id) # Waiting, this is custom View. Keep mixins.
+    
+    # Re-implementing original logic because replacing entire block
     def post(self, request, alert_id):
         alert = get_object_or_404(AlertInstance, id=alert_id)
         alert.status = 'acknowledged'
@@ -267,7 +277,7 @@ class ResolveAlertView(LoginRequiredMixin, SuperuserRequiredMixin, View):
         return redirect('global_alerts:alert_detail', alert_id=alert.id)
 
 
-class AlertEscalationPolicyListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
+class AlertEscalationPolicyListView(SalesCompassSuperuserListView):
     model = AlertEscalationPolicy
     template_name = 'global_alerts/escalation_policy_list.html'
     context_object_name = 'policies'
@@ -298,7 +308,7 @@ class AlertEscalationPolicyListView(LoginRequiredMixin, SuperuserRequiredMixin, 
         return context
 
 
-class AlertEscalationPolicyCreateView(LoginRequiredMixin, SuperuserRequiredMixin, CreateView):
+class AlertEscalationPolicyCreateView(SalesCompassSuperuserCreateView):
     model = AlertEscalationPolicy
     template_name = 'global_alerts/escalation_policy_form.html'
     fields = [
@@ -307,14 +317,17 @@ class AlertEscalationPolicyCreateView(LoginRequiredMixin, SuperuserRequiredMixin
         'escalation_recipients'
     ]
     success_url = reverse_lazy('global_alerts:escalation_policy_list')
+    success_message = "Escalation policy '{name}' created successfully."
+    
+    def get_success_message(self, cleaned_data):
+        return self.success_message.format(name=cleaned_data.get('name', ''))
     
     def form_valid(self, form):
         form.instance.created_by = self.request.user
-        messages.success(self.request, f"Escalation policy '{form.instance.name}' created successfully.")
         return super().form_valid(form)
 
 
-class AlertEscalationPolicyUpdateView(LoginRequiredMixin, SuperuserRequiredMixin, UpdateView):
+class AlertEscalationPolicyUpdateView(SalesCompassSuperuserUpdateView):
     model = AlertEscalationPolicy
     template_name = 'global_alerts/escalation_policy_form.html'
     fields = [
@@ -324,20 +337,21 @@ class AlertEscalationPolicyUpdateView(LoginRequiredMixin, SuperuserRequiredMixin
     ]
     success_url = reverse_lazy('global_alerts:escalation_policy_list')
     pk_url_kwarg = 'policy_id'
+    success_message = "Escalation policy '{name}' updated successfully."
     
-    def form_valid(self, form):
-        messages.success(self.request, f"Escalation policy '{form.instance.name}' updated successfully.")
-        return super().form_valid(form)
+    def get_success_message(self, cleaned_data):
+        return self.success_message.format(name=cleaned_data.get('name', ''))
 
 
-class AlertNotificationListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
+class AlertNotificationListView(SalesCompassSuperuserListView):
     model = AlertNotification
     template_name = 'global_alerts/notification_list.html'
     context_object_name = 'notifications'
     paginate_by = 25
     
     def get_queryset(self):
-        queryset = super().get_queryset().select_related(
+        # Override to keep existing complex select_related
+        queryset = self.model.objects.select_related(
             'alert_instance', 'alert_instance__alert_config', 'recipient_user', 'tenant'
         )
         
@@ -384,7 +398,7 @@ class AlertNotificationListView(LoginRequiredMixin, SuperuserRequiredMixin, List
         return context
 
 
-class AlertCorrelationRuleListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
+class AlertCorrelationRuleListView(SalesCompassSuperuserListView):
     model = AlertCorrelationRule
     template_name = 'global_alerts/correlation_rule_list.html'
     context_object_name = 'rules'
@@ -427,7 +441,7 @@ class AlertCorrelationRuleListView(LoginRequiredMixin, SuperuserRequiredMixin, L
         return context
 
 
-class AlertCorrelationRuleCreateView(LoginRequiredMixin, SuperuserRequiredMixin, CreateView):
+class AlertCorrelationRuleCreateView(SalesCompassSuperuserCreateView):
     model = AlertCorrelationRule
     template_name = 'global_alerts/correlation_rule_form.html'
     fields = [
@@ -435,14 +449,17 @@ class AlertCorrelationRuleCreateView(LoginRequiredMixin, SuperuserRequiredMixin,
         'correlation_window_minutes', 'max_correlated_alerts'
     ]
     success_url = reverse_lazy('global_alerts:correlation_rule_list')
+    success_message = "Correlation rule '{name}' created successfully."
+    
+    def get_success_message(self, cleaned_data):
+        return self.success_message.format(name=cleaned_data.get('name', ''))
     
     def form_valid(self, form):
         form.instance.created_by = self.request.user
-        messages.success(self.request, f"Correlation rule '{form.instance.name}' created successfully.")
         return super().form_valid(form)
 
 
-class AlertCorrelationRuleUpdateView(LoginRequiredMixin, SuperuserRequiredMixin, UpdateView):
+class AlertCorrelationRuleUpdateView(SalesCompassSuperuserUpdateView):
     model = AlertCorrelationRule
     template_name = 'global_alerts/correlation_rule_form.html'
     fields = [
@@ -451,13 +468,13 @@ class AlertCorrelationRuleUpdateView(LoginRequiredMixin, SuperuserRequiredMixin,
     ]
     success_url = reverse_lazy('global_alerts:correlation_rule_list')
     pk_url_kwarg = 'rule_id'
+    success_message = "Correlation rule '{name}' updated successfully."
     
-    def form_valid(self, form):
-        messages.success(self.request, f"Correlation rule '{form.instance.name}' updated successfully.")
-        return super().form_valid(form)
+    def get_success_message(self, cleaned_data):
+        return self.success_message.format(name=cleaned_data.get('name', ''))
 
 
-class AlertAnalyticsView(LoginRequiredMixin, SuperuserRequiredMixin, TemplateView):
+class AlertAnalyticsView(SalesCompassSuperuserTemplateView):
     template_name = 'global_alerts/alert_analytics.html'
     
     def get_context_data(self, **kwargs):

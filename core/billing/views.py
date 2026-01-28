@@ -5,9 +5,24 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, DetailView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
+from core.views import (
+    TenantAwareViewMixin, SalesCompassListView, SalesCompassDetailView,
+    SalesCompassCreateView, SalesCompassUpdateView, SalesCompassDeleteView
+)
 from django.urls import reverse_lazy
-from .models import Plan, Subscription, Invoice, CreditAdjustment, PaymentProviderConfig, PaymentMethod, Payment, PlanTier, SubscriptionStatus, AdjustmentType, PaymentProvider, PaymentType
-from .forms import PlanForm, SubscriptionForm, InvoiceForm, CreditAdjustmentForm, PaymentProviderConfigForm, PaymentMethodForm, PaymentForm, PlanTierForm, SubscriptionStatusForm, AdjustmentTypeForm, PaymentProviderForm, PaymentTypeForm
+from .models import (
+    Plan, Subscription, Invoice, CreditAdjustment, PaymentProviderConfig, 
+    PaymentMethod, Payment, PlanTier, SubscriptionStatus, AdjustmentType, 
+    PaymentProvider, PaymentType
+)
+from accounting.models import TaxRate, TaxRule
+from .forms import (
+    PlanForm, SubscriptionForm, InvoiceForm, CreditAdjustmentForm, 
+    PaymentProviderConfigForm, PaymentMethodForm, PaymentForm, PlanTierForm, 
+    SubscriptionStatusForm, AdjustmentTypeForm, PaymentProviderForm, 
+    PaymentTypeForm
+)
+from accounting.forms import TaxRateForm, TaxRuleForm
 from tenants.models import Tenant as TenantModel
 import logging
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -24,6 +39,7 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from access_control.views import SecureViewMixin
 from access_control.utils import access_required
+from core.event_bus import event_bus
 
 class BillingDashboardView(SecureViewMixin, LoginRequiredMixin, TemplateView):
     template_name = 'billing/dashboard.html'
@@ -314,64 +330,37 @@ class PaymentTypeDeleteView(SecureViewMixin, LoginRequiredMixin, DeleteView):
 
 
 
-class PlanListView(SecureViewMixin, LoginRequiredMixin, ListView):
+class PlanListView(SalesCompassListView):
     model = Plan
     template_name = 'billing/plan_list.html'
     context_object_name = 'plans'
-    required_access = 'billing.admin.plans'
+    required_access = 'billing.plans'
     
     def get_queryset(self):
-        return Plan.objects.filter(is_active=True)
+        return super().get_queryset().filter(is_active=True)
 
 
 
-class PlanCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
+class PlanCreateView(SalesCompassCreateView):
     model = Plan
     form_class = PlanForm
     template_name = 'billing/plan_form.html'
     success_url = reverse_lazy('billing:plan_list')
-    required_access = 'billing.admin.plans'
-    
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        # Pass the current tenant to the form
-        if hasattr(self.request.user, 'tenant_id') and self.request.user.tenant_id:
-            try:
-                kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
-            except TenantModel.DoesNotExist:
-                kwargs['tenant'] = None
-        else:
-            kwargs['tenant'] = None
-        return kwargs
+    required_access = 'billing.plans'
     
     def form_valid(self, form):
-        # Set tenant automatically
-        if hasattr(self.request.user, 'tenant_id') and self.request.user.tenant_id:
-            form.instance.tenant_id = self.request.user.tenant_id
         messages.success(self.request, 'Plan created successfully.')
         return super().form_valid(form)
 
 
 
-class PlanUpdateView(SecureViewMixin, LoginRequiredMixin, UpdateView):
+class PlanUpdateView(SalesCompassUpdateView):
     model = Plan
     form_class = PlanForm
     template_name = 'billing/plan_form.html'
     success_url = reverse_lazy('billing:plan_list')
-    required_access = 'billing.admin.plans'
-    pk_url_kwarg = 'plan_id'  # Added this to match the URL parameter name
-    
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        # Pass the current tenant to the form
-        if hasattr(self.request.user, 'tenant_id') and self.request.user.tenant_id:
-            try:
-                kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
-            except TenantModel.DoesNotExist:
-                kwargs['tenant'] = None
-        else:
-            kwargs['tenant'] = None
-        return kwargs
+    required_access = 'billing.plans'
+    pk_url_kwarg = 'plan_id'
     
     def form_valid(self, form):
         messages.success(self.request, 'Plan updated successfully.')
@@ -392,20 +381,15 @@ class PlanDeleteView(SecureViewMixin, LoginRequiredMixin, DeleteView):
 
 
 
-class SubscriptionListView(SecureViewMixin, LoginRequiredMixin, ListView):
+class SubscriptionListView(SalesCompassListView):
     model = Subscription
     template_name = 'billing/subscription_list.html'
     context_object_name = 'subscriptions'
-    paginate_by = 20  # Optional: add pagination
-    required_access = 'billing.admin.subscriptions'
+    paginate_by = 20
+    required_access = 'billing.subscriptions'
     
     def get_queryset(self):
         queryset = super().get_queryset()
-        
-        # For superusers, show all subscriptions; for regular users, filter by their tenant
-        if not self.request.user.is_superuser and not self.request.user.is_staff:
-            if hasattr(self.request.user, 'tenant_id'):
-                queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
         
         # Handle search
         search_query = self.request.GET.get('search')
@@ -441,36 +425,14 @@ class SubscriptionListView(SecureViewMixin, LoginRequiredMixin, ListView):
 
 
 
-class SubscriptionCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
+class SubscriptionCreateView(SalesCompassCreateView):
     model = Subscription
     form_class = SubscriptionForm
     template_name = 'billing/subscription_form.html'
     success_url = reverse_lazy('billing:subscription_list')
-    required_access = 'billing.admin.subscriptions'
+    required_access = 'billing.subscriptions'
      
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        # Pass the current tenant to the form
-        if hasattr(self.request.user, 'tenant_id') and self.request.user.tenant_id:
-            try:
-                kwargs['tenant'] = TenantModel.objects.get(id=self.request.user.tenant_id)
-            except TenantModel.DoesNotExist:
-                kwargs['tenant'] = None
-        else:
-            kwargs['tenant'] = None
-        return kwargs
-    
     def form_valid(self, form):
-        # For superusers or staff, set tenant_id from the selected user
-        if self.request.user.is_superuser or self.request.user.is_staff:
-            selected_user = form.cleaned_data.get('user')
-            if selected_user and hasattr(selected_user, 'tenant_id'):
-                form.instance.tenant_id = selected_user.tenant_id
-        else:
-            # For regular users, set tenant_id to their own tenant
-            if hasattr(self.request.user, 'tenant_id') and self.request.user.tenant_id:
-                form.instance.tenant_id = self.request.user.tenant_id
-            
         response = super().form_valid(form)
 
         # Log engagement event for subscription created
@@ -558,26 +520,17 @@ class SubscriptionDeleteView(SecureViewMixin, LoginRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class InvoiceListView(SecureViewMixin, LoginRequiredMixin, ListView):
+class InvoiceListView(SalesCompassListView):
     model = Invoice
     template_name = 'billing/invoice_list.html'
     context_object_name = 'invoices'
     paginate_by = 20
-    required_access = 'billing.admin.invoices'
+    required_access = 'billing.invoices'
     
     def get_queryset(self):
         queryset = super().get_queryset()
         
-        # For superusers, show all invoices; for regular users, filter by their tenant
-        if not self.request.user.is_superuser and not self.request.user.is_staff:
-            if hasattr(self.request.user, 'tenant_id'):
-                queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
-        
         # Apply filters if provided
-        tenant_id = self.request.GET.get('tenant_id')
-        if tenant_id:
-            queryset = queryset.filter(tenant_id=tenant_id)
-        
         status = self.request.GET.get('status')
         if status:
             queryset = queryset.filter(status=status)
@@ -637,12 +590,12 @@ class InvoiceListView(SecureViewMixin, LoginRequiredMixin, ListView):
         
         return context
 
-class InvoiceCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
+class InvoiceCreateView(SalesCompassCreateView):
     model = Invoice
     form_class = InvoiceForm
     template_name = 'billing/invoice_create.html'
     success_url = reverse_lazy('billing:invoice_list')
-    required_access = 'billing.admin.invoices'
+    required_access = 'billing.invoices'
     
     def form_valid(self, form):
         # Set tenant automatically
@@ -676,12 +629,12 @@ class InvoiceCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
         return response
 
 
-class InvoiceUpdateView(SecureViewMixin, LoginRequiredMixin, UpdateView):
+class InvoiceUpdateView(SalesCompassUpdateView):
     model = Invoice
     form_class = InvoiceForm
     template_name = 'billing/invoice_create.html'
     success_url = reverse_lazy('billing:invoice_list')
-    required_access = 'billing.admin.invoices'
+    required_access = 'billing.invoices'
     
     def form_valid(self, form):
         messages.success(self.request, 'Invoice updated successfully.')
@@ -795,7 +748,7 @@ class PaymentProviderConfigListView(SecureViewMixin, LoginRequiredMixin, ListVie
         # Filter by current tenant and prefetch related objects
         if hasattr(self.request.user, 'tenant_id'):
             queryset = queryset.filter(tenant_id=self.request.user.tenant_id)
-        return queryset.select_related('name_ref')
+
 
 
 class PaymentProviderConfigCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
@@ -977,6 +930,14 @@ class PaymentCreateView(SecureViewMixin, LoginRequiredMixin, CreateView):
                 engagement_score=5,
                 created_by=self.request.user
             )
+            
+            event_bus.emit('payment.received', {
+                'payment_id': self.object.id,
+                'amount': float(self.object.amount),
+                'invoice_id': self.object.invoice.id if self.object.invoice else None,
+                'tenant_id': self.request.user.tenant_id,
+                'user': self.request.user
+            })
         except Exception as e:
             logger.warning(f"Failed to log engagement event: {e}")
             
@@ -1102,6 +1063,23 @@ class InvoiceMarkPaidView(LoginRequiredMixin, View):
         invoice = get_object_or_404(Invoice, pk=invoice_id)
         invoice.status = 'paid'
         invoice.save()
+        
+        event_bus.emit('invoice.paid', {
+            'invoice_id': invoice.id,
+            'amount': float(invoice.amount),
+            'tenant_id': request.user.tenant_id if hasattr(request.user, 'tenant_id') else None,
+            'user': request.user
+        })
+        
+        # Also emit payment.received since it implies payment
+        event_bus.emit('payment.received', {
+            'invoice_id': invoice.id,
+            'amount': float(invoice.amount),
+            'source': 'manual_mark_paid',
+            'tenant_id': request.user.tenant_id if hasattr(request.user, 'tenant_id') else None,
+            'user': request.user
+        })
+        
         messages.success(request, f'Invoice {invoice.invoice_number} marked as paid.')
         return redirect('billing:invoice_list')
 
@@ -1223,6 +1201,15 @@ class InvoiceGenerationView(SecureViewMixin, LoginRequiredMixin, TemplateView):
                     status='open',
                     tenant_id=subscription.tenant_id
                 )
+                
+                event_bus.emit('invoice.created', {
+                    'invoice_id': invoice.id,
+                    'invoice_number': invoice.invoice_number,
+                    'amount': float(invoice.amount),
+                    'subscription_id': subscription.id,
+                    'tenant_id': subscription.tenant_id,
+                    'user': request.user
+                })
                 
                 generated_count += 1
             except Exception as e:

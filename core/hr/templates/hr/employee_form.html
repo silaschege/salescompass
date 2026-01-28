@@ -1,0 +1,69 @@
+{% extends "hr/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block hr_content %}
+<div class="row justify-content-center p-4">
+    <div class="col-lg-10">
+        <div class="d-flex align-items-center mb-4">
+            <a href="{% url 'hr:employee_list' %}"
+                class="btn btn-light btn-icon rounded-circle me-3 border-0 shadow-sm">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h1 class="h3 fw-bold mb-0">{% if object %}Manage{% else %}Onboard{% endif %} Personnel</h1>
+        </div>
+
+        <div class="premium-card p-4 border-0 shadow-sm position-relative overflow-hidden">
+            <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                <i class="bi bi-person-plus" style="font-size: 5rem;"></i>
+            </div>
+
+            <div class="alert alert-light border-0 py-3 mb-5 shadow-none small d-flex align-items-center"
+                style="background: rgba(67, 56, 202, 0.05); border-left: 4px solid #4338ca !important;">
+                <i class="bi bi-shield-check text-primary me-3 h4 mb-0"></i>
+                <div class="text-dark">
+                    <strong>IAS 19 Compliance:</strong> Personnel records now require contract end dates and benefit
+                    scheme mapping to ensure accurate financial liability reporting.
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="row g-4">
+                    <div class="col-md-6">{{ form.user|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ form.employee_id|as_crispy_field }}</div>
+
+                    <div class="col-md-4">{{ form.department|as_crispy_field }}</div>
+                    <div class="col-md-4">{{ form.position|as_crispy_field }}</div>
+                    <div class="col-md-4">{{ form.employment_type|as_crispy_field }}</div>
+
+                    <div class="col-md-4">{{ form.hire_date|as_crispy_field }}</div>
+                    <div class="col-md-4">{{ form.contract_end_date|as_crispy_field }}</div>
+                    <div class="col-md-4">{{ form.pension_scheme|as_crispy_field }}</div>
+
+                    <div class="col-md-6">{{ form.salary|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ form.salary_type|as_crispy_field }}</div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-3 mt-5 pt-4 border-top">
+                    <a href="{% url 'hr:employee_list' %}"
+                        class="btn btn-link text-muted text-decoration-none px-4 rounded-pill">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-5 shadow-sm border-0 rounded-pill animate-hover">
+                        <i class="bi bi-check2-circle me-2"></i> Save Personnel Record
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .animate-hover {
+        transition: all 0.2s ease;
+    }
+
+    .animate-hover:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.1);
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,206 @@
+{% extends "assets/base.html" %}
+{% load humanize %}
+
+{% block asset_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-start mb-5">
+        <div class="d-flex align-items-center">
+            <a href="{% url 'assets:asset_list' %}"
+                class="btn btn-light btn-icon rounded-circle me-3 border-0 shadow-sm">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1">
+                        <li class="breadcrumb-item small"><a href="{% url 'assets:asset_list' %}"
+                                class="text-decoration-none text-muted">Registry</a></li>
+                        <li class="breadcrumb-item active small text-primary fw-bold" aria-current="page">{{
+                            asset.asset_number }}</li>
+                    </ol>
+                </nav>
+                <h1 class="h3 fw-bold mb-0">{{ asset.name }}</h1>
+            </div>
+        </div>
+        <div class="d-flex gap-2 pt-3">
+            <a href="{% url 'assets:asset_update' asset.pk %}" class="btn btn-white border px-4 shadow-sm">
+                <i class="bi bi-pencil me-2"></i> Edit Asset
+            </a>
+            <div class="dropdown">
+                <button class="btn btn-primary px-4 shadow-sm border-0 dropdown-toggle" type="button"
+                    data-bs-toggle="dropdown">
+                    <i class="bi bi-shield-check me-2"></i> Compliance
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2">
+                    <li><a class="dropdown-item rounded small py-2"
+                            href="{% url 'assets:asset_revaluation' asset.pk %}"><i
+                                class="bi bi-graph-up-arrow text-success me-2"></i> Fair Value Revaluation</a></li>
+                    <li><a class="dropdown-item rounded small py-2"
+                            href="{% url 'assets:asset_impairment' asset.pk %}"><i
+                                class="bi bi-graph-down-arrow text-danger me-2"></i> Record Impairment (IAS 36)</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Sidebar Info -->
+        <div class="col-lg-4">
+            <div class="premium-card p-4 border-0 shadow-sm mb-4">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div class="bg-indigo-50 text-indigo-600 rounded p-3">
+                        <i class="bi bi-building h3 mb-0"></i>
+                    </div>
+                    <span
+                        class="badge {% if asset.status == 'active' %}badge-soft-success{% else %}badge-soft-warning{% endif %} px-3 rounded-pill text-uppercase extra-small">
+                        {{ asset.status }}
+                    </span>
+                </div>
+                <h5 class="fw-bold mb-1">{{ asset.name }}</h5>
+                <p class="text-muted small mb-4">{{ asset.category.name }}</p>
+
+                <div class="list-group list-group-flush small border-top pt-3">
+                    <div class="list-group-item px-0 py-2 bg-transparent border-0 d-flex justify-content-between">
+                        <span class="text-muted">Asset ID:</span>
+                        <span class="fw-bold">{{ asset.asset_number }}</span>
+                    </div>
+                    <div class="list-group-item px-0 py-2 bg-transparent border-0 d-flex justify-content-between">
+                        <span class="text-muted">Location:</span>
+                        <span class="text-dark fw-semibold">{{ asset.location|default:"Central Facility" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="premium-card p-4 border-0 shadow-sm mb-4 bg-dark text-white overflow-hidden position-relative">
+                <div class="position-absolute bottom-0 end-0 p-3 opacity-10">
+                    <i class="bi bi-shield-check" style="font-size: 4rem;"></i>
+                </div>
+                <h6 class="fw-bold mb-3 small text-uppercase text-primary">Valuation Summary</h6>
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <div class="extra-small text-white-50">Current Carrying Amount</div>
+                        <div class="h3 fw-bold mb-0">${{ asset.current_value|intcomma }}</div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="extra-small text-white-50">Purchase Cost</div>
+                            <div class="fw-bold small">${{ asset.purchase_cost|intcomma }}</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="extra-small text-white-50">Revaluation Surplus</div>
+                            <div class="fw-bold small text-success">+${{ asset.revaluation_surplus|intcomma }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- IFRS Compliance Tabs -->
+            <div class="premium-card border-0 shadow-sm mb-4">
+                <div class="p-4 border-bottom">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-journal-check text-primary me-2"></i> Technical &
+                        Compliance Specs</h6>
+                </div>
+                <div class="p-4">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="text-muted extra-small text-uppercase fw-bold mb-1">Depreciation Method</div>
+                            <div class="fw-bold text-dark">{{
+                                asset.get_depreciation_method_display|default:asset.category.get_depreciation_method_display
+                                }}</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-muted extra-small text-uppercase fw-bold mb-1">Useful Life</div>
+                            <div class="fw-bold text-dark">{{ asset.category.useful_life_years }} Years</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-muted extra-small text-uppercase fw-bold mb-1">Salvage Value</div>
+                            <div class="fw-bold text-dark">${{ asset.salvage_value|intcomma }}</div>
+                        </div>
+
+                        <div class="col-12 border-top pt-4">
+                            <div class="row g-4">
+                                <div class="col-md-6 d-flex align-items-center">
+                                    <div class="rounded-circle bg-light p-2 me-3">
+                                        <i class="bi bi-box-seam text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <div class="extra-small text-muted fw-bold">Type</div>
+                                        <div class="small fw-bold">{% if asset.is_intangible %}Intangible (IAS 38){%
+                                            else %}PPE (IAS 16){% endif %}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 d-flex align-items-center">
+                                    <div class="rounded-circle bg-light p-2 me-3">
+                                        <i class="bi bi-receipt text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <div class="extra-small text-muted fw-bold">Accounting Model</div>
+                                        <div class="small fw-bold">{% if asset.revaluation_surplus %}Revaluation Model{%
+                                            else %}Cost Model{% endif %}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Components (IAS 16) -->
+            <div class="premium-card border-0 shadow-sm mb-4">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-puzzle text-primary me-2"></i> Component Breakdown</h6>
+                    <button class="btn btn-sm btn-light border small">Add Component</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light bg-opacity-50 extra-small text-uppercase fw-bold">
+                            <tr>
+                                <th class="ps-4">Component</th>
+                                <th>Method</th>
+                                <th class="text-end pe-4">Current Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for component in asset.components.all %}
+                            <tr>
+                                <td class="ps-4 py-3">
+                                    <div class="fw-bold text-dark">{{ component.name }}</div>
+                                    <div class="extra-small text-muted">ID: {{ component.asset_number }}</div>
+                                </td>
+                                <td>{{ component.category.get_depreciation_method_display }}</td>
+                                <td class="text-end pe-4 fw-bold">${{ component.current_value|intcomma }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center py-4 text-muted extra-small">No components recorded.
+                                    Using single asset approach.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-indigo-50 {
+        background-color: rgba(67, 56, 202, 0.05);
+    }
+
+    .text-indigo-600 {
+        color: #4338ca;
+    }
+
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+{% endblock %}

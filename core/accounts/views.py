@@ -22,6 +22,7 @@ from django.utils import timezone
 from datetime import timedelta
 import json
 from core.models import User
+from core.event_bus import event_bus
 from .models import *
 class CustomLoginView(LoginView):
     template_name = 'public/login.html'
@@ -156,8 +157,16 @@ class AccountCreateView(ObjectPermissionRequiredMixin, CreateView):
         return kwargs
 
     def form_valid(self, form):
+        response = super().form_valid(form)
         messages.success(self.request, f"Account '{form.instance.account_name}' created successfully!")
-        return super().form_valid(form)
+        
+        event_bus.emit('account.created', {
+            'account_id': self.object.id,
+            'name': self.object.account_name,
+            'tenant_id': self.request.user.tenant.id,
+            'user': self.request.user
+        })
+        return response
 
 
 class AccountUpdateView(ObjectPermissionRequiredMixin, UpdateView):
@@ -173,8 +182,16 @@ class AccountUpdateView(ObjectPermissionRequiredMixin, UpdateView):
         return kwargs
 
     def form_valid(self, form):
+        response = super().form_valid(form)
         messages.success(self.request, f"Account '{form.instance.account_name}' updated successfully!")
-        return super().form_valid(form)
+        
+        event_bus.emit('account.updated', {
+            'account_id': self.object.id,
+            'name': self.object.account_name,
+            'tenant_id': self.request.user.tenant.id,
+            'user': self.request.user
+        })
+        return response
 
 
 
@@ -544,8 +561,17 @@ class ContactCreateView(ObjectPermissionRequiredMixin, CreateView):
         return kwargs
 
     def form_valid(self, form):
+        response = super().form_valid(form)
         messages.success(self.request, f"Contact '{form.instance.first_name} {form.instance.last_name}' created successfully!")
-        return super().form_valid(form)
+        
+        event_bus.emit('contact.created', {
+            'contact_id': self.object.id,
+            'name': f"{self.object.first_name} {self.object.last_name}",
+            'account_id': self.object.account.id if self.object.account else None,
+            'tenant_id': self.request.user.tenant.id,
+            'user': self.request.user
+        })
+        return response
 
 
 class ContactUpdateView(ObjectPermissionRequiredMixin, UpdateView):
@@ -566,8 +592,17 @@ class ContactUpdateView(ObjectPermissionRequiredMixin, UpdateView):
         return kwargs
 
     def form_valid(self, form):
+        response = super().form_valid(form)
         messages.success(self.request, f"Contact '{form.instance.first_name} {form.instance.last_name}' updated successfully!")
-        return super().form_valid(form)
+        
+        event_bus.emit('contact.updated', {
+            'contact_id': self.object.id,
+            'name': f"{self.object.first_name} {self.object.last_name}",
+            'account_id': self.object.account.id if self.object.account else None,
+            'tenant_id': self.request.user.tenant.id,
+            'user': self.request.user
+        })
+        return response
 
 
 class ContactDeleteView(ObjectPermissionRequiredMixin, DeleteView):

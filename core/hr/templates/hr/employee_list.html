@@ -1,0 +1,78 @@
+{% extends "hr/base.html" %}
+{% load humanize %}
+
+{% block hr_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h3 fw-bold mb-0">Personnel Registry</h1>
+            <p class="text-muted small mb-0">Active employee directory and workforce status</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'hr:employee_create' %}" class="btn btn-primary px-4 shadow-sm border-0">
+                <i class="bi bi-person-plus me-2"></i> Add Personnel
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for employee in employees %}
+        <div class="col-xl-4 col-md-6">
+            <div class="premium-card p-4 border-0 shadow-sm h-100 position-relative transition-transform">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="avatar-lg rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3"
+                        style="width: 56px; height: 56px; font-size: 1.5rem; font-weight: 700;">
+                        {{ employee.user.get_full_name|slice:":1" }}
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1"><a href="{% url 'hr:employee_detail' employee.pk %}"
+                                class="text-decoration-none text-dark">{{ employee.user.get_full_name }}</a></h5>
+                        <div class="text-muted extra-small">{{ employee.position }}</div>
+                    </div>
+                </div>
+
+                <div class="list-group list-group-flush small mb-4">
+                    <div class="list-group-item px-0 py-2 bg-transparent border-0 d-flex justify-content-between">
+                        <span class="text-muted">ID:</span>
+                        <span class="fw-bold">{{ employee.employee_id }}</span>
+                    </div>
+                    <div class="list-group-item px-0 py-2 bg-transparent border-0 d-flex justify-content-between">
+                        <span class="text-muted">Type:</span>
+                        <span class="badge badge-soft-primary rounded-pill text-uppercase extra-small">{{
+                            employee.get_employment_type_display }}</span>
+                    </div>
+                    <div class="list-group-item px-0 py-2 bg-transparent border-0 d-flex justify-content-between">
+                        <span class="text-muted">Salary Type:</span>
+                        <span class="text-dark fw-semibold">{{ employee.get_salary_type_display }}</span>
+                    </div>
+                </div>
+
+                <div class="d-grid pt-3 border-top">
+                    <a href="{% url 'hr:employee_detail' employee.pk %}"
+                        class="btn btn-sm btn-white border shadow-none text-primary fw-bold">View Profile</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="premium-card p-5 border-0 shadow-sm">
+                <i class="bi bi-people text-muted mb-3 d-block" style="font-size: 3rem;"></i>
+                <h5 class="text-muted fw-normal">No personnel records found</h5>
+                <a href="{% url 'hr:employee_create' %}" class="btn btn-primary px-4 shadow-sm border-0 mt-3">Onboard
+                    First Employee</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .transition-transform {
+        transition: transform 0.2s ease;
+    }
+
+    .transition-transform:hover {
+        transform: translateY(-4px);
+    }
+</style>
+{% endblock %}

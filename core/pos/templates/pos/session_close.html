@@ -1,0 +1,126 @@
+{% extends "pos/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Close Session{% endblock %}
+
+{% block pos_content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark text-center py-4">
+                    <i class="feather icon-stop-circle fa-3x mb-2"></i>
+                    <h4 class="mb-0">Close Session</h4>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Session Summary -->
+                    <div class="bg-light rounded p-3 mb-4">
+                        <div class="row">
+                            <div class="col-6">
+                                <small class="text-muted">Terminal</small>
+                                <p class="fw-bold mb-0">{{ session.terminal.terminal_name }}</p>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Session #</small>
+                                <p class="fw-bold mb-0">{{ session.session_number }}</p>
+                            </div>
+                        </div>
+                        <hr class="my-2">
+                        <div class="row">
+                            <div class="col-6">
+                                <small class="text-muted">Started</small>
+                                <p class="mb-0">{{ session.opened_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Duration</small>
+                                <p class="mb-0">{{ session.opened_at|timesince }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cash Summary -->
+                    <div class="mb-4">
+                        <h6 class="border-bottom pb-2">Cash Summary</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Opening Cash</span>
+                            <span class="fw-bold">{{ session.opening_cash|floatformat:2|intcomma }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Cash Sales</span>
+                            <span class="fw-bold text-success">+{{
+                                expected_cash|add:"-"|add:session.opening_cash|floatformat:2|intcomma }}</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-bold">Expected Cash</span>
+                            <span class="fw-bold fs-5 text-primary">{{ expected_cash|floatformat:2|intcomma }}</span>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label for="id_closing_cash" class="form-label">Actual Closing Cash</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text">KES</span>
+                                <input type="number" name="closing_cash" id="id_closing_cash" class="form-control"
+                                    step="0.01" min="0" value="{{ expected_cash|floatformat:2 }}" required>
+                            </div>
+                            <small class="text-muted">Count the actual cash in the drawer.</small>
+                        </div>
+
+                        <div id="cash-variance" class="alert d-none mb-4">
+                            <!-- Filled by JS -->
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="id_notes" class="form-label">Closing Notes <small
+                                    class="text-muted">(optional)</small></label>
+                            <textarea name="notes" id="id_notes" class="form-control" rows="2"
+                                placeholder="Any notes about this session..."></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="feather icon-stop-circle me-2"></i>Close Session
+                            </button>
+                            <a href="{% url 'pos:terminal' %}" class="btn btn-outline-secondary">
+                                <i class="feather icon-arrow-left me-2"></i>Continue Working
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const expectedCash = {{ expected_cash| floatformat: 2
+    }};
+    const closingInput = document.getElementById('id_closing_cash');
+    const varianceDiv = document.getElementById('cash-variance');
+
+    closingInput.addEventListener('input', function () {
+        const actual = parseFloat(this.value) || 0;
+        const variance = actual - expectedCash;
+
+        if (Math.abs(variance) < 0.01) {
+            varianceDiv.classList.add('d-none');
+        } else {
+            varianceDiv.classList.remove('d-none');
+            if (variance > 0) {
+                varianceDiv.className = 'alert alert-success mb-4';
+                varianceDiv.innerHTML = `<strong>Cash Over:</strong> +${variance.toFixed(2)}`;
+            } else {
+                varianceDiv.className = 'alert alert-danger mb-4';
+                varianceDiv.innerHTML = `<strong>Cash Short:</strong> ${variance.toFixed(2)}`;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -57,6 +57,9 @@ urlpatterns = [
     path('subscription-statuses/create/', views.SubscriptionStatusCreateView.as_view(), name='subscription_status_create'),
     path('subscription-statuses/<int:pk>/edit/', views.SubscriptionStatusUpdateView.as_view(), name='subscription_status_update'),
     path('subscription-statuses/<int:pk>/delete/', views.SubscriptionStatusDeleteView.as_view(), name='subscription_status_delete'),
+
+    # Taxes
+
     
     # Adjustment Types
     path('adjustment-types/', views.AdjustmentTypeListView.as_view(), name='adjustment_type_list'),

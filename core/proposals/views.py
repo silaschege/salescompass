@@ -7,10 +7,16 @@ from django.views.generic import (
     ListView, DetailView, CreateView, UpdateView, 
     DeleteView, TemplateView, View
 )
+from django.utils import timezone
 
 from core.permissions import ObjectPermissionRequiredMixin
 from .models import Proposal, ProposalEmail, ProposalPDF, ProposalTemplate, ProposalEvent, ProposalSignature, PROPOSAL_STATUS_CHOICES,ApprovalTemplateStep
-from .forms import ProposalForm, ProposalTemplateForm, ProposalEmailForm, ProposalPDFForm, ProposalEventForm, ProposalSignatureForm, ApprovalStepForm, ProposalApprovalForm, ApprovalTemplateForm
+from .forms import (
+    ProposalForm, ProposalTemplateForm, ProposalEmailForm, 
+    ProposalPDFForm, ProposalEventForm, ProposalSignatureForm, 
+    ApprovalStepForm, ProposalApprovalForm, ApprovalTemplateForm,
+    ProposalLineFormSet
+)
 from .utils import (
     send_proposal_email, 
     generate_proposal_pdf, 
@@ -200,16 +206,37 @@ class ProposalDetailView(ObjectPermissionRequiredMixin, DetailView):
     template_name = 'proposals/detail.html'
     context_object_name = 'proposal'
 
-
 class ProposalCreateView(ObjectPermissionRequiredMixin, CreateView):
     model = Proposal
     form_class = ProposalForm
     template_name = 'proposals/form.html'
     success_url = '/proposals/'
+    permission_action = 'create'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['lines'] = ProposalLineFormSet(self.request.POST)
+        else:
+            context['lines'] = ProposalLineFormSet()
+        return context
 
     def form_valid(self, form):
-        messages.success(self.request, f"Proposal '{form.instance.title}' created!")
-        return super().form_valid(form)
+        context = self.get_context_data()
+        lines = context['lines']
+        if lines.is_valid():
+            self.object = form.save()
+            lines.instance = self.object
+            lines.save()
+            
+            # Apply CPQ rules
+            from .services import ConfiguratorService
+            ConfiguratorService.apply_auto_rules(self.object)
+            
+            messages.success(self.request, f"Proposal '{self.object.title}' created with CPQ rules applied.")
+            return redirect(self.get_success_url())
+        else:
+            return self.form_invalid(form)
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -223,6 +250,30 @@ class ProposalUpdateView(ObjectPermissionRequiredMixin, UpdateView):
     template_name = 'proposals/form.html'
     success_url = '/proposals/'
     
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['lines'] = ProposalLineFormSet(self.request.POST, instance=self.object)
+        else:
+            context['lines'] = ProposalLineFormSet(instance=self.object)
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        lines = context['lines']
+        if lines.is_valid():
+            form.save()
+            lines.save()
+
+            # Apply CPQ rules
+            from .services import ConfiguratorService
+            ConfiguratorService.apply_auto_rules(self.object)
+
+            messages.success(self.request, f"Proposal '{self.object.title}' updated and CPQ rules applied.")
+            return redirect(self.get_success_url())
+        else:
+            return self.form_invalid(form)
+
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['current_user'] = self.request.user

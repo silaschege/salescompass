@@ -1,0 +1,27 @@
+<!-- Dashboard -->
+<a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+    href="{% url 'assets:dashboard' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-speedometer2 nav-icon"></i>
+        <span>Dashboard</span>
+    </div>
+</a>
+
+<!-- Assets Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#assetsMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-box-seam nav-icon"></i>
+        <span>Assets</span>
+    </div>
+</a>
+<div class="collapse {% if 'asset' in request.path %}show{% endif %}" id="assetsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'asset_list' %}active{% endif %}"
+        href="{% url 'assets:asset_list' %}">
+        Asset Register
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'asset_create' %}active{% endif %}"
+        href="{% url 'assets:asset_create' %}">
+        Add Asset
+    </a>
+</div>

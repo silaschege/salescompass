@@ -6,7 +6,7 @@ app_name = 'engagement'
 
 urlpatterns = [
     # Dashboard
-    path('dashboard/', views.EngagementDashboardView.as_view(), name='dashboard'),
+    path('', views.EngagementDashboardView.as_view(), name='dashboard'),
     path('account-breakdowns/', views.EngagementAccountBreakdownView.as_view(), name='account_breakdowns'),
     
     # Engagement Events

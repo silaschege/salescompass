@@ -1,0 +1,82 @@
+{% extends "logged_in/base.html" %}
+{% load humanize %}
+
+{% block dashboard_content %}
+<div class="container-fluid py-4">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Welcome to Customer Portal</h1>
+        <span class="text-muted">Account: {{ account.account_name }}</span>
+    </div>
+
+    <div class="row">
+        <!-- Billing Overview -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Recent Invoices</div>
+                            <ul class="list-unstyled">
+                                {% for inv in recent_invoices %}
+                                <li>#{{ inv.invoice_number }} - ${{ inv.amount|intcomma }} ({{ inv.get_status_display
+                                    }})</li>
+                                {% empty %}
+                                <li class="text-muted small">No recent invoices.</li>
+                                {% endfor %}
+                            </ul>
+                            <a href="{% url 'customer_portal:invoice_list' %}"
+                                class="btn btn-sm btn-outline-success">View All</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Support Overview -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Active Tickets</div>
+                            <ul class="list-unstyled">
+                                {% for tkt in active_tickets %}
+                                <li class="small">{{ tkt.title }} - <span class="badge badge-info">{{
+                                        tkt.get_priority_display }}</span></li>
+                                {% empty %}
+                                <li class="text-muted small">No active tickets.</li>
+                                {% endfor %}
+                            </ul>
+                            <a href="{% url 'customer_portal:ticket_list' %}" class="btn btn-sm btn-outline-info">Manage
+                                Tickets</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Proposals Overview -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending Proposals
+                            </div>
+                            <ul class="list-unstyled">
+                                {% for prop in pending_proposals %}
+                                <li class="small">{{ prop.title }} (Due: {{ prop.created_at|date }})</li>
+                                {% empty %}
+                                <li class="text-muted small">No pending proposals.</li>
+                                {% endfor %}
+                            </ul>
+                            <a href="{% url 'customer_portal:proposal_list' %}"
+                                class="btn btn-sm btn-outline-warning">View Proposals</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

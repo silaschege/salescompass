@@ -1,0 +1,82 @@
+{% extends "pos/base.html" %}
+{% load static %}
+
+{% block title %}Open Session{% endblock %}
+
+{% block pos_content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <i class="feather icon-play-circle fa-3x mb-2"></i>
+                    <h4 class="mb-0">Start POS Session</h4>
+                </div>
+                <div class="card-body p-4">
+                    {% if existing_session %}
+                    <div class="alert alert-warning mb-4">
+                        <h6 class="alert-heading">
+                            <i class="feather icon-alert-triangle me-2"></i>Active Session Found
+                        </h6>
+                        <p class="mb-2">You have an active session on <strong>{{ existing_session.terminal.terminal_name
+                                }}</strong>.</p>
+                        <hr>
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'pos:terminal' %}" class="btn btn-warning">
+                                <i class="feather icon-monitor me-2"></i>Continue Session
+                            </a>
+                            <a href="{% url 'pos:session_close' existing_session.pk %}" class="btn btn-outline-danger">
+                                <i class="feather icon-x me-2"></i>Close Session
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label for="id_terminal" class="form-label">Select Terminal</label>
+                            <select name="terminal" id="id_terminal" class="form-select form-select-lg" required>
+                                <option value="">-- Choose a terminal --</option>
+                                {% for terminal in form.fields.terminal.queryset %}
+                                <option value="{{ terminal.pk }}">{{ terminal.terminal_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="id_opening_cash" class="form-label">Opening Cash Amount</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text">KES</span>
+                                <input type="number" name="opening_cash" id="id_opening_cash" class="form-control"
+                                    step="0.01" min="0" value="0.00" required>
+                            </div>
+                            <small class="text-muted">Enter the cash amount in the drawer at the start of the
+                                session.</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="id_notes" class="form-label">Notes <small
+                                    class="text-muted">(optional)</small></label>
+                            <textarea name="notes" id="id_notes" class="form-control" rows="2"
+                                placeholder="Any notes about this session..."></textarea>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="feather icon-play me-2"></i>Start Session
+                            </button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{% url 'pos:dashboard' %}" class="text-muted">
+                        <i class="feather icon-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

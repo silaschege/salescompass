@@ -1,10 +1,12 @@
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 
 app_name = 'global_alerts'
 
 urlpatterns = [
     # Dashboard
+    path('', RedirectView.as_view(pattern_name='global_alerts:dashboard', permanent=False), name='index'),
     path('admin/dashboard/', views.GlobalAlertsDashboardView.as_view(), name='dashboard'),
     
     # Alert Configuration Management

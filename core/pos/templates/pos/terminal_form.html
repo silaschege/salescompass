@@ -1,0 +1,174 @@
+{% extends "pos/base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if object %}Edit{% else %}New{% endif %} Terminal{% endblock %}
+
+{% block pos_content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="feather icon-monitor me-2"></i>
+                            {% if object %}Edit Terminal: {{ object.terminal_name }}{% else %}New Terminal{% endif %}
+                        </h5>
+                        <a href="{% url 'pos:terminal_list' %}" class="btn btn-sm btn-light">
+                            <i class="feather icon-list me-1"></i> Back to List
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <form method="post" id="terminalForm">
+                        {% csrf_token %}
+
+                        <!-- Nav tabs -->
+                        <ul class="nav nav-tabs px-4 pt-3 bg-light" id="terminalTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="general-tab" data-bs-toggle="tab"
+                                    data-bs-target="#general" type="button" role="tab">
+                                    <i class="feather icon-settings me-1"></i> General
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="receipt-tab" data-bs-toggle="tab" data-bs-target="#receipt"
+                                    type="button" role="tab">
+                                    <i class="feather icon-file-text me-1"></i> Receipt Settings
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="hardware-tab" data-bs-toggle="tab"
+                                    data-bs-target="#hardware" type="button" role="tab">
+                                    <i class="feather icon-cpu me-1"></i> Hardware & Peripherals
+                                </button>
+                            </li>
+                        </ul>
+
+                        <!-- Tab panes -->
+                        <div class="tab-content p-4">
+                            <!-- General Settings -->
+                            <div class="tab-pane fade show active" id="general" role="tabpanel">
+                                <div class="row">
+                                    <div class="col-md-6">{{ form.terminal_name|as_crispy_field }}</div>
+                                    <div class="col-md-6">{{ form.terminal_code|as_crispy_field }}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">{{ form.warehouse|as_crispy_field }}</div>
+                                    <div class="col-md-6">{{ form.location|as_crispy_field }}</div>
+                                </div>
+                                <div class="mt-3">
+                                    {{ form.is_active|as_crispy_field }}
+                                    {{ form.allow_negative_stock|as_crispy_field }}
+                                    {{ form.require_customer|as_crispy_field }}
+                                </div>
+                            </div>
+
+                            <!-- Receipt Settings -->
+                            <div class="tab-pane fade" id="receipt" role="tabpanel">
+                                <div class="card bg-light border-0 mb-3">
+                                    <div class="card-body">
+                                        <h6 class="fw-bold mb-3">Receipt Appearance</h6>
+                                        {{ form.auto_print_receipt|as_crispy_field }}
+                                        {{ form.receipt_footer|as_crispy_field }}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">{{ form.receipt_printer_name|as_crispy_field }}</div>
+                                    <div class="col-md-6">{{ form.printer_width|as_crispy_field }}</div>
+                                </div>
+                            </div>
+
+                            <!-- Hardware Peripherals -->
+                            <div class="tab-pane fade" id="hardware" role="tabpanel">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <h6 class="fw-bold mb-3 border-bottom pb-2">Primary Printer Connection</h6>
+                                        <div class="row">
+                                            <div class="col-md-6">{{ form.printer_type|as_crispy_field }}</div>
+                                            <div class="col-md-6" id="printer_ip_div">{{ form.printer_ip|as_crispy_field
+                                                }}</div>
+                                            <div class="col-md-12" id="printer_port_div">{{
+                                                form.printer_port|as_crispy_field }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mt-4">
+                                    <div class="col-md-6">
+                                        <h6 class="fw-bold mb-3 border-bottom pb-2">Input Devices</h6>
+                                        {{ form.barcode_scanner_enabled|as_crispy_field }}
+                                        {{ form.cash_drawer_enabled|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="fw-bold mb-3 border-bottom pb-2">Customer Display</h6>
+                                        {{ form.customer_display_enabled|as_crispy_field }}
+                                        <div id="display_port_div">
+                                            {{ form.customer_display_port|as_crispy_field }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 pt-3 border-top text-center">
+                                    <button type="button" class="btn btn-outline-info" onclick="testConnection()">
+                                        <i class="feather icon-refresh-cw me-1"></i> Test Connection
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-footer bg-light p-4">
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="{% url 'pos:terminal_list' %}"
+                                    class="btn btn-outline-secondary px-4">Cancel</a>
+                                <button type="submit" class="btn btn-primary btn-lg px-5">
+                                    <i class="feather icon-save me-2"></i> Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const printerType = document.querySelector('#id_printer_type');
+        const printerIpDiv = document.querySelector('#printer_ip_div');
+        const printerPortDiv = document.querySelector('#printer_port_div');
+        const displayEnabled = document.querySelector('#id_customer_display_enabled');
+        const displayPortDiv = document.querySelector('#display_port_div');
+
+        function togglePrinterFields() {
+            const val = printerType.value;
+            if (val === 'network') {
+                printerIpDiv.style.display = 'block';
+                printerPortDiv.style.display = 'none';
+            } else if (val === 'disabled') {
+                printerIpDiv.style.display = 'none';
+                printerPortDiv.style.display = 'none';
+            } else {
+                printerIpDiv.style.display = 'none';
+                printerPortDiv.style.display = 'block';
+            }
+        }
+
+        function toggleDisplayFields() {
+            displayPortDiv.style.display = displayEnabled.checked ? 'block' : 'none';
+        }
+
+        printerType.addEventListener('change', togglePrinterFields);
+        displayEnabled.addEventListener('change', toggleDisplayFields);
+
+        togglePrinterFields();
+        toggleDisplayFields();
+    });
+
+    function testConnection() {
+        alert('Testing hardware connection... (Simulation Mode)');
+    }
+</script>
+{% endblock %}

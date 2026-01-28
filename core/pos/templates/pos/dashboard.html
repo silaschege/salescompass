@@ -1,0 +1,254 @@
+{% extends "pos/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}POS Dashboard{% endblock %}
+
+{% block pos_content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Point of Sale</h1>
+            <p class="text-muted mb-0">Welcome back, {{ request.user.get_full_name|default:request.user.username }}</p>
+        </div>
+        <div>
+            {% if user_session %}
+            <a href="{% url 'pos:terminal' %}" class="btn btn-primary btn-lg shadow"
+                style="background: var(--pos-primary) !important; border: none !important;">
+                <i class="bi bi-monitor me-2 text-warning"></i>Open Terminal
+            </a>
+            {% else %}
+            <a href="{% url 'pos:session_open' %}" class="btn btn-success btn-lg shadow">
+                <i class="bi bi-play-circle me-2"></i>Start Session
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Today's Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white shadow-sm border-0"
+                style="background: linear-gradient(135deg, var(--pos-primary) 0%, var(--pos-dark-accent) 100%) !important;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Today's Sales</h6>
+                            <h2 class="mb-0 fw-bold">{{ today_sales|floatformat:0|intcomma }}</h2>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                            <i class="bi bi-currency-dollar fs-2 text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Transactions</h6>
+                            <h2 class="mb-0">{{ today_transactions }}</h2>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                            <i class="feather icon-shopping-cart fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Active Sessions</h6>
+                            <h2 class="mb-0">{{ active_sessions.count }}</h2>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                            <i class="feather icon-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="opacity-75 mb-1">Terminals</h6>
+                            <h2 class="mb-0">{{ terminals.count }}</h2>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                            <i class="feather icon-monitor fa-2x text-dark"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Active Sessions -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Active Sessions</h5>
+                    <a href="{% url 'pos:session_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if active_sessions %}
+                    <div class="list-group list-group-flush">
+                        {% for session in active_sessions %}
+                        <a href="{% url 'pos:session_detail' session.pk %}"
+                            class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ session.terminal.terminal_name }}</h6>
+                                    <small class="text-muted">
+                                        {{ session.cashier.get_full_name|default:session.cashier.username }}
+                                        &bull; Started {{ session.opened_at|timesince }} ago
+                                    </small>
+                                </div>
+                                <span class="badge bg-success">Active</span>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="feather icon-coffee fa-3x mb-3 opacity-50"></i>
+                        <p>No active sessions</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Transactions</h5>
+                    <a href="{% url 'pos:transaction_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_transactions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Transaction</th>
+                                    <th>Cashier</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for txn in recent_transactions %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'pos:transaction_detail' txn.pk %}">
+                                            {{ txn.transaction_number }}
+                                        </a>
+                                        <br>
+                                        <small class="text-muted">{{ txn.created_at|date:"M d, H:i" }}</small>
+                                    </td>
+                                    <td>{{ txn.cashier.get_full_name|default:txn.cashier.username }}</td>
+                                    <td class="fw-bold">{{ txn.total_amount|floatformat:2|intcomma }}</td>
+                                    <td>
+                                        {% if txn.status == 'completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                        {% elif txn.status == 'draft' %}
+                                        <span class="badge bg-secondary">Draft</span>
+                                        {% elif txn.status == 'voided' %}
+                                        <span class="badge bg-danger">Voided</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">{{ txn.status|title }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="feather icon-inbox fa-3x mb-3 opacity-50"></i>
+                        <p>No transactions yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-3">
+                        <div class="col">
+                            <a href="{% url 'pos:terminal_list' %}" class="card text-center text-decoration-none h-100">
+                                <div class="card-body">
+                                    <i class="feather icon-monitor fa-2x mb-2 text-primary"></i>
+                                    <p class="mb-0">Terminals</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col">
+                            <a href="{% url 'pos:session_list' %}" class="card text-center text-decoration-none h-100">
+                                <div class="card-body">
+                                    <i class="feather icon-clock fa-2x mb-2 text-info"></i>
+                                    <p class="mb-0">Sessions</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col">
+                            <a href="{% url 'pos:transaction_list' %}"
+                                class="card text-center text-decoration-none h-100">
+                                <div class="card-body">
+                                    <i class="feather icon-list fa-2x mb-2 text-success"></i>
+                                    <p class="mb-0">Transactions</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col">
+                            <a href="{% url 'pos:refund_list' %}" class="card text-center text-decoration-none h-100">
+                                <div class="card-body">
+                                    <i class="feather icon-rotate-ccw fa-2x mb-2 text-warning"></i>
+                                    <p class="mb-0">Refunds</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col">
+                            <a href="{% url 'pos:reports' %}" class="card text-center text-decoration-none h-100">
+                                <div class="card-body">
+                                    <i class="feather icon-bar-chart-2 fa-2x mb-2 text-danger"></i>
+                                    <p class="mb-0">Reports</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col">
+                            <a href="{% url 'inventory:dashboard' %}"
+                                class="card text-center text-decoration-none h-100">
+                                <div class="card-body">
+                                    <i class="feather icon-package fa-2x mb-2 text-secondary"></i>
+                                    <p class="mb-0">Inventory</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

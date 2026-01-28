@@ -1,0 +1,44 @@
+<div class="nav flex-column">
+    <div class="section-title">Overview</div>
+    <a href="{% url 'inventory:dashboard' %}"
+        class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <i class="bi bi-speedometer2 nav-icon"></i> Dashboard
+    </a>
+
+    <div class="section-title">Stock Management</div>
+    <a href="{% url 'inventory:stock_list' %}"
+        class="nav-link {% if request.resolver_match.url_name == 'stock_list' %}active{% endif %}">
+        <i class="bi bi-box-seam nav-icon"></i> Stock Levels
+    </a>
+    <a href="{% url 'inventory:movement_list' %}"
+        class="nav-link {% if request.resolver_match.url_name == 'movement_list' %}active{% endif %}">
+        <i class="bi bi-arrow-left-right nav-icon"></i> Movements
+    </a>
+    <a href="{% url 'inventory:adjustment_list' %}"
+        class="nav-link {% if request.resolver_match.url_name == 'adjustment_list' %}active{% endif %}">
+        <i class="bi bi-sliders nav-icon"></i> Adjustments
+    </a>
+    <a href="{% url 'inventory:transfer_list' %}"
+        class="nav-link {% if 'transfer' in request.resolver_match.url_name and request.resolver_match.url_name != 'stock_transfer' %}active{% endif %}">
+        <i class="bi bi-truck nav-icon"></i> Transfers
+    </a>
+
+    <div class="section-title">Warehouses</div>
+    <a href="{% url 'inventory:warehouse_list' %}"
+        class="nav-link {% if 'warehouse' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-building nav-icon"></i> Warehouses
+    </a>
+
+    <div class="section-title">Monitoring</div>
+    <a href="{% url 'inventory:alert_list' %}"
+        class="nav-link {% if 'alert' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-exclamation-triangle nav-icon"></i> Alerts
+        {% if low_stock_count > 0 %}
+        <span class="badge bg-danger rounded-pill ms-auto">{{ low_stock_count }}</span>
+        {% endif %}
+    </a>
+    <a href="{% url 'inventory:reorder_list' %}"
+        class="nav-link {% if 'reorder' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-arrow-repeat nav-icon"></i> Reorder Rules
+    </a>
+</div>

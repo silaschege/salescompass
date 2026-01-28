@@ -1,0 +1,39 @@
+{% extends "tenants/base.html" %}
+
+{% block title %}Team Roles - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="block-title fw-bold mb-0">Team Roles</h2>
+
+    <a href="{% url 'accounts:role_create' %}" class="btn btn-primary">+ New Role</a>
+</div>
+
+{% if roles %}
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Label</th>
+                <th>Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for role in roles %}
+            <tr>
+                <td>{{ role.label }}</td>
+                <td>{{ role.role_name }}</td>
+                <td>
+                    <a href="{% url 'accounts:role_update' role.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p class="text-muted">No roles found.</p>
+<a href="{% url 'accounts:role_create' %}" class="btn btn-primary">Create Role</a>
+{% endif %}
+{% endblock %}

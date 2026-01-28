@@ -1,0 +1,46 @@
+{% extends "projects/base.html" %}
+{% load humanize %}
+
+{% block page_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Managed Projects</h6>
+        <a href="{% url 'projects:project_create' %}" class="btn btn-sm btn-primary">Add Project</a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Project Name</th>
+                        <th>Status</th>
+                        <th>Start Date</th>
+                        <th>Budget</th>
+                        <th>Type</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in projects %}
+                    <tr>
+                        <td><a href="{% url 'projects:project_detail' project.pk %}">{{ project.name }}</a></td>
+                        <td><span class="badge badge-info">{{ project.get_status_display }}</span></td>
+                        <td>{{ project.start_date|default:"-" }}</td>
+                        <td>${{ project.budget|intcomma }}</td>
+                        <td>{{ project.get_project_type_display }}</td>
+                        <td>
+                            <a href="{% url 'projects:project_update' project.pk %}"
+                                class="btn btn-sm btn-outline-info">Edit</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">No projects found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

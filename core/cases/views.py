@@ -19,6 +19,7 @@ from core.object_permissions import CaseObjectPolicy
 from django.utils import timezone
 from tenants.models import Tenant as TenantModel
 from django.urls import reverse_lazy
+from core.event_bus import event_bus
 
 class CaseListView(ObjectPermissionRequiredMixin, ListView):
     model = Case
@@ -41,7 +42,16 @@ class CaseCreateView(ObjectPermissionRequiredMixin, CreateView):
         
         form.instance.sla_due = calculate_sla_due_date(form.instance.priority)
         messages.success(self.request, f"Case '{form.instance.subject}' created!")
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        
+        event_bus.emit('case.created', {
+            'case_id': self.object.id,
+            'subject': self.object.subject,
+            'priority': self.object.priority,
+            'tenant_id': self.request.user.tenant.id,
+            'user': self.request.user
+        })
+        return response
     
     # In CaseCreateView
     def get_form_kwargs(self):
@@ -55,6 +65,19 @@ class CaseUpdateView(ObjectPermissionRequiredMixin, UpdateView):
     form_class = CaseForm
     template_name = 'cases/case_form.html'
     success_url = reverse_lazy('cases:case_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, f"Case '{form.instance.subject}' updated!")
+        response = super().form_valid(form)
+        
+        event_bus.emit('case.updated', {
+            'case_id': self.object.id,
+            'subject': self.object.subject,
+            'status': self.object.status,
+            'tenant_id': self.request.user.tenant.id,
+            'user': self.request.user
+        })
+        return response
 
 
 class CaseDeleteView(ObjectPermissionRequiredMixin, DeleteView):
@@ -198,6 +221,16 @@ class UpdateCaseStatusView(View):
             
             case.status = new_status
             case.save(update_fields=['status'])
+            
+            # Emit event
+            event_type = 'case.closed' if new_status in ['resolved', 'closed'] else 'case.updated'
+            event_bus.emit(event_type, {
+                'case_id': case.id,
+                'subject': case.subject,
+                'status': new_status,
+                'tenant_id': request.user.tenant.id if hasattr(request.user, 'tenant_id') else None,
+                'user': request.user
+            })
             
             # If case is resolved/closed, trigger CSAT survey
             if new_status in ['resolved', 'closed'] and not case.csat_score:

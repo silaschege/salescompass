@@ -1,0 +1,41 @@
+{% extends "pos/base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Cash Pay In{% endblock %}
+
+{% block pos_content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-success text-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-plus-circle me-2"></i> Cash Pay In</h5>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted mb-4">Record cash added to the drawer (e.g., FLOAT, petty cash return).</p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-success px-4">
+                                <i class="bi bi-check-circle me-1"></i> Record Pay In
+                            </button>
+                            <a href="{% url 'pos:cash_drawer' %}" class="btn btn-light px-4">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <div class="alert alert-info border-0 shadow-sm small">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    Pay-in operations are logged and will appear on the X-Report and Z-Report.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

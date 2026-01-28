@@ -1,0 +1,78 @@
+{% extends "loyalty/base.html" %}
+{% load humanize %}
+
+{% block loyalty_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h3 fw-bold mb-0">Loyalty Financial Ledger</h1>
+            <p class="text-muted mb-0">Audit trail of all point movements and revenue deferrals</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-light px-4 border shadow-sm"><i class="bi bi-filter me-2"></i> Audit Filter</button>
+        </div>
+    </div>
+
+    <div class="premium-card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light bg-opacity-50">
+                    <tr>
+                        <th class="ps-4 py-3 text-muted small text-uppercase fw-bold">Timestamp</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold">Member</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold">Transaction Type</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold text-center">Points</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold text-end">Deferred Value</th>
+                        <th class="pe-4 py-3 text-muted small text-uppercase fw-bold text-end">Processed By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in transactions %}
+                    <tr>
+                        <td class="ps-4 py-3 small text-muted">
+                            {{ tx.created_at|date:"M d, Y" }} <br>
+                            <span class="extra-small opacity-75">{{ tx.created_at|date:"H:i:s" }}</span>
+                        </td>
+                        <td class="py-3 fw-bold">{{ tx.loyalty_account.customer.account_name }}</td>
+                        <td class="py-3">
+                            <span
+                                class="badge {% if tx.transaction_type == 'earn' %}badge-soft-success{% elif tx.transaction_type == 'redeem' %}badge-soft-primary{% else %}bg-light text-muted border{% endif %} px-3 rounded-pill text-uppercase">
+                                {{ tx.get_transaction_type_display }}
+                            </span>
+                            {% if tx.is_expired %}<span
+                                class="badge bg-danger rounded-pill extra-small ms-1">EXPIRED</span>{% endif %}
+                        </td>
+                        <td
+                            class="py-3 text-center fw-bold {% if tx.points > 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ tx.points|stringformat:"+d" }}
+                        </td>
+                        <td class="py-3 text-end fw-bold">
+                            {% if tx.allocated_revenue > 0 %}
+                            <span class="text-primary">${{ tx.allocated_revenue|floatformat:2 }}</span>
+                            {% else %}-{% endif %}
+                        </td>
+                        <td class="pe-4 py-3 text-end small text-muted">
+                            {{ tx.processed_by.get_full_name|default:tx.processed_by.username|default:"System" }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">The ledger is currently empty.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if is_paginated %}
+        <div class="card-footer bg-white border-top-0 py-4 px-4">
+            {% include "shared/_pagination.html" %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+<style>
+    .extra-small {
+        font-size: 0.75rem;
+    }
+</style>
+{% endblock %}

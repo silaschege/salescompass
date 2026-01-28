@@ -1,0 +1,80 @@
+{% extends "ecommerce/base.html" %}
+
+{% block ecommerce_content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb bg-transparent p-0">
+        <li class="breadcrumb-item"><a href="{% url 'ecommerce:index' %}">Store</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ product.product_name }}</li>
+    </ol>
+</nav>
+
+<div class="row g-5">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm p-2" style="border-radius: 1.5rem;">
+            {% if product.thumbnail %}
+            <img src="{{ product.thumbnail.url }}" class="img-fluid" alt="{{ product.product_name }}"
+                style="border-radius: 1rem; width: 100%;">
+            {% else %}
+            <div class="bg-light d-flex align-items-center justify-content-center"
+                style="height: 400px; border-radius: 1rem;">
+                <i class="bi bi-box-seam display-1 text-muted"></i>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="ps-md-4">
+            <h1 class="display-5 fw-bold text-gray-900 mb-3">{{ product.product_name }}</h1>
+            <div class="d-flex align-items-center mb-4">
+                <span class="h3 fw-bold text-primary mb-0 me-3">{{ product.currency|default:"$" }}{{ product.base_price
+                    }}</span>
+                <span class="badge bg-success-soft text-success rounded-pill px-3 py-1">In Stock</span>
+            </div>
+
+            <p class="lead text-muted mb-5">{{ product.product_description }}</p>
+
+            <form action="{% url 'ecommerce:add_to_cart' product.pk %}" method="POST" class="row g-3 align-items-end">
+                {% csrf_token %}
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-uppercase text-muted">Quantity</label>
+                    <input type="number" name="quantity" class="form-control form-control-lg rounded-pill px-4"
+                        value="1" min="1">
+                </div>
+                <div class="col-md-8">
+                    <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm py-3">
+                        <i class="bi bi-cart-plus me-2"></i> Add to Cart
+                    </button>
+                </div>
+            </form>
+
+            <hr class="my-5">
+
+            <div class="row g-4">
+                <div class="col-6">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-blue-soft p-2 rounded-circle me-3">
+                            <i class="bi bi-truck text-primary"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Fast Delivery</h6>
+                            <small class="text-muted">2-3 Business Days</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-green-soft p-2 rounded-circle me-3">
+                            <i class="bi bi-shield-check text-success"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">1 Year Warranty</h6>
+                            <small class="text-muted">Protection Plan Included</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

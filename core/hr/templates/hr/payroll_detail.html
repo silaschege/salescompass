@@ -1,0 +1,120 @@
+{% extends "hr/base.html" %}
+{% load humanize %}
+
+{% block hr_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item small"><a href="{% url 'hr:payroll_dashboard' %}"
+                            class="text-decoration-none text-muted">Payroll History</a></li>
+                    <li class="breadcrumb-item active small text-primary fw-bold" aria-current="page">{{ run.period_name
+                        }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3 fw-bold mb-0">Payroll: {{ run.period_name }}</h1>
+        </div>
+        <div class="d-flex gap-2">
+            {% if not run.is_accrued %}
+            <form method="post" action="{% url 'hr:payroll_accrual' run.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-warning px-4 shadow-sm border-0">
+                    <i class="bi bi-journal-plus me-2"></i> Post Accrual
+                </button>
+            </form>
+            {% elif run.status == 'draft' %}
+            <form method="post" action="{% url 'hr:payroll_settle' run.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success px-4 shadow-sm border-0">
+                    <i class="bi bi-send-check me-2"></i> Process Payment
+                </button>
+            </form>
+            {% endif %}
+
+            <button class="btn btn-light px-3 border shadow-sm">
+                <i class="bi bi-printer"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Totals Cards -->
+        <div class="col-md-4">
+            <div class="premium-card p-4 border-0 shadow-sm">
+                <div class="text-muted small text-uppercase fw-bold mb-1">Gross Disbursement</div>
+                <div class="h2 fw-bold text-dark mb-0">${{ run.total_gross|intcomma }}</div>
+                <div class="extra-small text-muted mt-2">Before deductions and taxes</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="premium-card p-4 border-0 shadow-sm">
+                <div class="text-muted small text-uppercase fw-bold mb-1">Total Comp (Net)</div>
+                <div class="h2 fw-bold text-success mb-0">${{ run.total_net|intcomma }}</div>
+                <div class="extra-small text-muted mt-2">Final amount to be paid</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="premium-card p-4 border-0 shadow-sm border-start border-primary border-4">
+                <div class="text-muted small text-uppercase fw-bold mb-1">GL Status</div>
+                <div class="h3 fw-bold mb-1">
+                    {% if run.is_accrued %}
+                    <span class="text-primary"><i class="bi bi-check-circle-fill"></i> Accrued</span>
+                    {% else %}
+                    <span class="text-warning">Pending Accrual</span>
+                    {% endif %}
+                </div>
+                <div class="extra-small text-muted">{% if run.accrual_date %}Recorded on {{ run.accrual_date }}{% else
+                    %}Recognize liability now{% endif %}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee Breakdown -->
+    <div class="premium-card shadow-sm border-0">
+        <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0">Earnings Breakdown</h5>
+            <span class="text-muted small">{{ lines.count }} Employees</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light bg-opacity-50 small text-uppercase fw-bold">
+                    <tr>
+                        <th class="ps-4">Employee</th>
+                        <th class="text-center">Base Salary</th>
+                        <th class="text-center">Commissions</th>
+                        <th class="text-center">Deductions</th>
+                        <th class="text-center">Tax</th>
+                        <th class="pe-4 text-end">Net Salary</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for line in lines %}
+                    <tr>
+                        <td class="ps-4 py-3">
+                            <div class="fw-bold text-dark">{{ line.employee.user.get_full_name }}</div>
+                            <div class="extra-small text-muted">{{ line.employee.position }}</div>
+                        </td>
+                        <td class="text-center small">${{ line.gross_salary|intcomma }}</td>
+                        <td class="text-center">
+                            {% if line.commission_amount > 0 %}
+                            <span class="text-success small">+${{ line.commission_amount|intcomma }}</span>
+                            {% else %}<span class="text-muted extra-small">-</span>{% endif %}
+                        </td>
+                        <td class="text-center text-danger small">-${{ line.deductions|intcomma }}</td>
+                        <td class="text-center text-danger small">-${{ line.tax_withheld|intcomma }}</td>
+                        <td class="pe-4 text-end">
+                            <div class="fw-bold text-dark">${{ line.net_salary|intcomma }}</div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">No payroll lines generated for this run.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

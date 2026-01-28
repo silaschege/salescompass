@@ -1,0 +1,111 @@
+{% extends 'core/base_module.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    /* Premium Expenses Theme */
+    :root {
+        --expenses-primary: #6366f1;
+        /* Indigo */
+        --expenses-secondary: #ec4899;
+        /* Pink for accents */
+        --expenses-bg: #f8fafc;
+    }
+
+    .nav-icon {
+        margin-right: 0.75rem;
+        font-size: 1.15rem;
+        width: 1.5rem;
+        text-align: center;
+        transition: transform 0.2s ease;
+    }
+
+    .nav-link:hover .nav-icon {
+        transform: scale(1.1);
+    }
+
+    .sidebar-section-title {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05rem;
+        color: #94a3b8;
+        padding: 1.5rem 1rem 0.5rem;
+        font-weight: 700;
+    }
+
+    /* Status Badges */
+    .badge-soft-success {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .badge-soft-warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: #b45309;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .badge-soft-primary {
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .badge-soft-danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+</style>
+{% endblock %}
+
+{% block module_nav %}
+<div class="sidebar-section-title">Overview</div>
+<a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+    href="{% url 'expenses:dashboard' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-grid-1x2 nav-icon"></i>
+        <span>Spend Insights</span>
+    </div>
+</a>
+
+<div class="sidebar-section-title">My Workspace</div>
+<a class="nav-link {% if request.resolver_match.url_name == 'report_list' %}active{% endif %}"
+    href="{% url 'expenses:report_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-journal-text nav-icon"></i>
+        <span>My Reports</span>
+    </div>
+</a>
+
+<a class="nav-link {% if request.resolver_match.url_name == 'report_create' %}active{% endif %}"
+    href="{% url 'expenses:report_create' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-plus-circle nav-icon"></i>
+        <span>Submit Expense</span>
+    </div>
+</a>
+
+<div class="sidebar-section-title">Governance</div>
+<a class="nav-link {% if 'approval' in request.path %}active{% endif %}" href="{% url 'expenses:approval_inbox' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-shield-check nav-icon"></i>
+        <span>Pending Approvals</span>
+    </div>
+</a>
+
+<div class="sidebar-section-title">Setup</div>
+<a class="nav-link {% if 'category' in request.path %}active{% endif %}" href="{% url 'expenses:category_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-tags nav-icon"></i>
+        <span>Categories</span>
+    </div>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="expenses-wrapper animate-fade-in">
+    {% block expenses_content %}{% endblock %}
+</div>
+{% endblock %}

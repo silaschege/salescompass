@@ -1,0 +1,108 @@
+{% extends "inventory/base.html" %}
+
+{% block title %}Transfer {{ object.transfer_number }}{% endblock %}
+
+{% block inventory_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Transfer {{ object.transfer_number }}</h1>
+        <p class="text-muted mb-0">Created on {{ object.created_at|date:"M d, Y" }} by {{ object.requested_by.username
+            }}</p>
+    </div>
+    <div>
+        {% if object.status == 'draft' %}
+        <form action="{% url 'inventory:transfer_ship' object.pk %}" method="post" class="d-inline"
+            onsubmit="return confirm('Confirm shipping? Stock will be deducted from source.');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">
+                <i class="feather icon-truck me-1"></i> Ship Transfer
+            </button>
+        </form>
+        {% elif object.status == 'in_transit' %}
+        <a href="{% url 'inventory:transfer_receive' object.pk %}" class="btn btn-success">
+            <i class="feather icon-download me-1"></i> Receive Stock
+        </a>
+        {% endif %}
+        <a href="{% url 'inventory:transfer_list' %}" class="btn btn-secondary ms-2">Back</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-light">
+                <h6 class="m-0 font-weight-bold">Transfer Info</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong class="d-block text-muted small">Status</strong>
+                    {% if object.status == 'draft' %}
+                    <span class="badge bg-secondary fs-6">Draft</span>
+                    {% elif object.status == 'in_transit' %}
+                    <div class="alert alert-warning py-2 mb-0">
+                        <i class="feather icon-truck me-2"></i> In Transit
+                        <br><small>Shipped: {{ object.shipped_at|date:"M d H:i" }}</small>
+                    </div>
+                    {% elif object.status == 'received' %}
+                    <div class="alert alert-success py-2 mb-0">
+                        <i class="feather icon-check-circle me-2"></i> Received
+                        <br><small>Received: {{ object.received_at|date:"M d H:i" }}</small>
+                    </div>
+                    {% else %}
+                    <span class="badge bg-light text-dark border">{{ object.get_status_display }}</span>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <strong class="d-block text-muted small">From Source</strong>
+                    <div class="fw-bold">{{ object.source_warehouse.warehouse_name }}</div>
+                </div>
+                <div class="mb-3">
+                    <strong class="d-block text-muted small">To Destination</strong>
+                    <div class="fw-bold">{{ object.destination_warehouse.warehouse_name }}</div>
+                </div>
+                {% if object.notes %}
+                <hr>
+                <div class="mb-3">
+                    <strong class="d-block text-muted small">Notes</strong>
+                    <p class="mb-0">{{ object.notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-light">
+                <h6 class="m-0 font-weight-bold">Products</h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Product</th>
+                            <th class="text-end">Requested</th>
+                            <th class="text-end">Shipped</th>
+                            <th class="text-end pe-4">Received</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for line in lines %}
+                        <tr>
+                            <td class="ps-4">{{ line.product.product_name }}<br><small class="text-muted">{{
+                                    line.product.sku }}</small></td>
+                            <td class="text-end">{{ line.quantity_requested|floatformat:2 }}</td>
+                            <td class="text-end">{{ line.quantity_shipped|floatformat:2 }}</td>
+                            <td
+                                class="text-end pe-4 fw-bold {% if line.quantity_received < line.quantity_shipped %}text-warning{% else %}text-success{% endif %}">
+                                {{ line.quantity_received|floatformat:2 }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

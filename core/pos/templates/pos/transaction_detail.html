@@ -1,0 +1,242 @@
+{% extends "pos/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Transaction {{ object.transaction_number }}{% endblock %}
+
+{% block pos_content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'pos:dashboard' %}">POS</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'pos:transaction_list' %}">Transactions</a></li>
+                    <li class="breadcrumb-item active">{{ object.transaction_number }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3 mb-0">Transaction {{ object.transaction_number }}</h1>
+        </div>
+        <div>
+            {% if object.status == 'completed' %}
+            <div class="dropdown d-inline-block">
+                <button class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="feather icon-printer me-2"></i>Print
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    {% for receipt in receipts %}
+                    <li>
+                        <a class="dropdown-item" href="{% url 'pos:receipt_print' receipt.pk %}">
+                            Receipt #{{ receipt.receipt_number }}
+                        </a>
+                    </li>
+                    {% empty %}
+                    <li><span class="dropdown-item text-muted">No receipts</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <a href="{% url 'pos:refund_create' object.pk %}" class="btn btn-warning">
+                <i class="feather icon-rotate-ccw me-2"></i>Refund
+            </a>
+            <a href="{% url 'pos:transaction_void' object.pk %}" class="btn btn-danger">
+                <i class="feather icon-x-circle me-2"></i>Void
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Transaction Info -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Transaction Details</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <td class="text-muted">Status</td>
+                            <td>
+                                {% if object.status == 'completed' %}
+                                <span class="badge bg-success">Completed</span>
+                                {% elif object.status == 'draft' %}
+                                <span class="badge bg-secondary">Draft</span>
+                                {% elif object.status == 'voided' %}
+                                <span class="badge bg-danger">Voided</span>
+                                {% elif object.status == 'refunded' %}
+                                <span class="badge bg-warning">Refunded</span>
+                                {% else %}
+                                <span class="badge bg-info">{{ object.status|title }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Terminal</td>
+                            <td>{{ object.terminal.terminal_name }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Session</td>
+                            <td>
+                                <a href="{% url 'pos:session_detail' object.session.pk %}">
+                                    {{ object.session.session_number }}
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Cashier</td>
+                            <td>{{ object.cashier.get_full_name|default:object.cashier.username }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Customer</td>
+                            <td>
+                                {% if object.customer %}
+                                <a href="{% url 'accounts:account_detail' object.customer.pk %}">{{
+                                    object.customer.account_name }}</a>
+                                {% elif object.customer_name %}
+                                {{ object.customer_name }}
+                                {% else %}
+                                <span class="text-muted">Walk-in</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Created</td>
+                            <td>{{ object.created_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        {% if object.completed_at %}
+                        <tr>
+                            <td class="text-muted">Completed</td>
+                            <td>{{ object.completed_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payments -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Payments</h5>
+                </div>
+                <div class="card-body">
+                    {% if payments %}
+                    {% for payment in payments %}
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                        <div>
+                            <h6 class="mb-0">{{ payment.get_payment_method_display }}</h6>
+                            <small class="text-muted">{{ payment.created_at|date:"M d, H:i" }}</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="fw-bold">{{ payment.amount|floatformat:2|intcomma }}</span>
+                            {% if payment.status == 'completed' %}
+                            <span class="badge bg-success ms-2">Paid</span>
+                            {% else %}
+                            <span class="badge bg-warning ms-2">{{ payment.status|title }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="feather icon-credit-card fa-2x mb-2 opacity-50"></i>
+                        <p class="mb-0">No payments recorded</p>
+                    </div>
+                    {% endif %}
+
+                    {% if object.change_due > 0 %}
+                    <div class="alert alert-info mb-0">
+                        <strong>Change Due:</strong> {{ object.change_due|floatformat:2|intcomma }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Subtotal</span>
+                        <span>{{ object.subtotal|floatformat:2|intcomma }}</span>
+                    </div>
+                    {% if object.discount_amount > 0 %}
+                    <div class="d-flex justify-content-between mb-2 text-success">
+                        <span>Discount</span>
+                        <span>-{{ object.discount_amount|floatformat:2|intcomma }}</span>
+                    </div>
+                    {% endif %}
+                    {% if object.tax_amount > 0 %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Tax</span>
+                        <span>{{ object.tax_amount|floatformat:2|intcomma }}</span>
+                    </div>
+                    {% endif %}
+                    <hr>
+                    <div class="d-flex justify-content-between fs-5 fw-bold">
+                        <span>Total</span>
+                        <span class="text-primary">{{ object.total_amount|floatformat:2|intcomma }}</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Amount Paid</span>
+                        <span class="fw-bold">{{ object.amount_paid|floatformat:2|intcomma }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Line Items -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Items ({{ lines.count }})</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Product</th>
+                            <th>SKU</th>
+                            <th class="text-end">Unit Price</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-end">Discount</th>
+                            <th class="text-end">Line Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for line in lines %}
+                        <tr>
+                            <td>
+                                <strong>{{ line.product_name }}</strong>
+                                {% if line.notes %}
+                                <br><small class="text-muted">{{ line.notes }}</small>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted">{{ line.product_sku }}</td>
+                            <td class="text-end">{{ line.unit_price|floatformat:2|intcomma }}</td>
+                            <td class="text-center">{{ line.quantity }}</td>
+                            <td class="text-end">
+                                {% if line.discount_percent > 0 %}
+                                <span class="text-success">-{{ line.discount_percent }}%</span>
+                                {% else %}
+                                —
+                                {% endif %}
+                            </td>
+                            <td class="text-end fw-bold">{{ line.line_total|floatformat:2|intcomma }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+<!-- Dashboard -->
+<a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+    href="{% url 'projects:dashboard' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-speedometer2 nav-icon"></i>
+        <span>Dashboard</span>
+    </div>
+</a>
+
+<!-- Projects -->
+<a class="nav-link {% if request.resolver_match.url_name == 'project_list' or request.resolver_match.url_name == 'project_detail' %}active{% endif %}"
+    href="{% url 'projects:project_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-stack nav-icon"></i>
+        <span>Projects</span>
+    </div>
+</a>

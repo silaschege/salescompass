@@ -1,9 +1,11 @@
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 
 app_name = 'infrastructure'
 
 urlpatterns = [
+    path('', RedirectView.as_view(pattern_name='infrastructure:dashboard', permanent=False), name='index'),
     # Application Module Management
     path('admin/modules/', views.AppModuleListView.as_view(), name='app_module_list'),
     path('admin/modules/create/', views.AppModuleCreateView.as_view(), name='app_module_create'),

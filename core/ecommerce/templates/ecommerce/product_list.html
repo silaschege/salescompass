@@ -1,0 +1,55 @@
+{% extends "ecommerce/base.html" %}
+
+{% block ecommerce_content %}
+<div class="row mb-5">
+    <div class="col-12 text-center">
+        <h1 class="display-4 fw-bold text-gray-900 mb-2">Our Products</h1>
+        <p class="lead text-muted">Premium quality products curated for your business needs.</p>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+    {% for product in products %}
+    <div class="col">
+        <div class="card h-100 border-0 shadow-sm transition-hover" style="border-radius: 1rem; overflow: hidden;">
+            <div class="position-relative">
+                {% if product.thumbnail %}
+                <img src="{{ product.thumbnail.url }}" class="card-img-top" alt="{{ product.product_name }}"
+                    style="height: 200px; object-fit: cover;">
+                {% else %}
+                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="bi bi-box-seam display-4 text-muted"></i>
+                </div>
+                {% endif %}
+                <div class="position-absolute top-0 end-0 m-3">
+                    <span class="badge bg-white text-primary shadow-sm rounded-pill px-3 py-2 fw-bold">
+                        {{ product.currency|default:"$" }}{{ product.base_price }}
+                    </span>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <h5 class="card-title fw-bold mb-2">{{ product.product_name }}</h5>
+                <p class="card-text text-muted small mb-0 line-clamp-2">{{ product.product_description|truncatewords:15
+                    }}</p>
+
+                <div class="d-grid mt-4 gap-2">
+                    <a href="{% url 'ecommerce:product_detail' product.pk %}"
+                        class="btn btn-outline-primary rounded-pill btn-sm">View Details</a>
+                    <form action="{% url 'ecommerce:add_to_cart' product.pk %}" method="POST" class="d-grid">
+                        {% csrf_token %}
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="btn btn-primary rounded-pill btn-sm">Add to Cart</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+        <p class="text-muted">No products available at the moment.</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% include "shared/_pagination.html" %}
+{% endblock %}

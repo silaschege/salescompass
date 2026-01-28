@@ -1,0 +1,178 @@
+{% extends "accounting/base.html" %}
+{% load humanize %}
+
+{% block accounting_content %}
+<div class="animate-fade-in">
+    <!-- Header with Alerts -->
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h2 fw-bold mb-0">Financial Overview</h1>
+            <p class="text-muted">Real-time accounting insights for your enterprise</p>
+        </div>
+        <div class="d-flex gap-3">
+            {% if unbalanced_journals > 0 %}
+            <div class="alert alert-warning py-2 mb-0 border-0 shadow-sm animate-fade-in">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>{{ unbalanced_journals }}</strong> draft entries need review
+            </div>
+            {% endif %}
+            <a href="{% url 'accounting:journal_create' %}"
+                class="btn btn-primary d-flex align-items-center px-4 shadow">
+                <i class="bi bi-plus-lg me-2"></i> New Entry
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Section -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100">
+                <div class="kpi-icon-wrapper kpi-success shadow-sm">
+                    <i class="bi bi-cash-banknote"></i>
+                </div>
+                <div class="stat-label">Liquidity</div>
+                <div class="stat-value text-success">${{ cash_balance|floatformat:2|intcomma }}</div>
+                <div class="text-muted small mt-2">Cash on Hand</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100">
+                <div class="kpi-icon-wrapper kpi-primary shadow-sm">
+                    <i class="bi bi-person-check"></i>
+                </div>
+                <div class="stat-label">Receivables</div>
+                <div class="stat-value text-primary">${{ ar_balance|floatformat:2|intcomma }}</div>
+                <div class="text-muted small mt-2">Outstanding Invoices</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100">
+                <div class="kpi-icon-wrapper kpi-danger shadow-sm">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+                <div class="stat-label">Payables</div>
+                <div class="stat-value text-danger">${{ ap_balance|floatformat:2|intcomma }}</div>
+                <div class="text-muted small mt-2">Total Liabilities</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100">
+                <div class="kpi-icon-wrapper kpi-info shadow-sm">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <div class="stat-label">Net Performance</div>
+                <div class="stat-value text-info">${{ net_profit|floatformat:2|intcomma }}</div>
+                <div class="text-muted small mt-2">Year to Date Profit</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Recent Activity -->
+        <div class="col-lg-8">
+            <div class="premium-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0">Recent Activity</h5>
+                    <a href="{% url 'accounting:journal_list' %}" class="btn btn-sm btn-link text-decoration-none">View
+                        All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-borderless align-middle">
+                        <thead>
+                            <tr class="text-muted small text-uppercase">
+                                <th>Date</th>
+                                <th>Reference</th>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for journal in recent_journals %}
+                            <tr class="recent-activity-row">
+                                <td class="py-3">{{ journal.entry_date|date:"M d" }}</td>
+                                <td class="fw-bold">#{{ journal.entry_number }}</td>
+                                <td>{{ journal.description|truncatechars:30 }}</td>
+                                <td>
+                                    {% if journal.status == 'posted' %}
+                                    <span class="badge bg-success-subtle text-success px-3">Posted</span>
+                                    {% else %}
+                                    <span class="badge bg-warning-subtle text-warning px-3">Draft</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'accounting:journal_detail' journal.pk %}"
+                                        class="btn btn-sm btn-light rounded-pill px-3 shadow-sm">Details</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted fst-italic">No recent transactions
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Budget & Ratios -->
+        <div class="col-lg-4">
+            <div class="premium-card p-4 mb-4">
+                <h5 class="fw-bold mb-4">Budget Progress</h5>
+                {% for budget in top_budgets %}
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="small fw-bold">{{ budget.account.account_name }}</span>
+                        <span class="small text-muted">${{ budget.amount|floatformat:0 }}</span>
+                    </div>
+                    <div class="progress budget-progress bg-light shadow-inner">
+                        <div class="progress-bar bg-primary" style="width: 65%"></div> <!-- Mock 65% utilization -->
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted small text-center py-3">No active budgets found</p>
+                {% endfor %}
+                <a href="{% url 'accounting:budget_list' %}"
+                    class="btn btn-outline-primary btn-sm w-100 rounded-pill mt-2">Manage Budgets</a>
+            </div>
+
+            <div class="premium-card p-4"
+                style="background: linear-gradient(135deg, #6f42c1 0%, #a259ff 100%); color: white;">
+                <h5 class="fw-bold mb-3">Report Generator</h5>
+                <p class="small opacity-75 mb-4">Download your audited financial statements in PDF or Excel format.</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'accounting:balance_sheet' %}"
+                        class="btn btn-white btn-sm text-primary fw-bold rounded-pill">Balance Sheet</a>
+                    <a href="{% url 'accounting:income_statement' %}"
+                        class="btn btn-white btn-sm text-primary fw-bold rounded-pill">P&L Statement</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-white {
+        background: white;
+        border: none;
+    }
+
+    .btn-white:hover {
+        background: #f8f9fa;
+    }
+
+    .shadow-inner {
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .bg-success-subtle {
+        background-color: rgba(25, 135, 84, 0.1);
+    }
+
+    .bg-warning-subtle {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+</style>
+{% endblock %}

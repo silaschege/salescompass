@@ -1,0 +1,138 @@
+{% extends "purchasing/base.html" %}
+{% load humanize %}
+
+{% block purchasing_content %}
+<div class="animate-fade-in p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item small"><a href="{% url 'purchasing:invoice_list' %}"
+                            class="text-decoration-none text-muted">Vendor Bills</a></li>
+                    <li class="breadcrumb-item active small text-primary fw-bold" aria-current="page">Invoice #{{
+                        invoice.invoice_number }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3 fw-bold mb-0">Invoice Verification</h1>
+        </div>
+        <div class="d-flex gap-2">
+            {% if invoice.status == 'draft' %}
+            <form action="{% url 'purchasing:invoice_detail' invoice.pk %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="post">
+                <button type="submit" class="btn btn-primary px-4 shadow-sm border-0">
+                    <i class="bi bi-journal-check me-2"></i> Post to Ledger
+                </button>
+            </form>
+            {% endif %}
+
+            <button onclick="window.print();" class="btn btn-outline-secondary px-3">
+                <i class="bi bi-printer"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="premium-card p-0 overflow-hidden border-0 shadow-sm mb-4">
+                <div class="p-4 bg-light bg-opacity-50">
+                    <div class="row align-items-center">
+                        <div class="col-md-6 border-end">
+                            <label class="text-muted extra-small text-uppercase fw-bold d-block mb-1">Supplier</label>
+                            <h5 class="fw-bold mb-0">{{ invoice.supplier.supplier_name }}</h5>
+                            <div class="extra-small text-muted">{{ invoice.supplier.address|linebreaksbr }}</div>
+                        </div>
+                        <div class="col-md-6 ps-md-4">
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <label class="text-muted extra-small text-uppercase fw-bold d-block mb-1">Invoice
+                                        Date</label>
+                                    <div class="small fw-semibold">{{ invoice.invoice_date|date:"M d, Y" }}</div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="text-muted extra-small text-uppercase fw-bold d-block mb-1">Due
+                                        Date</label>
+                                    <div class="small fw-semibold text-danger">{{ invoice.due_date|date:"M d, Y" }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 border-top">
+                    <div class="d-flex justify-content-between align-items-end">
+                        <div>
+                            <label class="text-muted small text-uppercase fw-bold d-block mb-2">Liability Status</label>
+                            <span
+                                class="badge {% if invoice.status == 'paid' %}badge-soft-success{% elif invoice.status == 'posted' %}badge-soft-primary{% else %}bg-light text-muted border{% endif %} px-4 rounded-pill py-2">
+                                {{ invoice.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="text-end">
+                            <label class="text-muted small text-uppercase fw-bold d-block mb-2">Total Payable</label>
+                            <div class="h2 fw-bold text-primary mb-0">${{ invoice.total_amount|floatformat:2|intcomma }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if invoice.purchase_order %}
+            <div class="premium-card p-4 border-0 shadow-sm d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="bi bi-link-45deg text-primary h4 mb-0 me-2 align-middle"></i>
+                    <span class="fw-bold">Reference PO #{{ invoice.purchase_order.po_number }}</span>
+                    <div class="text-muted extra-small ms-4">Matched quantities verified against GRN data.</div>
+                </div>
+                <a href="{% url 'purchasing:po_detail' invoice.purchase_order.pk %}"
+                    class="btn btn-sm btn-outline-primary px-3 rounded-pill">View PO</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <div class="premium-card p-4 border-0 shadow-sm mb-4">
+                <h6 class="fw-bold mb-3 d-flex align-items-center">
+                    <i class="bi bi-shield-lock me-2 text-primary"></i> Financial Impact
+                </h6>
+                <div class="extra-small text-muted mb-4">Accounting entries generated in compliance with IFRS 9
+                    Financial Instruments.</div>
+
+                {% if invoice.status == 'posted' or invoice.status == 'paid' %}
+                <div class="list-group list-group-flush small">
+                    <div class="list-group-item px-0 py-3 bg-transparent border-0 d-flex justify-content-between">
+                        <span class="text-muted">General Ledger</span>
+                        <span class="text-success fw-bold"><i class="bi bi-check-circle"></i> UPDATED</span>
+                    </div>
+                    <div class="list-group-item px-0 py-3 bg-transparent border-0 d-flex justify-content-between">
+                        <span class="text-muted">Accrual Reversal</span>
+                        <span class="text-success fw-bold"><i class="bi bi-check-circle"></i> COMPLETED</span>
+                    </div>
+                    <div class="list-group-item px-0 py-3 bg-transparent border-0 d-flex justify-content-between">
+                        <span class="text-muted">AP Liability</span>
+                        <span class="text-primary fw-bold">RECOGNIZED</span>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-top">
+                    <a href="{% url 'accounting:journal_list' %}" class="btn btn-light w-100 btn-sm border py-2">
+                        <i class="bi bi-search me-2"></i> Audit Journal Entries
+                    </a>
+                </div>
+                {% else %}
+                <div class="alert alert-warning border-0 small mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i> This bill has NOT been posted. Ledger balances will
+                    not reflect this liability until finalized.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .extra-small {
+        font-size: 0.725rem;
+    }
+</style>
+{% endblock %}

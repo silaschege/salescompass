@@ -1,0 +1,42 @@
+{% extends "pos/base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Cash Pay Out{% endblock %}
+
+{% block pos_content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-danger text-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-dash-circle me-2"></i> Cash Pay Out</h5>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted mb-4">Record cash removed from the drawer (e.g., petty cash expenses, supplier
+                        payment).</p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-danger px-4">
+                                <i class="bi bi-check-circle me-1"></i> Record Pay Out
+                            </button>
+                            <a href="{% url 'pos:cash_drawer' %}" class="btn btn-light px-4">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <div class="alert alert-warning border-0 shadow-sm small">
+                    <i class="bi bi-exclamation-circle-fill me-2"></i>
+                    Ensure you have the physical cash and a receipt/voucher for all pay-out operations.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

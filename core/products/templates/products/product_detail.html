@@ -1,74 +1,139 @@
 {% extends "accounts/base.html" %}
 {% load auth_extras task_tags %}
+{% load humanize %}
 
-{% block title %}{{ product.name }} - SalesCompass{% endblock %}
+{% block title %}{{ product.product_name }} - SalesCompass{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-start mb-3">
     <div>
-        <h1 class="block-title fw-bold mb-0">{{ product.name }}</h1>
+        <h1 class="block-title fw-bold mb-0">{{ product.product_name }}</h1>
         <span class="badge bg-primary">{{ product.sku }}</span>
         {% if product.esg_certified %}
         <span class="badge bg-success">🌱 ESG Certified</span>
         {% endif %}
-        {% if not product.is_active %}
+        {% if not product.product_is_active %}
         <span class="badge bg-secondary">Inactive</span>
+        {% endif %}
+        {% if product.is_subscription %}
+        <span class="badge bg-info">Subscription: {{ product.get_billing_cycle_display }}</span>
         {% endif %}
     </div>
     <div>
         {% if request.user.is_authenticated and request.user|has_perm:"products:write" %}
-        <a href="{% url 'products:update' product.pk %}" class="btn btn-outline-secondary">Edit</a>
-        <a href="{% url 'products:delete' product.pk %}" class="btn btn-outline-danger">Delete</a>
+        <a href="{% url 'products:product_update' product.pk %}" class="btn btn-outline-secondary">Edit</a>
+        <a href="{% url 'products:product_delete' product.pk %}" class="btn btn-outline-danger">Delete</a>
         {% endif %}
     </div>
 </div>
 
 <div class="row">
     <div class="col-md-8">
-        <h3>Product Details</h3>
-        <table class="table table-borderless">
-            <tr>
-                <th>Description</th>
-                <td>{{ product.description|linebreaks }}</td>
-            </tr>
-            <tr>
-                <th>Category</th>
-                <td>{{ product.category|default:"—" }}</td>
-            </tr>
-            <tr>
-                <th>Base Price</th>
-                <td>${{ product.base_price|intcomma }} {{ product.currency }}</td>
-            </tr>
-            <tr>
-                <th>Pricing Model</th>
-                <td>{{ product.get_pricing_model_display }}</td>
-            </tr>
-            <tr>
-                <th>Availability</th>
-                <td>
-                    {% if product.available_from and product.available_to %}
-                    {{ product.available_from }} to {{ product.available_to }}
-                    {% elif product.available_from %}
-                    From {{ product.available_from }}
-                    {% elif product.available_to %}
-                    Until {{ product.available_to }}
-                    {% else %}
-                    Always available
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Product Details</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th style="width: 200px;">Description</th>
+                        <td>{{ product.product_description|linebreaks }}</td>
+                    </tr>
+                    <tr>
+                        <th>Category</th>
+                        <td>{{ product.category|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Base Price</th>
+                        <td>${{ product.base_price|intcomma }} {{ product.currency }}</td>
+                    </tr>
+                    <tr>
+                        <th>Pricing Model</th>
+                        <td>{{ product.get_pricing_model_display }}</td>
+                    </tr>
+                    {% if product.tax_rate %}
+                    <tr>
+                        <th>Tax Rate</th>
+                        <td>{{ product.tax_rate.name }} ({{ product.tax_rate.rate }}%)</td>
+                    </tr>
                     {% endif %}
-                </td>
-            </tr>
-        </table>
+                    <tr>
+                        <th>Availability</th>
+                        <td>
+                            {% if product.available_from and product.available_to %}
+                            {{ product.available_from }} to {{ product.available_to }}
+                            {% elif product.available_from %}
+                            From {{ product.available_from }}
+                            {% elif product.available_to %}
+                            Until {{ product.available_to }}
+                            {% else %}
+                            Always available
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-warehouse mr-2"></i>Inventory & Logistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2"><strong>Track Inventory:</strong>
+                                <span
+                                    class="badge {% if product.track_inventory %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {{ product.track_inventory|yesno:"Enabled,Disabled" }}
+                                </span>
+                            </li>
+                            {% if product.track_inventory %}
+                            <li class="mb-2"><strong>Reorder Threshold:</strong> {{ product.low_stock_threshold }} units
+                            </li>
+                            {% endif %}
+                            <li class="mb-2"><strong>Preferred Supplier:</strong> {{
+                                product.preferred_supplier|default:"None Assigned" }}</li>
+                            <li class="mb-2"><strong>Valuation (IAS 2):</strong> {{ product.get_valuation_method_display
+                                }}</li>
+                            <li class="mb-2"><strong>Capital Asset (IAS 16):</strong> {{
+                                product.is_capital_asset|yesno:"Yes,No" }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-ruler-combined mr-2"></i>Physical Specs</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2"><strong>Weight:</strong> {{ product.weight|default:"—" }} kg</li>
+                            <li class="mb-2"><strong>Dimensions:</strong>
+                                {% if product.length or product.width or product.height %}
+                                {{ product.length|default:"0" }} x {{ product.width|default:"0" }} x {{
+                                product.height|default:"0" }} cm
+                                {% else %}
+                                —
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         {% if product.pricing_tiers.exists %}
         <h4>Pricing Tiers</h4>
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
+        <div class="table-responsive mb-4">
+            <table class="table table-striped table-hover shadow-sm">
+                <thead class="bg-primary text-white">
                     <tr>
-                        <th>Quantity</th>
+                        <th>Quantity Range</th>
                         <th>Unit Price</th>
                         <th>Discount</th>
-                        <th>Total (10 units)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -76,18 +141,13 @@
                     <tr>
                         <td>
                             {% if tier.max_quantity %}
-                            {{ tier.min_quantity }}–{{ tier.max_quantity }}
+                            {{ tier.min_quantity }} – {{ tier.max_quantity }}
                             {% else %}
                             {{ tier.min_quantity }}+
                             {% endif %}
                         </td>
-                        <td>${{ tier.unit_price|intcomma }}</td>
-                        <td>{{ tier.discount_percent }}%</td>
-                        <td>
-                            {% with price=pricing_info.10.total_price %}
-                            ${{ price|intcomma }}
-                            {% endwith %}
-                        </td>
+                        <td>{{ product.currency }} {{ tier.unit_price|intcomma }}</td>
+                        <td>{{ tier.discount_percent|floatformat:1 }}%</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -96,21 +156,37 @@
         {% endif %}
 
         {% if product.esg_certified %}
-        <h4>ESG Impact Metrics</h4>
-        <ul>
-            <li><strong>Carbon Footprint:</strong> {{ product.carbon_footprint }} kg CO2e per unit</li>
-            <li><strong>tCO2e Saved:</strong> {{ product.tco2e_saved }} tonnes</li>
-            {% if product.esg_certifications %}
-            <li><strong>Certifications:</strong>
-                {% for cert in product.get_certifications_list %}
-                <span class="badge bg-info text-dark">{{ cert }}</span>
-                {% endfor %}
-            </li>
-            {% endif %}
-            {% if product.sustainability_notes %}
-            <li><strong>Sustainability Notes:</strong> {{ product.sustainability_notes }}</li>
-            {% endif %}
-        </ul>
+        <div class="card mb-4 shadow-sm border-left-success">
+            <div class="card-header bg-light">
+                <h5 class="mb-0 text-success"><i class="fas fa-leaf mr-2"></i>ESG Impact Metrics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center mb-3">
+                    <div class="col-md-6 border-right">
+                        <div class="h4 font-weight-bold text-dark">{{ product.carbon_footprint|default:"0" }}</div>
+                        <div class="text-xs text-uppercase text-muted">kg CO2e per unit</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="h4 font-weight-bold text-success">{{ product.tco2e_saved|default:"0" }}</div>
+                        <div class="text-xs text-uppercase text-muted">Tonnes Saved (Cumulative)</div>
+                    </div>
+                </div>
+                {% if product.esg_certifications %}
+                <div class="mt-3">
+                    <strong>Certifications:</strong>
+                    {% for cert in product.get_certifications_list %}
+                    <span class="badge bg-info text-dark ml-1">{{ cert }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% if product.sustainability_notes %}
+                <div class="mt-3">
+                    <strong>Sustainability Statement:</strong>
+                    <p class="mb-0 small">{{ product.sustainability_notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
         {% endif %}
 
         {% if bundles %}
@@ -118,14 +194,19 @@
         <div class="row">
             {% for bundle in bundles %}
             <div class="col-md-6 mb-3">
-                <div class="card">
+                <div class="card shadow-sm">
                     <div class="card-body">
-                        <h5 class="card-title">{{ bundle.name }}</h5>
-                        <p class="card-text">{{ bundle.description|truncatewords:20 }}</p>
-                        <p><strong>Price:</strong> ${{ bundle.bundle_price|intcomma }}</p>
-                        <ul>
+                        <h5 class="card-title text-primary">{{ bundle.product_bundle_name }}</h5>
+                        <p class="card-text small text-muted">{{ bundle.product_bundle_description|truncatewords:20 }}
+                        </p>
+                        <p class="font-weight-bold">Bundle Price: {{ product.currency }} {{ bundle.bundle_price|intcomma
+                            }}</p>
+                        <hr>
+                        <h6 class="small font-weight-bold">Included Items:</h6>
+                        <ul class="list-unstyled small">
                             {% for item in bundle.bundleitem_set.all %}
-                            <li>{{ item.quantity }}x {{ item.product.name }}</li>
+                            <li><i class="fas fa-check text-success mr-2"></i>{{ item.quantity }}x {{
+                                item.product.product_name }}</li>
                             {% endfor %}
                         </ul>
                     </div>
@@ -138,45 +219,59 @@
 
     <div class="col-md-4">
         <!-- Tasks Widget -->
-        <div class="mb-3">
+        <div class="mb-4">
             {% render_object_tasks product %}
         </div>
 
-        <div class="card mb-3">
-            <div class="card-header">Quick Actions</div>
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h6 class="mb-0">Quick Actions</h6>
+            </div>
             <div class="card-body">
-                <a href="{% url 'products:comparison' %}?product={{ product.id }}"
-                    class="btn btn-outline-primary w-100 mb-2">
-                    Compare with Other Products
+                <a href="{% url 'products:product_comparison_list' %}?product={{ product.id }}"
+                    class="btn btn-outline-primary btn-block mb-2">
+                    <i class="fas fa-exchange-alt mr-2"></i> Compare with Others
                 </a>
                 <a href="{% url 'products:competitor_mapping' %}?product_id={{ product.id }}"
-                    class="btn btn-outline-secondary w-100">
-                    View Competitor Mapping
+                    class="btn btn-outline-secondary btn-block mb-2">
+                    <i class="fas fa-map-signs mr-2"></i> Competitor Analysis
+                </a>
+                <a href="{% url 'products:product_label' product.pk %}" class="btn btn-success btn-block">
+                    <i class="fas fa-barcode mr-2"></i> Print Label
                 </a>
             </div>
         </div>
 
-        {% if competitors %}
-        <div class="card">
-            <div class="card-header">Competitor Mapping</div>
-            <div class="card-body">
-                <ul class="list-group">
-                    {% for competitor in competitors %}
-                    <li class="list-group-item">
-                        <strong>{{ competitor.competitor_name }}</strong><br>
-                        {{ competitor.name }} ({{ competitor.competitor_sku|default:"—" }})
-                        {% if competitor.price_difference_percent != 0 %}
-                        <br><small>
-                            {% if competitor.price_difference_percent > 0 %}
-                            {{ competitor.price_difference_percent }}% more expensive
-                            {% else %}
-                            {{ competitor.price_difference_percent|abs }}% cheaper
+        {% if product.competitor_mappings.all %}
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">Market Comparisons</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for competitor in product.competitor_mappings.all %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1 font-weight-bold">{{ competitor.competitor_product_name }}</h6>
+                            <small class="text-muted">{{ competitor.competitor_name }}</small>
+                        </div>
+                        <p class="mb-1 small">{{ competitor.competitive_advantage|truncatewords:15 }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small
+                                class="badge {% if competitor.price_difference_percent > 0 %}bg-danger{% else %}bg-success{% endif %}">
+                                {% if competitor.price_difference_percent > 0 %}
+                                +{{ competitor.price_difference_percent }}% Price
+                                {% else %}
+                                {{ competitor.price_difference_percent }}% Price
+                                {% endif %}
+                            </small>
+                            {% if competitor.is_direct_competitor %}
+                            <small class="text-danger font-weight-bold">Direct Rival</small>
                             {% endif %}
-                        </small>
-                        {% endif %}
-                    </li>
+                        </div>
+                    </div>
                     {% endfor %}
-                </ul>
+                </div>
             </div>
         </div>
         {% endif %}

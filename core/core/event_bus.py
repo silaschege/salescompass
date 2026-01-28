@@ -68,8 +68,12 @@ class EventBus:
         'lead.created', 'lead.updated', 'lead.converted',
         'opportunity.created', 'opportunity.updated', 'opportunity.stage_changed', 'opportunity.won', 'opportunity.lost',
         'account.created', 'account.updated',
+        'contact.created', 'contact.updated',
         'case.created', 'case.updated', 'case.closed', 'case.escalated',
         'task.created', 'task.completed', 'task.overdue',
+        'pos.sale.completed', 'pos.refund.completed',
+        'inventory.stock.added', 'inventory.stock.removed',
+        'invoice.created', 'invoice.sent', 'invoice.paid', 'payment.received',
         'proposal.created', 'proposal.sent', 'proposal.viewed', 'proposal.accepted', 'proposal.rejected',
         'email.sent', 'email.opened', 'email.clicked', 'email.bounced',
         'call.completed', 'call.missed',
@@ -83,12 +87,14 @@ class EventBus:
         'call.completed',
         'meeting.scheduled', 'meeting.completed',
         'website.visited', 'document.downloaded',
-        'form.submitted',
+        'form.submitted', 'pos.sale.completed',
+        'case.created', 'invoice.paid', 'payment.received',
     ]
     
     AUDIT_EVENTS = [
         'user.login', 'user.logout', 'user.password_changed', 'user.mfa_enabled',
         'user.created', 'user.updated', 'user.deleted',
+        'contact.created', 'contact.updated', 'contact.deleted',
         'role.created', 'role.updated', 'role.deleted',
         'tenant.created', 'tenant.updated', 'tenant.suspended',
         'subscription.created', 'subscription.cancelled', 'subscription.upgraded',

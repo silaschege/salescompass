@@ -1,0 +1,92 @@
+{% extends "inventory/base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Stock Adjustments</h1>
+        <a href="{% url 'inventory:adjustment_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-2"></i>New Adjustment
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th>Adjustment #</th>
+                        <th>Reason</th>
+                        <th>Warehouse</th>
+                        <th>Status</th>
+                        <th>Created By</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for adjustment in adjustments %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'inventory:adjustment_detail' adjustment.pk %}"
+                                class="fw-medium text-decoration-none">
+                                {{ adjustment.adjustment_number }}
+                            </a>
+                        </td>
+                        <td>{{ adjustment.get_reason_display }}</td>
+                        <td>{{ adjustment.warehouse.warehouse_name }}</td>
+                        <td>
+                            {% if adjustment.status == 'approved' or adjustment.status == 'applied' %}
+                            <span class="badge bg-success-subtle text-success">{{ adjustment.get_status_display
+                                }}</span>
+                            {% elif adjustment.status == 'rejected' %}
+                            <span class="badge bg-danger-subtle text-danger">{{ adjustment.get_status_display }}</span>
+                            {% else %}
+                            <span class="badge bg-warning-subtle text-warning">{{ adjustment.get_status_display
+                                }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ adjustment.created_by.get_full_name|default:adjustment.created_by.username }}</td>
+                        <td>{{ adjustment.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <a href="{% url 'inventory:adjustment_detail' adjustment.pk %}"
+                                class="btn btn-sm btn-outline-primary">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-clipboard-check fs-1 mb-2 opacity-50"></i>
+                            <p class="mb-0">No adjustments found</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if is_paginated %}
+        <div class="card-footer bg-white border-0 py-3">
+            <nav>
+                <ul class="pagination justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

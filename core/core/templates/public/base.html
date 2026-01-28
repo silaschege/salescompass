@@ -38,7 +38,7 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto align-items-center gap-lg-4">
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'core:product' %}">Products</a>
+            <a class="nav-link" href="{% url 'core:product_public' %}">Products</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="{% url 'core:solutions' %}">Solutions</a>
@@ -109,7 +109,7 @@
         <div class="col-6 col-md-3 col-lg-2">
           <h6>Platform</h6>
           <ul class="list-unstyled d-flex flex-column gap-2 mb-0 small">
-            <li><a href="{% url 'core:product' %}">Features</a></li>
+            <li><a href="{% url 'core:product_public' %}">Features</a></li>
             <li><a href="{% url 'core:pricing' %}">Pricing</a></li>
             <li><a href="{% url 'core:integrations' %}">Integrations</a></li>
             <li><a href="{% url 'core:api_docs' %}">API Documentation</a></li>

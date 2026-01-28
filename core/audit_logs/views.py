@@ -10,13 +10,15 @@ from datetime import timedelta
 from django.utils import timezone
 
 
-class SuperuserRequiredMixin(UserPassesTestMixin):
-    """Mixin to require superuser access"""
-    def test_func(self):
-        return self.request.user.is_superuser
+from core.views import (
+    SalesCompassSuperuserListView, 
+    SalesCompassSuperuserDetailView,
+    SalesCompassSuperuserTemplateView
+)
 
 
-class AuditLogsDashboardView(LoginRequiredMixin, SuperuserRequiredMixin, TemplateView):
+
+class AuditLogsDashboardView(SalesCompassSuperuserTemplateView):
     template_name = 'audit_logs/dashboard.html'
     
     def get_context_data(self, **kwargs):
@@ -34,7 +36,7 @@ class AuditLogsDashboardView(LoginRequiredMixin, SuperuserRequiredMixin, Templat
         return context
 
 
-class AuditLogListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
+class AuditLogListView(SalesCompassSuperuserListView):
     model = AuditLog
     template_name = 'audit_logs/log_list.html'
     context_object_name = 'logs'
@@ -71,13 +73,13 @@ class AuditLogListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
         return queryset
 
 
-class AuditLogDetailView(LoginRequiredMixin, SuperuserRequiredMixin, DetailView):
+class AuditLogDetailView(SalesCompassSuperuserDetailView):
     model = AuditLog
     template_name = 'audit_logs/log_detail.html'
     context_object_name = 'log'
 
 
-class RecentActionsView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
+class RecentActionsView(SalesCompassSuperuserListView):
     model = AuditLog
     template_name = 'audit_logs/recent_actions.html'
     context_object_name = 'logs'
@@ -89,7 +91,7 @@ class RecentActionsView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
         return AuditLog.objects.filter(timestamp__gte=last_24h)
 
 
-class CriticalEventsView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
+class CriticalEventsView(SalesCompassSuperuserListView):
     model = AuditLog
     template_name = 'audit_logs/critical_events.html'
     context_object_name = 'logs'
@@ -99,7 +101,7 @@ class CriticalEventsView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
         return AuditLog.objects.filter(severity__in=['critical', 'error'])
 
 
-class StateChangesView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
+class StateChangesView(SalesCompassSuperuserListView):
     model = AuditLog
     template_name = 'audit_logs/state_changes.html'
     context_object_name = 'logs'
@@ -110,7 +112,7 @@ class StateChangesView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
         return AuditLog.objects.exclude(state_before__isnull=True, state_after__isnull=True)
 
 
-class DataModificationsView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
+class DataModificationsView(SalesCompassSuperuserListView):
     model = AuditLog
     template_name = 'audit_logs/data_modifications.html'
     context_object_name = 'logs'
@@ -126,7 +128,7 @@ class DataModificationsView(LoginRequiredMixin, SuperuserRequiredMixin, ListView
         )
 
 
-class SecurityEventsView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
+class SecurityEventsView(SalesCompassSuperuserListView):
     model = AuditLog
     template_name = 'audit_logs/security_events.html'
     context_object_name = 'logs'
@@ -143,7 +145,7 @@ class SecurityEventsView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
         )
 
 
-class SOC2ReportView(LoginRequiredMixin, SuperuserRequiredMixin, TemplateView):
+class SOC2ReportView(SalesCompassSuperuserTemplateView):
     template_name = 'audit_logs/soc2_report.html'
     
     def get_context_data(self, **kwargs):
@@ -158,7 +160,7 @@ class SOC2ReportView(LoginRequiredMixin, SuperuserRequiredMixin, TemplateView):
         return context
 
 
-class HIPAAAuditView(LoginRequiredMixin, SuperuserRequiredMixin, TemplateView):
+class HIPAAAuditView(SalesCompassSuperuserTemplateView):
     template_name = 'audit_logs/hipaa_audit.html'
     
     def get_context_data(self, **kwargs):
@@ -173,7 +175,7 @@ class HIPAAAuditView(LoginRequiredMixin, SuperuserRequiredMixin, TemplateView):
         return context
 
 
-class ExportLogsView(LoginRequiredMixin, SuperuserRequiredMixin, TemplateView):
+class ExportLogsView(SalesCompassSuperuserTemplateView):
     template_name = 'audit_logs/export_form.html'
     
     def post(self, request, *args, **kwargs):

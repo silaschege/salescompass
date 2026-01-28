@@ -1,0 +1,118 @@
+{% extends "pos/base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">X-Report (Read Only)</h1>
+        <button class="btn btn-primary" onclick="window.print()">
+            <i class="fas fa-print"></i> Print Report
+        </button>
+    </div>
+
+    {% if no_session %}
+    <div class="alert alert-warning">
+        You do not have an active session to generate an X-Report.
+        <a href="{% url 'pos:session_open' %}">Open a session</a> to start selling.
+    </div>
+    {% else %}
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Session Summary: {{ session.session_number }}</h6>
+                    <small class="text-muted">Generated at: {{ report_date }}</small>
+                </div>
+                <div class="card-body">
+                    <!-- Session Info -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p><strong>Cashier:</strong> {{
+                                session.cashier.get_full_name|default:session.cashier.username }}</p>
+                            <p><strong>Terminal:</strong> {{ session.terminal.terminal_name }}</p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <p><strong>Opened:</strong> {{ session.opened_at }}</p>
+                            <p><strong>Status:</strong> <span class="badge bg-success">ACTIVE</span></p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Sales Summary -->
+                    <h5 class="mb-3">Sales Summary</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <tr>
+                                <td>Gross Sales</td>
+                                <td class="text-end">{{ total_sales|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td>Discounts</td>
+                                <td class="text-end text-danger">-{{ total_discount|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td>Tax</td>
+                                <td class="text-end">{{ total_tax|floatformat:2 }}</td>
+                            </tr>
+                            <tr class="fw-bold bg-light">
+                                <td>Net Sales</td>
+                                <td class="text-end">{{ total_sales|add:total_discount|floatformat:2 }}</td>
+                                <!-- Approximation -->
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Payment Breakdown -->
+                    <h5 class="mt-4 mb-3">Tender Breakdown</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Method</th>
+                                    <th class="text-end">Count</th>
+                                    <th class="text-end">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payment_methods %}
+                                <tr>
+                                    <td>{{ payment.payment_method|title }}</td>
+                                    <td class="text-end">{{ payment.count }}</td>
+                                    <td class="text-end">{{ payment.total|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Hourly Info -->
+                    <h5 class="mt-4 mb-3">Hourly Activity</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Hour</th>
+                                    <th class="text-end">Txns</th>
+                                    <th class="text-end">Sales</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for h in hourly_sales %}
+                                <tr>
+                                    <td>{{ h.hour|date:"H:00" }}</td>
+                                    <td class="text-end">{{ h.count }}</td>
+                                    <td class="text-end">{{ h.total|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,179 @@
+{% extends "purchasing/base.html" %}
+{% load humanize %}
+
+{% block purchasing_content %}
+<div class="animate-fade-in p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item small"><a href="{% url 'purchasing:po_list' %}"
+                            class="text-decoration-none text-muted">Purchase Orders</a></li>
+                    <li class="breadcrumb-item active small text-primary fw-bold" aria-current="page">#{{ order.po_number }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3 fw-bold mb-0">Order Summary</h1>
+        </div>
+        <div class="d-flex gap-2">
+            {% if order.status == 'draft' %}
+            <a href="{% url 'purchasing:po_update' order.pk %}" class="btn btn-light px-4 border">
+                <i class="bi bi-pencil me-2"></i> Edit
+            </a>
+            <form action="{% url 'purchasing:po_detail' order.pk %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="approve">
+                <button type="submit" class="btn btn-primary px-4 shadow-sm border-0">
+                    <i class="bi bi-check-circle me-2"></i> Approve Order
+                </button>
+            </form>
+            {% endif %}
+
+            {% if order.status == 'sent' or order.status == 'partial' %}
+            <a href="{% url 'purchasing:po_receive' order.pk %}" class="btn btn-success px-4 shadow-sm border-0">
+                <i class="bi bi-box-seam me-2"></i> Receive Goods
+            </a>
+            {% endif %}
+
+            <button onclick="window.print();" class="btn btn-outline-secondary px-3">
+                <i class="bi bi-printer"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-lg-8">
+            <!-- Order Status & Tracker (Pseudo) -->
+            <div class="premium-card p-0 overflow-hidden mb-4 border-0 shadow-sm">
+                <div class="bg-light p-3 d-flex justify-content-between align-items-center border-bottom">
+                    <h6 class="mb-0 fw-bold">Order Items</h6>
+                    <span class="badge badge-soft-primary px-3 rounded-pill">{{ order.get_status_display }}</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="bg-light bg-opacity-50 small text-uppercase">
+                            <tr>
+                                <th class="ps-4">Product</th>
+                                <th class="text-center">Ordered</th>
+                                <th class="text-center">Received</th>
+                                <th class="text-end">Unit Cost</th>
+                                <th class="pe-4 text-end">Line Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for line in order.lines.all %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">{{ line.product.product_name }}</div>
+                                    <div class="text-muted extra-small">SKU: {{ line.product.sku }}</div>
+                                </td>
+                                <td class="text-center">{{ line.quantity_ordered }}</td>
+                                <td class="text-center">
+                                    {% if line.quantity_received >= line.quantity_ordered %}
+                                    <span class="text-success fw-bold"><i class="bi bi-check-all"></i> {{ line.quantity_received }}</span>
+                                    {% else %}
+                                    {{ line.quantity_received }}
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">${{ line.unit_cost|floatformat:2 }}</td>
+                                <td class="pe-4 text-end fw-bold">${{ line.line_total|floatformat:2|intcomma }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="bg-light bg-opacity-50">
+                            <tr>
+                                <td colspan="4" class="ps-4 text-end fw-bold py-3">Total Amount:</td>
+                                <td class="pe-4 text-end h5 fw-bold text-primary py-3 mb-0">${{  order.total_amount|floatformat:2|intcomma }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Notes or Terms -->
+            {% if order.notes %}
+            <div class="premium-card p-4 border-0 shadow-sm">
+                <h6 class="fw-bold mb-3">Internal Notes</h6>
+                <p class="text-muted small mb-0">{{ order.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <div class="premium-card p-4 border-0 shadow-sm mb-4">
+                <h6 class="fw-bold mb-4">Supplier Information</h6>
+                <div class="d-flex align-items-center mb-4">
+                    <div class="avatar bg-primary bg-opacity-10 text-primary rounded shadow-sm d-flex align-items-center justify-content-center me-3"
+                        style="width: 48px; height: 48px; font-size: 1.5rem;">
+                        <i class="bi bi-building"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold h6 mb-0">{{ order.supplier.supplier_name }}</div>
+                        <a href="mailto:{{ order.supplier.email }}" class="text-primary small text-decoration-none">{{ order.supplier.email }}</a>
+                    </div>
+                </div>
+                <div class="border-top pt-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Warehouse</span>
+                        <span class="small fw-bold">{{ order.warehouse.warehouse_name }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Order Date</span>
+                        <span class="small fw-bold">{{ order.order_date|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="premium-card p-4 border-0 shadow-sm">
+                <h6 class="fw-bold mb-3">Compliance & Audit</h6>
+                <div class="mb-3">
+                    <div class="small text-muted mb-1">Requested By</div>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-person-circle me-2 text-primary"></i>
+                        <span class="small fw-semibold">{{
+  order.requested_by.get_full_name|default:order.requested_by.username }}</span>
+                    </div>
+                </div>
+                {% if order.approved_by %}
+                <div class="mb-3">
+                    <div class="small text-muted mb-1">Approved By</div>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-shield-check me-2 text-success"></i>
+                        <span class="small fw-semibold">{{
+                            order.approved_by.get_full_name|default:order.approved_by.username }}</span>
+                    </div>
+                    <div class="extra-small text-muted ms-4">on {{ order.approval_date|date:"M d, Y H:i" }}</div>
+                </div>
+                {% endif %}
+
+                {% if order.is_capital_commitment %}
+                <div class="alert alert-info border-0 shadow-sm small py-2 mb-0 mt-3">
+                    <i class="bi bi-info-circle me-1"></i> IFRS: Fixed Asset Commitment recognized.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .extra-small {
+        font-size: 0.725rem;
+    }
+
+    @media print {
+
+        .btn,
+        .breadcrumb,
+        .sidebar,
+        .sidebar-wrapper {
+            display: none !important;
+        }
+
+        .purchasing-wrapper {
+            padding: 0 !important;
+            width: 100% !important;
+            margin: 0 !important;
+        }
+    }
+</style>
+{% endblock %}

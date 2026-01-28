@@ -1,72 +1,165 @@
 {% extends "public/base.html" %}
 {% load static %}
 
-{% block title %}Customers - Trusted by Revenue Leaders | SalesCompass{% endblock %}
+{% block title %}Customer Stories - From Chaos to Clarity | SalesCompass{% endblock %}
 
 {% block content %}
-<!-- Customer Hero -->
+<!-- Transformation Hero -->
 <section class="section-large text-center position-relative overflow-hidden">
   <div class="container position-relative z-1">
-    <h1 class="display-3 fw-extrabold mb-4">Trusted by <br><span class="highlight-handwritten">revenue leaders.</span>
-    </h1>
-    <p class="lead text-muted mb-6 mx-auto" style="max-width: 650px;">
-      From high-growth startups to global enterprises, SalesCompass provides the
-      intelligence to drive consistent results.
+    <span class="transformation-badge mb-4"><i class="bi bi-trophy"></i> Success Stories</span>
+    <h1 class="display-3 fw-extrabold mb-4">From Manual Chaos to <br><span class="highlight-handwritten">Digital
+        Mastery.</span></h1>
+    <p class="lead text-muted mb-8 mx-auto" style="max-width: 650px;">
+      See how businesses just like yours replaced their "Black Book" of spreadsheets with SalesCompass and achieved 10x
+      ROI.
     </p>
 
-    <!-- Logo Grid -->
-    <div class="row justify-content-center pt-5 g-5 opacity-50 grayscale align-items-center">
-      <div class="col-4 col-md-2">
-        <h4 class="fw-bold mb-0">GLOBEX</h4>
+    <!-- Aggregate Stats -->
+    <div class="row g-4 justify-content-center">
+      <div class="col-md-3">
+        <div class="p-4 border rounded-4 bg-white shadow-sm">
+          <div class="display-5 fw-bold text-primary mb-1">5M+</div>
+          <div class="small fw-bold text-uppercase text-muted">Hours Saved</div>
+        </div>
       </div>
-      <div class="col-4 col-md-2">
-        <h4 class="fw-bold mb-0">ACME</h4>
+      <div class="col-md-3">
+        <div class="p-4 border rounded-4 bg-white shadow-sm">
+          <div class="display-5 fw-bold text-primary mb-1">$2B+</div>
+          <div class="small fw-bold text-uppercase text-muted">Revenue Generated</div>
+        </div>
       </div>
-      <div class="col-4 col-md-2">
-        <h4 class="fw-bold mb-0">SOYLENT</h4>
-      </div>
-      <div class="col-4 col-md-2">
-        <h4 class="fw-bold mb-0">INITECH</h4>
-      </div>
-      <div class="col-4 col-md-2">
-        <h4 class="fw-bold mb-0">CYBERDYNE</h4>
+      <div class="col-md-3">
+        <div class="p-4 border rounded-4 bg-white shadow-sm">
+          <div class="display-5 fw-bold text-primary mb-1">15K</div>
+          <div class="small fw-bold text-uppercase text-muted">Spreadsheets Retired</div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Impact Section -->
-<section class="section bg-light border-top border-light">
+<!-- Industry Filters -->
+<section class="section bg-white border-top border-light pb-0">
+  <div class="container text-center">
+    <div class="industry-tabs">
+      <button class="industry-tab active">All Industries</button>
+      <button class="industry-tab">Technology</button>
+      <button class="industry-tab">Retail</button>
+      <button class="industry-tab">Manufacturing</button>
+      <button class="industry-tab">Services</button>
+    </div>
+  </div>
+</section>
+
+<!-- Journey Stories Grid -->
+<section class="section bg-white pt-4">
   <div class="container">
-    <div class="row align-items-center g-5">
-      <div class="col-lg-5">
-        <h2 class="fw-extrabold mb-4">Proven Impact</h2>
-        <p class="text-muted mb-5">
-          We don't just provide a tool. We provide a competitive advantage.
-          See how our customers are winning.
-        </p>
-        <div class="mb-4">
-          <div class="h2 fw-extrabold text-primary mb-0">2.4x</div>
-          <p class="small text-muted">Average increase in pipeline velocity</p>
-        </div>
-        <div>
-          <div class="h2 fw-extrabold text-primary mb-0">80%</div>
-          <p class="small text-muted">Reduction in manual lead qualification time</p>
+    <div class="row g-5">
+
+      <!-- Story 1 -->
+      <div class="col-lg-6">
+        <div class="card-clean p-0 h-100 overflow-hidden">
+          <div class="row g-0 h-100">
+            <div class="col-md-12">
+              <div class="p-6">
+                <div class="d-flex align-items-center gap-3 mb-4 opacity-50 grayscale">
+                  <h4 class="fw-bold mb-0">TECHNOVA</h4>
+                </div>
+                <h3 class="fw-bold mb-4">"We were flying blind before SalesCompass."</h3>
+                <div class="transform-card mb-4 bg-light shadow-none border-0">
+                  <div class="transform-old">
+                    <div class="small fw-bold text-uppercase mb-1">Before</div>
+                    Data scattered across 15 different spreadsheets. Weekly reports took 2 days to compile.
+                  </div>
+                  <div class="transform-arrow"><i class="bi bi-arrow-right"></i></div>
+                  <div class="transform-new">
+                    <div class="small fw-bold text-uppercase mb-1">After</div>
+                    Real-time dashboard visibility. Zero manual reporting. 2.4x Deal Velocity.
+                  </div>
+                </div>
+                <a href="#" class="text-primary fw-bold text-decoration-none">Read full case study &rarr;</a>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="col-lg-7">
-        <div class="card-clean p-5 border-primary">
-          <i class="bi bi-quote fs-1 text-primary opacity-25 mb-4"></i>
-          <p class="lead fw-medium mb-5">
-            "SalesCompass is the first CRM that our reps actually enjoy using.
-            The ML-driven lead scoring has completely eliminated the guesswork
-            from our outbound strategy."
-          </p>
-          <div class="d-flex align-items-center gap-3">
-            <div class="rounded-circle bg-gray-200" style="width: 56px; height: 56px;"></div>
-            <div>
-              <strong class="d-block">Marcus Thorne</strong>
-              <span class="small text-muted">VP of Sales, TechNova</span>
+
+      <!-- Story 2 -->
+      <div class="col-lg-6">
+        <div class="card-clean p-0 h-100 overflow-hidden">
+          <div class="row g-0 h-100">
+            <div class="col-md-12">
+              <div class="p-6">
+                <div class="d-flex align-items-center gap-3 mb-4 opacity-50 grayscale">
+                  <h4 class="fw-bold mb-0">GLOBALSCALE</h4>
+                </div>
+                <h3 class="fw-bold mb-4">"The Black Book was costing us millons."</h3>
+                <div class="transform-card mb-4 bg-light shadow-none border-0">
+                  <div class="transform-old">
+                    <div class="small fw-bold text-uppercase mb-1">Before</div>
+                    Missed follow-ups on 40% of leads. Sales reps spent 2h/day on data entry.
+                  </div>
+                  <div class="transform-arrow"><i class="bi bi-arrow-right"></i></div>
+                  <div class="transform-new">
+                    <div class="small fw-bold text-uppercase mb-1">After</div>
+                    98% lead coverage. Automated nurturing. $250k recovered revenue in Month 1.
+                  </div>
+                </div>
+                <a href="#" class="text-primary fw-bold text-decoration-none">Read full case study &rarr;</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Additional Stories -->
+<section class="section bg-light border-top border-light">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="journey-card h-100">
+          <div class="journey-header py-4">
+            <h5 class="fw-bold mb-0 text-white">Creatively Agency</h5>
+          </div>
+          <div class="journey-body">
+            <p class="text-muted mb-4">"Finally, a CRM that doesn't feel like a chore. Our creative team actually uses
+              it."</p>
+            <div class="journey-metric">
+              <div class="journey-metric-value">100%</div>
+              <div class="journey-metric-label">Adoption</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="journey-card h-100">
+          <div class="journey-header py-4">
+            <h5 class="fw-bold mb-0 text-white">Apex Logistics</h5>
+          </div>
+          <div class="journey-body">
+            <p class="text-muted mb-4">"The automated dispatch workflows replaced 3 full-time data entry roles."</p>
+            <div class="journey-metric">
+              <div class="journey-metric-value">$120k</div>
+              <div class="journey-metric-label">Annual Savings</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="journey-card h-100">
+          <div class="journey-header py-4">
+            <h5 class="fw-bold mb-0 text-white">Zenith Health</h5>
+          </div>
+          <div class="journey-body">
+            <p class="text-muted mb-4">"HIPAA compliance built-in was a huge selling point. We migrated in 3 days."</p>
+            <div class="journey-metric">
+              <div class="journey-metric-value">3 Days</div>
+              <div class="journey-metric-label">Migration Time</div>
             </div>
           </div>
         </div>
@@ -75,67 +168,46 @@
   </div>
 </section>
 
-<!-- Testimonials Grid -->
+<!-- Results Dashboard Visualization -->
 <section class="section bg-white border-top border-light">
   <div class="container">
-    <div class="text-center mb-10">
-      <h2 class="fw-extrabold mb-3">Don't just take our word for it</h2>
-      <p class="text-muted">Join 15 million users who trust us every day.</p>
-    </div>
-    <div class="row g-4">
-      <div class="col-md-6 col-lg-4">
-        <div class="card-clean p-5 h-100">
-          <div class="mb-3 text-warning"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
-              class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
-          <p class="mb-4 small text-muted">"The ROI was immediate. We saw a 30% jump in conversion rates in the first
-            quarter alone."</p>
-          <div class="d-flex align-items-center gap-3">
-            <div class="rounded-circle bg-gray-200" style="width: 40px; height: 40px;"></div>
-            <div><strong class="d-block small">Sarah Jenkins</strong><span class="extra-small text-muted">CRO,
-                GlobalScale</span></div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-4">
-        <div class="card-clean p-5 h-100">
-          <div class="mb-3 text-warning"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
-              class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
-          <p class="mb-4 small text-muted">"Modular, scalable, and intelligent. The perfect foundation for our global
-            revenue operations."</p>
-          <div class="d-flex align-items-center gap-3">
-            <div class="rounded-circle bg-gray-200" style="width: 40px; height: 40px;"></div>
-            <div><strong class="d-block small">David Chen</strong><span class="extra-small text-muted">Head of RevOps,
-                FinTech Inc</span></div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-4">
-        <div class="card-clean p-5 h-100">
-          <div class="mb-3 text-warning"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
-              class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
-          <p class="mb-4 small text-muted">"The best CRM interface on the market. It finally feels like software
-            designed for 2025."</p>
-          <div class="d-flex align-items-center gap-3">
-            <div class="rounded-circle bg-gray-200" style="width: 40px; height: 40px;"></div>
-            <div><strong class="d-block small">Elena Rodriguez</strong><span class="extra-small text-muted">Founder,
-                Creatively</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+    <div class="row align-items-center g-6">
+      <div class="col-lg-5">
+        <span class="text-primary fw-bold text-uppercase tracking-widest small mb-2 d-block">Real Results</span>
+        <h2 class="fw-extrabold mb-4">The Impact of Leaving Manual Processes</h2>
+        <p class="text-muted mb-6">Aggregate data from over 10,000 customers shows what happens when you switch to
+          SalesCompass.</p>
 
-<!-- Locations Section -->
-<section class="section bg-light border-top border-light">
-  <div class="container text-center">
-    <h2 class="fw-extrabold mb-4">Serving Teams Across California</h2>
-    <div class="d-flex flex-wrap justify-content-center gap-2" style="max-width: 800px; margin: 0 auto;">
-      {% for location in california_locations %}
-      <span
-        class="badge bg-white text-primary border border-primary border-opacity-10 rounded-pill px-3 py-2 fw-medium shadow-sm">{{
-        location }}</span>
-      {% endfor %}
+        <ul class="list-unstyled space-y-4">
+          <li class="d-flex align-items-center gap-3">
+            <div class="rounded-circle bg-success text-white p-2"><i class="bi bi-arrow-up"></i></div>
+            <div>
+              <strong class="d-block text-dark">32% Revenue Increase</strong>
+              <span class="small text-muted">First 12 months</span>
+            </div>
+          </li>
+          <li class="d-flex align-items-center gap-3">
+            <div class="rounded-circle bg-success text-white p-2"><i class="bi bi-arrow-down"></i></div>
+            <div>
+              <strong class="d-block text-dark">40% Admin Time Reduction</strong>
+              <span class="small text-muted">Freed up for selling</span>
+            </div>
+          </li>
+          <li class="d-flex align-items-center gap-3">
+            <div class="rounded-circle bg-success text-white p-2"><i class="bi bi-arrow-up"></i></div>
+            <div>
+              <strong class="d-block text-dark">50% Faster Close Rates</strong>
+              <span class="small text-muted">Sales cycle acceleration</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="col-lg-7">
+        <div class="card-clean p-2 shadow-2xl bg-gray-50 border-purple">
+          <img src="https://placehold.co/800x500/f8fafc/e2e8f0?text=Growth+Chart+Dashboard" alt="Results Dashboard"
+            class="img-fluid rounded-xl w-100">
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -143,9 +215,9 @@
 <!-- Final CTA -->
 <section class="section-large text-center bg-white border-top border-light">
   <div class="container">
-    <h2 class="display-4 fw-extrabold mb-4">Join the winners.</h2>
+    <h2 class="display-4 fw-extrabold mb-4">Be Our Next Success Story.</h2>
     <p class="lead text-muted mb-6">Start your transformation today.</p>
-    <a href="{% url 'core:try_free' %}" class="btn btn-primary btn-lg px-5">Start Trial</a>
+    <a href="{% url 'core:try_free' %}" class="btn btn-primary btn-lg px-5">Start Free Trial</a>
   </div>
 </section>
 {% endblock %}

@@ -1,0 +1,57 @@
+{% extends "hr/base.html" %}
+
+{% block hr_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h3 fw-bold mb-0">Attendance Registry</h1>
+            <p class="text-muted small mb-0">Daily timecards and presence tracking</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary px-4 shadow-sm border-0">
+                <i class="bi bi-clock-history me-2"></i> Clock In / Out
+            </button>
+        </div>
+    </div>
+
+    <div class="premium-card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light bg-opacity-50 small text-uppercase fw-bold">
+                    <tr>
+                        <th class="ps-4 py-3">Employee</th>
+                        <th class="py-3">Date</th>
+                        <th class="py-3">Clock In</th>
+                        <th class="py-3">Clock Out</th>
+                        <th class="pe-4 py-3 text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in attendance_records %}
+                    <tr>
+                        <td class="ps-4 py-3">
+                            <div class="fw-bold text-dark">{{ record.employee.user.get_full_name }}</div>
+                            <div class="extra-small text-muted">{{ record.employee.position }}</div>
+                        </td>
+                        <td class="py-3">{{ record.date|date:"M d, Y" }}</td>
+                        <td class="py-3 small text-muted">{{ record.clock_in|time:"H:i"|default:"-" }}</td>
+                        <td class="py-3 small text-muted">{{ record.clock_out|time:"H:i"|default:"-" }}</td>
+                        <td class="pe-4 py-3 text-center">
+                            <span
+                                class="badge {% if record.status == 'present' %}badge-soft-success{% elif record.status == 'absent' %}badge-soft-danger{% else %}badge-soft-warning{% endif %} px-3 rounded-pill text-uppercase">
+                                {{ record.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">No attendance records found for this period.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

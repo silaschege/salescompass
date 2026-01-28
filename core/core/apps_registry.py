@@ -49,6 +49,54 @@ AVAILABLE_APPS = [
         'category': 'core',
         'description': 'Billing and revenue management'
     },
+    {
+        'id': 'accounting',
+        'name': 'Accounting',
+        'icon': 'bi-journal-text',
+        'url_name': 'accounting:dashboard',
+        'category': 'feature',
+        'description': 'General Ledger and Financial Reporting'
+    },
+    {
+        'id': 'purchasing',
+        'name': 'Purchasing',
+        'icon': 'bi-bag-plus',
+        'url_name': 'purchasing:dashboard',
+        'category': 'feature',
+        'description': 'Purchase Orders and Supplier Management'
+    },
+    {
+        'id': 'loyalty',
+        'name': 'Loyalty',
+        'icon': 'bi-award',
+        'url_name': 'loyalty:dashboard',
+        'category': 'feature',
+        'description': 'Customer Rewards and Points Program'
+    },
+    {
+        'id': 'expenses',
+        'name': 'Expenses',
+        'icon': 'bi-receipt',
+        'url_name': 'expenses:dashboard',
+        'category': 'feature',
+        'description': 'Expense Tracking and Reimbursements'
+    },
+    {
+        'id': 'hr',
+        'name': 'HR',
+        'icon': 'bi-people',
+        'url_name': 'hr:dashboard',
+        'category': 'feature',
+        'description': 'Employee Management and HR'
+    },
+    {
+        'id': 'assets',
+        'name': 'Assets',
+        'icon': 'bi-building',
+        'url_name': 'assets:dashboard',
+        'category': 'feature',
+        'description': 'Fixed Asset Register and Depreciation'
+    },
 
     # Feature Apps
     {
@@ -60,13 +108,53 @@ AVAILABLE_APPS = [
         'description': 'Sales pipelines and performance'
     },
 
-    {
+    { 
         'id': 'products',
         'name': 'Products',
         'icon': 'bi-box-seam',
         'url_name': 'products:product_list',
         'category': 'feature',
         'description': 'Product catalog and pricing'
+    },
+    {
+        'id': 'pos',
+        'name': 'Point of Sale',
+        'icon': 'bi-display',
+        'url_name': 'pos:terminal_list',
+        'category': 'feature',
+        'description': 'POS Terminal for retail sales'
+    },
+    {
+        'id': 'inventory',
+        'name': 'Inventory',
+        'icon': 'bi-boxes',
+        'url_name': 'inventory:dashboard',
+        'category': 'feature',
+        'description': 'Stock management and transfers'
+    },
+    {
+        'id': 'manufacturing',
+        'name': 'MRP',
+        'icon': 'bi-tools',
+        'url_name': 'manufacturing:dashboard',
+        'category': 'feature',
+        'description': 'Manufacturing and Work Orders'
+    },
+    {
+        'id': 'logistics',
+        'name': 'Logistics',
+        'icon': 'bi-truck',
+        'url_name': 'logistics:dashboard',
+        'category': 'feature',
+        'description': 'Shipping, Fulfillment and Tracking'
+    },
+    {
+        'id': 'quality_control',
+        'name': 'Quality',
+        'icon': 'bi-check2-all',
+        'url_name': 'quality_control:dashboard',
+        'category': 'feature',
+        'description': 'Quality Management and Inspections'
     },
     {
         'id': 'opportunities',
@@ -165,6 +253,14 @@ AVAILABLE_APPS = [
         'description': 'Sales commissions and compensation'
     },
     {
+        'id': 'projects',
+        'name': 'Projects',
+        'icon': 'bi-stack',
+        'url_name': 'projects:dashboard',
+        'category': 'feature',
+        'description': 'Project accounting and PSA'
+    },
+    {
         'id': 'developer',
         'name': 'Developer',
         'icon': 'bi-code-slash',
@@ -181,12 +277,20 @@ AVAILABLE_APPS = [
         'description':'Email and messaging management'
     },
     {
-        'id': 'reachout',
+        'id': 'wazo',
         'name': 'ReachOut',
         'icon': 'bi-telephone-outbound',
         'url_name': 'wazo:status',
         'category': 'feature',
         'description': 'Telephony and SMS services'
+    },
+    {
+        'id': 'ecommerce',
+        'name': 'Storefront',
+        'icon': 'bi-shop',
+        'url_name': 'ecommerce:index',
+        'category': 'feature',
+        'description': 'External ecommerce portal and product catalog'
     },
     # Control Plane Apps
         {

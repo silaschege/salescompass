@@ -38,12 +38,12 @@
             <table class="table table-hover align-middle mb-0 table-comm">
                 <thead class="bg-light">
                     <tr>
-                        <th class="ps-4">Ticket ID</th>
-                        <th>Subject</th>
-                        <th>Priority</th>
-                        <th>Status</th>
+                        {% include "components/_table_header.html" with field="id" label="Ticket ID" %}
+                        {% include "components/_table_header.html" with field="subject" label="Subject" %}
+                        {% include "components/_table_header.html" with field="priority" label="Priority" %}
+                        {% include "components/_table_header.html" with field="status" label="Status" %}
                         <th>Assigned To</th>
-                        <th>Created</th>
+                        {% include "components/_table_header.html" with field="created_at" label="Created" %}
                         <th class="text-end pe-4">Actions</th>
                     </tr>
                 </thead>
@@ -60,11 +60,9 @@
                         </td>
                         <td>
                             {% if ticket.priority == 'urgent' or ticket.priority == 'high' %}
-                            <span class="text-danger fw-bold"><i class="bi bi-fire me-1"></i> {{ ticket.priority|title
-                                }}</span>
+                            <span class="text-danger fw-bold"><i class="bi bi-fire me-1"></i> {{ ticket.priority|title }}</span>
                             {% elif ticket.priority == 'medium' %}
-                            <span class="text-warning fw-bold"><i class="bi bi-exclamation-triangle me-1"></i> {{
-                                ticket.priority|title }}</span>
+                            <span class="text-warning fw-bold"><i class="bi bi-exclamation-triangle me-1"></i> {{ticket.priority|title }}</span>
                             {% else %}
                             <span class="text-info fw-bold">{{ ticket.priority|title }}</span>
                             {% endif %}
@@ -75,15 +73,12 @@
                                 class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">New</span>
                             {% elif ticket.status == 'open' or ticket.status == 'in_progress' %}
                             <span
-                                class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill">In
-                                Progress</span>
+                                class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill">In Progress</span>
                             {% elif ticket.status == 'resolved' or ticket.status == 'closed' %}
                             <span
-                                class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">{{
-                                ticket.status|title }}</span>
+                                class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">{{ticket.status|title }}</span>
                             {% else %}
-                            <span class="badge bg-secondary-subtle text-secondary rounded-pill">{{ ticket.status|title
-                                }}</span>
+                            <span class="badge bg-secondary-subtle text-secondary rounded-pill">{{ ticket.status|title}}</span>
                             {% endif %}
                         </td>
                         <td>
@@ -99,6 +94,7 @@
                             <span class="text-muted italic small">Unassigned</span>
                             {% endif %}
                         </td>
+                        
                         <td>{{ ticket.created_at|date:"M d" }}</td>
                         <td class="text-end pe-4">
                             <div class="btn-group">
@@ -109,17 +105,20 @@
                             </div>
                         </td>
                     </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">
-                            <i class="bi bi-ticket-perforated display-4 mb-3 d-block"></i>
-                            <p>No support tickets found</p>
-                        </td>
-                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        {% if tickets %}
+        <div class="card-footer bg-white border-top py-3">
+            {% include "components/_pagination.html" %}
+        </div>
+        {% else %}
+        <div class="card-body">
+            {% url 'communication:ticket_create' as action_url %}
+            {% include "components/_empty_state.html" with icon="bi-ticket-perforated" title="No support tickets found" message="Manage customer inquiries and technical issues from here." action_url=action_url action_text="New Ticket" %}
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

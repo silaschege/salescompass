@@ -1,7 +1,8 @@
 from django import forms
+from django.forms.models import inlineformset_factory
 from core.models import User as Account
 from opportunities.models import Opportunity
-from .models import Proposal, ProposalTemplate, ProposalEmail, ProposalPDF, ProposalEvent, ProposalSignature, ApprovalStep, ProposalApproval, ApprovalTemplate,ApprovalTemplateStep
+from .models import Proposal, ProposalTemplate, ProposalEmail, ProposalPDF, ProposalEvent, ProposalSignature, ApprovalStep, ProposalApproval, ApprovalTemplate, ApprovalTemplateStep, ProposalLine
 
 
 
@@ -102,35 +103,53 @@ class ProposalForm(forms.ModelForm):
             self.fields['approval_template'].queryset = ApprovalTemplate.objects.filter(
                 is_active=True
             )
-class ProposalTemplateForm(forms.ModelForm):
-    """
-    Form for creating and updating proposal templates.
-    """
-    html_content = forms.CharField(
-        widget=forms.Textarea(attrs={
-            'rows': 15,
-            'class': 'form-control',
-            'placeholder': 'Enter the template content here. You can use HTML tags for formatting.'
-        }),
-        help_text="Template content (HTML supported)"
-    )
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('current_user', None)
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        if user or self.tenant:
+            target_tenant = self.tenant or (user.tenant if user else None)
+            
+            # Filter opportunities to user's visible set
+            from core.object_permissions import OpportunityObjectPolicy
+            if user:
+                self.fields['opportunity'].queryset = OpportunityObjectPolicy.get_viewable_queryset(
+                    user, 
+                    Opportunity.objects.all()
+                )
+            elif target_tenant:
+                self.fields['opportunity'].queryset = Opportunity.objects.filter(tenant=target_tenant)
+            
+            # Filter approval templates to active ones
+            if target_tenant:
+                self.fields['approval_template'].queryset = ApprovalTemplate.objects.filter(
+                    tenant=target_tenant, is_active=True
+                )
+            else:
+                self.fields['approval_template'].queryset = ApprovalTemplate.objects.filter(is_active=True)
+            
+            # ... rest of logic ...
 
-    class Meta:
-        model = ProposalTemplate
-        fields = ['email_template_name', 'subject', 'html_content', 'email_template_is_active']
-        widgets = {
-            'email_template_name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'e.g., Standard Enterprise Proposal Template'
-            }),
-            'subject': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'e.g., Proposal for Services'
-            }),
-            'email_template_is_active': forms.CheckboxInput(attrs={
-                'class': 'form-check-input'
-            }),
-        }
+class ProposalTemplateForm(forms.ModelForm):
+    # ...
+    def __init__(self, *args, tenant=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+class ProposalEmailForm(forms.ModelForm):
+    # ...
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('current_user', None)
+        self.tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        
+        target_tenant = self.tenant or (user.tenant if user else None)
+        
+        if target_tenant:
+            self.fields['proposal'].queryset = Proposal.objects.filter(tenant=target_tenant)
+            self.fields['email_template'].queryset = ProposalTemplate.objects.filter(
+                tenant=target_tenant, email_template_is_active=True
+            )
 
 
 class ProposalEmailForm(forms.ModelForm):
@@ -366,3 +385,24 @@ class ApprovalTemplateStepForm(forms.ModelForm):
         }
 
 
+class ProposalLineForm(forms.ModelForm):
+    """
+    Form for individual line items in a proposal.
+    """
+    class Meta:
+        model = ProposalLine
+        fields = ['product', 'quantity', 'unit_price', 'discount_percent']
+        widgets = {
+            'product': forms.Select(attrs={'class': 'form-select product-select'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control quantity-input', 'min': 1}),
+            'unit_price': forms.NumberInput(attrs={'class': 'form-control price-input', 'readonly': 'readonly'}),
+            'discount_percent': forms.NumberInput(attrs={'class': 'form-control discount-input', 'min': 0, 'max': 100}),
+        }
+
+ProposalLineFormSet = inlineformset_factory(
+    Proposal, 
+    ProposalLine, 
+    form=ProposalLineForm,
+    extra=1,
+    can_delete=True
+)

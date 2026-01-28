@@ -1,0 +1,93 @@
+{% extends "inventory/base.html" %}
+
+{% block title %}Inter-Store Transfers{% endblock %}
+
+{% block inventory_content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="h3">Inventory Transfers</h1>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'inventory:transfer_create' %}" class="btn btn-primary">
+            <i class="feather icon-plus me-1"></i> New Transfer
+        </a>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="m-0 font-weight-bold text-primary">Transfers</h6>
+            </div>
+            <div class="col-md-6 text-end">
+                <div class="btn-group btn-group-sm">
+                    <a href="?status="
+                        class="btn btn-outline-secondary {% if not request.GET.status %}active{% endif %}">All</a>
+                    <a href="?status=draft"
+                        class="btn btn-outline-secondary {% if request.GET.status == 'draft' %}active{% endif %}">Draft</a>
+                    <a href="?status=in_transit"
+                        class="btn btn-outline-secondary {% if request.GET.status == 'in_transit' %}active{% endif %}">In
+                        Transit</a>
+                    <a href="?status=received"
+                        class="btn btn-outline-secondary {% if request.GET.status == 'received' %}active{% endif %}">Received</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Transfer #</th>
+                        <th>Source</th>
+                        <th>Destination</th>
+                        <th>Status</th>
+                        <th>Created By</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transfer in transfers %}
+                    <tr>
+                        <td class="ps-4">
+                            <a href="{% url 'inventory:transfer_detail' transfer.pk %}"
+                                class="fw-bold text-decoration-none">
+                                {{ transfer.transfer_number }}
+                            </a>
+                        </td>
+                        <td>{{ transfer.source_warehouse.warehouse_name }}</td>
+                        <td>{{ transfer.destination_warehouse.warehouse_name }}</td>
+                        <td>
+                            {% if transfer.status == 'draft' %}
+                            <span class="badge bg-secondary">Draft</span>
+                            {% elif transfer.status == 'in_transit' %}
+                            <span class="badge bg-warning text-dark">In Transit</span>
+                            {% elif transfer.status == 'received' %}
+                            <span class="badge bg-success">Received</span>
+                            {% elif transfer.status == 'partial' %}
+                            <span class="badge bg-info text-dark">Partial</span>
+                            {% else %}
+                            <span class="badge bg-light text-dark border">{{ transfer.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ transfer.requested_by.username }}</td>
+                        <td>{{ transfer.created_at|date:"M d, Y" }}</td>
+                        <td class="text-end pe-4">
+                            <a href="{% url 'inventory:transfer_detail' transfer.pk %}"
+                                class="btn btn-sm btn-outline-primary">View</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">No transfers found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends "accounting/base.html" %}
+{% load humanize %}
+
+{% block accounting_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">Income Statement</h1>
+    <form class="d-flex gap-2" method="get">
+        <input type="date" name="start_date" class="form-control" value="{{ start_date|default:'' }}">
+        <input type="date" name="end_date" class="form-control" value="{{ end_date|default:'' }}">
+        <button type="submit" class="btn btn-primary">Update</button>
+        <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+            <i class="bi bi-printer"></i>
+        </button>
+    </form>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-5">
+        <div class="text-center mb-5">
+            <h2 class="h4 fw-bold">Statement of Profit or Loss</h2>
+            <p class="text-muted">For the period {{ start_date|default:"Start" }} to {{ end_date|default:"End" }}</p>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <!-- Revenue -->
+                <h4 class="h6 fw-bold text-success mb-3">Revenue</h4>
+                <table class="table table-sm table-borderless mb-4">
+                    {% for item in revenues %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td class="text-end">{{ item.amount|floatformat:2|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-muted fst-italic">No revenue recorded</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="border-top fw-bold">
+                        <td>Total Revenue</td>
+                        <td class="text-end">{{ total_revenue|floatformat:2|intcomma }}</td>
+                    </tr>
+                </table>
+
+                <!-- Cost of Sales -->
+                <h4 class="h6 fw-bold text-warning mb-3">Cost of Sales</h4>
+                <table class="table table-sm table-borderless mb-2">
+                    {% for item in cogs %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td class="text-end">({{ item.amount|floatformat:2|intcomma }})</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="border-top fw-bold">
+                        <td>Total Cost of Sales</td>
+                        <td class="text-end">({{ total_cogs|floatformat:2|intcomma }})</td>
+                    </tr>
+                </table>
+
+                <!-- Gross Profit -->
+                <div class="d-flex justify-content-between alert alert-light border mb-4">
+                    <span class="fw-bold">Gross Profit</span>
+                    <span class="fw-bold">{{ gross_profit|floatformat:2|intcomma }}</span>
+                </div>
+
+                <!-- Expenses -->
+                <h4 class="h6 fw-bold text-danger mb-3">Operating Expenses</h4>
+                <table class="table table-sm table-borderless mb-4">
+                    {% for item in expenses %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td class="text-end">({{ item.amount|floatformat:2|intcomma }})</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-muted fst-italic">No expenses recorded</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="border-top fw-bold">
+                        <td>Total Operating Expenses</td>
+                        <td class="text-end">({{ total_expense|floatformat:2|intcomma }})</td>
+                    </tr>
+                </table>
+
+                <!-- Net Income -->
+                <div class="d-flex justify-content-between p-3 bg-light border rounded">
+                    <h3 class="h5 fw-bold mb-0">Net Income</h3>
+                    <h3 class="h5 fw-bold mb-0 {% if net_income >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        {{ net_income|floatformat:2|intcomma }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -186,3 +186,32 @@ def analyze_competitive_position(product_id):
         return {
             'error': 'Product does not exist'
         }
+
+
+def generate_barcode(sku: str, barcode_type: str = 'code128') -> str:
+    """
+    Generate barcode image (SVG) for a SKU.
+    Returns the SVG content as a string.
+    """
+    import barcode
+    from barcode.writer import SVGWriter
+    from io import BytesIO
+
+    try:
+        # Get the barcode class
+        barcode_class = barcode.get_barcode_class(barcode_type)
+        
+        # Create barcode object
+        # writer=SVGWriter() ensures we get SVG output which is scalable and easy to embed
+        rv = BytesIO()
+        code = barcode_class(sku, writer=SVGWriter())
+        
+        # Write to buffer
+        code.write(rv)
+        
+        # Return SVG string
+        return rv.getvalue().decode('utf-8')
+    except Exception as e:
+        # Fallback or error logging
+        print(f"Error generating barcode: {e}")
+        return None

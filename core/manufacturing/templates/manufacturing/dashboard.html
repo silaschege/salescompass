@@ -1,0 +1,108 @@
+{% extends "manufacturing/base.html" %}
+{% load humanize %}
+
+{% block page_content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- KPI Cards -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Confirmed Orders
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_orders }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-file-earmark-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">In Progress</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ in_progress_orders }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-gear-wide-connected fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Production Lines
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_production_lines }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-tools fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tables -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Work Orders</h6>
+                    <div>
+                        <a href="{% url 'manufacturing:work_order_list' %}"
+                            class="btn btn-sm btn-outline-primary mr-2">View All</a>
+                        <a href="{% url 'manufacturing:work_order_create' %}" class="btn btn-sm btn-primary">Create Work
+                            Order</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>WO#</th>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Status</th>
+                                    <th>Planned End</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_work_orders %}
+                                <tr>
+                                    <td><a href="{% url 'manufacturing:work_order_detail' order.pk %}">{{
+                                            order.order_number }}</a></td>
+                                    <td>{{ order.product.product_name }}</td>
+                                    <td>{{ order.quantity|floatformat:2 }}</td>
+                                    <td><span class="badge badge-pill badge-info">{{ order.get_status_display }}</span>
+                                    </td>
+                                    <td>{{ order.planned_end_date|default:"-" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">No work orders found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

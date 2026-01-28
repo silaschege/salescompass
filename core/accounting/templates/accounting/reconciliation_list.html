@@ -1,0 +1,61 @@
+{% extends "accounting/base.html" %}
+
+{% block title %}Bank Reconciliations{% endblock %}
+
+{% block accounting_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">Bank Reconciliations</h1>
+    <a href="{% url 'accounting:reconciliation_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> New Reconciliation
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="bg-light">
+                <tr>
+                    {% include "components/_table_header.html" with field="account__account_name" label="Bank Account" %}
+                    {% include "components/_table_header.html" with field="statement_date" label="Statement Date" %}
+                    <th class="text-end">Closing Balance</th>
+                    <th>Status</th>
+                    <th>Reconciled By</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for recon in reconciliations %}
+                <tr>
+                    <td>{{ recon.account.account_name }}</td>
+                    <td>{{ recon.statement_date }}</td>
+                    <td class="text-end">{{ recon.closing_balance|floatformat:2 }}</td>
+                    <td>
+                        <span
+                            class="badge {% if recon.status == 'completed' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                            {{ recon.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ recon.reconciled_by.username|default:"-" }}</td>
+                    <td class="text-end">
+                        <a href="{% url 'accounting:reconciliation_update' recon.pk %}"
+                            class="btn btn-sm btn-outline-primary">
+                            {% if recon.status == 'completed' %}View{% else %}Continue{% endif %}
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if reconciliations %}
+    <div class="card-footer bg-white border-top py-3">
+        {% include "components/_pagination.html" %}
+    </div>
+    {% else %}
+    <div class="card-body">
+        {% url 'accounting:reconciliation_create' as action_url %}
+        {% include "components/_empty_state.html" with icon="bi-bank" title="No reconciliations found" message="Start a new reconciliation to verify your bank balances." action_url=action_url action_text="New Reconciliation" %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

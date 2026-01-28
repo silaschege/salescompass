@@ -1,0 +1,65 @@
+{% extends "expenses/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block expenses_content %}
+<div class="row justify-content-center p-4">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center mb-4">
+            <a href="{% url 'expenses:report_list' %}"
+                class="btn btn-light btn-icon rounded-circle me-3 border-0 shadow-sm">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h1 class="h3 fw-bold mb-0">{% if object %}Edit{% else %}New{% endif %} Expense Report</h1>
+        </div>
+
+        <div class="premium-card p-4 border-0 shadow-sm overflow-hidden position-relative">
+            <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                <i class="bi bi-file-earmark-plus" style="font-size: 5rem;"></i>
+            </div>
+
+            <div class="alert alert-light border-0 py-3 mb-5 shadow-none small d-flex align-items-center"
+                style="background: rgba(99, 102, 241, 0.05); border-left: 4px solid #6366f1 !important;">
+                <i class="bi bi-shield-check text-primary me-3 h4 mb-0"></i>
+                <div class="text-dark">
+                    <strong>Enterprise Governance:</strong> This report will be tracked according to IFRS 16 standards.
+                    Please ensure the title and payment method are accurate for financial reconciliation.
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="row g-4">
+                    <div class="col-md-8">
+                        {{ form.title|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.payment_method|as_crispy_field }}
+                    </div>
+                    <div class="col-12 mt-4">
+                        {{ form.notes|as_crispy_field }}
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-3 mt-5 pt-4 border-top">
+                    <a href="{% url 'expenses:report_list' %}"
+                        class="btn btn-link text-muted text-decoration-none px-4 rounded-pill">Discard Changes</a>
+                    <button type="submit" class="btn btn-primary px-5 shadow-sm border-0 rounded-pill animate-hover">
+                        <i class="bi bi-check2-circle me-2"></i> Create Report
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <style>
+            .animate-hover {
+                transition: all 0.2s ease;
+            }
+
+            .animate-hover:hover {
+                transform: translateY(-2px);
+                filter: brightness(1.1);
+            }
+        </style>
+    </div>
+</div>
+{% endblock %}

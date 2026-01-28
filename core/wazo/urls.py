@@ -2,11 +2,13 @@
 Wazo URL Configuration for SalesCompass CRM.
 """
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 
 app_name = 'wazo'
 
 urlpatterns = [
+    path('', RedirectView.as_view(pattern_name='wazo:status', permanent=False), name='index'),
     # Status
     path('status/', views.WazoStatusView.as_view(), name='status'),
     

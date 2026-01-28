@@ -1,0 +1,198 @@
+{% extends "pos/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Session {{ object.session_number }}{% endblock %}
+
+{% block pos_content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'pos:dashboard' %}">POS</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'pos:session_list' %}">Sessions</a></li>
+                    <li class="breadcrumb-item active">{{ object.session_number }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3 mb-0">Session {{ object.session_number }}</h1>
+        </div>
+        <div>
+            {% if object.status == 'active' %}
+            <a href="{% url 'pos:terminal' %}" class="btn btn-primary me-2">
+                <i class="feather icon-monitor me-2"></i>Open Terminal
+            </a>
+            <a href="{% url 'pos:session_close' object.pk %}" class="btn btn-warning">
+                <i class="feather icon-stop-circle me-2"></i>Close Session
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Session Info -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Session Details</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <td class="text-muted">Status</td>
+                            <td>
+                                {% if object.status == 'active' %}
+                                <span class="badge bg-success">Active</span>
+                                {% elif object.status == 'closed' %}
+                                <span class="badge bg-secondary">Closed</span>
+                                {% else %}
+                                <span class="badge bg-warning">{{ object.status|title }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Terminal</td>
+                            <td class="fw-bold">{{ object.terminal.terminal_name }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Cashier</td>
+                            <td>{{ object.cashier.get_full_name|default:object.cashier.username }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Opened</td>
+                            <td>{{ object.opened_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        {% if object.closed_at %}
+                        <tr>
+                            <td class="text-muted">Closed</td>
+                            <td>{{ object.closed_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <td class="text-muted">Duration</td>
+                            <td>{{ object.opened_at|timesince:object.closed_at }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cash Summary -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Cash Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Opening Cash</span>
+                        <span class="fw-bold">{{ object.opening_cash|floatformat:2|intcomma }}</span>
+                    </div>
+                    {% if object.closing_cash %}
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Closing Cash</span>
+                        <span class="fw-bold">{{ object.closing_cash|floatformat:2|intcomma }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Cash Variance</span>
+                        {% with variance=object.cash_variance %}
+                        <span
+                            class="fw-bold {% if variance > 0 %}text-success{% elif variance < 0 %}text-danger{% endif %}">
+                            {% if variance > 0 %}+{% endif %}{{ variance|floatformat:2|intcomma }}
+                        </span>
+                        {% endwith %}
+                    </div>
+                    {% endif %}
+                    {% if object.notes %}
+                    <hr>
+                    <small class="text-muted">Notes:</small>
+                    <p class="mb-0">{{ object.notes }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Session Stats</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <h3 class="mb-0 text-primary">{{ transactions.count }}</h3>
+                            <small class="text-muted">Transactions</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h3 class="mb-0 text-success">{{ object.total_sales|floatformat:0|intcomma }}</h3>
+                            <small class="text-muted">Total Sales</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Transactions</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Transaction #</th>
+                            <th>Customer</th>
+                            <th>Items</th>
+                            <th class="text-end">Total</th>
+                            <th>Status</th>
+                            <th>Time</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for txn in transactions %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'pos:transaction_detail' txn.pk %}">{{ txn.transaction_number }}</a>
+                            </td>
+                            <td>{{ txn.customer.account_name|default:txn.customer_name|default:"Walk-in" }}</td>
+                            <td>{{ txn.lines.count }}</td>
+                            <td class="text-end fw-bold">{{ txn.total_amount|floatformat:2|intcomma }}</td>
+                            <td>
+                                {% if txn.status == 'completed' %}
+                                <span class="badge bg-success">Completed</span>
+                                {% elif txn.status == 'draft' %}
+                                <span class="badge bg-secondary">Draft</span>
+                                {% elif txn.status == 'voided' %}
+                                <span class="badge bg-danger">Voided</span>
+                                {% else %}
+                                <span class="badge bg-warning">{{ txn.status|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ txn.created_at|date:"H:i" }}</td>
+                            <td class="text-end">
+                                <a href="{% url 'pos:transaction_detail' txn.pk %}"
+                                    class="btn btn-sm btn-outline-primary">
+                                    <i class="feather icon-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                No transactions in this session
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

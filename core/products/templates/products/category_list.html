@@ -1,0 +1,62 @@
+{% extends "products/base.html" %}
+
+{% block title %}Product Categories{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0 text-gray-800">Categories</h1>
+        {% if all_categories_count %}
+            <small class="text-muted">Total: {{ all_categories_count }} category{{ all_categories_count|pluralize }}</small>
+        {% endif %}
+    </div>
+    <a href="{% url 'products:category_create' %}" class="btn btn-primary">
+        <i class="feather icon-plus me-1"></i> New Category
+    </a>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Category Hierarchy</h6>
+        <div class="dropdown no-arrow">
+            <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                <div class="dropdown-header">Options:</div>
+                <a class="dropdown-item" href="{% url 'products:product_list' %}">View Products</a>
+                <a class="dropdown-item" href="#">Export Categories</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item text-danger" href="#">Bulk Actions</a>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Order</th>
+                        <th>Status</th>
+                        <th>Subcategories</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in categories %}
+                    {% include "products/partials/category_row.html" with category=category level=0 %}
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            <i class="feather icon-folder font-2xl mb-2"></i>
+                            <p>No categories found. <a href="{% url 'products:category_create' %}">Create the first category</a>.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

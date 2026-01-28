@@ -143,6 +143,7 @@
     .table-responsive::-webkit-scrollbar {
         height: 8px;
     }
+
     .table-responsive::-webkit-scrollbar-thumb {
         background: #cbd5e1;
         border-radius: 10px;
@@ -152,12 +153,14 @@
     .search-wrapper {
         position: relative;
     }
+
     .search-wrapper .form-control {
         border-radius: 0.75rem;
         padding-left: 2.5rem;
         border: 1px solid #e2e8f0;
         background: #f8fafc;
     }
+
     .search-wrapper i {
         position: absolute;
         left: 1rem;
@@ -165,7 +168,7 @@
         transform: translateY(-50%);
         color: var(--text-muted);
     }
-    
+
     /* Filter Controls */
     .filter-controls {
         display: flex;
@@ -173,11 +176,11 @@
         margin-bottom: 1rem;
         flex-wrap: wrap;
     }
-    
+
     .filter-select {
         min-width: 150px;
     }
-    
+
     /* Progress bar styling for stages */
     .progress-stage {
         height: 8px;
@@ -185,18 +188,18 @@
         background-color: #e2e8f0;
         margin: 0.5rem 0;
     }
-    
+
     .progress-stage .progress-bar {
         border-radius: 4px;
         height: 100%;
     }
-    
+
     /* Responsive adjustments */
     @media (max-width: 768px) {
         .opportunity-header {
             padding: 1.5rem 1rem;
         }
-        
+
         .table thead th,
         .table tbody td {
             padding: 0.75rem;
@@ -216,9 +219,9 @@
         </div>
         <div class="mt-4 mt-md-0">
             {% if request.user.is_authenticated and request.user|has_perm:"opportunities:write" %}
-                <a href="{% url 'opportunities:opportunity_create' %}" class="btn btn-modern btn-create shadow-sm">
-                    <i class="bi bi-plus-lg"></i> New Opportunity
-                </a>
+            <a href="{% url 'opportunities:opportunity_create' %}" class="btn btn-modern btn-create shadow-sm">
+                <i class="bi bi-plus-lg"></i> New Opportunity
+            </a>
             {% endif %}
         </div>
     </div>
@@ -226,13 +229,16 @@
     <!-- Quick Toolset -->
     <div class="row g-3 mb-4">
         <div class="col-12 d-flex flex-wrap gap-2">
-            <a href="{% url 'opportunities:pipeline_kanban' %}" class="btn btn-modern btn-white border shadow-sm bg-white">
+            <a href="{% url 'opportunities:pipeline_kanban' %}"
+                class="btn btn-modern btn-white border shadow-sm bg-white">
                 <i class="bi bi-kanban text-primary"></i> Kanban
             </a>
-            <a href="{% url 'opportunities:forecast_dashboard' %}" class="btn btn-modern btn-white border shadow-sm bg-white">
+            <a href="{% url 'opportunities:forecast_dashboard' %}"
+                class="btn btn-modern btn-white border shadow-sm bg-white">
                 <i class="bi bi-graph-up-arrow text-success"></i> Forecast
             </a>
-            <a href="{% url 'opportunities:win_loss_analysis' %}" class="btn btn-modern btn-white border shadow-sm bg-white">
+            <a href="{% url 'opportunities:win_loss_analysis' %}"
+                class="btn btn-modern btn-white border shadow-sm bg-white">
                 <i class="bi bi-pie-chart text-warning"></i> Win/Loss
             </a>
         </div>
@@ -241,48 +247,16 @@
     <!-- Stats Grid -->
     <div class="row g-4 mb-5">
         <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-icon bg-primary-subtle text-primary">
-                    <i class="bi bi-briefcase"></i>
-                </div>
-                <div>
-                    <div class="stat-label text-muted small fw-bold text-uppercase">Total Deals</div>
-                    <div class="h4 mb-0 fw-bold">{{ opportunities|length }}</div>
-                </div>
-            </div>
+            {% include "components/_kpi_card.html" with title="Total Deals" value=opportunities|length icon="bi-briefcase" color="primary" %}
         </div>
         <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-icon bg-success-subtle text-success">
-                    <i class="bi bi-currency-dollar"></i>
-                </div>
-                <div>
-                    <div class="stat-label text-muted small fw-bold text-uppercase">Total Value</div>
-                    <div class="h4 mb-0 fw-bold text-success">${{ total_value|floatformat:0|intcomma }}</div>
-                </div>
-            </div>
+            {% include "components/_kpi_card.html" with title="Total Value" value="$"|add:total_value|floatformat:0 icon="bi-currency-dollar" color="success" %}
         </div>
         <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-icon bg-info-subtle text-info">
-                    <i class="bi bi-bullseye"></i>
-                </div>
-                <div>
-                    <div class="stat-label text-muted small fw-bold text-uppercase">Weighted</div>
-                    <div class="h4 mb-0 fw-bold text-info">${{ weighted_value|floatformat:0|intcomma }}</div>
-                </div>
-            </div>
+            {% include "components/_kpi_card.html" with title="Weighted" value="$"|add:weighted_value|floatformat:0 icon="bi-bullseye" color="info" %}
         </div>
         <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-icon bg-warning-subtle text-warning">
-                    <i class="bi bi-lightning-charge"></i>
-                </div>
-                <div>
-                    <div class="stat-label text-muted small fw-bold text-uppercase">Win Rate</div>
-                    <div class="h4 mb-0 fw-bold text-warning">{{ win_rate|floatformat:1 }}%</div>
-                </div>
-            </div>
+            {% include "components/_kpi_card.html" with title="Win Rate" value=win_rate|floatformat:1|add:"%" icon="bi-lightning-charge" color="warning" %}
         </div>
     </div>
 
@@ -291,19 +265,19 @@
         <select id="stage-filter" class="form-select filter-select">
             <option value="">All Stages</option>
             {% for stage in stages %}
-                <option value="{{ stage.id }}">{{ stage.name }}</option>
+            <option value="{{ stage.id }}">{{ stage.name }}</option>
             {% endfor %}
         </select>
         <select id="owner-filter" class="form-select filter-select">
             <option value="">All Owners</option>
             {% for owner in owners %}
-                <option value="{{ owner.id }}">{{ owner.get_full_name|default:owner.username }}</option>
+            <option value="{{ owner.id }}">{{ owner.get_full_name|default:owner.username }}</option>
             {% endfor %}
         </select>
         <select id="account-filter" class="form-select filter-select">
             <option value="">All Accounts</option>
             {% for account in accounts %}
-                <option value="{{ account.id }}">{{ account.name }}</option>
+            <option value="{{ account.id }}">{{ account.name }}</option>
             {% endfor %}
         </select>
         <button id="clear-filters" class="btn btn-outline-secondary">Clear Filters</button>
@@ -315,7 +289,8 @@
             <h5 class="fw-bold mb-0">Active Opportunities</h5>
             <div class="search-wrapper mt-3 mt-md-0" style="min-width: 300px;">
                 <i class="bi bi-search"></i>
-                <input type="text" id="search-input" class="form-control" placeholder="Search by name, account, or tags...">
+                <input type="text" id="search-input" class="form-control"
+                    placeholder="Search by name, account, or tags...">
             </div>
         </div>
 
@@ -338,63 +313,69 @@
                 </thead>
                 <tbody>
                     {% for opp in opportunities %}
-                    <tr data-stage="{{ opp.stage.id }}" data-owner="{{ opp.owner.id }}" data-account="{{ opp.account.id }}">
+                    <tr data-stage="{{ opp.stage.id }}" data-owner="{{ opp.owner.id }}"
+                        data-account="{{ opp.account.id }}">
                         <td>
-                            <a href="{% url 'opportunities:opportunity_detail' opp.pk %}" class="text-decoration-none fw-bold text-dark">
+                            <a href="{% url 'opportunities:opportunity_detail' opp.pk %}"
+                                class="text-decoration-none fw-bold text-dark">
                                 {{ opp.opportunity_name|default:"—" }}
                             </a>
                         </td>
                         <td>
-                            <span class="text-muted"><i class="bi bi-building me-1"></i> {{ opp.account.account_name|default:"—" }}</span>
+                            <span class="text-muted"><i class="bi bi-building me-1"></i> {{
+                                opp.account.account_name|default:"—" }}</span>
                         </td>
                         <td>
                             {% if opp.stage %}
-                                <span class="badge-soft" style="background-color: {{ opp.stage.color }}22; color: {{ opp.stage.color }}">
-                                    ● {{ opp.stage.pipeline_type }}
-                                </span>
+                            <span class="badge-soft"
+                                style="background-color: {{ opp.stage.color }}22; color: {{ opp.stage.color }}">
+                                ● {{ opp.stage.pipeline_type }}
+                            </span>
                             {% else %}
-                                <span class="badge-soft" style="background-color: #e2e8f0; color: #64748b">
-                                    ● Unknown
-                                </span>
+                            <span class="badge-soft" style="background-color: #e2e8f0; color: #64748b">
+                                ● Unknown
+                            </span>
                             {% endif %}
                         </td>
                         <td class="text-end fw-bold">${{ opp.amount|floatformat:0|intcomma }}</td>
                         <td class="text-end text-muted">${{ opp.weighted_value|floatformat:0|intcomma }}</td>
                         <td>
                             {% if opp.close_date %}
-                                <span class="{% if opp.close_date < today %}text-danger fw-bold{% endif %}">
-                                    {{ opp.close_date|date:"M d, Y" }}
-                                    {% if opp.close_date < today %}<i class="bi bi-exclamation-circle ms-1"></i>{% endif %}
-                                </span>
+                            <span class="{% if opp.close_date < today %}text-danger fw-bold{% endif %}">
+                                {{ opp.close_date|date:"M d, Y" }}
+                                {% if opp.close_date < today %}<i class="bi bi-exclamation-circle ms-1"></i>{% endif %}
+                            </span>
                             {% else %}
-                                <span class="text-muted small">Not set</span>
+                            <span class="text-muted small">Not set</span>
                             {% endif %}
                         </td>
                         <td>
                             {% if opp.owner %}
-                                <span class="text-muted">{{ opp.owner.get_full_name|default:opp.owner.username }}</span>
+                            <span class="text-muted">{{ opp.owner.get_full_name|default:opp.owner.username }}</span>
                             {% else %}
-                                <span class="text-muted">Unassigned</span>
+                            <span class="text-muted">Unassigned</span>
                             {% endif %}
                         </td>
                         <td>
                             {% if opp.stage %}
-                                <div class="progress-stage">
-                                    <div class="progress-bar" style="width: {{ opp.stage.probability }}%; background-color: {{ opp.stage.color }};"></div>
+                            <div class="progress-stage">
+                                <div class="progress-bar"
+                                    style="width: {{ opp.stage.probability }}%; background-color: {{ opp.stage.color }};">
                                 </div>
-                                <small class="text-muted">{{ opp.stage.probability }}%</small>
+                            </div>
+                            <small class="text-muted">{{ opp.stage.probability }}%</small>
                             {% else %}
-                                <div class="progress-stage">
-                                    <div class="progress-bar" style="width: 0%;"></div>
-                                </div>
-                                <small class="text-muted">0%</small>
+                            <div class="progress-stage">
+                                <div class="progress-bar" style="width: 0%;"></div>
+                            </div>
+                            <small class="text-muted">0%</small>
                             {% endif %}
                         </td>
                         <td>
                             {% if opp.esg_tagged %}
-                                <span class="badge badge-soft badge-esg">
-                                    <i class="bi bi-leaf-fill me-1"></i> ESG
-                                </span>
+                            <span class="badge badge-soft badge-esg">
+                                <i class="bi bi-leaf-fill me-1"></i> ESG
+                            </span>
                             {% endif %}
                         </td>
                         <td class="text-center">
@@ -408,136 +389,108 @@
                                     <li><a class="dropdown-item" href="{% url 'opportunities:opportunity_update' opp.pk %}"><i class="bi bi-pencil me-2"></i> Edit Deal</a></li>
                                     {% endif %}
                                     {% if request.user.is_authenticated and request.user|has_perm:"opportunities:delete" %}
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-danger" href="{% url 'opportunities:opportunity_delete' opp.pk %}"><i class="bi bi-trash me-2"></i> Archive</a></li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li><a class="dropdown-item text-danger"
+                                            href="{% url 'opportunities:opportunity_delete' opp.pk %}"><i class="bi bi-trash me-2"></i> Archive</a></li>
                                     {% endif %}
                                 </ul>
                             </div>
                         </td>
                     </tr>
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
 
-        <!-- Modern Pagination -->
-        {% if is_paginated %}
-        <div class="p-4 border-top bg-light-subtle">
-            <nav class="d-flex justify-content-center">
-                <ul class="pagination pagination-sm mb-0">
-                    {% if page_obj.has_previous %}
-                        <li class="page-item"><a class="page-link border-0 shadow-sm mx-1 rounded-3" href="?page={{ page_obj.previous_page_number }}"><i class="bi bi-chevron-left"></i></a></li>
+                    <!-- Modern Pagination -->
+                    <div class="card-footer bg-white border-top py-3">
+                        {% include "components/_pagination.html" %}
+                    </div>
+
+                    {% else %}
+                    <div class="card-body">
+                        {% url 'opportunities:opportunity_create' as action_url %}
+                        {% include "components/_empty_state.html" with icon="bi-search-heart" title="No deals found" message="Adjust your filters or start a new pipeline track." action_url=action_url action_text="Create your first Deal" %}
+                    </div>
                     {% endif %}
-                    
-                    {% for num in page_obj.paginator.page_range %}
-                        {% if page_obj.number == num %}
-                            <li class="page-item active"><span class="page-link border-0 shadow-sm mx-1 rounded-3 bg-primary">{{ num }}</span></li>
-                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                            <li class="page-item"><a class="page-link border-0 shadow-sm mx-1 rounded-3" href="?page={{ num }}">{{ num }}</a></li>
-                        {% endif %}
-                    {% endfor %}
-
-                    {% if page_obj.has_next %}
-                        <li class="page-item"><a class="page-link border-0 shadow-sm mx-1 rounded-3" href="?page={{ page_obj.next_page_number }}"><i class="bi bi-chevron-right"></i></a></li>
-                    {% endif %}
-                </ul>
-            </nav>
         </div>
-        {% endif %}
-
-        {% else %}
-        <div class="text-center py-5">
-            <div class="mb-3">
-                <i class="bi bi-search-heart display-1 text-muted opacity-25"></i>
-            </div>
-            <h4 class="fw-bold">No deals found</h4>
-            <p class="text-muted">Adjust your filters or start a new pipeline track.</p>
-            {% if request.user.is_authenticated and request.user|has_perm:"opportunities:write" %}
-                <a href="{% url 'opportunities:opportunity_create' %}" class="btn btn-primary btn-modern shadow-sm mt-2">
-                    Create your first Deal
-                </a>
-            {% endif %}
-        </div>
-        {% endif %}
     </div>
-</div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Search functionality
-    const searchInput = document.getElementById('search-input');
-    const rows = document.querySelectorAll('tbody tr');
-    
-    searchInput.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
-        
-        rows.forEach(row => {
-            const textContent = row.textContent.toLowerCase();
-            if (textContent.includes(searchTerm)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const rows = document.querySelectorAll('tbody tr');
+
+            searchInput.addEventListener('input', function () {
+                const searchTerm = this.value.toLowerCase();
+
+                rows.forEach(row => {
+                    const textContent = row.textContent.toLowerCase();
+                    if (textContent.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+
+            // Filter functionality
+            const stageFilter = document.getElementById('stage-filter');
+            const ownerFilter = document.getElementById('owner-filter');
+            const accountFilter = document.getElementById('account-filter');
+            const clearFiltersBtn = document.getElementById('clear-filters');
+
+            function applyFilters() {
+                const stageValue = stageFilter.value;
+                const ownerValue = ownerFilter.value;
+                const accountValue = accountFilter.value;
+
+                rows.forEach(row => {
+                    const rowStage = row.getAttribute('data-stage');
+                    const rowOwner = row.getAttribute('data-owner');
+                    const rowAccount = row.getAttribute('data-account');
+
+                    let showRow = true;
+
+                    if (stageValue && rowStage !== stageValue) {
+                        showRow = false;
+                    }
+
+                    if (ownerValue && rowOwner !== ownerValue) {
+                        showRow = false;
+                    }
+
+                    if (accountValue && rowAccount !== accountValue) {
+                        showRow = false;
+                    }
+
+                    // Apply search filter as well
+                    if (showRow) {
+                        const searchText = searchInput.value.toLowerCase();
+                        const textContent = row.textContent.toLowerCase();
+                        if (!textContent.includes(searchText)) {
+                            showRow = false;
+                        }
+                    }
+
+                    row.style.display = showRow ? '' : 'none';
+                });
             }
+
+            stageFilter.addEventListener('change', applyFilters);
+            ownerFilter.addEventListener('change', applyFilters);
+            accountFilter.addEventListener('change', applyFilters);
+
+            clearFiltersBtn.addEventListener('click', function () {
+                stageFilter.value = '';
+                ownerFilter.value = '';
+                accountFilter.value = '';
+                searchInput.value = '';
+
+                rows.forEach(row => {
+                    row.style.display = '';
+                });
+            });
         });
-    });
-    
-    // Filter functionality
-    const stageFilter = document.getElementById('stage-filter');
-    const ownerFilter = document.getElementById('owner-filter');
-    const accountFilter = document.getElementById('account-filter');
-    const clearFiltersBtn = document.getElementById('clear-filters');
-    
-    function applyFilters() {
-        const stageValue = stageFilter.value;
-        const ownerValue = ownerFilter.value;
-        const accountValue = accountFilter.value;
-        
-        rows.forEach(row => {
-            const rowStage = row.getAttribute('data-stage');
-            const rowOwner = row.getAttribute('data-owner');
-            const rowAccount = row.getAttribute('data-account');
-            
-            let showRow = true;
-            
-            if (stageValue && rowStage !== stageValue) {
-                showRow = false;
-            }
-            
-            if (ownerValue && rowOwner !== ownerValue) {
-                showRow = false;
-            }
-            
-            if (accountValue && rowAccount !== accountValue) {
-                showRow = false;
-            }
-            
-            // Apply search filter as well
-            if (showRow) {
-                const searchText = searchInput.value.toLowerCase();
-                const textContent = row.textContent.toLowerCase();
-                if (!textContent.includes(searchText)) {
-                    showRow = false;
-                }
-            }
-            
-            row.style.display = showRow ? '' : 'none';
-        });
-    }
-    
-    stageFilter.addEventListener('change', applyFilters);
-    ownerFilter.addEventListener('change', applyFilters);
-    accountFilter.addEventListener('change', applyFilters);
-    
-    clearFiltersBtn.addEventListener('click', function() {
-        stageFilter.value = '';
-        ownerFilter.value = '';
-        accountFilter.value = '';
-        searchInput.value = '';
-        
-        rows.forEach(row => {
-            row.style.display = '';
-        });
-    });
-});
-</script>
-{% endblock %}
+    </script>
+    {% endblock %}

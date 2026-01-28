@@ -296,6 +296,14 @@ class Report(TenantModel):
     def __str__(self):
         return self.report_name
 
+    @property
+    def created_at(self):
+        return self.report_created_at
+    
+    @created_at.setter
+    def created_at(self, value):
+        self.report_created_at = value
+
 
 SCHEDULE_FREQUENCY_CHOICES = [
     ('daily', 'Daily'),

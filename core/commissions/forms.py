@@ -17,6 +17,9 @@ class CommissionPlanForm(forms.ModelForm):
             'period': forms.Select(attrs={'class': 'form-select'}),
         }
 
+    def __init__(self, *args, tenant=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
 
 class CommissionRuleForm(forms.ModelForm):
     class Meta:

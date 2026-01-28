@@ -1,10 +1,11 @@
-
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 
 app_name = 'access_control'
 
 urlpatterns = [
+    path('', RedirectView.as_view(pattern_name='access_control:dashboard', permanent=False), name='index'),
     path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
     path('manage/', views.ManageAccessView.as_view(), name='manage_access'),
     path('tenants/', views.TenantAccessListView.as_view(), name='tenant_list'),

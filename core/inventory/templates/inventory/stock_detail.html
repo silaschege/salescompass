@@ -1,0 +1,139 @@
+{% extends "inventory/base.html" %}
+{% load humanize %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:stock_list' %}">Stock</a></li>
+            <li class="breadcrumb-item active">{{ object.product.product_name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Stock Info -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body text-center py-4">
+                    <h5 class="mb-1">{{ object.product.product_name }}</h5>
+                    <p class="text-muted mb-3">{{ object.product.sku }}</p>
+
+                    <div class="display-4 fw-bold mb-1">{{ object.quantity|floatformat:0 }}</div>
+                    <p class="text-muted">Total Units</p>
+
+                    <div class="d-flex justify-content-center gap-2 mt-4">
+                        <a href="{% url 'inventory:stock_add' %}?product={{ object.product.id }}&warehouse={{ object.warehouse.id }}"
+                            class="btn btn-outline-success">
+                            <i class="bi bi-plus-lg"></i> Add
+                        </a>
+                        <a href="{% url 'inventory:stock_remove' %}?product={{ object.product.id }}&warehouse={{ object.warehouse.id }}"
+                            class="btn btn-outline-danger">
+                            <i class="bi bi-dash-lg"></i> Remove
+                        </a>
+                        <a href="{% url 'inventory:stock_transfer' %}?product={{ object.product.id }}&from={{ object.warehouse.id }}"
+                            class="btn btn-outline-primary">
+                            <i class="bi bi-arrow-left-right"></i> Transfer
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">Stock Details</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Warehouse</span>
+                        <span class="fw-medium">{{ object.warehouse.warehouse_name }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Location</span>
+                        <span class="fw-medium">{{ object.location.location_code|default:"-" }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Available</span>
+                        <span class="fw-medium text-success">{{ object.available_quantity|floatformat:0 }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Reserved</span>
+                        <span class="fw-medium text-warning">{{ object.reserved_quantity|floatformat:0 }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Unit Cost</span>
+                        <span class="fw-medium">{{ object.cost_price|default:0|floatformat:2|intcomma }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Total Value</span>
+                        <span class="fw-medium">{{ object.stock_value|floatformat:2|intcomma }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Last Counted</span>
+                        <span class="fw-medium">{{ object.last_counted|date:"M d, Y"|default:"Never" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Movement History -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Movement History</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Reference</th>
+                                <th class="text-end">Quantity</th>
+                                <th>Performed By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for movement in movements %}
+                            <tr>
+                                <td>{{ movement.created_at|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if movement.movement_type == 'in' %}bg-success-subtle text-success
+                                        {% elif movement.movement_type == 'out' %}bg-danger-subtle text-danger
+                                        {% else %}bg-secondary-subtle text-secondary{% endif %}">
+                                        {{ movement.get_movement_type_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if movement.reference_type %}
+                                    <span class="text-muted small">{{ movement.reference_type|title }} #{{
+                                        movement.reference_id }}</span>
+                                    {% else %}
+                                    <span class="text-muted small">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end fw-bold">
+                                    {% if movement.movement_type in 'out,sale,damage,expired' %}-{% else %}+{% endif
+                                    %}{{ movement.quantity|floatformat:0 }}
+                                </td>
+                                <td>
+                                    <div class="small">{{
+                                        movement.performed_by.get_full_name|default:movement.performed_by.username }}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">No movements recorded</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,5 +1,9 @@
 from django import forms
-from .models import Plan, Subscription, Invoice, CreditAdjustment, PaymentProviderConfig, PaymentMethod, Payment, PlanTier, SubscriptionStatus, AdjustmentType, PaymentProvider, PaymentType
+from .models import (
+    Plan, Subscription, Invoice, CreditAdjustment, PaymentProviderConfig, 
+    PaymentMethod, Payment, PlanTier, SubscriptionStatus, AdjustmentType, 
+    PaymentProvider, PaymentType
+)
 from tenants.models import Tenant as TenantModel
 from core.models import User
 
@@ -283,3 +287,4 @@ class PaymentTypeForm(forms.ModelForm):
             'type_is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_system': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+

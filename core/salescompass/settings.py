@@ -75,20 +75,29 @@ INSTALLED_APPS = [
     
     # --- CRM Core 🤝 ---
     'accounts',
+    'customer_portal',      # Client-facing portal
     'leads',
     'opportunities',
     'sales',
     
     # --- Finance & Commerce 💰 ---
     'billing',
+    'accounting',
+    'purchasing',
+    'expenses',
+    'hr',
+    'assets',
     'commissions',
     'proposals',
     'products',
+    'inventory',           # Stock management for POS
+    'pos',                 # Point of Sale
     
     # --- Communication & Engagement 💬 ---
     'communication',
     'engagement',
     'marketing',
+    'loyalty',
     'nps',
     'wazo',                # Telephony
     
@@ -100,6 +109,11 @@ INSTALLED_APPS = [
     'automation',          # Workflow engine
     'reports',             # Analytics engine
     'tasks',               # User tasks
+    'projects',            # Project accounting (PSA)
+    'manufacturing',       # MRP & Production
+    'logistics',           # Shipping & Fulfillment
+    'quality_control',     # QMS & Inspections
+    'ecommerce',           # Mini-portal
     'developer',           # Dev tools & API introspection
 
     # --- Third Party ---
@@ -111,6 +125,7 @@ INSTALLED_APPS = [
     'drf_spectacular_sidecar',
     'django_filters',
     'crispy_forms',
+    'crispy_bootstrap4',
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'

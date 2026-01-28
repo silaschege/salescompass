@@ -1,0 +1,73 @@
+{% extends "hr/base.html" %}
+
+{% block hr_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h3 fw-bold mb-0">Org Hierarchy</h1>
+            <p class="text-muted small mb-0">Departmental structure and cost center mapping</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'hr:department_create' %}" class="btn btn-primary px-4 shadow-sm border-0">
+                <i class="bi bi-plus-lg me-2"></i> Add Department
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for dept in departments %}
+        <div class="col-md-6">
+            <div class="premium-card p-4 border-0 shadow-sm h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-indigo-50 text-indigo-600 rounded p-2 me-3">
+                            <i class="bi bi-diagram-3-fill h5 mb-0"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-1">{{ dept.name }}</h5>
+                            <span class="text-muted extra-small fw-bold">Manager:</span>
+                            <span class="extra-small text-dark">{{ dept.manager.user.get_full_name|default:"Unassigned"
+                                }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="list-group list-group-flush small mb-4">
+                    <div class="list-group-item px-0 py-2 bg-transparent border-0 d-flex justify-content-between">
+                        <span class="text-muted">Direct Reports:</span>
+                        <span class="fw-bold">{{ dept.employee_set.count }} Personnel</span>
+                    </div>
+                    <div class="list-group-item px-0 py-2 bg-transparent border-0 d-flex justify-content-between">
+                        <span class="text-muted">Cost Center:</span>
+                        <span class="text-dark fw-semibold">{{ dept.cost_center.account_code|default:"Unmapped"
+                            }}</span>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 pt-3 border-top justify-content-end">
+                    <a href="{% url 'hr:department_update' dept.pk %}"
+                        class="btn btn-sm btn-light border extra-small">Edit Settings</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="premium-card p-5 border-0 shadow-sm">
+                <i class="bi bi-diagram-3 text-muted mb-3 d-block" style="font-size: 3rem;"></i>
+                <h5 class="text-muted fw-normal">No departments created yet</h5>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .bg-indigo-50 {
+        background-color: rgba(99, 102, 241, 0.05);
+    }
+
+    .text-indigo-600 {
+        color: #4338ca;
+    }
+</style>
+{% endblock %}

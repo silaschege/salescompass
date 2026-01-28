@@ -1,0 +1,44 @@
+{% extends "expenses/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block expenses_content %}
+<div class="row justify-content-center p-4">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center mb-4">
+            <a href="{% url 'expenses:report_detail' view.kwargs.pk %}"
+                class="btn btn-light btn-icon rounded-circle me-3 border-0 shadow-sm">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h1 class="h3 fw-bold mb-0">Add Expense Line</h1>
+        </div>
+
+        <div class="premium-card p-4 border-0 shadow-sm">
+            <div class="alert alert-soft-warning border-0 small mb-4 d-flex align-items-center"
+                style="background: rgba(245, 158, 11, 0.05); color: #b45309;">
+                <i class="bi bi-shield-check me-3 h4 mb-0"></i>
+                <div>
+                    <strong>Financial Compliance:</strong> Ensure your receipt is clear and the <strong>Is
+                        CAPEX</strong> flag is checked if this is an asset purchase (e.g. Technology, Furniture).
+                </div>
+            </div>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-12">
+                        {{ form|crispy }}
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-5 pt-3 border-top">
+                    <button type="button" class="btn btn-light px-4 border rounded-pill"
+                        onclick="history.back()">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-5 shadow-sm border-0 rounded-pill">
+                        <i class="bi bi-plus-lg me-1"></i> Add Line Item
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

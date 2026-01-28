@@ -1,0 +1,47 @@
+{% extends "purchasing/base.html" %}
+{% load humanize %}
+
+{% block dashboard_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Accounts Payable Reconciliation</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-12">
+                <h5 class="border-bottom pb-2">Unreconciled Supplier Invoices</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr class="bg-light">
+                                <th>Invoice #</th>
+                                <th>Supplier</th>
+                                <th>Date</th>
+                                <th>Total Amount</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inv in unreconciled_invoices %}
+                            <tr>
+                                <td>{{ inv.invoice_number }}</td>
+                                <td>{{ inv.supplier.name }}</td>
+                                <td>{{ inv.invoice_date }}</td>
+                                <td>${{ inv.total_amount|intcomma }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary">Match Payment</button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4">All invoices are matched.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,9 +1,11 @@
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 
 app_name = 'marketing'
 
 urlpatterns = [
+    path('', RedirectView.as_view(pattern_name='marketing:campaign_list', permanent=False), name='index'),
     # Dynamic choices API
     path('api/dynamic-choices/<str:model_name>/', views.get_marketing_dynamic_choices, name='get_marketing_dynamic_choices'),
     

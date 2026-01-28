@@ -21,8 +21,10 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, Sp
 
 urlpatterns = [
     path('', include('core.urls')),
+    path('system/', include('core.system_urls')),
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
+    path('portal/', include('customer_portal.urls')),
     
     path('sales/',include('sales.urls')),
     path('leads/', include('leads.urls')),
@@ -42,7 +44,13 @@ urlpatterns = [
     path('billing/', include('billing.urls')),
     path('tasks/', include('tasks.urls')),
     path('commissions/', include('commissions.urls')),
+    path('inventory/', include('inventory.urls')),
+    path('pos/', include('pos.urls')),
     path('communication/', include('communication.urls')),
+    path('projects/', include('projects.urls')),
+    path('manufacturing/', include('manufacturing.urls')),
+    path('logistics/', include('logistics.urls')),
+    path('quality-control/', include('quality_control.urls')),
     path('developer/', include('developer.urls')),
     
       # Access Control
@@ -54,6 +62,15 @@ urlpatterns = [
     path('feature-flags/', include('feature_flags.urls')),
     path('global-alerts/', include('global_alerts.urls')),
     
+    # Finance & Commerce
+    path('accounting/', include('accounting.urls')),
+    path('purchasing/', include('purchasing.urls')),
+    path('loyalty/', include('loyalty.urls')),
+    path('expenses/', include('expenses.urls')),
+    path('hr/', include('hr.urls')),
+    path('assets/', include('assets.urls')),
+    path('ecommerce/', include('ecommerce.urls')),
+
     # Telephony Integration
     path('wazo/', include('wazo.urls')),
     

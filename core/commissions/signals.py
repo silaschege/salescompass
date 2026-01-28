@@ -104,3 +104,45 @@ def commission_pre_save_signal(sender, instance, **kwargs):
             instance._original_status = None
     else:
         instance._original_status = None
+
+@receiver(post_save, sender=Commission)
+def auto_generate_commission_expense_signal(sender, instance, created, **kwargs):
+    """
+    IFRS: Auto-generate an Expense Report line when a commission is approved.
+    This ensures internal costs are tracked in the expense ledger.
+    """
+    if not created and hasattr(instance, '_original_status') and \
+       instance._original_status != 'approved' and instance.status == 'approved':
+        
+        from expenses.models import ExpenseReport, ExpenseLine, ExpenseCategory
+        from django.utils import timezone
+        import uuid
+
+        # Ensure a "Commissions" category exists for the tenant
+        category, _ = ExpenseCategory.objects.get_or_create(
+            tenant=instance.tenant,
+            name="Sales Commissions",
+            defaults={'description': "Automated commission payouts"}
+        )
+
+        # Create or find a report for this user for the current month
+        report_title = f"Commissions - {timezone.now().strftime('%B %Y')}"
+        report, created = ExpenseReport.objects.get_or_create(
+            tenant=instance.tenant,
+            employee=instance.user,
+            title=report_title,
+            status='draft',
+            defaults={'report_number': f"COM-{uuid.uuid4().hex[:8].upper()}"}
+        )
+
+        # Add the line
+        ExpenseLine.objects.create(
+            tenant=instance.tenant,
+            report=report,
+            category=category,
+            date=instance.date_earned,
+            description=f"Commission for Opportunity: {instance.opportunity.opportunity_name}",
+            amount=instance.amount
+        )
+        
+        logger.info(f"Generated expense line for commission {instance.pk}")

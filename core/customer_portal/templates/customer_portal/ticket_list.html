@@ -1,0 +1,38 @@
+{% extends "logged_in/base.html" %}
+
+{% block dashboard_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Support Tickets</h6>
+        <button class="btn btn-sm btn-primary">Open New Ticket</button>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Last Update</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tkt in tickets %}
+                    <tr>
+                        <td>{{ tkt.title }}</td>
+                        <td><span class="badge badge-secondary">{{ tkt.get_status_display }}</span></td>
+                        <td>{{ tkt.get_priority_display }}</td>
+                        <td>{{ tkt.updated_at|date }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center">No tickets found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

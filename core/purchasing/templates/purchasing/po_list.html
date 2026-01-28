@@ -1,0 +1,111 @@
+{% extends "purchasing/base.html" %}
+{% load humanize %}
+
+{% block purchasing_content %}
+<div class="animate-fade-in p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h3 fw-bold mb-0">Purchase Orders</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'purchasing:dashboard' %}"
+                            class="text-decoration-none">Hub</a></li>
+                    <li class="breadcrumb-item active">Orders</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{% url 'purchasing:po_create' %}" class="btn btn-primary px-4 shadow-sm border-0">
+            <i class="bi bi-plus-lg me-2"></i> New Order
+        </a>
+    </div>
+
+    <!-- Inventory/PO Summary Mini-KPIs could go here -->
+
+    <div class="premium-card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light bg-opacity-50">
+                    <tr>
+                        <th class="ps-4 py-3 text-muted small text-uppercase fw-bold">Order #</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold">Supplier</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold">Date</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold">Status</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold text-end">Total Amount</th>
+                        <th class="pe-4 py-3 text-muted small text-uppercase fw-bold text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td class="ps-4 py-3">
+                            <a href="{% url 'purchasing:po_detail' order.pk %}"
+                                class="fw-bold text-primary text-decoration-none">
+                                #{{ order.po_number }}
+                            </a>
+                        </td>
+                        <td class="py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm rounded-circle bg-light d-flex align-items-center justify-content-center me-2"
+                                    style="width: 32px; height: 32px;">
+                                    <i class="bi bi-building text-muted"></i>
+                                </div>
+                                <span>{{ order.supplier.supplier_name }}</span>
+                            </div>
+                        </td>
+                        <td class="py-3 text-muted small">{{ order.order_date|date:"M d, Y" }}</td>
+                        <td class="py-3">
+                            <span
+                                class="badge {% if order.status == 'received' %}badge-soft-success{% elif order.status == 'draft' %}bg-light text-muted border{% else %}badge-soft-warning{% endif %} px-3 rounded-pill">
+                                {{ order.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="py-3 text-end fw-bold">
+                            ${{ order.total_amount|floatformat:2|intcomma }}
+                        </td>
+                        <td class="pe-4 py-3 text-end">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-icon btn-light border-0 shadow-none" type="button"
+                                    data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-2">
+                                    <li><a class="dropdown-item rounded-2 py-2"
+                                            href="{% url 'purchasing:po_detail' order.pk %}"><i
+                                                class="bi bi-eye me-2"></i> View Details</a></li>
+                                    {% if order.status == 'draft' %}
+                                    <li><a class="dropdown-item rounded-2 py-2"
+                                            href="{% url 'purchasing:po_update' order.pk %}"><i
+                                                class="bi bi-pencil me-2"></i> Edit Order</a></li>
+                                    {% endif %}
+                                    {% if order.status == 'sent' or order.status == 'partial' %}
+                                    <li><a class="dropdown-item rounded-2 py-2 text-success"
+                                            href="{% url 'purchasing:po_receive' order.pk %}"><i
+                                                class="bi bi-box-seam me-2"></i> Receive Inventory</a></li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="py-4">
+                                <i class="bi bi-cart-x text-muted mb-3 d-block" style="font-size: 3rem;"></i>
+                                <h5 class="text-muted fw-normal">No purchase orders found</h5>
+                                <a href="{% url 'purchasing:po_create' %}"
+                                    class="btn btn-link py-0 text-decoration-none small">Create your first order</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if is_paginated %}
+        <div class="card-footer bg-white border-top-0 py-4 px-4">
+            {% include "shared/_pagination.html" %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

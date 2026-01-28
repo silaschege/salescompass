@@ -122,6 +122,55 @@ class SalesCompassDeleteView(LoginRequiredMixin, TenantAwareViewMixin, DeleteVie
     pass
 
 
+class SuperuserRequiredMixin(UserPassesTestMixin):
+    """Mixin to require superuser access"""
+    def test_func(self):
+        return self.request.user.is_superuser
+
+
+class SalesCompassSuperuserListView(LoginRequiredMixin, SuperuserRequiredMixin, ListView):
+    """
+    Standard List View for Superuser-only apps (system-wide).
+    Does NOT enforce tenant scoping by default.
+    """
+    pass
+
+
+class SalesCompassSuperuserDetailView(LoginRequiredMixin, SuperuserRequiredMixin, DetailView):
+    """
+    Standard Detail View for Superuser-only apps.
+    """
+    pass
+
+
+class SalesCompassSuperuserTemplateView(LoginRequiredMixin, SuperuserRequiredMixin, TemplateView):
+    """
+    Standard Template View for Superuser-only apps.
+    """
+    pass
+
+
+class SalesCompassSuperuserCreateView(LoginRequiredMixin, SuperuserRequiredMixin, SuccessMessageMixin, CreateView):
+    """
+    Standard Create View for Superuser-only apps.
+    """
+    pass
+
+
+class SalesCompassSuperuserUpdateView(LoginRequiredMixin, SuperuserRequiredMixin, SuccessMessageMixin, UpdateView):
+    """
+    Standard Update View for Superuser-only apps.
+    """
+    pass
+
+
+class SalesCompassSuperuserDeleteView(LoginRequiredMixin, SuperuserRequiredMixin, DeleteView):
+    """
+    Standard Delete View for Superuser-only apps.
+    """
+    pass
+
+
 # --- Authentication Views ---
 
 def logout_view(request):
@@ -185,7 +234,7 @@ def clv_dashboard(request):
 
 def calculate_clv_simple(request):
     """
-    Calculate CLV using the simple formula: Average Order Value × Purchase Frequency × Customer Lifespan
+    Calculate CLV using the simple formula: Average Order Value x Purchase Frequency x Customer Lifespan
     """
     # This would typically be called from a model method
     pass

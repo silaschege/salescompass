@@ -1,0 +1,64 @@
+{% extends "accounting/base.html" %}
+{% load humanize %}
+{% load math filters_extras %}
+
+{% block accounting_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">Trial Balance</h1>
+    <form class="d-flex gap-2" method="get">
+        <input type="date" name="date" class="form-control" value="{{ as_of_date|date:'Y-m-d' }}">
+        <button type="submit" class="btn btn-primary">Update</button>
+        <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+            <i class="bi bi-printer"></i>
+        </button>
+    </form>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Code</th>
+                        <th>Account Name</th>
+                        <th class="text-end">Debit</th>
+                        <th class="text-end">Credit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in trial_balance %}
+                    <tr>
+                        <td><span class="badge bg-light text-dark fw-normal border">{{ row.code }}</span></td>
+                        <td>{{ row.name }}</td>
+                        <td class="text-end">
+                            {% if row.type in 'asset,asset_current,asset_non_current,expense,cost_of_sales,other_expense' %}
+                            {% if row.balance >= 0 %}{{ row.balance|floatformat:2|intcomma }}{% endif %}
+                            {% else %}
+                            {% if row.balance < 0 %}{{ row.balance|abs|floatformat:2|intcomma }}{% endif %} {% endif %}
+                                </td>
+                        <td class="text-end">
+                            {% if row.type in 'liability,liability_current,liability_non_current,equity,revenue,other_income' %}
+                            {% if row.balance >= 0 %}{{ row.balance|floatformat:2|intcomma }}{% endif %}
+                            {% else %}
+                            {% if row.balance < 0 %}{{ row.balance|abs|floatformat:2|intcomma }}{% endif %} {% endif %}
+                                </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-4 text-muted">No balances found for this date.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-light fw-bold">
+                    <tr>
+                        <td colspan="2" class="text-end">Total</td>
+                        <td class="text-end">{{ total_debit|floatformat:2|intcomma }}</td>
+                        <td class="text-end">{{ total_credit|floatformat:2|intcomma }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

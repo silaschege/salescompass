@@ -236,3 +236,39 @@ class ProposalSignature(models.Model):
     
     def __str__(self):
         return f"Signature for {self.proposal.title} by {self.signer_name}"
+
+class ProposalLine(TenantModel):
+    """
+    Individual items (products/services) included in a proposal.
+    Part of the CPQ (Configure, Price, Quote) system.
+    """
+    proposal = models.ForeignKey(
+        Proposal, 
+        on_delete=models.CASCADE, 
+        related_name='lines'
+    )
+    product = models.ForeignKey(
+        'products.Product', 
+        on_delete=models.CASCADE, 
+        related_name='proposal_lines'
+    )
+    quantity = models.DecimalField(max_digits=12, decimal_places=2, default=1)
+    unit_price = models.DecimalField(max_digits=12, decimal_places=2)
+    discount_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    
+    # Configuration status (for CPQ rules)
+    is_required_by_another = models.BooleanField(default=False)
+    added_automatically = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['id']
+
+    @property
+    def line_total(self):
+        total = self.unit_price * self.quantity
+        if self.discount_percent:
+            total -= (total * self.discount_percent / 100)
+        return total
+
+    def __str__(self):
+        return f"{self.product.product_name} x {self.quantity} in {self.proposal.title}"

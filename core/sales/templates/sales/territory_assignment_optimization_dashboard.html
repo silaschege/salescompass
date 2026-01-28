@@ -56,9 +56,9 @@
                                 Average Performance Score</div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
                                 {% if optimizations %}
-                                    {{ optimizations|first.territory_performance_score|floatformat:2 }}%
+                                {{ optimizations.0.territory_performance_score|floatformat:2 }}%
                                 {% else %}
-                                    0.00%
+                                0.00%
                                 {% endif %}
                             </div>
                         </div>
@@ -104,7 +104,7 @@
                                 <select class="form-control mb-2" id="territorySelect" name="territory_id">
                                     <option value="">Select a territory...</option>
                                     {% for opt in optimizations %}
-                                        <option value="{{ opt.territory.id }}">{{ opt.territory.label }}</option>
+                                    <option value="{{ opt.territory.id }}">{{ opt.territory.label }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -161,14 +161,15 @@
                                     <td>{{ opt.territory_performance_score|floatformat:2 }}%</td>
                                     <td>{{ opt.load_balance_score|floatformat:2 }}%</td>
                                     <td>
-                                        <span class="badge badge-{% if opt.status == 'completed' %}success{% elif opt.status == 'running' %}warning{% else %}secondary{% endif %}">
+                                        <span
+                                            class="badge badge-{% if opt.status == 'completed' %}success{% elif opt.status == 'running' %}warning{% else %}secondary{% endif %}">
                                             {{ opt.get_status_display }}
                                         </span>
                                     </td>
                                     <td>
                                         <a href="#" class="btn btn-sm btn-primary" title="View Details">View</a>
-                                        <a href="{% url 'sales:run_territory_optimization' opt.territory.id %}?type={{ opt.optimization_type }}" 
-                                           class="btn btn-sm btn-info" title="Re-run Optimization">Re-run</a>
+                                        <a href="{% url 'sales:run_territory_optimization' opt.territory.id %}?type={{ opt.optimization_type }}"
+                                            class="btn btn-sm btn-info" title="Re-run Optimization">Re-run</a>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -204,15 +205,15 @@
 
 <script>
     // Initialize DataTables
-    $(document).ready(function() {
+    $(document).ready(function () {
         $('#optimizationTable').DataTable({
             "pageLength": 25,
             "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
         });
     });
-    
+
     // Handle territory selection for optimization
-    document.getElementById('territorySelect').addEventListener('change', function() {
+    document.getElementById('territorySelect').addEventListener('change', function () {
         const form = document.querySelector('form');
         const actionUrl = form.getAttribute('action');
         form.setAttribute('action', actionUrl.replace('/0/', '/' + this.value + '/'));

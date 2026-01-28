@@ -2,12 +2,19 @@
 <html lang="en">
 
 <head>
+    <meta charset="utf-8">
     <title>{% block title %}Dashboard - SalesCompass{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{% block meta_description %}SalesCompass Dashboard{% endblock %}">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" as="style">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" as="style">
+    
     <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-2CwZCsePGW9NtxISYQiLhAnJAJkYC4qw/hXAHjNF+8vC4YreNdRsaarBz4Ty8f" crossorigin="anonymous">
 
     {% block extra_css %}
     <style>
@@ -20,6 +27,10 @@
             --text-muted: #6c757d;
             --border-color: #e9ecef;
             --accent-color: #667eea;
+            --sidebar-width: 260px;
+            --sidebar-collapsed-width: 70px;
+            --transition-speed: 0.3s;
+            --transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         body {
@@ -29,11 +40,12 @@
             padding: 0;
             min-height: 100vh;
             overflow-x: hidden;
+            transition: padding-left var(--transition-speed) var(--transition-easing);
         }
 
         /* --- Modern Sidebar --- */
         .sidebar {
-            width: 260px;
+            width: var(--sidebar-width);
             background: var(--sidebar-bg);
             border-right: 1px solid var(--border-color);
             position: fixed;
@@ -41,11 +53,16 @@
             bottom: 0;
             left: 0;
             overflow-y: auto;
-            z-index: 1000;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1050;
+            transition: transform var(--transition-speed) var(--transition-easing), 
+                        width var(--transition-speed) var(--transition-easing);
             box-shadow: 4px 0 20px rgba(0, 0, 0, 0.03);
             display: flex;
             flex-direction: column;
+        }
+
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed-width);
         }
 
         .sidebar.hidden {
@@ -56,6 +73,12 @@
         .sidebar-brand {
             padding: 20px 20px 24px;
             border-bottom: 1px solid var(--border-color);
+            transition: padding var(--transition-speed) var(--transition-easing);
+        }
+
+        .sidebar.collapsed .sidebar-brand {
+            padding: 15px 10px;
+            text-align: center;
         }
 
         .sidebar-brand a {
@@ -67,6 +90,10 @@
             font-size: 1.2rem;
         }
 
+        .sidebar.collapsed .sidebar-brand a {
+            justify-content: center;
+        }
+
         .sidebar-brand i {
             font-size: 1.5rem;
             margin-right: 10px;
@@ -74,6 +101,14 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+        }
+
+        .sidebar.collapsed .sidebar-brand i {
+            margin-right: 0;
+        }
+
+        .sidebar.collapsed .brand-text {
+            display: none;
         }
 
         /* Navigation Container */
@@ -92,6 +127,11 @@
             color: var(--text-muted);
             padding: 16px 12px 8px;
             margin-top: 8px;
+            display: block;
+        }
+
+        .sidebar.collapsed .nav-section-title {
+            display: none;
         }
 
         /* Navigation Links */
@@ -107,6 +147,7 @@
             font-size: 0.9rem;
             font-weight: 500;
             transition: all 0.2s ease;
+            position: relative;
         }
 
         .sidebar .nav-link:hover {
@@ -142,9 +183,22 @@
             transition: color 0.2s ease;
         }
 
+        .sidebar.collapsed .nav-icon {
+            margin-right: 0;
+            text-align: center;
+        }
+
         .sidebar .nav-link:hover .nav-icon,
         .sidebar .nav-link.active .nav-icon {
             color: var(--accent-color);
+        }
+
+        .sidebar.collapsed .nav-link span {
+            display: none;
+        }
+
+        .sidebar.collapsed .nav-link.dropdown-toggle::after {
+            display: none;
         }
 
         /* Dropdown Items */
@@ -160,6 +214,16 @@
             position: relative;
         }
 
+        .sidebar.collapsed .nav-dropdown-content .nav-link {
+            padding-left: 14px;
+            padding-right: 14px;
+            justify-content: center;
+        }
+
+        .sidebar.collapsed .nav-dropdown-content .nav-link span {
+            display: none;
+        }
+
         .nav-dropdown-content .nav-link::before {
             content: '';
             position: absolute;
@@ -173,6 +237,11 @@
             transition: background 0.2s ease;
         }
 
+        .sidebar.collapsed .nav-dropdown-content .nav-link::before {
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
         .nav-dropdown-content .nav-link:hover::before,
         .nav-dropdown-content .nav-link.active::before {
             background: var(--accent-color);
@@ -182,11 +251,15 @@
         .nav-chevron {
             font-size: 0.7rem;
             color: var(--text-muted);
-            transition: transform 0.3s ease;
+            transition: transform var(--transition-speed) ease;
         }
 
         .nav-link[aria-expanded="true"] .nav-chevron {
             transform: rotate(180deg);
+        }
+
+        .sidebar.collapsed .nav-chevron {
+            display: none;
         }
 
         /* Footer */
@@ -211,16 +284,16 @@
 
         /* --- Main Content --- */
         .main-content {
-            margin-left: 260px;
+            margin-left: var(--sidebar-width);
             min-height: 100vh;
-            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: margin-left var(--transition-speed) var(--transition-easing);
             display: flex;
             flex-direction: column;
             padding: 24px;
         }
 
-        .main-content.sidebar-hidden {
-            margin-left: 0;
+        .main-content.sidebar-collapsed {
+            margin-left: var(--sidebar-collapsed-width);
         }
 
         /* Toggle Button */
@@ -228,7 +301,7 @@
             position: fixed;
             top: 20px;
             left: 20px;
-            z-index: 1001;
+            z-index: 1051;
             background: var(--primary-gradient);
             color: white;
             border: none;
@@ -247,6 +320,10 @@
         .toggle-sidebar:hover {
             transform: scale(1.05);
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .sidebar.collapsed ~ .main-content .toggle-sidebar {
+            left: calc(var(--sidebar-collapsed-width) + 20px);
         }
 
         /* Dashboard Cards */
@@ -288,8 +365,44 @@
             border-radius: 12px;
         }
 
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
+        /* Loading indicator */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity var(--transition-speed) ease, visibility var(--transition-speed) ease;
+        }
+
+        .loading-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(102, 126, 234, 0.2);
+            border-top: 5px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
             .sidebar {
                 transform: translateX(-100%);
             }
@@ -303,9 +416,27 @@
                 padding: 16px;
             }
 
+            .main-content.sidebar-collapsed {
+                margin-left: 0;
+            }
+
+            .sidebar.collapsed ~ .main-content .toggle-sidebar {
+                left: 20px;
+            }
+
             .toggle-sidebar {
                 top: 12px;
                 left: 12px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 12px;
+            }
+            
+            .widget-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -315,18 +446,23 @@
 
 <body>
 
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
     <!-- Toggle Button -->
-    <button class="toggle-sidebar" id="toggleSidebar">
+    <button class="toggle-sidebar" id="toggleSidebar" aria-label="Toggle navigation menu">
         <i class="bi bi-list"></i>
     </button>
 
     <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
+    <div class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
         <!-- Brand -->
         <div class="sidebar-brand">
-            <a href="{% url 'core:app_selection' %}">
+            <a href="{% url 'core:app_selection' %}" aria-label="Go to main app selection">
                 <i class="bi bi-compass"></i>
-                <span>SalesCompass</span>
+                <span class="brand-text">SalesCompass</span>
             </a>
         </div>
 
@@ -334,68 +470,68 @@
         <nav class="sidebar-nav">
             <!-- Main Navigation -->
             <a class="nav-link {% if request.resolver_match.url_name == 'cockpit' %}active{% endif %}"
-                href="{% url 'dashboard:cockpit' %}">
+                href="{% url 'dashboard:cockpit' %}" aria-current="{% if request.resolver_match.url_name == 'cockpit' %}page{% else %}false{% endif %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-speedometer2 nav-icon"></i>
+                    <i class="bi bi-speedometer2 nav-icon" aria-hidden="true"></i>
                     <span>Cockpit</span>
                 </div>
             </a>
 
             <!-- BI Suite Dropdown -->
-            <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#biSuiteMenu"
-                aria-expanded="{% if request.resolver_match.url_name in 'bi_dashboard,data_explorer,drill_down,bi_builder' %}true{% else %}false{% endif %}">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#biSuiteMenu"
+                aria-expanded="{% if request.resolver_match.url_name in 'bi_dashboard,data_explorer,drill_down,bi_builder' %}true{% else %}false{% endif %}" aria-controls="biSuiteMenu">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-graph-up-arrow nav-icon"></i>
+                    <i class="bi bi-graph-up-arrow nav-icon" aria-hidden="true"></i>
                     <span>BI Suite</span>
                 </div>
-                <i class="bi bi-chevron-down nav-chevron"></i>
+                <i class="bi bi-chevron-down nav-chevron" aria-hidden="true"></i>
             </a>
             <div class="collapse nav-dropdown-content {% if request.resolver_match.url_name in 'bi_dashboard,data_explorer,drill_down,bi_builder' %}show{% endif %}"
-                id="biSuiteMenu">
+                id="biSuiteMenu" aria-label="BI Suite submenu">
                 <a class="nav-link {% if request.resolver_match.url_name == 'bi_dashboard' %}active{% endif %}"
-                    href="{% url 'dashboard:bi_dashboard' %}">
+                    href="{% url 'dashboard:bi_dashboard' %}" aria-current="{% if request.resolver_match.url_name == 'bi_dashboard' %}page{% else %}false{% endif %}">
                     Dashboard
                 </a>
                 <a class="nav-link {% if request.resolver_match.url_name == 'data_explorer' %}active{% endif %}"
-                    href="{% url 'dashboard:data_explorer' %}">
+                    href="{% url 'dashboard:data_explorer' %}" aria-current="{% if request.resolver_match.url_name == 'data_explorer' %}page{% else %}false{% endif %}">
                     Explorer
                 </a>
                 <a class="nav-link {% if request.resolver_match.url_name == 'drill_down' %}active{% endif %}"
-                    href="{% url 'dashboard:drill_down' metric='default' %}">
+                    href="{% url 'dashboard:drill_down' metric='default' %}" aria-current="{% if request.resolver_match.url_name == 'drill_down' %}page{% else %}false{% endif %}">
                     Drill Down
                 </a>
                 <a class="nav-link {% if request.resolver_match.url_name == 'bi_builder' %}active{% endif %}"
-                    href="{% url 'dashboard:bi_builder' %}">
+                    href="{% url 'dashboard:bi_builder' %}" aria-current="{% if request.resolver_match.url_name == 'bi_builder' %}page{% else %}false{% endif %}">
                     BI Builder
                 </a>
             </div>
 
             <!-- Admin Dropdown (Role-based) -->
             {% if user.role.name == 'Admin' or user.is_superuser %}
-            <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#adminMenu"
-                aria-expanded="{% if request.resolver_match.url_name in 'admin_dashboard,widget_type_list,widget_category_list,dynamic_choices_dashboard' %}true{% else %}false{% endif %}">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#adminMenu"
+                aria-expanded="{% if request.resolver_match.url_name in 'admin_dashboard,widget_type_list,widget_category_list,dynamic_choices_dashboard' %}true{% else %}false{% endif %}" aria-controls="adminMenu">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-shield-lock nav-icon"></i>
+                    <i class="bi bi-shield-lock nav-icon" aria-hidden="true"></i>
                     <span>Admin</span>
                 </div>
-                <i class="bi bi-chevron-down nav-chevron"></i>
+                <i class="bi bi-chevron-down nav-chevron" aria-hidden="true"></i>
             </a>
             <div class="collapse nav-dropdown-content {% if request.resolver_match.url_name in 'admin_dashboard,widget_type_list,widget_category_list,dynamic_choices_dashboard' %}show{% endif %}"
-                id="adminMenu">
+                id="adminMenu" aria-label="Admin submenu">
                 <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}"
-                    href="{% url 'dashboard:admin_dashboard' %}">
+                    href="{% url 'dashboard:admin_dashboard' %}" aria-current="{% if request.resolver_match.url_name == 'admin_dashboard' %}page{% else %}false{% endif %}">
                     Overview
                 </a>
                 <a class="nav-link {% if request.resolver_match.url_name == 'widget_type_list' %}active{% endif %}"
-                    href="{% url 'dashboard:widget_type_list' %}">
+                    href="{% url 'dashboard:widget_type_list' %}" aria-current="{% if request.resolver_match.url_name == 'widget_type_list' %}page{% else %}false{% endif %}">
                     Widget Types
                 </a>
                 <a class="nav-link {% if request.resolver_match.url_name == 'widget_category_list' %}active{% endif %}"
-                    href="{% url 'dashboard:widget_category_list' %}">
+                    href="{% url 'dashboard:widget_category_list' %}" aria-current="{% if request.resolver_match.url_name == 'widget_category_list' %}page{% else %}false{% endif %}">
                     Widget Categories
                 </a>
                 <a class="nav-link {% if request.resolver_match.url_name == 'dynamic_choices_dashboard' %}active{% endif %}"
-                    href="{% url 'dashboard:dynamic_choices_dashboard' %}">
+                    href="{% url 'dashboard:dynamic_choices_dashboard' %}" aria-current="{% if request.resolver_match.url_name == 'dynamic_choices_dashboard' %}page{% else %}false{% endif %}">
                     Dynamic Choices
                 </a>
             </div>
@@ -405,9 +541,9 @@
             {% if user.role.name == 'Manager' or user.role.name == 'Admin' or user.is_superuser %}
             <div class="nav-section-title">Roles</div>
             <a class="nav-link {% if request.resolver_match.url_name == 'manager_dashboard' %}active{% endif %}"
-                href="{% url 'dashboard:manager_dashboard' %}">
+                href="{% url 'dashboard:manager_dashboard' %}" aria-current="{% if request.resolver_match.url_name == 'manager_dashboard' %}page{% else %}false{% endif %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-briefcase nav-icon"></i>
+                    <i class="bi bi-briefcase nav-icon" aria-hidden="true"></i>
                     <span>Manager View</span>
                 </div>
             </a>
@@ -415,9 +551,9 @@
 
             {% if user.role.name == 'Support' or user.role.name == 'Admin' or user.is_superuser %}
             <a class="nav-link {% if request.resolver_match.url_name == 'support_dashboard' %}active{% endif %}"
-                href="{% url 'dashboard:support_dashboard' %}">
+                href="{% url 'dashboard:support_dashboard' %}" aria-current="{% if request.resolver_match.url_name == 'support_dashboard' %}page{% else %}false{% endif %}">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-headset nav-icon"></i>
+                    <i class="bi bi-headset nav-icon" aria-hidden="true"></i>
                     <span>Support View</span>
                 </div>
             </a>
@@ -425,9 +561,9 @@
 
             <!-- System Section -->
             <div class="nav-section-title">System</div>
-            <a class="nav-link" href="{% url 'core:app_selection' %}">
+            <a class="nav-link" href="{% url 'core:app_selection' %}" aria-label="Go to control plane">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-grid nav-icon"></i>
+                    <i class="bi bi-grid nav-icon" aria-hidden="true"></i>
                     <span>Control Plane</span>
                 </div>
             </a>
@@ -435,9 +571,9 @@
 
         <!-- Footer -->
         <div class="sidebar-footer">
-            <a class="nav-link" href="{% url 'core:logout' %}">
+            <a class="nav-link" href="{% url 'core:logout' %}" aria-label="Logout">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-box-arrow-right nav-icon"></i>
+                    <i class="bi bi-box-arrow-right nav-icon" aria-hidden="true"></i>
                     <span>Log Out</span>
                 </div>
             </a>
@@ -445,14 +581,14 @@
     </div>
 
     <!-- Main Content -->
-    <div class="main-content" id="mainContent">
+    <div class="main-content" id="mainContent" role="main">
         <!-- Messages -->
         {% if messages %}
-        <div class="mb-4">
+        <div class="mb-4" role="alert">
             {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <span>{{ message }}</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
             {% endfor %}
         </div>
@@ -463,7 +599,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
     {% block extra_js %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
@@ -474,22 +610,35 @@
             const sidebar = document.getElementById('sidebar');
             const mainContent = document.getElementById('mainContent');
             const toggleBtn = document.getElementById('toggleSidebar');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            
+            // Initialize collapsed state from localStorage
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (isCollapsed) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('sidebar-collapsed');
+            }
 
             // Toggle sidebar
             toggleBtn.addEventListener('click', function () {
-                sidebar.classList.toggle('hidden');
-                mainContent.classList.toggle('sidebar-hidden');
-
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('sidebar-collapsed');
+                
+                // Save state to localStorage
+                const isCollapsed = sidebar.classList.contains('collapsed');
+                localStorage.setItem('sidebarCollapsed', isCollapsed);
+                
                 // On mobile, toggle visible class instead
-                if (window.innerWidth <= 768) {
+                if (window.innerWidth <= 992) {
                     sidebar.classList.toggle('visible');
                 }
             });
 
             // Close sidebar on mobile when clicking outside
-            if (window.innerWidth <= 768) {
+            if (window.innerWidth <= 992) {
                 document.addEventListener('click', function (e) {
-                    if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+                    if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target) && 
+                        sidebar.classList.contains('visible')) {
                         sidebar.classList.remove('visible');
                     }
                 });
@@ -505,6 +654,43 @@
                     }
                 }
             });
+            
+            // Handle window resize for responsive behavior
+            let resizeTimer;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    if (window.innerWidth > 992) {
+                        sidebar.classList.remove('visible');
+                    } else {
+                        sidebar.classList.remove('collapsed');
+                        mainContent.classList.remove('sidebar-collapsed');
+                    }
+                }, 250);
+            });
+            
+            // Show loading indicator function
+            function showLoading() {
+                loadingOverlay.classList.add('show');
+            }
+            
+            // Hide loading indicator function
+            function hideLoading() {
+                loadingOverlay.classList.remove('show');
+            }
+            
+            // Example of how to use loading indicators during AJAX requests
+            // Uncomment and customize as needed
+            /*
+            document.addEventListener('submit', function(e) {
+                if (e.target.closest('form[data-loading]')) {
+                    showLoading();
+                }
+            });
+            
+            // Listen for successful form submissions or AJAX completions
+            // and hide the loader accordingly
+            */
         });
     </script>
 </body>

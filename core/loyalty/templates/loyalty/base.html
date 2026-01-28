@@ -1,0 +1,109 @@
+{% extends 'core/base_module.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    /* Premium Loyalty Theme */
+    :root {
+        --loyalty-primary: #f59e0b;
+        --loyalty-secondary: #6366f1;
+        --loyalty-bg: #fdfcfb;
+    }
+
+    .nav-icon {
+        margin-right: 0.75rem;
+        font-size: 1.15rem;
+        width: 1.5rem;
+        text-align: center;
+        transition: transform 0.2s ease;
+    }
+
+    .nav-link:hover .nav-icon {
+        transform: scale(1.1);
+    }
+
+    .sidebar-section-title {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05rem;
+        color: #94a3b8;
+        padding: 1.5rem 1rem 0.5rem;
+        font-weight: 700;
+    }
+
+    /* Badge refinements */
+    .badge-soft-success {
+        background: rgba(25, 135, 84, 0.1);
+        color: #198754;
+        border: 1px solid rgba(25, 135, 84, 0.2);
+    }
+
+    .badge-soft-warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: #b45309;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .badge-soft-primary {
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+</style>
+{% endblock %}
+
+{% block module_nav %}
+<div class="sidebar-section-title">Insights</div>
+<a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+    href="{% url 'loyalty:dashboard' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-grid-1x2 nav-icon"></i>
+        <span>Loyalty Hub</span>
+    </div>
+</a>
+
+<div class="sidebar-section-title">CRM & Engagement</div>
+<a class="nav-link {% if 'members' in request.path %}active{% endif %}" href="{% url 'loyalty:member_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-people nav-icon"></i>
+        <span>Members</span>
+    </div>
+</a>
+
+<a class="nav-link {% if 'transactions' in request.path %}active{% endif %}"
+    href="{% url 'loyalty:transaction_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-clock-history nav-icon"></i>
+        <span>Ledger</span>
+    </div>
+</a>
+
+<div class="sidebar-section-title">Configuration</div>
+<a class="nav-link {% if 'tier-rules' in request.path %}active{% endif %}" href="{% url 'loyalty:tier_rules' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-trophy nav-icon"></i>
+        <span>Tiers & Multipliers</span>
+    </div>
+</a>
+
+<a class="nav-link {% if 'programs/' in request.path and 'setup' not in request.path %}active{% endif %}"
+    href="{% url 'loyalty:program_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-wallet2 nav-icon"></i>
+        <span>Reward Programs</span>
+    </div>
+</a>
+
+<a class="nav-link {% if 'programs/setup' in request.path %}active{% endif %}" href="{% url 'loyalty:program_setup' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-gear nav-icon"></i>
+        <span>Program Settings</span>
+    </div>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="loyalty-wrapper animate-fade-in">
+    {% block loyalty_content %}{% endblock %}
+</div>
+{% endblock %}

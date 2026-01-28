@@ -1,0 +1,182 @@
+{% extends "expenses/base.html" %}
+{% load humanize %}
+
+{% block expenses_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h2 fw-bold mb-0">Expense Management</h1>
+            <p class="text-muted">IFRS 16 compliant spend tracking and financial controls</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'expenses:report_create' %}" class="btn btn-primary px-4 shadow-sm border-0">
+                <i class="bi bi-plus-lg me-2"></i> Submit Expense
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Section -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100 border-0 shadow-sm border-start border-primary border-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="kpi-icon-wrapper bg-primary bg-opacity-10 text-primary p-2 rounded">
+                        <i class="bi bi-cash-stack h4 mb-0"></i>
+                    </div>
+                </div>
+                <div class="stat-label text-muted small text-uppercase fw-bold">Company Spend (MTD)</div>
+                <div class="stat-value h2 fw-bold text-dark mt-1">${{ total_spent_month|floatformat:2|intcomma }}</div>
+                <div class="text-muted extra-small mt-1">Approved & Paid this month</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100 border-0 shadow-sm border-start border-warning border-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="kpi-icon-wrapper bg-warning bg-opacity-10 text-warning p-2 rounded">
+                        <i class="bi bi-hourglass-split h4 mb-0"></i>
+                    </div>
+                </div>
+                <div class="stat-label text-muted small text-uppercase fw-bold">Pending Approvals</div>
+                <div class="stat-value h2 fw-bold text-dark mt-1">${{ pending_approval_total|floatformat:2|intcomma }}
+                </div>
+                <div class="text-warning extra-small mt-1">Awaiting manager review</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100 border-0 shadow-sm border-start border-danger border-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="kpi-icon-wrapper bg-danger bg-opacity-10 text-danger p-2 rounded">
+                        <i class="bi bi-buildings-fill h4 mb-0"></i>
+                    </div>
+                </div>
+                <div class="stat-label text-muted small text-uppercase fw-bold">CAPEX (YTD)</div>
+                <div class="stat-value h2 fw-bold text-dark mt-1">${{ capex_year|floatformat:2|intcomma }}</div>
+                <div class="text-muted extra-small mt-1">Capitalized expenditure</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100 border-0 shadow-sm border-start border-success border-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="kpi-icon-wrapper bg-success bg-opacity-10 text-success p-2 rounded">
+                        <i class="bi bi-wallet2 h4 mb-0"></i>
+                    </div>
+                </div>
+                <div class="stat-label text-muted small text-uppercase fw-bold">My Personal Drafts</div>
+                <div class="stat-value h2 fw-bold text-dark mt-1">${{ my_pending_amount|floatformat:2|intcomma }}</div>
+                <div class="text-muted extra-small mt-1">Unsubmitted reports</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Recent Reports -->
+        <div class="col-lg-8">
+            <div class="premium-card h-100 border-0 shadow-sm">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Recent Activity</h5>
+                    <a href="{% url 'expenses:report_list' %}"
+                        class="btn btn-sm btn-light border small text-primary">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light bg-opacity-50">
+                            <tr class="text-muted small text-uppercase fw-bold">
+                                <th class="ps-4">Report</th>
+                                <th>Employee</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for report in recent_reports %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold"><a href="{% url 'expenses:report_detail' report.pk %}"
+                                            class="text-decoration-none text-dark">{{ report.title }}</a></div>
+                                    <div class="extra-small text-muted">{{ report.report_number }} • {{
+                                        report.created_at|date:"M d" }}</div>
+                                </td>
+                                <td>
+                                    <div class="small fw-bold">{{ report.employee.get_full_name }}</div>
+                                </td>
+                                <td>
+                                    <span
+                                        class="badge {% if report.status == 'approved' %}badge-soft-success{% elif report.status == 'submitted' %}badge-soft-warning{% elif report.status == 'paid' %}badge-soft-primary{% else %}bg-light text-muted border{% endif %} px-3 rounded-pill text-uppercase">
+                                        {{ report.get_status_display }}
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <span class="fw-bold text-dark">${{ report.total_amount|intcomma }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">No recent expense reports.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compliance & Controls -->
+        <div class="col-lg-4">
+            <div class="premium-card p-4 mb-4 border-0 shadow-sm"
+                style="background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); color: white;">
+                <h6 class="fw-bold mb-3 d-flex align-items-center text-white">
+                    <i class="bi bi-shield-lock-fill me-2 h5 mb-0"></i> IFRS 16 Controls
+                </h6>
+                <div class="extra-small text-white-50 mb-4">Accrual-basis accounting ensures expenses are matched to the
+                    period they are incurred, not just when paid.</div>
+
+                <div class="d-grid gap-2">
+                    <button class="btn btn-light btn-sm text-start py-2 border-0">
+                        <i class="bi bi-journal-check me-2 text-primary"></i> Review Accrual Ledger
+                    </button>
+                    <button class="btn btn-primary btn-sm text-start py-2 border-0"
+                        style="background: rgba(255,255,255,0.1);">
+                        <i class="bi bi-link-45deg me-2"></i> Audit Asset Links
+                    </button>
+                </div>
+            </div>
+
+            <div class="premium-card p-4 border-0 shadow-sm">
+                <h6 class="fw-bold mb-4 d-flex align-items-center"><i
+                        class="bi bi-pie-chart-fill text-indigo-500 me-2"></i> Allocation</h6>
+                <!-- Simple placeholder for expense distribution -->
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <div class="d-flex justify-content-between extra-small fw-bold text-muted mb-1">
+                            <span>OPERATING (OPEX)</span>
+                            <span>85%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" style="width: 85%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between extra-small fw-bold text-muted mb-1">
+                            <span>CAPITAL (CAPEX)</span>
+                            <span>15%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-danger" style="width: 15%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .extra-small {
+        font-size: 0.75rem;
+    }
+
+    .stat-label {
+        letter-spacing: 0.02rem;
+    }
+</style>
+{% endblock %}

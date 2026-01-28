@@ -1,0 +1,110 @@
+{% extends 'core/base_module.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'accounting/css/accounting_premium.css' %}">
+<style>
+    /* Premium Purchasing Theme */
+    :root {
+        --purchase-primary: #0d6efd;
+        --purchase-secondary: #6c757d;
+        --purchase-bg: #f8fafc;
+    }
+
+    .nav-icon {
+        margin-right: 0.75rem;
+        font-size: 1.15rem;
+        width: 1.5rem;
+        text-align: center;
+        transition: transform 0.2s ease;
+    }
+
+    .nav-link:hover .nav-icon {
+        transform: scale(1.1);
+    }
+
+    .sidebar-section-title {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05rem;
+        color: #94a3b8;
+        padding: 1.5rem 1rem 0.5rem;
+        font-weight: 700;
+    }
+
+    /* Badge refinements */
+    .badge-soft-success {
+        background: rgba(25, 135, 84, 0.1);
+        color: #198754;
+        border: 1px solid rgba(25, 135, 84, 0.2);
+    }
+
+    .badge-soft-warning {
+        background: rgba(255, 193, 7, 0.1);
+        color: #997404;
+        border: 1px solid rgba(255, 193, 7, 0.2);
+    }
+
+    .badge-soft-primary {
+        background: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+        border: 1px solid rgba(13, 110, 253, 0.2);
+    }
+</style>
+{% endblock %}
+
+{% block module_nav %}
+<div class="sidebar-section-title">Overview</div>
+<a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+    href="{% url 'purchasing:dashboard' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-grid-1x2 nav-icon"></i>
+        <span>Purchasing Hub</span>
+    </div>
+</a>
+
+<div class="sidebar-section-title">Procurement</div>
+<a class="nav-link {% if 'orders' in request.path %}active{% endif %}" href="{% url 'purchasing:po_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-cart4 nav-icon"></i>
+        <span>Purchase Orders</span>
+    </div>
+</a>
+
+<a class="nav-link {% if 'receipts' in request.path or 'grn' in request.path %}active{% endif %}"
+    href="{% url 'purchasing:grn_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-box-seam nav-icon"></i>
+        <span>Goods Receipts</span>
+    </div>
+</a>
+
+<div class="sidebar-section-title">Accounts Payable</div>
+<a class="nav-link {% if 'invoices' in request.path %}active{% endif %}" href="{% url 'purchasing:invoice_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-file-earmark-spreadsheet nav-icon"></i>
+        <span>Vendor Bills</span>
+    </div>
+</a>
+
+<a class="nav-link {% if 'payments' in request.path %}active{% endif %}" href="{% url 'purchasing:payment_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-wallet2 nav-icon"></i>
+        <span>Payments</span>
+    </div>
+</a>
+
+<div class="sidebar-section-title">Master Data</div>
+<a class="nav-link {% if 'supplier' in request.path %}active{% endif %}" href="{% url 'products:supplier_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-building nav-icon"></i>
+        <span>Suppliers</span>
+    </div>
+</a>
+{% endblock %}
+
+{% block module_content %}
+<div class="purchasing-wrapper">
+    {% block purchasing_content %}{% endblock %}
+</div>
+{% endblock %}

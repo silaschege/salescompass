@@ -1,0 +1,45 @@
+<!-- Dashboard -->
+<a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+    href="{% url 'manufacturing:dashboard' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-speedometer2 nav-icon"></i>
+        <span>Dashboard</span>
+    </div>
+</a>
+
+<!-- BOM -->
+<a class="nav-link {% if request.resolver_match.url_name == 'bom_list' or request.resolver_match.url_name == 'bom_detail' %}active{% endif %}"
+    href="{% url 'manufacturing:bom_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-diagram-3 nav-icon"></i>
+        <span>Bill of Materials</span>
+    </div>
+</a>
+
+<!-- Work Orders -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#workOrderMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-file-earmark-text nav-icon"></i>
+        <span>Work Orders</span>
+    </div>
+</a>
+<div class="collapse" id="workOrderMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'work_order_list' %}active{% endif %}"
+        href="{% url 'manufacturing:work_order_list' %}">
+        All Work Orders
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'work_order_create' %}active{% endif %}"
+        href="{% url 'manufacturing:work_order_create' %}">
+        Create Work Order
+    </a>
+</div>
+
+<!-- Production Floor -->
+<a class="nav-link {% if request.resolver_match.url_name == 'production_floor' %}active{% endif %}"
+    href="{% url 'manufacturing:production_floor' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-tools nav-icon"></i>
+        <span>Production Floor</span>
+    </div>
+</a>

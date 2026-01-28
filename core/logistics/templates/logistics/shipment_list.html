@@ -1,0 +1,39 @@
+{% extends "logistics/base.html" %}
+
+{% block page_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Managed Shipments</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Shipment #</th>
+                        <th>Status</th>
+                        <th>Carrier</th>
+                        <th>Tracking</th>
+                        <th>Est. Arrival</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for shp in shipments %}
+                    <tr>
+                        <td><a href="{% url 'logistics:shipment_detail' shp.pk %}">{{ shp.shipment_number }}</a></td>
+                        <td><span class="badge badge-info">{{ shp.get_status_display }}</span></td>
+                        <td>{{ shp.carrier.name|default:"-" }}</td>
+                        <td>{{ shp.tracking_number|default:"N/A" }}</td>
+                        <td>{{ shp.estimated_arrival|date }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">No shipments recorded.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "loyalty/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block loyalty_content %}
+<div class="row justify-content-center p-4">
+    <div class="col-lg-7">
+        <div class="d-flex align-items-center mb-4">
+            <a href="{% url 'loyalty:member_detail' form.initial.loyalty_account.pk %}"
+                class="btn btn-light btn-icon rounded-circle me-3 border-0 shadow-sm">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="h3 fw-bold mb-0">Adjust Loyalty Points</h1>
+                <p class="text-muted small mb-0">For member: {{ form.initial.loyalty_account.customer.account_name }}
+                </p>
+            </div>
+        </div>
+
+        <div class="premium-card p-4 border-0 shadow-sm">
+            <div class="alert alert-soft-info border-0 d-flex align-items-center mb-4"
+                style="background: rgba(13, 202, 240, 0.05); color: #055160;">
+                <i class="bi bi-info-circle-fill me-3 h4 mb-0"></i>
+                <div class="small">
+                    <strong>Guidance:</strong> Entering a positive value (e.g., <code>50</code>) adds points. Use
+                    negative values (e.g., <code>-20</code>) for manual deductions or corrections. This will be recorded
+                    in the ledger.
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-12">
+                        {{ form|crispy }}
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-5 pt-3 border-top">
+                    <button type="button" class="btn btn-light px-4 border rounded-pill"
+                        onclick="history.back()">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-5 shadow-sm border-0 rounded-pill">
+                        <i class="bi bi-check2-circle me-1"></i> Confirm Adjustment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

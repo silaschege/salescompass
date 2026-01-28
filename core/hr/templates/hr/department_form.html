@@ -1,0 +1,42 @@
+{% extends "hr/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block hr_content %}
+<div class="row justify-content-center p-4">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center mb-4">
+            <a href="{% url 'hr:department_list' %}"
+                class="btn btn-light btn-icon rounded-circle me-3 border-0 shadow-sm">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h1 class="h3 fw-bold mb-0">{% if object %}Manage{% else %}New{% endif %} Department</h1>
+        </div>
+
+        <div class="premium-card p-4 border-0 shadow-sm position-relative overflow-hidden">
+            <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                <i class="bi bi-diagram-3" style="font-size: 5rem;"></i>
+            </div>
+
+            <p class="text-muted small mb-5">Define your organizational units and map them to financial cost centers for
+                accurate departmental expenditure reporting.</p>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="row g-4">
+                    <div class="col-12">{{ form.name|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ form.manager|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ form.cost_center|as_crispy_field }}</div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-3 mt-5 pt-4 border-top">
+                    <a href="{% url 'hr:department_list' %}"
+                        class="btn btn-link text-muted text-decoration-none px-4 rounded-pill">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-5 shadow-sm border-0 rounded-pill animate-hover">
+                        <i class="bi bi-check2-circle me-2"></i> Save Department
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

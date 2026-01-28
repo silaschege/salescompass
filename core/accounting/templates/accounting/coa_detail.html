@@ -1,0 +1,50 @@
+{% extends "accounting/base.html" %}
+{% load humanize %}
+
+{% block accounting_content %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 fw-bold text-primary">Account Ledger: {{ account.account_name }}</h6>
+        <span class="badge bg-info">{{ account.get_account_type_display }}</span>
+    </div>
+    <div class="card-body">
+        <div class="mb-4">
+            <div class="h4">Current Balance: ${{ account.current_balance|intcomma }}</div>
+            <p class="text-muted small">Account Code: {{ account.account_code }}</p>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead class="bg-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Reference</th>
+                        <th>Description</th>
+                        <th class="text-end">Debit</th>
+                        <th class="text-end">Credit</th>
+                        <th class="text-end">Running Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in ledger_entries %}
+                    <tr>
+                        <td>{{ entry.date|date:"Y-m-d" }}</td>
+                        <td><a href="{% url 'accounting:journal_detail' entry.journal_id %}">#{{ entry.entry_number
+                                }}</a></td>
+                        <td>{{ entry.description }}</td>
+                        <td class="text-end text-danger">{% if entry.debit > 0 %}${{ entry.debit|intcomma }}{% else
+                            %}-{% endif %}</td>
+                        <td class="text-end text-success">{% if entry.credit > 0 %}${{ entry.credit|intcomma }}{% else
+                            %}-{% endif %}</td>
+                        <td class="text-end">${{ entry.balance|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">No transactions found for this account.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

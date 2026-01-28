@@ -476,6 +476,10 @@ class ForecastDashboardView(DashboardBaseView):
         # Get recent forecast alerts
         context['forecast_alerts'] = check_forecast_alerts(tenant_id=self.request.user.tenant_id)
         
+        # Get forecast accuracy
+        accuracy_data = calculate_forecast_accuracy(tenant_id=self.request.user.tenant_id)
+        context['forecast_accuracy'] = accuracy_data['accuracy']
+        
         # Get quota information
         current_date = context['current_date']
         total_quota = Quota.objects.filter(

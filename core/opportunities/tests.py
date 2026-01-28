@@ -4,7 +4,7 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from .models import Opportunity, OpportunityStage
 from accounts.models import Account
-from core.models import TenantModel
+from tenants.models import TenantAwareModel as TenantModel
 
 User = get_user_model()
 

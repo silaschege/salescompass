@@ -1,0 +1,80 @@
+{% extends "core/base_module.html" %}
+{% load static %}
+
+{% block title %}Inventory | SalesCompass{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header-bar {
+        background: #28a745;
+        color: #fff;
+        padding: 2rem 0 1rem 1rem;
+        border-radius: 0 0 2rem 2rem;
+        box-shadow: 0 4px 24px rgba(40, 167, 69, 0.08);
+        margin-bottom: 2rem;
+    }
+
+    .footer-bar {
+        background: #28a745;
+        color: #fff;
+        padding: 1rem 0;
+        border-radius: 2rem 2rem 0 0;
+        box-shadow: 0 -4px 24px rgba(40, 167, 69, 0.08);
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    .block-title {
+        color: #28a745;
+        font-size: 2rem;
+        letter-spacing: 0.5px;
+        margin-bottom: 0;
+        text-align: center;
+    }
+
+    .card {
+        border-radius: 1rem;
+        box-shadow: 0 2px 16px rgba(40, 167, 69, 0.08);
+    }
+
+    .card-header {
+        border-radius: 1rem 1rem 0 0;
+        background: #28a745;
+        color: #fff;
+    }
+
+    .btn-success {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+
+    .table thead {
+        background: #28a745;
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block module_nav %}
+{% include "inventory/module_nav.html" %}
+{% endblock %}
+
+{% block content %}
+<!-- Sub-templates will override this block -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if we're on an inventory page and expand the appropriate menu
+    if (window.location.pathname.indexOf('/inventory/') !== -1) {
+        var inventoryMenuItems = document.querySelectorAll('#module-nav .nav-link');
+        for(var i = 0; i < inventoryMenuItems.length; i++) {
+            if(window.location.pathname.includes(inventoryMenuItems[i].getAttribute('href'))) {
+                inventoryMenuItems[i].classList.add('active');
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

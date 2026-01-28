@@ -1,0 +1,28 @@
+{% extends "shared/base_module.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm text-center p-4">
+                <div class="mb-4">
+                    <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 3rem;"></i>
+                </div>
+                <h4 class="fw-bold mb-3">Delete Supplier?</h4>
+                <p class="text-muted mb-4">
+                    Are you sure you want to delete <strong>{{ object.supplier_name }}</strong>? This action cannot be
+                    undone and may affect linked purchase orders.
+                </p>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger py-2 shadow-sm">Confirm Delete</button>
+                        <a href="{% url 'products:supplier_list' %}" class="btn btn-light py-2 border">Cancel and
+                            Keep</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

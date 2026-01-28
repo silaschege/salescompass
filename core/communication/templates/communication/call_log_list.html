@@ -3,8 +3,9 @@
 
 {% block title %}Call Logs - Communication{% endblock %}
 
-{% block comm_title %}<span style="color: black; text-align: center; display: block;">📞 Call History</span>{% endblock %}
-{% block comm_subtitle %}<span style="color: black; text-align: center; display: block;">Detailed record of your voice communications and results</span>{% endblock %}
+{% block comm_title %}<span style="color: black; text-align: center; display: block;">📞 Call History</span>{% endblock%}
+{% block comm_subtitle %}<span style="color: black; text-align: center; display: block;">Detailed record of your voice
+    communications and results</span>{% endblock %}
 
 {% block comm_actions %}
 <a href="{% url 'communication:call_analytics' %}" class="btn btn-light fw-bold px-4 shadow-sm border">
@@ -25,11 +26,11 @@
             <table class="table table-hover align-middle mb-0 table-comm">
                 <thead class="bg-light">
                     <tr>
-                        <th class="ps-4">Contact/Number</th>
-                        <th>Type</th>
+                        {% include "components/_table_header.html" with field="contact_name" label="Contact/Number" %}
+                        {% include "components/_table_header.html" with field="call_type" label="Type" %}
                         <th>Duration</th>
-                        <th>Outcome</th>
-                        <th>Date & Time</th>
+                        {% include "components/_table_header.html" with field="outcome" label="Outcome" %}
+                        {% include "components/_table_header.html" with field="call_started_at" label="Date & Time" %}
                         <th class="text-end pe-4">Actions</th>
                     </tr>
                 </thead>
@@ -50,7 +51,8 @@
                             {% elif call.call_type == 'missed' %}
                             <span class="badge bg-danger-subtle text-danger rounded-pill px-3">Missed</span>
                             {% else %}
-                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3">{{ call.call_type|title }}</span>
+                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3">{{
+                                call.call_type|title }}</span>
                             {% endif %}
                         </td>
                         <td>{{ call.duration_seconds }}s</td>
@@ -81,17 +83,20 @@
                             </div>
                         </td>
                     </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center py-5 text-muted">
-                            <i class="bi bi-telephone-x display-4 mb-3 d-block"></i>
-                            <p>No call logs found</p>
-                        </td>
-                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
+    {% if calls %}
+    <div class="card-footer bg-white border-top py-3">
+        {% include "components/_pagination.html" %}
+    </div>
+    {% else %}
+    <div class="card-body">
+        {% url 'communication:call_log_create' as action_url %}
+        {% include "components/_empty_state.html" with icon="bi-telephone-x" title="No call logs found" message="Log your voice communications to keep track of customer interactions." action_url=action_url action_text="Log Call"%}
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

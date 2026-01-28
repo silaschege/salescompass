@@ -331,9 +331,9 @@ class EmailService:
     def _log_email_sent(self, message: EmailMessage, result: EmailResult) -> None:
         """Log successful email sends for tracking."""
         try:
-            from core.event_bus import emit
+            from core.event_bus import event_bus
             
-            emit('email.sent', {
+            event_bus.emit('email.sent', {
                 'to': message.to,
                 'subject': message.subject,
                 'message_id': result.message_id,

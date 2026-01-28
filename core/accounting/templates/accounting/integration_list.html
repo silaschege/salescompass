@@ -1,0 +1,55 @@
+{% extends "accounting/base.html" %}
+
+{% block accounting_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">Accounting Integrations</h1>
+    <a href="{% url 'accounting:integration_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> New Integration Rule
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="bg-light">
+                <tr>
+                    <th>Event Type</th>
+                    <th>Debit Account</th>
+                    <th>Credit Account</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rule in integrations %}
+                <tr>
+                    <td>{{ rule.get_event_type_display }}</td>
+                    <td>{{ rule.debit_account.account_name }}</td>
+                    <td>{{ rule.credit_account.account_name }}</td>
+                    <td>
+                        {% if rule.is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'accounting:integration_update' rule.pk %}"
+                            class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">
+                        <i class="bi bi-gear-wide-connected h1 d-block mb-3"></i>
+                        No integration rules set. Configure rules to automate journal entries from other apps.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

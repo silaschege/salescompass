@@ -1,0 +1,145 @@
+{% extends "hr/base.html" %}
+{% load humanize %}
+
+{% block hr_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-start mb-5">
+        <div class="d-flex align-items-center">
+            <a href="{% url 'hr:employee_list' %}"
+                class="btn btn-light btn-icon rounded-circle me-3 border-0 shadow-sm">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1">
+                        <li class="breadcrumb-item small"><a href="{% url 'hr:employee_list' %}"
+                                class="text-decoration-none text-muted">Registry</a></li>
+                        <li class="breadcrumb-item active small text-primary fw-bold" aria-current="page">{{
+                            employee.employee_id }}</li>
+                    </ol>
+                </nav>
+                <h1 class="h3 fw-bold mb-0">{{ employee.user.get_full_name }}</h1>
+            </div>
+        </div>
+        <div class="d-flex gap-2 pt-3">
+            <a href="{% url 'hr:employee_update' employee.pk %}" class="btn btn-white border px-4 shadow-sm">
+                <i class="bi bi-pencil me-2"></i> Edit Profile
+            </a>
+            <button class="btn btn-danger bg-opacity-10 text-danger border-0 px-4 shadow-sm">
+                <i class="bi bi-person-x me-2"></i> Terminate
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Profile Sidebar -->
+        <div class="col-lg-4">
+            <div class="premium-card p-4 border-0 shadow-sm text-center mb-4">
+                <div class="avatar-xl rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center mx-auto mb-4"
+                    style="width: 100px; height: 100px; font-size: 2.5rem; font-weight: 700;">
+                    {{ employee.user.get_full_name|slice:":1" }}
+                </div>
+                <h5 class="fw-bold mb-1">{{ employee.user.get_full_name }}</h5>
+                <p class="text-muted small mb-4">{{ employee.position }}</p>
+                <div class="d-flex justify-content-center gap-2">
+                    <span class="badge badge-soft-primary px-3 rounded-pill text-uppercase extra-small">{{
+                        employee.get_employment_type_display }}</span>
+                    <span
+                        class="badge {% if employee.is_active %}badge-soft-success{% else %}badge-soft-danger{% endif %} px-3 rounded-pill text-uppercase extra-small">
+                        {% if employee.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="premium-card p-4 border-0 shadow-sm">
+                <h6 class="fw-bold mb-4 small text-uppercase">Contact Details</h6>
+                <div class="d-flex flex-column gap-3 small">
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-envelope text-muted me-3"></i>
+                        <div>{{ employee.user.email }}</div>
+                    </div>
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-telephone text-muted me-3"></i>
+                        <div>{{ employee.user.phone_number|default:"Not provided" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Profile Info -->
+        <div class="col-lg-8">
+            <div class="premium-card p-4 border-0 shadow-sm mb-4">
+                <h6 class="fw-bold mb-4 border-bottom pb-3"><i class="bi bi-briefcase text-primary me-2"></i> Employment
+                    & Finance</h6>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="text-muted extra-small text-uppercase fw-bold mb-1">Department</div>
+                        <div class="fw-bold text-dark">{{ employee.department.name|default:"Unassigned" }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted extra-small text-uppercase fw-bold mb-1">Hire Date</div>
+                        <div class="fw-bold text-dark">{{ employee.hire_date|date:"M d, Y" }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted extra-small text-uppercase fw-bold mb-1">Remuneration</div>
+                        <div class="h5 fw-bold text-success mb-0">${{ employee.salary|intcomma }} / {{
+                            employee.salary_type }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted extra-small text-uppercase fw-bold mb-1">Tax ID / SSN</div>
+                        <div class="fw-bold text-dark">{{ employee.tax_id|default:"-" }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="premium-card p-4 border-0 shadow-sm mb-4 bg-light bg-opacity-50">
+                <h6 class="fw-bold mb-3 small text-uppercase">IAS 19 Compliance Data</h6>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="text-muted extra-small mb-1">Pension Scheme</div>
+                        <div class="small fw-semibold">{{ employee.pension_scheme|default:"Default Statutory" }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted extra-small mb-1">Contract End Date</div>
+                        <div class="small fw-semibold text-danger">{{ employee.contract_end_date|date:"M d,
+                            Y"|default:"Indefinite" }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs/Quick Stats -->
+            <div class="row g-3 mt-2">
+                <div class="col-md-4">
+                    <div class="premium-card p-3 border-0 shadow-sm text-center">
+                        <div class="text-muted extra-small text-uppercase fw-bold mb-1">Leaves Used</div>
+                        <div class="h4 fw-bold mb-0 text-dark">12 <span class="text-muted small fw-normal">Days</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="premium-card p-3 border-0 shadow-sm text-center">
+                        <div class="text-muted extra-small text-uppercase fw-bold mb-1">Attendance</div>
+                        <div class="h4 fw-bold mb-0 text-dark">98<span class="text-muted small fw-normal">%</span></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="premium-card p-3 border-0 shadow-sm text-center">
+                        <div class="text-muted extra-small text-uppercase fw-bold mb-1">Commission Target</div>
+                        <div class="h4 fw-bold mb-0 text-success">102<span class="text-muted small fw-normal">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "quality_control/base.html" %}
+
+{% block page_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Inspection Rules & Checklists</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for rule in rules %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-left-info shadow-sm">
+                    <div class="card-body">
+                        <div class="h6 font-weight-bold text-info mb-2">{{ rule.name }}</div>
+                        <ul class="list-unstyled small">
+                            {% for item in rule.check_list %}
+                            <li><i class="bi bi-check-circle mr-1"></i> {{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-4">No inspection rules defined.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

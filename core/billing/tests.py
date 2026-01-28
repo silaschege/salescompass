@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from billing.models import Plan, Subscription
-from core.models import TenantModel
+from tenants.models import TenantAwareModel as TenantModel
 from django.core.exceptions import ValidationError
 
 User = get_user_model()

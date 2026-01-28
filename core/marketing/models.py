@@ -255,6 +255,7 @@ class Campaign(TenantAwareModel, TimeStampedModel):
     actual_reach = models.IntegerField(default=0)
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='owned_campaigns')
     campaign_is_active = models.BooleanField(default=True)  # Renamed from 'is_active' to avoid conflict with base class
+    bonus_points = models.PositiveIntegerField(default=0, help_text="Loyalty bonus points awarded for this campaign")
     # Remove the created_at and updated_at fields since they're inherited
 
     def calculate_total_marketing_spend(self, start_date=None, end_date=None, tenant_id=None):

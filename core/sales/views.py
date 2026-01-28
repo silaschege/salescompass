@@ -15,6 +15,7 @@ import json
 from datetime import datetime, timedelta
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
+from django.utils import timezone
 from django.db.models import Q
 
 
@@ -84,19 +85,44 @@ class SalesDashboardView(ObjectPermissionRequiredMixin, TemplateView):
         context['total_sales'] = sales.count()
         context['avg_deal_size'] = sales.aggregate(avg=Avg('amount'))['avg'] or 0
         
+        # IFRS 15 Glimpse
+        from .models_contract import PerformanceObligation
+        tenant = self.request.user.tenant
+        context['unearned_revenue'] = PerformanceObligation.objects.filter(tenant=tenant).exclude(status='fulfilled').aggregate(total=Sum('allocated_amount'))['total'] or 0
+        
         # Sales by Type
         sales_by_type = dict(sales.values_list('sale_type').annotate(count=Count('id')))
         type_labels = {'hardware': 'Hardware', 'ship': 'Shipment', 'software': 'Software'}
         context['sales_by_type'] = {type_labels.get(k, k): v for k, v in sales_by_type.items()}
 
-        # Top Accounts by Revenue
-        top_accounts = sales.values('account__account_name').annotate(
-            total=Sum('amount')
-        ).order_by('-total')[:5]
-        context['top_accounts'] = {item['account__account_name']: item['total'] for item in top_accounts}
-
         # Recent Sales
         context['recent_sales'] = sales.order_by('-sale_date')[:10]
+        return context
+
+class RevenueDashboardView(ObjectPermissionRequiredMixin, TemplateView):
+    template_name = 'sales/dashboard_revenue.html'
+    permission_action = 'view'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from .models_contract import PerformanceObligation, RevenueSchedule
+        tenant = self.request.user.tenant
+        
+        obligations = PerformanceObligation.objects.filter(tenant=tenant).select_related('contract')
+        
+        context['unearned_revenue'] = obligations.exclude(status='fulfilled').aggregate(total=Sum('allocated_amount'))['total'] or 0
+        context['mtd_recognized'] = RevenueSchedule.objects.filter(
+            tenant=tenant, is_recognized=True, date__month=timezone.now().month, date__year=timezone.now().year
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        
+        context['contract_assets'] = 0 # Placeholder for unbilled recognition
+        
+        # Obligations for table
+        pending = obligations.exclude(status='fulfilled').order_by('-created_at')[:10]
+        for ob in pending:
+            ob.progress_percent = int((ob.recognized_amount / ob.allocated_amount * 100)) if ob.allocated_amount > 0 else 0
+            
+        context['pending_obligations'] = pending
         return context
 
 

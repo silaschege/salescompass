@@ -1,0 +1,125 @@
+{% extends "accounting/base.html" %}
+{% load humanize %}
+
+{% block accounting_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">Balance Sheet</h1>
+    <form class="d-flex gap-2" method="get">
+        <input type="date" name="date" class="form-control" value="{{ as_of_date|date:'Y-m-d' }}">
+        <button type="submit" class="btn btn-primary">Update</button>
+        <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+            <i class="bi bi-printer"></i>
+        </button>
+    </form>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-5">
+        <div class="text-center mb-5">
+            <h2 class="h4 fw-bold">Statement of Financial Position</h2>
+            <p class="text-muted">As of {{ as_of_date|date:"F d, Y" }}</p>
+        </div>
+
+        <div class="row">
+            <!-- Assets -->
+            <div class="col-md-6">
+                <h3 class="h5 fw-bold text-primary mb-3">Assets</h3>
+
+                <h4 class="h6 fw-bold mt-3 text-secondary">Non-Current Assets</h4>
+                <table class="table table-sm table-borderless">
+                    {% for item in assets.non_current %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td class="text-end">{{ item.amount|floatformat:2|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-muted fst-italic">No non-current assets</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+
+                <h4 class="h6 fw-bold mt-4 text-secondary">Current Assets</h4>
+                <table class="table table-sm table-borderless">
+                    {% for item in assets.current %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td class="text-end">{{ item.amount|floatformat:2|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-muted fst-italic">No current assets</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="border-top">
+                        <th class="ps-0">Total Current Assets</th>
+                        <th class="text-end">{{ assets.current|length|yesno:"0,0"|add:0 }}
+                            <!-- logic to sum? passed context has total --></th>
+                    </tr>
+                </table>
+
+                <div class="d-flex justify-content-between border-top border-dark pt-2 mt-2">
+                    <h4 class="h5 fw-bold">Total Assets</h4>
+                    <h4 class="h5 fw-bold">{{ assets.total|floatformat:2|intcomma }}</h4>
+                </div>
+            </div>
+
+            <!-- Liabilities & Equity -->
+            <div class="col-md-6">
+                <h3 class="h5 fw-bold text-danger mb-3">Liabilities & Equity</h3>
+
+                <h4 class="h6 fw-bold mt-3 text-secondary">Equity</h4>
+                <table class="table table-sm table-borderless">
+                    {% for item in equity.details %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td class="text-end">{{ item.amount|floatformat:2|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-muted fst-italic">No equity accounts</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="border-top">
+                        <th class="ps-0">Total Equity</th>
+                        <th class="text-end">{{ equity.total|floatformat:2|intcomma }}</th>
+                    </tr>
+                </table>
+
+                <h4 class="h6 fw-bold mt-4 text-secondary">Non-Current Liabilities</h4>
+                <table class="table table-sm table-borderless">
+                    {% for item in liabilities.non_current %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td class="text-end">{{ item.amount|floatformat:2|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-muted fst-italic">No non-current liabilities</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+
+                <h4 class="h6 fw-bold mt-4 text-secondary">Current Liabilities</h4>
+                <table class="table table-sm table-borderless">
+                    {% for item in liabilities.current %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td class="text-end">{{ item.amount|floatformat:2|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-muted fst-italic">No current liabilities</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+
+                <div class="d-flex justify-content-between border-top border-dark pt-2 mt-2">
+                    <h4 class="h5 fw-bold">Total Liabilities & Equity</h4>
+                    <h4 class="h5 fw-bold">{{ total_liabilities_equity|floatformat:2|intcomma }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

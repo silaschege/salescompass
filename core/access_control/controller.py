@@ -3,6 +3,7 @@ from .models import AccessControl, TenantAccessControl, RoleAccessControl, UserA
 from django.db.models import Q
 from django.core.cache import cache
 import logging
+from billing.plan_access_service import PlanAccessService
 
 logger = logging.getLogger(__name__)
 
@@ -219,6 +220,18 @@ class UnifiedAccessController:
                     tenant=user.tenant, access_control=access_def, is_enabled=True
                 ).exists():
                     return True
+
+        # 5. Check Billing System Fallback (If key starts with 'billing.')
+        if resource_key.startswith('billing.') and user.tenant and user.tenant.plan:
+            # Simple check: if it's billing.dashboard, just check if billing module is enabled
+            if resource_key == 'billing.dashboard':
+                return PlanAccessService.get_module_access(user.tenant.plan, 'billing')
+            
+            # For other billing keys, could check specific features if mapped
+            # For now, if they have 'billing' module, give them basic billing access
+            # unless it's a specific admin config key
+            if '.admin.' not in resource_key:
+                return PlanAccessService.get_module_access(user.tenant.plan, 'billing')
         
         return False
 

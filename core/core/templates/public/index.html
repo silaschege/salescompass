@@ -1,209 +1,503 @@
 {% extends "public/base.html" %}
 {% load static %}
 
-{% block title %}SalesCompass - The Unified Intelligence CRM{% endblock %}
+{% block title %}SalesCompass - Leave the Black Book Behind | Unified Business Management{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
+<!-- Hero Section - "End the Chaos" -->
 <section class="section-large text-center position-relative overflow-hidden">
   <div class="container position-relative z-1" data-aos="fade-up">
     <div class="d-inline-flex align-items-center bg-white border border-light shadow-sm rounded-pill px-3 py-1 mb-4">
-      <span class="badge bg-primary rounded-pill me-2">New</span>
-      <span class="small fw-bold text-muted">Join 15 million happy users globally &rarr;</span>
+      <span class="badge badge-gold rounded-pill me-2">Transform</span>
+      <span class="small fw-bold text-muted">Join 15 million businesses who left manual chaos behind &rarr;</span>
     </div>
 
     <h1 class="display-3 fw-extrabold mb-4 lh-tight tracking-tight">
-      Unify your sales motion on <br>
-      <span class="highlight-handwritten">one platform.</span>
+      Stop Juggling Spreadsheets. <br>
+      <span class="highlight-handwritten">Start Closing Deals.</span>
     </h1>
 
-    <p class="lead text-muted mb-5 mx-auto" style="max-width: 650px;">
-      The intelligent CRM that combines voice, email, and automation.
-      Stop juggling tools and start <span class="text-handwritten">driving revenue</span> with real-time intelligence.
+    <p class="lead text-muted mb-5 mx-auto" style="max-width: 700px;">
+      Replace your <span class="strike-animate">disconnected tools, manual processes, and guesswork</span> with
+      one intelligent platform that automates, tracks, and grows your business.
     </p>
 
     <div class="d-flex justify-content-center gap-3 mb-5">
       <a href="{% url 'core:try_free' %}" class="btn btn-primary d-flex align-items-center gap-2">
-        Start now - It's free
+        <i class="bi bi-rocket-takeoff"></i> Leave the Black Book Behind
       </a>
-      <a href="{% url 'core:product' %}" class="btn btn-outline-primary">Meet the apps</a>
+      <a href="{% url 'core:product_public' %}" class="btn btn-outline-primary">See How It Works</a>
     </div>
 
-    <p class="text-muted small mb-0">No credit card required &bull; 14-day free trial</p>
+    <!-- Risk Reversal Badges -->
+    <div class="risk-badges-row mb-6">
+      <span class="risk-badge"><i class="bi bi-check-circle-fill"></i> No Credit Card</span>
+      <span class="risk-badge-outline risk-badge"><i class="bi bi-clock"></i> 14-Day Free Trial</span>
+      <span class="risk-badge-outline risk-badge"><i class="bi bi-shield-check"></i> Free Migration Support</span>
+    </div>
+  </div>
+</section>
+
+<!-- Problem → Solution Cards Section -->
+<section class="section bg-white border-top border-light">
+  <div class="container">
+    <div class="text-center mb-10">
+      <span class="transformation-badge mb-4"><i class="bi bi-arrow-repeat"></i> The Transformation</span>
+      <h2 class="fw-extrabold mb-3">Stop Losing Money to Manual Processes</h2>
+      <p class="text-muted text-lg mx-auto" style="max-width: 600px;">
+        Every day with outdated systems costs you opportunities. Here's what changes with SalesCompass.
+      </p>
+    </div>
+
+    <div class="row g-4">
+      <!-- Problem 1 -->
+      <div class="col-md-6 col-lg-3">
+        <div class="pain-point-card pain-point-problem h-100">
+          <div class="pain-point-title">Double-Entry Errors</div>
+          <div class="pain-point-desc">Manually copying data between spreadsheets leads to costly mistakes and wasted
+            hours.</div>
+        </div>
+      </div>
+      <!-- Solution 1 -->
+      <div class="col-md-6 col-lg-3">
+        <div class="pain-point-card pain-point-solution h-100">
+          <div class="pain-point-title">One-Time Entry</div>
+          <div class="pain-point-desc">Enter data once, use everywhere. Automatic sync across all modules eliminates
+            errors.</div>
+        </div>
+      </div>
+      <!-- Problem 2 -->
+      <div class="col-md-6 col-lg-3">
+        <div class="pain-point-card pain-point-problem h-100">
+          <div class="pain-point-title">Lost Information</div>
+          <div class="pain-point-desc">Critical customer details scattered across notebooks, emails, and sticky notes.
+          </div>
+        </div>
+      </div>
+      <!-- Solution 2 -->
+      <div class="col-md-6 col-lg-3">
+        <div class="pain-point-card pain-point-solution h-100">
+          <div class="pain-point-title">Centralized Hub</div>
+          <div class="pain-point-desc">Every interaction, note, and record in one searchable, secure platform.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Second row of transformations -->
+    <div class="row g-4 mt-4">
+      <!-- Problem 3 -->
+      <div class="col-md-6 col-lg-3">
+        <div class="pain-point-card pain-point-problem h-100">
+          <div class="pain-point-title">Missed Follow-ups</div>
+          <div class="pain-point-desc">Leads go cold because you forgot to follow up or lost track of timing.</div>
+        </div>
+      </div>
+      <!-- Solution 3 -->
+      <div class="col-md-6 col-lg-3">
+        <div class="pain-point-card pain-point-solution h-100">
+          <div class="pain-point-title">Smart Reminders</div>
+          <div class="pain-point-desc">AI-powered task scheduling ensures every opportunity gets timely attention.</div>
+        </div>
+      </div>
+      <!-- Problem 4 -->
+      <div class="col-md-6 col-lg-3">
+        <div class="pain-point-card pain-point-problem h-100">
+          <div class="pain-point-title">Guesswork Decisions</div>
+          <div class="pain-point-desc">Making business decisions based on outdated reports or gut feelings.</div>
+        </div>
+      </div>
+      <!-- Solution 4 -->
+      <div class="col-md-6 col-lg-3">
+        <div class="pain-point-card pain-point-solution h-100">
+          <div class="pain-point-title">Real-Time Intelligence</div>
+          <div class="pain-point-desc">Live dashboards and predictive analytics for confident, data-driven decisions.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Before/After Comparison Section -->
+<section class="section-large bg-light">
+  <div class="container">
+    <div class="text-center mb-10">
+      <h2 class="display-5 fw-extrabold mb-3">See the <span class="highlight-handwritten">Difference</span></h2>
+      <p class="text-muted text-lg">From manual chaos to unified control</p>
+    </div>
+
+    <div class="comparison-container position-relative">
+      <div class="comparison-vs">VS</div>
+
+      <!-- Before Side -->
+      <div class="comparison-side comparison-before">
+        <span class="comparison-label comparison-label-old">
+          <i class="bi bi-x-circle"></i> The Old Way
+        </span>
+        <h4 class="fw-bold mb-4 text-muted">Manual Business Management</h4>
+        <ul class="list-unstyled space-y-3 mb-0">
+          <li class="d-flex align-items-center gap-3 text-muted">
+            <i class="bi bi-x-circle-fill text-danger"></i>
+            <span>Multiple disconnected spreadsheets</span>
+          </li>
+          <li class="d-flex align-items-center gap-3 text-muted">
+            <i class="bi bi-x-circle-fill text-danger"></i>
+            <span>Manual data entry and re-entry</span>
+          </li>
+          <li class="d-flex align-items-center gap-3 text-muted">
+            <i class="bi bi-x-circle-fill text-danger"></i>
+            <span>Information scattered across tools</span>
+          </li>
+          <li class="d-flex align-items-center gap-3 text-muted">
+            <i class="bi bi-x-circle-fill text-danger"></i>
+            <span>Hours spent on repetitive tasks</span>
+          </li>
+          <li class="d-flex align-items-center gap-3 text-muted">
+            <i class="bi bi-x-circle-fill text-danger"></i>
+            <span>Decisions based on outdated data</span>
+          </li>
+          <li class="d-flex align-items-center gap-3 text-muted">
+            <i class="bi bi-x-circle-fill text-danger"></i>
+            <span>No visibility across departments</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- After Side -->
+      <div class="comparison-side comparison-after">
+        <span class="comparison-label comparison-label-new">
+          <i class="bi bi-check-circle"></i> The SalesCompass Way
+        </span>
+        <h4 class="fw-bold mb-4 text-dark">Unified Intelligence Platform</h4>
+        <ul class="list-unstyled space-y-3 mb-0">
+          <li class="d-flex align-items-center gap-3">
+            <i class="bi bi-check-circle-fill text-success"></i>
+            <span class="fw-medium">Single source of truth for all data</span>
+          </li>
+          <li class="d-flex align-items-center gap-3">
+            <i class="bi bi-check-circle-fill text-success"></i>
+            <span class="fw-medium">Automated data sync & workflows</span>
+          </li>
+          <li class="d-flex align-items-center gap-3">
+            <i class="bi bi-check-circle-fill text-success"></i>
+            <span class="fw-medium">Everything in one connected platform</span>
+          </li>
+          <li class="d-flex align-items-center gap-3">
+            <i class="bi bi-check-circle-fill text-success"></i>
+            <span class="fw-medium">AI handles repetitive work for you</span>
+          </li>
+          <li class="d-flex align-items-center gap-3">
+            <i class="bi bi-check-circle-fill text-success"></i>
+            <span class="fw-medium">Real-time analytics & predictions</span>
+          </li>
+          <li class="d-flex align-items-center gap-3">
+            <i class="bi bi-check-circle-fill text-success"></i>
+            <span class="fw-medium">Complete cross-team visibility</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Impact Stats Section -->
+<section class="section bg-white border-top border-light">
+  <div class="container">
+    <div class="text-center mb-8">
+      <h2 class="fw-extrabold mb-3">The Cost of Staying Manual</h2>
+      <p class="text-muted">What businesses waste every month on outdated processes</p>
+    </div>
+
+    <div class="row g-4 text-center">
+      <div class="col-6 col-lg-3">
+        <div class="stat-counter" data-animate>
+          <div class="stat-number stat-number-gold">40+</div>
+          <div class="stat-label">Hours Wasted</div>
+          <div class="stat-sublabel">on manual data entry monthly</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-counter" data-animate>
+          <div class="stat-number stat-number-gold">23%</div>
+          <div class="stat-label">Leads Lost</div>
+          <div class="stat-sublabel">due to missed follow-ups</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-counter" data-animate>
+          <div class="stat-number stat-number-gold">$15K</div>
+          <div class="stat-label">Revenue Lost</div>
+          <div class="stat-sublabel">from duplicate entries & errors</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-counter" data-animate>
+          <div class="stat-number stat-number-gold">5</div>
+          <div class="stat-label">Tools Replaced</div>
+          <div class="stat-sublabel">by one unified platform</div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
 <!-- Apps Grid Section -->
-<section class="section bg-white border-top border-light" id="apps">
+<section class="section bg-light border-top border-light" id="apps">
   <div class="container">
     <div class="text-center mb-10">
-      <h2 class="fw-extrabold mb-3">Enterprise depth. Startup speed.</h2>
-      <p class="text-muted text-lg">Every tool your revenue team needs, perfectly integrated.</p>
+      <h2 class="fw-extrabold mb-3">One Platform. <span class="text-gold">Every Tool You Need.</span></h2>
+      <p class="text-muted text-lg">Replace your fragmented toolstack with integrated, intelligent apps.</p>
     </div>
 
     <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-5 justify-content-center">
       <!-- CRM (Leads) -->
       <div class="col text-center">
-        <a href="{% url 'core:product' %}" class="text-decoration-none d-block">
+        <a href="{% url 'core:product_public' %}" class="text-decoration-none d-block">
           <div class="app-icon app-crm mx-auto">
             <i class="bi bi-people-fill"></i>
           </div>
           <h5 class="fw-bold text-dark">CRM</h5>
-          <p class="small text-muted mb-0">Predictive Lead Scoring</p>
+          <p class="small text-muted mb-0">Replaces: Spreadsheet Contacts</p>
         </a>
       </div>
 
       <!-- Sales (Opportunities) -->
       <div class="col text-center">
-        <a href="{% url 'core:product' %}" class="text-decoration-none d-block">
+        <a href="{% url 'core:product_public' %}" class="text-decoration-none d-block">
           <div class="app-icon app-sales mx-auto">
             <i class="bi bi-graph-up-arrow"></i>
           </div>
           <h5 class="fw-bold text-dark">Sales</h5>
-          <p class="small text-muted mb-0">Win Probability AI</p>
+          <p class="small text-muted mb-0">Replaces: Manual Pipeline Tracking</p>
         </a>
       </div>
 
       <!-- Marketing -->
       <div class="col text-center">
-        <a href="{% url 'core:product' %}" class="text-decoration-none d-block">
+        <a href="{% url 'core:product_public' %}" class="text-decoration-none d-block">
           <div class="app-icon app-marketing mx-auto">
             <i class="bi bi-bullseye"></i>
           </div>
           <h5 class="fw-bold text-dark">Marketing</h5>
-          <p class="small text-muted mb-0">Multi-touch Attribution</p>
+          <p class="small text-muted mb-0">Replaces: Email Chaos</p>
         </a>
       </div>
 
       <!-- Automation -->
       <div class="col text-center">
-        <a href="{% url 'core:product' %}" class="text-decoration-none d-block">
+        <a href="{% url 'core:product_public' %}" class="text-decoration-none d-block">
           <div class="app-icon app-automation mx-auto">
             <i class="bi bi-lightning-charge-fill"></i>
           </div>
           <h5 class="fw-bold text-dark">Automation</h5>
-          <p class="small text-muted mb-0">NBA Orchestration</p>
+          <p class="small text-muted mb-0">Replaces: Repetitive Tasks</p>
         </a>
       </div>
 
       <!-- Intelligence (ML) -->
       <div class="col text-center">
-        <a href="{% url 'core:product' %}" class="text-decoration-none d-block">
+        <a href="{% url 'core:product_public' %}" class="text-decoration-none d-block">
           <div class="app-icon app-ml mx-auto">
             <i class="bi bi-cpu-fill"></i>
           </div>
           <h5 class="fw-bold text-dark">Intelligence</h5>
-          <p class="small text-muted mb-0">Knowledge Graph</p>
+          <p class="small text-muted mb-0">Replaces: Guesswork</p>
         </a>
       </div>
 
       <!-- Reports -->
       <div class="col text-center">
-        <a href="{% url 'core:product' %}" class="text-decoration-none d-block">
+        <a href="{% url 'core:product_public' %}" class="text-decoration-none d-block">
           <div class="app-icon app-reports mx-auto">
             <i class="bi bi-grid-3x3-gap-fill"></i>
           </div>
           <h5 class="fw-bold text-dark">Reporting</h5>
-          <p class="small text-muted mb-0">Analytics Studio</p>
+          <p class="small text-muted mb-0">Replaces: Manual Reports</p>
         </a>
       </div>
 
       <!-- Commissions -->
       <div class="col text-center">
-        <a href="{% url 'core:product' %}" class="text-decoration-none d-block">
+        <a href="{% url 'core:product_public' %}" class="text-decoration-none d-block">
           <div class="app-icon app-commissions mx-auto">
             <i class="bi bi-cash-stack"></i>
           </div>
           <h5 class="fw-bold text-dark">Commissions</h5>
-          <p class="small text-muted mb-0">Payout Automation</p>
+          <p class="small text-muted mb-0">Replaces: Spreadsheet Calcs</p>
         </a>
       </div>
 
       <!-- Products (CPQ) -->
       <div class="col text-center">
-        <a href="{% url 'core:product' %}" class="text-decoration-none d-block">
+        <a href="{% url 'core:product_public' %}" class="text-decoration-none d-block">
           <div class="app-icon app-products mx-auto">
             <i class="bi bi-tag-fill"></i>
           </div>
           <h5 class="fw-bold text-dark">CPQ</h5>
-          <p class="small text-muted mb-0">Tiered Pricing Engine</p>
+          <p class="small text-muted mb-0">Replaces: Manual Quotes</p>
         </a>
       </div>
     </div>
 
     <div class="text-center mt-12">
-      <a href="{% url 'core:product' %}"
+      <a href="{% url 'core:product_public' %}"
         class="text-primary fw-bold text-decoration-none d-inline-flex align-items-center gap-2">
-        See all 24 apps <i class="bi bi-arrow-right"></i>
+        See all 24 apps that replace your manual processes <i class="bi bi-arrow-right"></i>
       </a>
     </div>
   </div>
 </section>
 
-<!-- Advanced AI Section -->
-<section class="section-large bg-light">
+<!-- Transformation Testimonials -->
+<section class="section bg-white border-top border-light">
   <div class="container">
-    <div class="row align-items-center gy-6">
-      <div class="col-lg-5">
-        <div class="app-icon app-ml mb-4">
-          <i class="bi bi-robot"></i>
-        </div>
-        <h2 class="display-5 fw-extrabold mb-4">The core of <br><span class="highlight-handwritten">intelligent
-            sales.</span></h2>
-        <p class="text-muted text-lg mb-5">
-          Our proprietary Sales Ontology and Knowledge Graph analyze billions of signals to give you
-          unprecedented deal visibility.
-        </p>
-        <ul class="list-unstyled space-y-4 mb-0">
-          <li class="d-flex align-items-start gap-3">
-            <i class="bi bi-patch-check-fill text-primary fs-5"></i>
-            <div>
-              <strong class="d-block text-dark">Predictive Win Probability</strong>
-              <span class="small text-muted">95% accurate forecasting driven by historical pattern analysis.</span>
+    <div class="text-center mb-10">
+      <h2 class="fw-extrabold mb-3">They Left the Black Book Behind</h2>
+      <p class="text-muted">Hear from businesses that transformed their operations</p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="journey-card h-100">
+          <div class="journey-header">
+            <h5 class="fw-bold mb-1 text-white">TechNova Solutions</h5>
+            <span class="small opacity-75">Software Company • 50 employees</span>
+          </div>
+          <div class="journey-body">
+            <p class="mb-4 text-muted">"We were drowning in spreadsheets. SalesCompass unified everything and gave us
+              visibility we never had."</p>
+            <div class="journey-metric">
+              <div class="journey-metric-value">80%</div>
+              <div class="journey-metric-label">Less time on data entry</div>
             </div>
-          </li>
-          <li class="d-flex align-items-start gap-3">
-            <i class="bi bi-patch-check-fill text-primary fs-5"></i>
-            <div>
-              <strong class="d-block text-dark">NBA Agent</strong>
-              <span class="small text-muted">Reinforcement learning for optimized sales sequences.</span>
+            <div class="journey-metric">
+              <div class="journey-metric-value">2.4x</div>
+              <div class="journey-metric-label">Faster deal velocity</div>
             </div>
-          </li>
-        </ul>
-      </div>
-      <div class="col-lg-7">
-        <div class="card-elevated p-2 shadow-2xl">
-          <img src="https://placehold.co/1200x800/212121/ffffff?text=Knowledge+Graph+Intelligence" alt="AI Intelligence"
-            class="img-fluid rounded-xl">
+          </div>
         </div>
       </div>
+      <div class="col-lg-4">
+        <div class="journey-card h-100">
+          <div class="journey-header">
+            <h5 class="fw-bold mb-1 text-white">GlobalScale Retail</h5>
+            <span class="small opacity-75">Retail Chain • 200 employees</span>
+          </div>
+          <div class="journey-body">
+            <p class="mb-4 text-muted">"The Black Book was costing us clients. Now every team member has the information
+              they need."</p>
+            <div class="journey-metric">
+              <div class="journey-metric-value">$250K</div>
+              <div class="journey-metric-label">Revenue recovered from lost leads</div>
+            </div>
+            <div class="journey-metric">
+              <div class="journey-metric-value">100%</div>
+              <div class="journey-metric-label">Team adoption rate</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="journey-card h-100">
+          <div class="journey-header">
+            <h5 class="fw-bold mb-1 text-white">Creatively Agency</h5>
+            <span class="small opacity-75">Marketing Agency • 25 employees</span>
+          </div>
+          <div class="journey-body">
+            <p class="mb-4 text-muted">"We replaced 5 different tools with SalesCompass. Our team actually enjoys using
+              it."</p>
+            <div class="journey-metric">
+              <div class="journey-metric-value">5→1</div>
+              <div class="journey-metric-label">Tools consolidated</div>
+            </div>
+            <div class="journey-metric">
+              <div class="journey-metric-value">35%</div>
+              <div class="journey-metric-label">Increase in client retention</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mt-8">
+      <a href="{% url 'core:customers' %}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-right-circle me-2"></i> Read More Success Stories
+      </a>
     </div>
   </div>
 </section>
 
-<!-- Social Proof -->
-<section class="section bg-white border-top border-light">
+<!-- Migration Promise Section -->
+<section class="section-large bg-light border-top border-light">
   <div class="container text-center">
-    <h2 class="fw-extrabold mb-10">Trusted by modern sales teams</h2>
-    <div
-      class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-4 justify-content-center align-items-center grayscale opacity-50">
-      <div class="col">
-        <h4 class="fw-bold mb-0">VERCEL</h4>
+    <h2 class="display-5 fw-extrabold mb-4">Switching is <span class="text-gold">Easier Than You Think</span></h2>
+    <p class="lead text-muted mb-8 mx-auto" style="max-width: 600px;">
+      Worried about transitioning from your current system? We've got you covered.
+    </p>
+
+    <div class="migration-steps">
+      <div class="migration-step">
+        <div class="migration-step-icon">
+          <i class="bi bi-cloud-upload"></i>
+        </div>
+        <div class="migration-step-label">Import Your Data</div>
       </div>
-      <div class="col">
-        <h4 class="fw-bold mb-0">STRIPE</h4>
+      <i class="bi bi-chevron-right migration-arrow d-none d-md-block"></i>
+      <div class="migration-step">
+        <div class="migration-step-icon">
+          <i class="bi bi-magic"></i>
+        </div>
+        <div class="migration-step-label">Auto-Configure</div>
       </div>
-      <div class="col">
-        <h4 class="fw-bold mb-0">FIGMA</h4>
+      <i class="bi bi-chevron-right migration-arrow d-none d-md-block"></i>
+      <div class="migration-step">
+        <div class="migration-step-icon">
+          <i class="bi bi-mortarboard"></i>
+        </div>
+        <div class="migration-step-label">Team Training</div>
       </div>
-      <div class="col">
-        <h4 class="fw-bold mb-0">LINEAR</h4>
+      <i class="bi bi-chevron-right migration-arrow d-none d-md-block"></i>
+      <div class="migration-step">
+        <div class="migration-step-icon">
+          <i class="bi bi-rocket-takeoff"></i>
+        </div>
+        <div class="migration-step-label">Go Live!</div>
       </div>
-      <div class="col">
-        <h4 class="fw-bold mb-0">LOOM</h4>
+    </div>
+
+    <div class="row justify-content-center g-4 mt-6">
+      <div class="col-md-4">
+        <div class="objection-card h-100">
+          <div class="objection-icon">
+            <i class="bi bi-file-earmark-spreadsheet"></i>
+          </div>
+          <div class="objection-content">
+            <h4>Bring Your Spreadsheets</h4>
+            <p>Import CSV, Excel, or connect to Google Sheets. We'll map your data automatically.</p>
+          </div>
+        </div>
       </div>
-      <div class="col">
-        <h4 class="fw-bold mb-0">RAMP</h4>
+      <div class="col-md-4">
+        <div class="objection-card h-100">
+          <div class="objection-icon">
+            <i class="bi bi-headset"></i>
+          </div>
+          <div class="objection-content">
+            <h4>Free Migration Support</h4>
+            <p>Our team helps you move from any system — no technical skills required.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="objection-card h-100">
+          <div class="objection-icon">
+            <i class="bi bi-clock-history"></i>
+          </div>
+          <div class="objection-content">
+            <h4>Up and Running Fast</h4>
+            <p>Most teams are fully operational within 48 hours of starting.</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -212,14 +506,22 @@
 <!-- Final CTA -->
 <section class="section-large text-center position-relative overflow-hidden bg-primary text-white">
   <div class="container position-relative z-1">
-    <h2 class="display-4 fw-extrabold mb-4">Start your revenue transformation.</h2>
+    <h2 class="display-4 fw-extrabold mb-4">Ready to Leave Manual Chaos Behind?</h2>
     <p class="lead mb-5 mx-auto text-white-50" style="max-width: 600px;">
-      Join thousands of teams scaling faster with SalesCompass.
-      Setup in minutes, results in days.
+      Join thousands of teams who've transformed their business with SalesCompass.
+      Setup in minutes, see results in days.
     </p>
-    <div class="d-flex justify-content-center gap-3">
-      <a href="{% url 'core:try_free' %}" class="btn btn-light text-primary btn-lg px-5 fw-bold">Try it for free</a>
-      <a href="{% url 'core:support' %}" class="btn btn-outline-light btn-lg px-5 fw-bold">Contact Sales</a>
+    <div class="d-flex justify-content-center gap-3 mb-5">
+      <a href="{% url 'core:try_free' %}" class="btn btn-light text-primary btn-lg px-5 fw-bold">
+        <i class="bi bi-rocket-takeoff me-2"></i> Start Free Trial
+      </a>
+      <a href="{% url 'core:support' %}" class="btn btn-outline-light btn-lg px-5 fw-bold">Talk to Sales</a>
+    </div>
+    <div class="risk-badges-row">
+      <span class="badge bg-white bg-opacity-25 px-3 py-2"><i class="bi bi-check me-1"></i> No credit card
+        required</span>
+      <span class="badge bg-white bg-opacity-25 px-3 py-2"><i class="bi bi-check me-1"></i> 14-day full access</span>
+      <span class="badge bg-white bg-opacity-25 px-3 py-2"><i class="bi bi-check me-1"></i> Cancel anytime</span>
     </div>
   </div>
 </section>

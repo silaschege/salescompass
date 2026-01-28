@@ -1,0 +1,141 @@
+{% load humanize %}
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0"
+                style="background: linear-gradient(135deg, var(--pos-dark) 0%, var(--pos-dark-accent) 100%); color: #fff;">
+                <h5 class="modal-title font-weight-bold" id="paymentModalLabel">
+                    <i class="feather icon-credit-card me-2 text-warning"></i>Collect Payment
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Left: Payment Methods -->
+                    <div class="col-md-6">
+                        <h6 class="mb-3">Payment Method</h6>
+                        <div class="d-grid gap-2 payment-methods">
+                            <button class="btn btn-lg btn-outline-primary payment-method-btn active shadow-sm"
+                                data-method="cash">
+                                <i class="bi bi-cash-coin me-2"></i>Cash
+                            </button>
+                            <button class="btn btn-lg btn-outline-primary payment-method-btn shadow-sm"
+                                data-method="card">
+                                <i class="bi bi-credit-card me-2"></i>Card
+                            </button>
+                            <button class="btn btn-lg btn-outline-primary payment-method-btn shadow-sm"
+                                data-method="mobile">
+                                <i class="bi bi-phone me-2"></i>M-Pesa
+                            </button>
+                            <button class="btn btn-lg btn-outline-primary payment-method-btn shadow-sm"
+                                data-method="bank_transfer">
+                                <i class="bi bi-bank me-2"></i>Bank Transfer
+                            </button>
+                        </div>
+
+                        <!-- Split Payment Toggle -->
+                        <div class="form-check mt-3">
+                            <input class="form-check-input" type="checkbox" id="split-payment-check">
+                            <label class="form-check-label" for="split-payment-check">
+                                Split Payment
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Right: Payment Details -->
+                    <div class="col-md-6">
+                        <div class="payment-summary p-3 bg-light rounded mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Amount Due</span>
+                                <span class="fw-bold fs-4" id="payment-amount-due">
+                                    {{ transaction.total_amount|default:"0.00" }}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2" id="amount-tendered-row">
+                                <span>Amount Tendered</span>
+                                <span class="fw-bold" id="payment-tendered">0.00</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <span>Change Due</span>
+                                <span class="fw-bold text-success fs-5" id="payment-change">0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Cash Amount Input (shown for cash payments) -->
+                        <div class="cash-input mb-3" id="cash-input-section">
+                            <label for="cash-amount" class="form-label">Amount Tendered</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text">{{ transaction.currency|default:"KES" }}</span>
+                                <input type="number" class="form-control" id="cash-amount" step="0.01" min="0"
+                                    placeholder="0.00">
+                            </div>
+                            <!-- Quick Amount Buttons -->
+                            <div class="quick-amounts mt-3 d-flex flex-wrap gap-2">
+                                <button class="btn btn-sm btn-outline-primary quick-amount"
+                                    data-amount="exact">Exact</button>
+                                <button class="btn btn-sm btn-outline-primary quick-amount"
+                                    data-amount="100">100</button>
+                                <button class="btn btn-sm btn-outline-primary quick-amount"
+                                    data-amount="200">200</button>
+                                <button class="btn btn-sm btn-outline-primary quick-amount"
+                                    data-amount="500">500</button>
+                                <button class="btn btn-sm btn-outline-primary quick-amount"
+                                    data-amount="1000">1,000</button>
+                            </div>
+                        </div>
+
+                        <!-- Card/Mobile Reference (hidden by default) -->
+                        <div class="reference-input mb-3 d-none" id="reference-input-section">
+                            <label for="payment-reference" class="form-label">Reference Number</label>
+                            <input type="text" class="form-control" id="payment-reference"
+                                placeholder="Enter transaction reference">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary btn-lg" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-checkout btn-lg px-5 shadow" id="complete-payment-btn"
+                    style="background: linear-gradient(135deg, var(--pos-accent) 0%, var(--pos-accent-dark) 100%) !important; border: none !important; color: var(--pos-dark) !important;">
+                    <i class="bi bi-check-circle-fill me-2"></i>Complete Sale
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sale Complete Modal -->
+<div class="modal fade" id="saleCompleteModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center">
+            <div class="modal-body py-5">
+                <div class="mb-4">
+                    <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center"
+                        style="width: 80px; height: 80px;">
+                        <i class="feather icon-check" style="font-size: 40px;"></i>
+                    </div>
+                </div>
+                <h3 class="mb-3">Sale Complete!</h3>
+                <p class="text-muted mb-4">
+                    Transaction <strong id="complete-txn-number"></strong> completed successfully.
+                </p>
+                <div class="change-info mb-4 d-none" id="change-info">
+                    <div class="alert alert-warning">
+                        <h5 class="mb-0">Change Due: <span id="change-amount" class="ms-2"></span></h5>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center gap-3">
+                    <button class="btn btn-outline-secondary" id="print-receipt-btn">
+                        <i class="feather icon-printer me-2"></i>Print Receipt
+                    </button>
+                    <button class="btn btn-primary" id="new-sale-btn">
+                        <i class="feather icon-plus me-2"></i>New Sale
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

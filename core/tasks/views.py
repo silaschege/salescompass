@@ -18,6 +18,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views import View
+from core.event_bus import event_bus
 import json
 
 class TaskPriorityListView(ListView):
@@ -292,7 +293,19 @@ class TaskCreateView(CreateView):
         if hasattr(self.request.user, 'tenant_id'):
             form.instance.tenant_id = self.request.user.tenant_id
         messages.success(self.request, 'Task created successfully.')
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        
+        event_bus.emit('task.created', {
+            'task_id': self.object.id,
+            'title': self.object.title,
+            'priority': self.object.priority,
+            'status': self.object.status,
+            'assigned_to_id': self.object.assigned_to.id if self.object.assigned_to else None,
+            'tenant_id': self.request.user.tenant_id if hasattr(self.request.user, 'tenant_id') else None,
+            'user': self.request.user
+        })
+        
+        return response
 
 
 class TaskUpdateView(UpdateView):
@@ -310,7 +323,19 @@ class TaskUpdateView(UpdateView):
     
     def form_valid(self, form):
         messages.success(self.request, 'Task updated successfully.')
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        
+        event_bus.emit('task.updated', {
+            'task_id': self.object.id,
+            'title': self.object.title,
+            'priority': self.object.priority,
+            'status': self.object.status,
+            'assigned_to_id': self.object.assigned_to.id if self.object.assigned_to else None,
+            'tenant_id': self.request.user.tenant_id if hasattr(self.request.user, 'tenant_id') else None,
+            'user': self.request.user
+        })
+        
+        return response
 
 
 class TaskDeleteView(DeleteView):
@@ -382,6 +407,14 @@ class CompleteTaskView(LoginRequiredMixin, View):
         task.status = 'completed'
         task.completed_at = timezone.now()
         task.save()
+        
+        event_bus.emit('task.completed', {
+            'task_id': task.id,
+            'title': task.title,
+            'tenant_id': request.user.tenant_id if hasattr(request.user, 'tenant_id') else None,
+            'user': request.user
+        })
+        
         return JsonResponse({'success': True, 'message': 'Task completed'})
 
 

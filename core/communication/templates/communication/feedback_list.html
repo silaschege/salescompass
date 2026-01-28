@@ -51,10 +51,12 @@
                 <tbody>
                     {% for feedback in feedback_forms %}
                     <tr>
+
                         <td class="ps-4">
                             <div class="fw-bold text-comm">{{ feedback.title }}</div>
-                            <small class="text-muted">{{ feedback.feedback_type|replace:"_, "|title }}</small>
+                            <small class="text-muted">{{ feedback.get_feedback_type_display }}</small>
                         </td>
+
                         <td>
                             {% if feedback.contact_target %}
                             <div class="small fw-bold">{{ feedback.contact_target.get_full_name }}</div>

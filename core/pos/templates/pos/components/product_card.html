@@ -1,0 +1,36 @@
+<div class="product-card card h-100 shadow-sm" data-product-id="{{ product.id }}"
+    data-product-name="{{ product.product_name }}" data-product-price="{{ product.base_price }}"
+    data-product-sku="{{ product.sku }}">
+    <div class="card-body p-2 text-center">
+        {% if product.thumbnail %}
+        <img src="{{ product.thumbnail.url }}" alt="{{ product.product_name }}" class="product-image mb-2"
+            style="max-height: 60px; object-fit: contain;">
+        {% elif product.image %}
+        <img src="{{ product.image.url }}" alt="{{ product.product_name }}" class="product-image mb-2"
+            style="max-height: 60px; object-fit: contain;">
+        {% else %}
+        <div class="product-placeholder mb-2 bg-light rounded d-flex align-items-center justify-content-center"
+            style="height: 60px;">
+            <i class="feather icon-package text-muted" style="font-size: 24px;"></i>
+        </div>
+        {% endif %}
+        <h6 class="product-name mb-1 text-truncate" title="{{ product.product_name }}">
+            {{ product.product_name }}
+        </h6>
+        <small class="text-muted d-block mb-1">{{ product.sku }}</small>
+        <div class="product-price fw-bold text-primary">
+            {{ product.base_price|floatformat:2 }}
+        </div>
+        {% if product.track_inventory %}
+        <small class="stock-indicator">
+            {% if stock_level > product.low_stock_threshold %}
+            <span class="text-success"><i class="feather icon-check-circle"></i> In Stock</span>
+            {% elif stock_level > 0 %}
+            <span class="text-warning"><i class="feather icon-alert-circle"></i> Low Stock</span>
+            {% else %}
+            <span class="text-danger"><i class="feather icon-x-circle"></i> Out of Stock</span>
+            {% endif %}
+        </small>
+        {% endif %}
+    </div>
+</div>

@@ -1,0 +1,161 @@
+{% extends "sales/base.html" %}
+{% load humanize %}
+
+{% block sales_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h2 fw-bold mb-0">Revenue Strategy & Compliance</h1>
+            <p class="text-muted">IFRS 15 | IAS 18 Performance & Recognition Velocity</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary px-4 shadow-sm border-0">
+                <i class="bi bi-arrow-repeat me-2"></i> Recalculate Schedules
+            </button>
+            <button class="btn btn-light px-4 border shadow-sm">
+                <i class="bi bi-file-earmark-pdf me-2"></i> Disclosure Report
+            </button>
+        </div>
+    </div>
+
+    <!-- KPI Section -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100 border-0 shadow-sm border-start border-primary border-4">
+                <div class="stat-label text-muted small text-uppercase fw-bold mb-1">Contract Liabilities</div>
+                <div class="stat-value h2 fw-bold text-dark">${{ unearned_revenue|floatformat:0|intcomma }}</div>
+                <div class="text-muted extra-small mt-2 d-flex align-items-center">
+                    <i class="bi bi-clock-history me-1 text-warning"></i> Deferred for recognition
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100 border-0 shadow-sm border-start border-success border-4">
+                <div class="stat-label text-muted small text-uppercase fw-bold mb-1">Recognized (MTD)</div>
+                <div class="stat-value h2 fw-bold text-dark">${{ mtd_recognized|floatformat:0|intcomma }}</div>
+                <div class="text-success extra-small mt-2">
+                    <i class="bi bi-graph-up me-1"></i> +12% vs last month
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100 border-0 shadow-sm border-start border-warning border-4">
+                <div class="stat-label text-muted small text-uppercase fw-bold mb-1">Contract Assets</div>
+                <div class="stat-value h2 fw-bold text-dark">${{ contract_assets|floatformat:0|intcomma }}</div>
+                <div class="text-warning extra-small mt-2">Unbilled earned revenue</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100 border-0 shadow-sm border-start border-info border-4">
+                <div class="stat-label text-muted small text-uppercase fw-bold mb-1">Recognition Velocity</div>
+                <div class="stat-value h2 fw-bold text-dark">84%</div>
+                <div class="text-info extra-small mt-2">Obligation fulfillment rate</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Contract Lifecycle Table -->
+        <div class="col-lg-8">
+            <div class="premium-card h-100 border-0 shadow-sm overflow-hidden">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Contract Fulfillment Pipeline</h5>
+                    <div class="badge badge-soft-primary px-3 rounded-pill">IFRS 15 Active</div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light bg-opacity-50">
+                            <tr class="text-muted small text-uppercase fw-bold">
+                                <th class="ps-4">Performance Obligation</th>
+                                <th>Method</th>
+                                <th class="text-center">Allocation</th>
+                                <th class="pe-4 text-end">Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for obligation in pending_obligations %}
+                            <tr>
+                                <td class="ps-4 py-3">
+                                    <div class="fw-bold text-dark">{{ obligation.name }}</div>
+                                    <div class="extra-small text-muted">{{ obligation.contract.contract_number }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-soft-info px-2 py-1 text-uppercase extra-small">{{
+                                        obligation.get_recognition_method_display }}</span>
+                                </td>
+                                <td class="text-center fw-bold text-dark">
+                                    ${{ obligation.allocated_amount|intcomma }}
+                                </td>
+                                <td class="pe-4">
+                                    <div class="d-flex align-items-center justify-content-end">
+                                        <div class="progress flex-grow-1 me-3" style="height: 6px; max-width: 100px;">
+                                            <div class="progress-bar bg-success"
+                                                style="width: {{ obligation.progress_percent }}%"></div>
+                                        </div>
+                                        <span class="fw-bold small">{{ obligation.progress_percent }}%</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">No pending obligations requiring
+                                    recognition.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compliance Check & Alerts -->
+        <div class="col-lg-4">
+            <div class="premium-card p-4 mb-4 border-0 shadow-sm bg-dark text-white">
+                <h6 class="fw-bold mb-3 d-flex align-items-center">
+                    <i class="bi bi-shield-check me-2 text-primary"></i> Recognition Alerts
+                </h6>
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex gap-3 align-items-start">
+                        <div class="bg-warning rounded-circle p-1 mt-1"></div>
+                        <div class="small text-white-50">3 contracts have unrecognized revenue past the scheduled date.
+                        </div>
+                    </div>
+                    <div class="d-flex gap-3 align-items-start">
+                        <div class="bg-primary rounded-circle p-1 mt-1"></div>
+                        <div class="small text-white-50">Revenue recognition for Q1 is within 2% of forecast accuracy.
+                        </div>
+                    </div>
+                </div>
+                <div class="d-grid mt-4">
+                    <button class="btn btn-outline-light btn-sm">View Audit Log</button>
+                </div>
+            </div>
+
+            <div class="premium-card p-4 border-0 shadow-sm h-100">
+                <h6 class="fw-bold mb-4 d-flex align-items-center"><i
+                        class="bi bi-graph-up-arrow text-primary me-2"></i> Revenue Allocation Mix</h6>
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <div class="d-flex justify-content-between extra-small fw-bold text-muted mb-1">
+                            <span>POINT IN TIME (GOODS)</span>
+                            <span>45%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" style="width: 45%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between extra-small fw-bold text-muted mb-1">
+                            <span>OVER TIME (SERVICES)</span>
+                            <span>55%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-success" style="width: 55%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

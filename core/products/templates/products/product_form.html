@@ -1,222 +1,448 @@
 {% extends "products/base.html" %}
+{% load static %}
 
-{% block title %}
-    {% if object %}Edit {{ object.name }}{% else %}New Product{% endif %} - SalesCompass
-{% endblock %}
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Product - SalesCompass{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    
-    <!-- Page Header -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <div>
-            <h1 class="h3 mb-0 text-gray-800">
-                {% if object %}Edit Product{% else %}New Product{% endif %}
-            </h1>
-            <p class="text-muted mb-0 mt-1 small">
-                {% if object %}Update product details and specifications{% else %}Add a new item to your catalog{% endif %}
-            </p>
-        </div>
-        <div>
-            <a href="{% url 'products:product_list' %}" class="btn btn-sm btn-secondary shadow-sm">
-                <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to List
-            </a>
-        </div>
-    </div>
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="h3 mb-0 text-gray-800">{% if object %}Edit Product: {{ object.product_name }}{% else %}Add New Product{% endif %}</h2>
+                    <p class="text-muted mb-0">Complete the details below to {% if object %}update{% else %}register{% endif %} a product in your catalog.</p>
+                </div>
+                <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left mr-1"></i> Back to List
+                </a>
+            </div>
 
-    <!-- Form Card -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Product Information</h6>
-        </div>
-        <div class="card-body">
-            <form method="post" novalidate>
+            <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
                 {% csrf_token %}
 
-                {% if form.non_field_errors %}
-                    <div class="alert alert-danger mb-4">
-                        {% for error in form.non_field_errors %}
-                            {{ error }}
-                        {% endfor %}
-                    </div>
-                {% endif %}
-
-                <!-- SECTION 1: GENERAL INFO -->
-                <h6 class="text-secondary text-uppercase text-xs font-weight-bold border-bottom pb-2 mb-3">
-                    General Information
-                </h6>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="{{ form.product_name.id_for_label }}" class="form-label font-weight-bold small">Product Name *</label>
-                        {{ form.product_name }}
-                        {% if form.product_name.errors %}
-                            <div class="text-danger small mt-1">{{ form.product_name.errors }}</div>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label for="{{ form.sku.id_for_label }}" class="form-label font-weight-bold small">SKU *</label>
-                        {{ form.sku }}
-                        {% if form.sku.errors %}
-                            <div class="text-danger small mt-1">{{ form.sku.errors }}</div>
-                        {% endif %}
-                        <small class="text-muted">Stock Keeping Unit</small>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label for="{{ form.upc.id_for_label }}" class="form-label font-weight-bold small">UPC</label>
-                        {{ form.upc }}
-                        <small class="text-muted">Universal Product Code</small>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="{{ form.category.id_for_label }}" class="form-label font-weight-bold small">Category</label>
-                        {{ form.category }}
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="{{ form.tags.id_for_label }}" class="form-label font-weight-bold small">Tags</label>
-                        {{ form.tags }}
-                        <small class="text-muted">Comma-separated (e.g., tech, hardware)</small>
-                    </div>
-                    <div class="col-12 mb-3">
-                        <label for="{{ form.description.id_for_label }}" class="form-label font-weight-bold small">Description</label>
-                        {{ form.description }}
-                    </div>
-                </div>
-
-                <!-- SECTION 2: PRICING -->
-                <h6 class="text-secondary text-uppercase text-xs font-weight-bold border-bottom pb-2 mb-3 mt-3">
-                    Pricing Strategy
-                </h6>
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label for="{{ form.base_price.id_for_label }}" class="form-label font-weight-bold small">Base Price *</label>
-                        {{ form.base_price }}
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label for="{{ form.currency.id_for_label }}" class="form-label font-weight-bold small">Currency</label>
-                        {{ form.currency }}
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label for="{{ form.pricing_model.id_for_label }}" class="form-label font-weight-bold small">Pricing Model</label>
-                        {{ form.pricing_model }}
-                    </div>
-                </div>
-
-                <!-- SECTION 3: SUSTAINABILITY (ESG) -->
-                <h6 class="text-secondary text-uppercase text-xs font-weight-bold border-bottom pb-2 mb-3 mt-3">
-                    Sustainability & ESG
-                </h6>
-                <div class="row">
-                    <div class="col-md-12 mb-3">
-                        <div class="form-check">
-                            {{ form.esg_certified }}
-                            <label class="form-check-label font-weight-bold small text-success" for="{{ form.esg_certified.id_for_label }}">
-                                <i class="fas fa-leaf mr-1"></i> This product is ESG Certified
-                            </label>
+                {% if form.errors %}
+                <div class="alert alert-danger shadow-sm border-left-danger" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-circle fa-2x mr-3"></i>
+                        <div>
+                            <h5 class="alert-heading mb-1">Please correct the following errors:</h5>
+                            <ul class="mb-0">
+                                {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                <li><strong>{{ field|title }}:</strong> {{ error }}</li>
+                                {% endfor %}
+                                {% endfor %}
+                            </ul>
                         </div>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="{{ form.carbon_footprint.id_for_label }}" class="form-label font-weight-bold small">Carbon Footprint</label>
-                        {{ form.carbon_footprint }}
-                        <small class="text-muted">kg CO2e per unit</small>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="{{ form.tco2e_saved.id_for_label }}" class="form-label font-weight-bold small">tCO2e Saved</label>
-                        {{ form.tco2e_saved }}
-                        <small class="text-muted">Tonnes saved by customer</small>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="{{ form.esg_certifications.id_for_label }}" class="form-label font-weight-bold small">Certifications</label>
-                        {{ form.esg_certifications }}
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="{{ form.sustainability_notes.id_for_label }}" class="form-label font-weight-bold small">Sustainability Notes</label>
-                        {{ form.sustainability_notes }}
-                    </div>
                 </div>
+                {% endif %}
 
-                <!-- SECTION 4: AVAILABILITY -->
-                <h6 class="text-secondary text-uppercase text-xs font-weight-bold border-bottom pb-2 mb-3 mt-3">
-                    Availability & Status
-                </h6>
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label for="{{ form.available_from.id_for_label }}" class="form-label font-weight-bold small">Available From</label>
-                        {{ form.available_from }}
+                <!-- SECTION 1: CORE DETAILS -->
+                <div class="card shadow mb-4 border-left-primary">
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-box-open mr-2"></i>Core Product
+                            Information</h6>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <label for="{{ form.available_to.id_for_label }}" class="form-label font-weight-bold small">Available To</label>
-                        {{ form.available_to }}
-                    </div>
-                    <div class="col-md-4 mb-3 d-flex align-items-end">
-                        <div class="form-group mb-2">
-                             <div class="custom-control custom-switch">
-                                {{ form.is_active }}
-                                <label class="custom-control-label font-weight-bold text-primary" for="{{ form.is_active.id_for_label }}">
-                                    Active Product
-                                </label>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label font-weight-bold small">Product Name *</label>
+                                {{ form.product_name }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold small">Category</label>
+                                {{ form.category }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold small">SKU (External ID)</label>
+                                {{ form.sku }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold small">UPC/Barcode</label>
+                                {{ form.upc }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold small">Tags</label>
+                                {{ form.tags }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label font-weight-bold small">Product Description</label>
+                            {{ form.product_description }}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label font-weight-bold small">Main Image</label>
+                                {{ form.image }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label font-weight-bold small">Thumbnail</label>
+                                {{ form.thumbnail }}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- ACTIONS -->
-                <hr class="mt-4 mb-4">
-                <div class="d-flex justify-content-end">
-                    <a href="{% url 'products:product_list' %}" class="btn btn-secondary mr-2">Cancel</a>
-                    <button type="submit" class="btn btn-primary">
-                        {% if object %}Save Changes{% else %}Create Product{% endif %}
-                    </button>
+                <!-- SECTION 2: PRICING & TAXATION -->
+                <div class="card shadow mb-4 border-left-success">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-success"><i class="fas fa-money-bill-wave mr-2"></i>Pricing
+                            & Taxation</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold small">Base Price *</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">$</span>
+                                    </div>
+                                    {{ form.base_price }}
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold small">Currency</label>
+                                {{ form.currency }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold small">Pricing Model</label>
+                                {{ form.pricing_model }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold small">Tax Rate</label>
+                                {{ form.tax_rate }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold small">Min SSP (Standalone)</label>
+                                {{ form.ssp_min }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold small">Max SSP (Standalone)</label>
+                                {{ form.ssp_max }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- SECTION 3: INVENTORY & LOGISTICS -->
+                    <div class="col-lg-6">
+                        <div class="card shadow mb-4 border-left-info">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-info"><i
+                                        class="fas fa-warehouse mr-2"></i>Inventory & Logistics</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="custom-control custom-switch mb-4">
+                                    {{ form.track_inventory }}
+                                    <label class="custom-control-label font-weight-bold text-info"
+                                        for="{{ form.track_inventory.id_for_label }}">
+                                        Track Inventory Levels
+                                    </label>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label font-weight-bold small">Low Stock Alert Threshold</label>
+                                    {{ form.low_stock_threshold }}
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label font-weight-bold small">Preferred Supplier</label>
+                                    {{ form.preferred_supplier }}
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label font-weight-bold small">Valuation Method (IAS 2)</label>
+                                    {{ form.valuation_method }}
+                                </div>
+                                <div class="custom-control custom-checkbox mt-3">
+                                    {{ form.is_capital_asset }}
+                                    <label class="custom-control-label font-weight-bold small"
+                                        for="{{ form.is_capital_asset.id_for_label }}">
+                                        IAS 16: Mark as Capital Asset (Fixed Asset)
+                                    </label>
+                                </div>
+                                <div class="mt-3">
+                                    <label class="form-label font-weight-bold small">Net Realizable Value
+                                        (Impairment)</label>
+                                    {{ form.nrv }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 4: PHYSICAL ATTRIBUTES -->
+                    <div class="col-lg-6">
+                        <div class="card shadow mb-4 border-left-warning">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-warning"><i
+                                        class="fas fa-ruler-combined mr-2"></i>Physical Attributes</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-6 mb-3">
+                                        <label class="form-label font-weight-bold small">Weight (kg)</label>
+                                        {{ form.weight }}
+                                    </div>
+                                    <div class="col-6 mb-3">
+                                        <label class="form-label font-weight-bold small">Length (cm)</label>
+                                        {{ form.length }}
+                                    </div>
+                                    <div class="col-6 mb-3">
+                                        <label class="form-label font-weight-bold small">Width (cm)</label>
+                                        {{ form.width }}
+                                    </div>
+                                    <div class="col-6 mb-3">
+                                        <label class="form-label font-weight-bold small">Height (cm)</label>
+                                        {{ form.height }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SUBSCRIPTION SETTINGS -->
+                        <div class="card shadow mb-4 border-left-dark">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-dark"><i class="fas fa-sync-alt mr-2"></i>Digital &
+                                    Subscriptions</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="custom-control custom-switch mb-3">
+                                    {{ form.is_subscription }}
+                                    <label class="custom-control-label font-weight-bold"
+                                        for="{{ form.is_subscription.id_for_label }}">
+                                        Subscription Product
+                                    </label>
+                                </div>
+                                <div class="row" id="subscription_fields">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label font-weight-bold small">Billing Cycle</label>
+                                        {{ form.billing_cycle }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label font-weight-bold small">Term (Months)</label>
+                                        {{ form.subscription_term }}
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="custom-control custom-checkbox">
+                                            {{ form.auto_renewal }}
+                                            <label class="custom-control-label font-weight-bold small"
+                                                for="{{ form.auto_renewal.id_for_label }}">
+                                                Enable Auto-Renewal
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 5: SUSTAINABILITY & ESG -->
+                <div class="card shadow mb-4 border-left-success">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-success"><i class="fas fa-leaf mr-2"></i>Sustainability &
+                            ESG Impact</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-center mb-4">
+                            <div class="col-md-4">
+                                <div class="custom-control custom-switch">
+                                    {{ form.esg_certified }}
+                                    <label class="custom-control-label h6 font-weight-bold text-success"
+                                        for="{{ form.esg_certified.id_for_label }}">
+                                        ESG Certified Product
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label font-weight-bold small">Carbon Footprint (kg CO2e)</label>
+                                {{ form.carbon_footprint }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label font-weight-bold small">tCO2e Saved (Cumulative)</label>
+                                {{ form.tco2e_saved }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label font-weight-bold small">ESG Certifications</label>
+                                {{ form.esg_certifications }}
+                                <small class="text-muted">e.g., ISO 14001, Energy Star, EPA</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label font-weight-bold small">Sustainability Statement</label>
+                                {{ form.sustainability_notes }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 6: AVAILABILITY -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-secondary text-uppercase small">Availability Schedule</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold small">Available From</label>
+                                {{ form.available_from }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold small">Available To</label>
+                                {{ form.available_to }}
+                            </div>
+                            <div class="col-md-4 mb-3 d-flex align-items-center">
+                                <div class="custom-control custom-switch">
+                                    {{ form.product_is_active }}
+                                    <label class="custom-control-label font-weight-bold text-primary"
+                                        for="{{ form.product_is_active.id_for_label }}">
+                                        Product Status (Active)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FORM ACTIONS -->
+                <div class="card shadow mb-5">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-outline-danger" data-toggle="modal"
+                            data-target="#cancelModal">
+                            <i class="fas fa-times mr-1"></i> Discard Changes
+                        </button>
+                        <div>
+                            <button type="reset" class="btn btn-secondary mr-2">Reset Form</button>
+                            <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm">
+                                <i class="fas fa-save mr-1"></i> {% if object %}Save Changes{% else %}Create Product{% endif %}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<!-- Cancel Confirmation Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Cancellation</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to discard your changes? All unsaved information will be lost.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Keep Editing</button>
+                <a href="{% url 'products:product_list' %}" class="btn btn-danger">Yes, Discard</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
-    /* Styling to ensure plain Django form widgets look like Bootstrap inputs */
-    form input[type="text"],
-    form input[type="email"],
-    form input[type="number"],
-    form input[type="url"],
-    form input[type="date"],
-    form input[type="datetime-local"],
-    form select,
-    form textarea {
-        display: block;
-        width: 100%;
-        height: calc(1.5em + .75rem + 2px);
-        padding: .375rem .75rem;
-        font-size: 1rem;
-        font-weight: 400;
-        line-height: 1.5;
-        color: #6e707e;
-        background-color: #fff;
-        background-clip: padding-box;
-        border: 1px solid #d1d3e2;
-        border-radius: .35rem;
-        transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-    }
-    
-    /* Textarea height fix */
-    form textarea {
-        height: auto;
-        min-height: 100px;
+    /* Premium Look & Feel Enhancement */
+    .card {
+        border-radius: 12px;
+        border: none;
     }
 
-    /* Checkbox alignment */
-    form input[type="checkbox"] {
-        width: auto;
-        height: auto;
-        margin-right: 0.5rem;
-        vertical-align: middle;
+    .card-header {
+        background-color: #f8f9fc;
+        border-bottom: 1px solid #e3e6f0;
+        border-top-left-radius: 12px !important;
+        border-top-right-radius: 12px !important;
     }
-    
-    /* Specific fix for custom switch if standard checkbox is used */
-    .custom-control-input {
-        width: 1rem !important;
-        height: 1.2rem !important;
+
+    .form-control,
+    .form-select {
+        border-radius: 8px;
+        padding: 0.6rem 1rem;
+        border: 1px solid #d1d3e2;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.1);
+    }
+
+    label.small {
+        letter-spacing: 0.05rem;
+        text-transform: uppercase;
+        color: #5a5c69;
+    }
+
+    .btn {
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 0.6rem 1.2rem;
+    }
+
+    .btn-lg {
+        padding: 0.8rem 2.5rem;
+    }
+
+    .custom-control-label::before,
+    .custom-control-label::after {
+        cursor: pointer;
+    }
+
+    /* Section specific border-left indicators */
+    .border-left-primary {
+        border-left: 5px solid #4e73df !important;
+    }
+
+    .border-left-success {
+        border-left: 5px solid #1cc88a !important;
+    }
+
+    .border-left-info {
+        border-left: 5px solid #36b9cc !important;
+    }
+
+    .border-left-warning {
+        border-left: 5px solid #f6c23e !important;
+    }
+
+    .border-left-danger {
+        border-left: 5px solid #e74a3b !important;
+    }
+
+    .border-left-dark {
+        border-left: 5px solid #5a5c69 !important;
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const subToggle = document.getElementById('{{ form.is_subscription.id_for_label }}');
+        const subFields = document.getElementById('subscription_fields');
+
+        function toggleSubFields() {
+            if (subToggle.checked) {
+                subFields.style.opacity = '1';
+                subFields.querySelectorAll('input, select').forEach(el => el.disabled = false);
+            } else {
+                subFields.style.opacity = '0.5';
+                subFields.querySelectorAll('input, select').forEach(el => el.disabled = true);
+            }
+        }
+
+        if (subToggle && subFields) {
+            subToggle.addEventListener('change', toggleSubFields);
+            toggleSubFields();
+        }
+    });
+</script>
 {% endblock %}

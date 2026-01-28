@@ -1,343 +1,124 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'core/base_module.html' %}
 
-<head>
-    <title>{% block title %}SalesCompass{% endblock %}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <style>
-        body {
-            background: linear-gradient(135deg, #f7f8fc 0%, #e3e6f3 100%);
-            font-family: 'Segoe UI', Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            min-height: 100vh;
-            overflow-x: hidden;
-            /* Prevent horizontal scroll during slide */
-        }
-
-        /* Sidebar - Slides off-screen to the left when hidden */
-        .sidebar {
-            width: 250px;
-            background: #fff;
-            border-right: 1px solid #e3e6f3;
-            padding: 1.5rem 1rem;
-            position: fixed;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            overflow-y: auto;
-            z-index: 1000;
-            transition: transform 0.3s ease;
-            /* Smooth slide */
-        }
-
-        /* When sidebar is hidden, slide it off-screen */
-        .sidebar.hidden {
-            transform: translateX(-100%);
-        }
-
-        .sidebar .navbar-brand {
-            color: #6f42c1 !important;
-            font-weight: bold;
-            font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .sidebar .nav-link {
-            color: #333;
-            margin-bottom: 0.5rem;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            transition: all 0.2s ease;
-        }
-
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link:focus {
-            color: #6f42c1;
-            background-color: #f0e6ff;
-            font-weight: 500;
-        }
-
-        .sidebar .dropdown-toggle::after {
-            margin-left: auto;
-            float: right;
-        }
-
-        /* Main content adjusts when sidebar is hidden */
-        .main-content {
-            margin-left: 250px;
-            padding: 2rem;
-            flex-grow: 1;
-            transition: margin-left 0.3s ease;
-        }
-
-        .main-content.sidebar-hidden {
-            margin-left: 0;
-        }
-
-        /* Hamburger button (top-left corner) */
-        .toggle-sidebar {
-            position: fixed;
-            top: 1rem;
-            left: 1rem;
-            z-index: 1001;
-            background: #6f42c1;
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            width: 40px;
-            height: 40px;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .header-bar {
-            background: #6f42c1;
-            color: #fff;
-            padding: 2rem 0 1rem 0;
-            border-radius: 0 0 2rem 2rem;
-            box-shadow: 0 4px 24px rgba(111, 66, 193, 0.08);
-            margin-bottom: 2rem;
-        }
-
-        .footer-bar {
-            background: #6f42c1;
-            color: #fff;
-            padding: 1rem 0;
-            border-radius: 2rem 2rem 0 0;
-            box-shadow: 0 -4px 24px rgba(111, 66, 193, 0.08);
-            text-align: center;
-            margin-top: 2rem;
-        }
-
-        .btn-primary {
-            background-color: #6f42c1;
-            border-color: #6f42c1;
-        }
-
-        .btn-warning {
-            background-color: #ffd600;
-            border-color: #ffd600;
-            color: #212529;
-        }
-
-        .btn-light {
-            background-color: #fff;
-            border-color: #e3e6f3;
-            color: #6f42c1;
-        }
-
-        .table thead {
-            background: #6f42c1;
-            color: #fff;
-        }
-
-        .card {
-            border-radius: 1rem;
-            box-shadow: 0 2px 16px rgba(111, 66, 193, 0.08);
-        }
-
-        .lead {
-            font-size: 1.1rem;
-        }
-
-        .block-title {
-            color: #6f42c1;
-            font-size: 2rem;
-            letter-spacing: 0.5px;
-            margin-bottom: 0;
-            text-align: center;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .sidebar.visible {
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 0;
-                padding: 2rem 1rem;
-            }
-
-            .toggle-sidebar {
-                display: flex;
-            }
-        }
-
-        /* Always show toggle on desktop for usability */
-        @media (min-width: 769px) {
-            .toggle-sidebar {
-                display: flex;
-            }
-        }
-
-        /* Navigation improvements */
-        .nav-section-title {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #6c757d;
-            margin: 1.5rem 0 0.5rem 1rem;
-            font-weight: 600;
-        }
-
-        .sidebar .nav-link.active {
-            background-color: #6f42c1;
-            color: white;
-        }
-    </style>
-    {% load static %}
-    {% block extra_head %}{% endblock %}
-</head>
-
-<body>
-
-    <!-- Hamburger Toggle Button -->
-    <button class="toggle-sidebar" id="toggleSidebar">
-        ☰
-    </button>
-
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-        <a class="navbar-brand" href="{% url 'core:app_selection' %}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#6f42c1" class="me-2"
-                viewBox="0 0 16 16">
-                <circle cx="8" cy="8" r="7" stroke="#6f42c1" stroke-width="2" fill="white" />
-                <polygon points="8,3 10,10 8,13 6,6" fill="#6f42c1" />
-            </svg>
-            SalesCompass
-        </a>
-        <nav class="nav flex-column">
-            <div class="nav-section-title">Main</div>
-            <a class="nav-link ms-3" href="{% url 'engagement:dashboard' %}">
-                <i class="bi bi-speedometer2 me-2"></i> Dashboard
-            </a>
-            <a class="nav-link ms-3" href="{% url 'engagement:account_breakdowns' %}">
-                <i class="bi bi-bar-chart-steps me-2"></i> Account Breakdowns
-            </a>
-            <a class="nav-link ms-3" href="{% url 'engagement:feed' %}">
-                <i class="bi bi-activity me-2"></i> Live Feed
-            </a>
-
-            <div class="nav-section-title">Actions</div>
-
-            <!--Next Action Dropdown -->
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#NextBestAction">
-                <i class="bi bi-lightning me-2"></i> Next Best Actions
-            </a>
-            <div class="collapse" id="NextBestAction">
-                <a class="nav-link ms-3" href="{% url 'engagement:next_best_action' %}">List</a>
-                <a class="nav-link ms-3" href="{% url 'engagement:next_best_action_create' %}">Create</a>
-            </div>
-
-            <!-- Playbooks Dropdown -->
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Playbooks">
-                <i class="bi bi-journal-text me-2"></i> Playbooks
-            </a>
-            <div class="collapse" id="Playbooks">
-                <a class="nav-link ms-3" href="{% url 'engagement:playbook_list' %}">List</a>
-                <a class="nav-link ms-3" href="{% url 'engagement:playbook_create' %}">Create</a>
-            </div>
-
-
-            <!-- Workflows Dropdown -->
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Workflows">
-                <i class="bi bi-diagram-3 me-2"></i> Workflows
-            </a>
-            <div class="collapse" id="Workflows">
-                <a class="nav-link ms-3" href="{% url 'engagement:workflow_list' %}">List</a>
-                <a class="nav-link ms-3" href="{% url 'engagement:workflow_create' %}">Create</a>
-                <a class="nav-link ms-3" href="{% url 'engagement:workflow_execution_list' %}">Executions</a>
-            </div>
-
-            <div class="nav-section-title">Reports</div>
-            <!-- Reports Dropdown -->
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Reports">
-                <i class="bi bi-bar-chart me-2"></i> Reports
-            </a>
-            <div class="collapse" id="Reports">
-                <a class="nav-link ms-3" href="{% url 'engagement:disengaged_accounts' %}">Disengaged Accounts</a>
-                <a class="nav-link ms-3" href="{% url 'engagement:top_engaged_accounts' %}">Top Engaged Accounts</a>
-                <a class="nav-link ms-3" href="{% url 'engagement:leaderboard' %}">Engagement Leaderboard</a>
-                <a class="nav-link ms-3" href="{% url 'engagement:attribution_report' %}">Attribution Report</a>
-                <a class="nav-link ms-3" href="{% url 'engagement:data_quality' %}">Data Quality</a>
-            </div>
-
-            <div class="nav-section-title">Optimization</div>
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Optimization">
-                <i class="bi bi-flask me-2"></i> A/B Testing
-            </a>
-            <div class="collapse" id="Optimization">
-                <a class="nav-link ms-3" href="{% url 'engagement:experiment_list' %}">Experiments</a>
-                <a class="nav-link ms-3" href="{% url 'engagement:experiment_create' %}">New Experiment</a>
-            </div>
-
-            <div class="nav-section-title">Configuration</div>
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Configuration">
-                <i class="bi bi-gear me-2"></i> Settings
-            </a>
-            <div class="collapse" id="Configuration">
-                <a class="nav-link ms-3" href="{% url 'engagement:configuration' %}">General Settings</a>
-                <a class="nav-link ms-3" href="{% url 'engagement:automation_rule_list' %}">Automation Rules</a>
-                <a class="nav-link ms-3" href="{% url 'engagement:webhook_list' %}">Webhooks</a>
-            </div>
-        </nav>
+{% block module_nav %}
+<div class="nav-section-title">Main</div>
+<a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+    href="{% url 'engagement:dashboard' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-speedometer2 nav-icon"></i>
+        <span>Dashboard</span>
     </div>
-
-    <!-- Main content -->
-    <div class="main-content" id="mainContent">
-        {% block content %}
-        <!-- Page-specific content goes here -->
-        {% endblock %}
-
+</a>
+<a class="nav-link {% if request.resolver_match.url_name == 'account_breakdowns' %}active{% endif %}"
+    href="{% url 'engagement:account_breakdowns' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-bar-chart-steps nav-icon"></i>
+        <span>Account Breakdowns</span>
     </div>
+</a>
+<a class="nav-link {% if request.resolver_match.url_name == 'feed' %}active{% endif %}"
+    href="{% url 'engagement:feed' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-activity nav-icon"></i>
+        <span>Live Feed</span>
+    </div>
+</a>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
-            const toggleBtn = document.getElementById('toggleSidebar');
+<div class="nav-section-title">Actions</div>
 
-            // Toggle sidebar visibility
-            toggleBtn.addEventListener('click', function () {
-                sidebar.classList.toggle('hidden');
-                mainContent.classList.toggle('sidebar-hidden');
-            });
+<!--Next Action Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#NextBestAction">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-lightning nav-icon"></i>
+        <span>Next Best Actions</span>
+    </div>
+</a>
+<div class="collapse" id="NextBestAction">
+    <a class="nav-link {% if request.resolver_match.url_name == 'next_best_action' %}active{% endif %}"
+        href="{% url 'engagement:next_best_action' %}">List</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'next_best_action_create' %}active{% endif %}"
+        href="{% url 'engagement:next_best_action_create' %}">Create</a>
+</div>
 
-            // On mobile, clicking outside closes sidebar
-            if (window.innerWidth <= 768) {
-                document.addEventListener('click', function (e) {
-                    if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
-                        sidebar.classList.remove('visible');
-                    }
-                });
-            }
+<!-- Playbooks Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Playbooks">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-journal-text nav-icon"></i>
+        <span>Playbooks</span>
+    </div>
+</a>
+<div class="collapse" id="Playbooks">
+    <a class="nav-link {% if request.resolver_match.url_name == 'playbook_list' %}active{% endif %}"
+        href="{% url 'engagement:playbook_list' %}">List</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'playbook_create' %}active{% endif %}"
+        href="{% url 'engagement:playbook_create' %}">Create</a>
+</div>
 
-            // Highlight active nav link
-            const currentPath = window.location.pathname;
-            const navLinks = document.querySelectorAll('.sidebar .nav-link');
-            navLinks.forEach(link => {
-                if (link.getAttribute('href') === currentPath) {
-                    link.classList.add('active');
-                }
-            });
-        });
-    </script>
-    {% block extra_js %}{% endblock %}
-</body>
 
-</html>
+<!-- Workflows Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Workflows">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-diagram-3 nav-icon"></i>
+        <span>Workflows</span>
+    </div>
+</a>
+<div class="collapse" id="Workflows">
+    <a class="nav-link {% if request.resolver_match.url_name == 'workflow_list' %}active{% endif %}"
+        href="{% url 'engagement:workflow_list' %}">List</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'workflow_create' %}active{% endif %}"
+        href="{% url 'engagement:workflow_create' %}">Create</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'workflow_execution_list' %}active{% endif %}"
+        href="{% url 'engagement:workflow_execution_list' %}">Executions</a>
+</div>
+
+<div class="nav-section-title">Reports</div>
+<!-- Reports Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Reports">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-bar-chart nav-icon"></i>
+        <span>Reports</span>
+    </div>
+</a>
+<div class="collapse" id="Reports">
+    <a class="nav-link {% if request.resolver_match.url_name == 'disengaged_accounts' %}active{% endif %}"
+        href="{% url 'engagement:disengaged_accounts' %}">Disengaged Accounts</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'top_engaged_accounts' %}active{% endif %}"
+        href="{% url 'engagement:top_engaged_accounts' %}">Top Engaged Accounts</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'leaderboard' %}active{% endif %}"
+        href="{% url 'engagement:leaderboard' %}">Engagement Leaderboard</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'attribution_report' %}active{% endif %}"
+        href="{% url 'engagement:attribution_report' %}">Attribution Report</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'data_quality' %}active{% endif %}"
+        href="{% url 'engagement:data_quality' %}">Data Quality</a>
+</div>
+
+<div class="nav-section-title">Optimization</div>
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Optimization">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-flask nav-icon"></i>
+        <span>A/B Testing</span>
+    </div>
+</a>
+<div class="collapse" id="Optimization">
+    <a class="nav-link {% if request.resolver_match.url_name == 'experiment_list' %}active{% endif %}"
+        href="{% url 'engagement:experiment_list' %}">Experiments</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'experiment_create' %}active{% endif %}"
+        href="{% url 'engagement:experiment_create' %}">New Experiment</a>
+</div>
+
+<div class="nav-section-title">Configuration</div>
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Configuration">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-gear nav-icon"></i>
+        <span>Settings</span>
+    </div>
+</a>
+<div class="collapse" id="Configuration">
+    <a class="nav-link {% if request.resolver_match.url_name == 'configuration' %}active{% endif %}"
+        href="{% url 'engagement:configuration' %}">General Settings</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'automation_rule_list' %}active{% endif %}"
+        href="{% url 'engagement:automation_rule_list' %}">Automation Rules</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'webhook_list' %}active{% endif %}"
+        href="{% url 'engagement:webhook_list' %}">Webhooks</a>
+</div>
+{% endblock %}

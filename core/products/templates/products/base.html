@@ -3,106 +3,191 @@
 {% block extra_css %}{% endblock %}
 
 {% block module_nav %}
+<!-- Governance & Compliance -->
+<a class="nav-link {% if request.resolver_match.url_name == 'governance_dashboard' %}active{% endif %}"
+    href="{% url 'products:governance_dashboard' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-shield-check nav-icon"></i>
+        <span>Compliance Hub</span>
+    </div>
+</a>
+
 <!-- Products Dropdown -->
-<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#productsMenu" aria-expanded="false">
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#productsMenu"
+    aria-expanded="false">
     <div class="d-flex align-items-center">
         <i class="bi bi-box-seam nav-icon"></i>
-        <span>Products</span>
+        <span>Product Registry</span>
     </div>
-   
 </a>
 <div class="collapse" id="productsMenu">
-    <a class="nav-link {% if request.resolver_match.url_name == 'product_list' %}active{% endif %}" 
-       href="{% url 'products:product_list' %}">
+    <a class="nav-link {% if request.resolver_match.url_name == 'product_list' %}active{% endif %}"
+        href="{% url 'products:product_list' %}">
         Product List
     </a>
-    <a class="nav-link {% if request.resolver_match.url_name == 'product_create' %}active{% endif %}" 
-       href="{% url 'products:product_create' %}">
+    <a class="nav-link {% if request.resolver_match.url_name == 'product_create' %}active{% endif %}"
+        href="{% url 'products:product_create' %}">
         Create Product
     </a>
 </div>
 
+<!-- Categories Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#categoriesMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-tags nav-icon"></i>
+        <span>Categories</span>
+    </div>
+</a>
+<div class="collapse" id="categoriesMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'category_list' %}active{% endif %}"
+        href="{% url 'products:category_list' %}">
+        Category List
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'category_create' %}active{% endif %}"
+        href="{% url 'products:category_create' %}">
+        Add Category
+    </a>
+</div>
+
 <!-- Bundles Dropdown -->
-<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#bundlesMenu" aria-expanded="false">
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#bundlesMenu"
+    aria-expanded="false">
     <div class="d-flex align-items-center">
         <i class="bi bi-collection nav-icon"></i>
         <span>Bundles</span>
     </div>
-   
+
 </a>
 <div class="collapse" id="bundlesMenu">
-    <a class="nav-link {% if request.resolver_match.url_name == 'productbundle_list' %}active{% endif %}" 
-       href="{% url 'products:productbundle_list' %}">
+    <a class="nav-link {% if request.resolver_match.url_name == 'productbundle_list' %}active{% endif %}"
+        href="{% url 'products:productbundle_list' %}">
         Bundle List
     </a>
-    <a class="nav-link {% if request.resolver_match.url_name == 'productbundle_create' %}active{% endif %}" 
-       href="{% url 'products:productbundle_create' %}">
+    <a class="nav-link {% if request.resolver_match.url_name == 'productbundle_create' %}active{% endif %}"
+        href="{% url 'products:productbundle_create' %}">
         Create Bundle
     </a>
 </div>
 
+<!-- Pricing & Discounts -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#pricingMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-currency-dollar nav-icon"></i>
+        <span>Price & Promotions</span>
+    </div>
+</a>
+<div class="collapse" id="pricingMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'pricelist_list' %}active{% endif %}"
+        href="{% url 'products:pricelist_list' %}">
+        Price Lists
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'coupon_list' %}active{% endif %}"
+        href="{% url 'products:coupon_list' %}">
+        Coupons
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'promotion_list' %}active{% endif %}"
+        href="{% url 'products:promotion_list' %}">
+        Promotions
+    </a>
+</div>
+
 <!-- Competitors Dropdown -->
-<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#competitorsMenu" aria-expanded="false">
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#competitorsMenu"
+    aria-expanded="false">
     <div class="d-flex align-items-center">
         <i class="bi bi-binoculars nav-icon"></i>
         <span>Competitors</span>
     </div>
-   
+
 </a>
 <div class="collapse" id="competitorsMenu">
-    <a class="nav-link {% if request.resolver_match.url_name == 'competitorproduct_list' %}active{% endif %}" 
-       href="{% url 'products:competitorproduct_list' %}">
+    <a class="nav-link {% if request.resolver_match.url_name == 'competitorproduct_list' %}active{% endif %}"
+        href="{% url 'products:competitorproduct_list' %}">
         Competitor List
     </a>
-    <a class="nav-link {% if request.resolver_match.url_name == 'competitorproduct_create' %}active{% endif %}" 
-       href="{% url 'products:competitorproduct_create' %}">
+    <a class="nav-link {% if request.resolver_match.url_name == 'competitorproduct_create' %}active{% endif %}"
+        href="{% url 'products:competitorproduct_create' %}">
         Add Competitor
     </a>
-    <a class="nav-link {% if request.resolver_match.url_name == 'competitor_mapping' %}active{% endif %}" 
-       href="{% url 'products:competitor_mapping' %}">
+    <a class="nav-link {% if request.resolver_match.url_name == 'competitor_mapping' %}active{% endif %}"
+        href="{% url 'products:competitor_mapping' %}">
         Competitor Mapping
     </a>
 </div>
 
 <!-- Comparisons Dropdown -->
-<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#comparisonsMenu" aria-expanded="false">
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#comparisonsMenu"
+    aria-expanded="false">
     <div class="d-flex align-items-center">
         <i class="bi bi-layout-text-window-reverse nav-icon"></i>
         <span>Comparisons</span>
     </div>
-   
+
 </a>
 <div class="collapse" id="comparisonsMenu">
-    <a class="nav-link {% if request.resolver_match.url_name == 'productcomparison_list' %}active{% endif %}" 
-       href="{% url 'products:productcomparison_list' %}">
+    <a class="nav-link {% if request.resolver_match.url_name == 'productcomparison_list' %}active{% endif %}"
+        href="{% url 'products:productcomparison_list' %}">
         Comparison List
     </a>
-    <a class="nav-link {% if request.resolver_match.url_name == 'productcomparison_create' %}active{% endif %}" 
-       href="{% url 'products:productcomparison_create' %}">
+    <a class="nav-link {% if request.resolver_match.url_name == 'productcomparison_create' %}active{% endif %}"
+        href="{% url 'products:productcomparison_create' %}">
         New Comparison
     </a>
-    <a class="nav-link {% if request.resolver_match.url_name == 'comparison' %}active{% endif %}" 
-       href="{% url 'products:comparison' %}">
+    <a class="nav-link {% if request.resolver_match.url_name == 'comparison' %}active{% endif %}"
+        href="{% url 'products:comparison' %}">
         Product Comparison
     </a>
 </div>
 
 <!-- Dependencies Dropdown -->
-<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#dependenciesMenu" aria-expanded="false">
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#dependenciesMenu"
+    aria-expanded="false">
     <div class="d-flex align-items-center">
         <i class="bi bi-link nav-icon"></i>
         <span>Dependencies</span>
     </div>
-   
+
 </a>
 <div class="collapse" id="dependenciesMenu">
-    <a class="nav-link {% if request.resolver_match.url_name == 'productdependency_list' %}active{% endif %}" 
-       href="{% url 'products:productdependency_list' %}">
+    <a class="nav-link {% if request.resolver_match.url_name == 'productdependency_list' %}active{% endif %}"
+        href="{% url 'products:productdependency_list' %}">
         Dependency List
     </a>
-    <a class="nav-link {% if request.resolver_match.url_name == 'productdependency_create' %}active{% endif %}" 
-       href="{% url 'products:productdependency_create' %}">
+    <a class="nav-link {% if request.resolver_match.url_name == 'productdependency_create' %}active{% endif %}"
+        href="{% url 'products:productdependency_create' %}">
         Add Dependency
     </a>
 </div>
+
+<!-- Suppliers Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#suppliersMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-truck nav-icon"></i>
+        <span>Suppliers</span>
+    </div>
+</a>
+<div class="collapse" id="suppliersMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'supplier_list' %}active{% endif %}"
+        href="{% url 'products:supplier_list' %}">
+        Supplier List
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'supplier_create' %}active{% endif %}"
+        href="{% url 'products:supplier_create' %}">
+        Add Supplier
+    </a>
+</div>
+
+<!-- Tools Section -->
+<div class="nav-header small text-uppercase text-muted mt-4 mb-2 ms-3"
+    style="font-size: 0.7rem; letter-spacing: 0.05rem;">Utilities</div>
+<a class="nav-link {% if request.resolver_match.url_name == 'bulk_label_print' %}active{% endif %}"
+    href="{% url 'products:bulk_label_print' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-printer nav-icon"></i>
+        <span>Label Generator</span>
+    </div>
+</a>
 {% endblock %}

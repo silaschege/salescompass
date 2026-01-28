@@ -1,0 +1,87 @@
+{% extends "pos/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Sessions{% endblock %}
+
+{% block pos_content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">POS Sessions</h1>
+        <a href="{% url 'pos:session_open' %}" class="btn btn-primary">
+            <i class="feather icon-play me-2"></i>New Session
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Session #</th>
+                            <th>Terminal</th>
+                            <th>Cashier</th>
+                            <th>Opened</th>
+                            <th>Closed</th>
+                            <th class="text-end">Transactions</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in sessions %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'pos:session_detail' session.pk %}" class="fw-bold">
+                                    {{ session.session_number }}
+                                </a>
+                            </td>
+                            <td>{{ session.terminal.terminal_name }}</td>
+                            <td>{{ session.cashier.get_full_name|default:session.cashier.username }}</td>
+                            <td>{{ session.opened_at|date:"M d, H:i" }}</td>
+                            <td>
+                                {% if session.closed_at %}
+                                {{ session.closed_at|date:"M d, H:i" }}
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">{{ session.transactions.count }}</td>
+                            <td>
+                                {% if session.status == 'active' %}
+                                <span class="badge bg-success">Active</span>
+                                {% elif session.status == 'closed' %}
+                                <span class="badge bg-secondary">Closed</span>
+                                {% else %}
+                                <span class="badge bg-warning">{{ session.status|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'pos:session_detail' session.pk %}"
+                                    class="btn btn-sm btn-outline-primary">
+                                    <i class="feather icon-eye"></i>
+                                </a>
+                                {% if session.status == 'active' %}
+                                <a href="{% url 'pos:session_close' session.pk %}"
+                                    class="btn btn-sm btn-outline-warning">
+                                    <i class="feather icon-stop-circle"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="feather icon-coffee fa-3x mb-3 opacity-50"></i>
+                                <p class="mb-0">No sessions found</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

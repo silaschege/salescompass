@@ -1,45 +1,154 @@
 {% extends "public/base.html" %}
 {% load static %}
 
-{% block title %}Pricing - Transparent & Modular | SalesCompass{% endblock %}
+{% block title %}Pricing - Better Than the Cost of Manual Operations | SalesCompass{% endblock %}
 
 {% block content %}
 <!-- Pricing Hero -->
 <section class="section-large text-center position-relative overflow-hidden">
     <div class="container position-relative z-1">
-        <h1 class="display-3 fw-extrabold mb-4">Pricing that grows <br><span class="highlight-handwritten">with your
-                team.</span></h1>
-        <p class="lead text-muted mb-6 mx-auto" style="max-width: 600px;">
-            Start with the Free CRM and only pay for the advanced apps you actually use.
-            No seat-based lock-ins for small teams.
+        <span class="transformation-badge mb-4"><i class="bi bi-calculator"></i> Smart Investment</span>
+        <h1 class="display-3 fw-extrabold mb-4">Costs Less Than Your <br><span class="highlight-handwritten">Manual
+                Processes.</span></h1>
+        <p class="lead text-muted mb-6 mx-auto" style="max-width: 700px;">
+            Most businesses lose $15,000+ monthly to manual processes. SalesCompass pays for itself in the first week.
         </p>
 
         <!-- Billing Toggle -->
         <div class="d-inline-flex align-items-center bg-white border border-light shadow-sm rounded-pill p-1 mb-5">
-            <button class="btn btn-sm btn-primary rounded-pill px-4">Monthly</button>
-            <button class="btn btn-sm btn-link text-muted text-decoration-none rounded-pill px-4">Yearly <span
-                    class="badge bg-success-subtle text-success ms-1">-20%</span></button>
+            <button class="btn btn-sm btn-primary rounded-pill px-4" id="monthly-btn">Monthly</button>
+            <button class="btn btn-sm btn-link text-muted text-decoration-none rounded-pill px-4" id="yearly-btn">Yearly
+                <span class="badge bg-success-subtle text-success ms-1">Save 20%</span></button>
+        </div>
+    </div>
+</section>
+
+<!-- Hidden Costs Exposure Section -->
+<section class="section bg-light border-top border-light">
+    <div class="container">
+        <div class="row align-items-center g-6">
+            <div class="col-lg-5">
+                <h2 class="fw-extrabold mb-4">The True Cost of <span class="text-danger">Manual Systems</span></h2>
+                <p class="text-muted mb-5">
+                    Every month you stay on manual processes, you're bleeding money. Here's what the "Black Book" is
+                    really costing you:
+                </p>
+
+                <div class="cost-breakdown">
+                    <div class="cost-item">
+                        <span class="cost-item-label">
+                            <i class="bi bi-clock text-danger"></i> Data Entry Time (40+ hrs)
+                        </span>
+                        <span class="cost-item-value">$2,000</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-item-label">
+                            <i class="bi bi-x-circle text-danger"></i> Duplicate Entry Errors
+                        </span>
+                        <span class="cost-item-value">$3,500</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-item-label">
+                            <i class="bi bi-person-dash text-danger"></i> Missed Follow-up Revenue
+                        </span>
+                        <span class="cost-item-value">$5,000</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-item-label">
+                            <i class="bi bi-app-indicator text-danger"></i> Multiple Tool Subscriptions
+                        </span>
+                        <span class="cost-item-value">$1,500</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-item-label">
+                            <i class="bi bi-graph-down text-danger"></i> Decision Delays & Guesswork
+                        </span>
+                        <span class="cost-item-value">$3,000</span>
+                    </div>
+                    <div class="cost-total">
+                        <span>Monthly Loss from Manual Systems</span>
+                        <span class="fs-4">$15,000+</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="text-center mb-4">
+                    <span class="comparison-label comparison-label-new">
+                        <i class="bi bi-check-circle"></i> SalesCompass Investment
+                    </span>
+                </div>
+
+                <!-- Standard Plan Highlight -->
+                <div class="card-elevated p-6 border-purple position-relative">
+                    <div class="position-absolute top-0 start-50 translate-middle">
+                        <span class="badge badge-gold rounded-pill px-4 py-2">Most Popular</span>
+                    </div>
+                    <div class="text-center pt-4">
+                        <h3 class="fw-bold mb-2">Standard Plan</h3>
+                        <div class="mb-4">
+                            <span class="display-3 fw-extrabold text-primary">$15</span>
+                            <span class="text-muted">/user /month</span>
+                        </div>
+                        <div class="p-4 bg-success-subtle rounded-3 mb-4">
+                            <div class="d-flex align-items-center justify-content-center gap-3">
+                                <i class="bi bi-arrow-up-circle-fill text-success fs-3"></i>
+                                <div class="text-start">
+                                    <div class="fw-bold text-success">ROI: 100x</div>
+                                    <div class="small text-muted">$15 investment saves $15,000+</div>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="{% url 'core:try_free' %}" class="btn btn-primary btn-lg w-100 mb-3">
+                            Start Saving Now
+                        </a>
+                        <p class="small text-muted mb-0">14-day free trial • No credit card required</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
 <!-- Pricing Grid -->
-<section class="section bg-light border-top border-light">
+<section class="section bg-white border-top border-light">
     <div class="container">
+        <div class="text-center mb-10">
+            <h2 class="fw-extrabold mb-3">Choose Your Plan</h2>
+            <p class="text-muted">All plans include free migration from your existing systems</p>
+        </div>
+
         <div class="row g-4 justify-content-center">
             <!-- Free Tier -->
             <div class="col-lg-4">
                 <div class="card-clean p-5 h-100">
-                    <h3 class="fw-bold mb-2">Free CRM</h3>
-                    <p class="small text-muted mb-4">Basic tools for individuals and small teams.</p>
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="app-icon app-icon-sm app-crm m-0">
+                            <i class="bi bi-gift"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold mb-0">Free CRM</h3>
+                            <span class="small text-muted">For individuals & startups</span>
+                        </div>
+                    </div>
                     <div class="mb-5">
                         <span class="display-4 fw-extrabold text-dark">$0</span>
-                        <span class="text-muted">/month</span>
+                        <span class="text-muted">/month forever</span>
                     </div>
+
+                    <div class="mb-4">
+                        <div class="small fw-bold text-uppercase text-muted mb-3">Replaces:</div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge bg-light text-muted">Spreadsheet Contacts</span>
+                            <span class="badge bg-light text-muted">Basic Task Lists</span>
+                        </div>
+                    </div>
+
                     <ul class="list-unstyled space-y-3 mb-6 small">
-                        <li><i class="bi bi-check2 text-primary me-2"></i>Unlimited Leads</li>
+                        <li><i class="bi bi-check2 text-primary me-2"></i>Unlimited Leads & Contacts</li>
                         <li><i class="bi bi-check2 text-primary me-2"></i>Basic Pipeline Management</li>
                         <li><i class="bi bi-check2 text-primary me-2"></i>Mobile App Access</li>
+                        <li><i class="bi bi-check2 text-primary me-2"></i>Email Integration</li>
+                        <li><i class="bi bi-check2 text-primary me-2"></i>Import from CSV/Excel</li>
                     </ul>
                     <a href="{% url 'core:try_free' %}" class="btn btn-outline-primary w-100">Start Free</a>
                 </div>
@@ -47,41 +156,119 @@
 
             <!-- Standard Tier -->
             <div class="col-lg-4">
-                <div class="card-clean p-5 h-100 border-purple shadow-xl scale-105 position-relative">
+                <div class="card-clean p-5 h-100 border-purple shadow-xl position-relative"
+                    style="transform: scale(1.02);">
                     <div class="position-absolute top-0 start-50 translate-middle">
                         <span class="badge badge-gold rounded-pill px-3 py-1">Best Value</span>
                     </div>
-                    <h3 class="fw-bold mb-2">Standard</h3>
-                    <p class="small text-muted mb-4">Full stack intelligence for growing companies.</p>
-                    <div class="mb-5">
-                        <span class="display-4 fw-extrabold text-dark">$15</span>
-                        <span class="text-muted">/user /mo</span>
+                    <div class="d-flex align-items-center gap-3 mb-4 pt-2">
+                        <div class="app-icon app-icon-sm app-sales m-0">
+                            <i class="bi bi-rocket-takeoff"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold mb-0">Standard</h3>
+                            <span class="small text-muted">For growing teams</span>
+                        </div>
                     </div>
+                    <div class="mb-5">
+                        <span class="display-4 fw-extrabold text-primary">$15</span>
+                        <span class="text-muted">/user /month</span>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="small fw-bold text-uppercase text-muted mb-3">Replaces:</div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge bg-primary-subtle text-primary">5+ Separate Tools</span>
+                            <span class="badge bg-primary-subtle text-primary">Manual Workflows</span>
+                        </div>
+                    </div>
+
                     <ul class="list-unstyled space-y-3 mb-6 small">
                         <li><i class="bi bi-check2 text-primary me-2"></i>Everything in Free</li>
-                        <li><i class="bi bi-check2 text-primary me-2"></i>All 24 Core Apps</li>
-                        <li><i class="bi bi-check2 text-primary me-2"></i>Predictive Forecasting</li>
+                        <li><i class="bi bi-check2 text-primary me-2"></i><strong>All 24 Core Apps</strong></li>
+                        <li><i class="bi bi-check2 text-primary me-2"></i>AI Lead Scoring & Predictions</li>
+                        <li><i class="bi bi-check2 text-primary me-2"></i>Workflow Automation</li>
                         <li><i class="bi bi-check2 text-primary me-2"></i>Custom API Access</li>
+                        <li><i class="bi bi-check2 text-primary me-2"></i>Advanced Reporting</li>
                     </ul>
-                    <a href="{% url 'core:try_free' %}" class="btn btn-primary w-100">Start now - It's free</a>
+                    <a href="{% url 'core:try_free' %}" class="btn btn-primary w-100">Start Free Trial</a>
                 </div>
             </div>
 
             <!-- Enterprise Tier -->
             <div class="col-lg-4">
                 <div class="card-clean p-5 h-100">
-                    <h3 class="fw-bold mb-2">Enterprise</h3>
-                    <p class="small text-muted mb-4">Advanced governance and custom ML.</p>
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="app-icon app-icon-sm app-ml m-0">
+                            <i class="bi bi-building"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold mb-0">Enterprise</h3>
+                            <span class="small text-muted">For large organizations</span>
+                        </div>
+                    </div>
                     <div class="mb-5">
                         <span class="display-4 fw-extrabold text-dark">Custom</span>
                     </div>
+
+                    <div class="mb-4">
+                        <div class="small fw-bold text-uppercase text-muted mb-3">Replaces:</div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge bg-light text-muted">Legacy CRM Systems</span>
+                            <span class="badge bg-light text-muted">Enterprise Software</span>
+                        </div>
+                    </div>
+
                     <ul class="list-unstyled space-y-3 mb-6 small">
+                        <li><i class="bi bi-check2 text-primary me-2"></i>Everything in Standard</li>
                         <li><i class="bi bi-check2 text-primary me-2"></i>Multi-Tenant Governance</li>
-                        <li><i class="bi bi-check2 text-primary me-2"></i>Custom ML Ontology</li>
-                        <li><i class="bi bi-check2 text-primary me-2"></i>SSO & SAML</li>
-                        <li><i class="bi bi-check2 text-primary me-2"></i>24/7 Dedicated Support</li>
+                        <li><i class="bi bi-check2 text-primary me-2"></i>Custom ML Model Training</li>
+                        <li><i class="bi bi-check2 text-primary me-2"></i>SSO & SAML Integration</li>
+                        <li><i class="bi bi-check2 text-primary me-2"></i>Dedicated Success Manager</li>
+                        <li><i class="bi bi-check2 text-primary me-2"></i>24/7 Priority Support</li>
                     </ul>
                     <a href="{% url 'core:support' %}" class="btn btn-outline-dark w-100">Contact Sales</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ROI Timeline -->
+<section class="section bg-light border-top border-light">
+    <div class="container text-center">
+        <h2 class="fw-extrabold mb-4">See Returns <span class="text-gold">Almost Immediately</span></h2>
+        <p class="text-muted mb-10 mx-auto" style="max-width: 600px;">
+            Unlike traditional software with long implementation cycles, SalesCompass delivers value from day one.
+        </p>
+
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="stat-counter">
+                    <div class="stat-number">Day 1</div>
+                    <div class="stat-label">Setup Complete</div>
+                    <div class="stat-sublabel">Import data & start using</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-counter">
+                    <div class="stat-number">Week 1</div>
+                    <div class="stat-label">Break Even</div>
+                    <div class="stat-sublabel">Time savings cover the cost</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-counter">
+                    <div class="stat-number">Month 1</div>
+                    <div class="stat-label">Positive ROI</div>
+                    <div class="stat-sublabel">Recovered revenue exceeds investment</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-counter">
+                    <div class="stat-number stat-number-gold">100x</div>
+                    <div class="stat-label">Annual Return</div>
+                    <div class="stat-sublabel">On your SalesCompass investment</div>
                 </div>
             </div>
         </div>
@@ -92,39 +279,48 @@
 <section class="section bg-white border-top border-light">
     <div class="container">
         <div class="text-center mb-10">
-            <h2 class="fw-extrabold">Build your bundle</h2>
-            <p class="text-muted">Pick the apps you need, skip the ones you don't.</p>
+            <h2 class="fw-extrabold">Add What You Need</h2>
+            <p class="text-muted">Modular pricing means you only pay for what you use</p>
         </div>
 
         <div class="row g-4 row-cols-1 row-cols-md-2 row-cols-lg-3">
             <div class="col">
-                <div class="p-4 border rounded-4 d-flex align-items-center gap-3">
+                <div class="p-4 border rounded-4 d-flex align-items-center gap-3 card-clean">
                     <div class="app-icon app-marketing m-0 app-icon-sm"><i class="bi bi-bullseye"></i></div>
                     <div class="flex-grow-1">
-                        <h6 class="fw-bold mb-0">Marketing</h6>
-                        <span class="small text-muted">+$10 /user</span>
+                        <h6 class="fw-bold mb-0">Marketing Automation</h6>
+                        <span class="small text-muted">Replaces: Mailchimp + Hubspot</span>
                     </div>
-                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox" checked></div>
+                    <div class="text-end">
+                        <div class="fw-bold text-primary">+$10</div>
+                        <div class="extra-small text-muted">/user</div>
+                    </div>
                 </div>
             </div>
             <div class="col">
-                <div class="p-4 border rounded-4 d-flex align-items-center gap-3">
+                <div class="p-4 border rounded-4 d-flex align-items-center gap-3 card-clean">
                     <div class="app-icon app-ml m-0 app-icon-sm"><i class="bi bi-cpu-fill"></i></div>
                     <div class="flex-grow-1">
-                        <h6 class="fw-bold mb-0">Intelligence</h6>
-                        <span class="small text-muted">+$20 /user</span>
+                        <h6 class="fw-bold mb-0">AI Intelligence</h6>
+                        <span class="small text-muted">Replaces: Guesswork</span>
                     </div>
-                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox" checked></div>
+                    <div class="text-end">
+                        <div class="fw-bold text-primary">+$20</div>
+                        <div class="extra-small text-muted">/user</div>
+                    </div>
                 </div>
             </div>
             <div class="col">
-                <div class="p-4 border rounded-4 d-flex align-items-center gap-3">
+                <div class="p-4 border rounded-4 d-flex align-items-center gap-3 card-clean">
                     <div class="app-icon app-reports m-0 app-icon-sm"><i class="bi bi-grid-3x3-gap-fill"></i></div>
                     <div class="flex-grow-1">
                         <h6 class="fw-bold mb-0">BI Studio</h6>
-                        <span class="small text-muted">+$15 /user</span>
+                        <span class="small text-muted">Replaces: Tableau + Excel</span>
                     </div>
-                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox"></div>
+                    <div class="text-end">
+                        <div class="fw-bold text-primary">+$15</div>
+                        <div class="extra-small text-muted">/user</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -134,18 +330,26 @@
 <!-- Trust Section -->
 <section class="section bg-light border-top border-light">
     <div class="container text-center">
-        <div class="row g-4 justify-content-center opacity-75 grayscale">
+        <div class="row g-4 justify-content-center">
             <div class="col-4 col-md-2 d-flex flex-column align-items-center">
-                <i class="bi bi-shield-lock-fill fs-2 mb-2"></i>
+                <i class="bi bi-shield-lock-fill fs-2 mb-2 text-primary"></i>
                 <small class="fw-bold">SOC2 Type II</small>
             </div>
             <div class="col-4 col-md-2 d-flex flex-column align-items-center">
-                <i class="bi bi-patch-check-fill fs-2 mb-2"></i>
+                <i class="bi bi-patch-check-fill fs-2 mb-2 text-primary"></i>
                 <small class="fw-bold">GDPR Ready</small>
             </div>
             <div class="col-4 col-md-2 d-flex flex-column align-items-center">
-                <i class="bi bi-globe fs-2 mb-2"></i>
+                <i class="bi bi-globe fs-2 mb-2 text-primary"></i>
                 <small class="fw-bold">HIPAA Comp.</small>
+            </div>
+            <div class="col-4 col-md-2 d-flex flex-column align-items-center">
+                <i class="bi bi-clock-fill fs-2 mb-2 text-primary"></i>
+                <small class="fw-bold">99.9% Uptime</small>
+            </div>
+            <div class="col-4 col-md-2 d-flex flex-column align-items-center">
+                <i class="bi bi-headset fs-2 mb-2 text-primary"></i>
+                <small class="fw-bold">24/7 Support</small>
             </div>
         </div>
     </div>
@@ -154,19 +358,21 @@
 <!-- FAQ -->
 <section class="section bg-white border-top border-light">
     <div class="container" style="max-width: 800px;">
-        <h2 class="text-center fw-extrabold mb-5">Common Questions</h2>
+        <h2 class="text-center fw-extrabold mb-5">Common Questions About Switching</h2>
         <div class="accordion accordion-flush" id="faqAccordion">
             <div class="accordion-item border-bottom">
                 <h2 class="accordion-header">
                     <button class="accordion-button collapsed fw-bold py-4" type="button" data-bs-toggle="collapse"
                         data-bs-target="#q1">
-                        Are there any setup fees?
+                        <i class="bi bi-file-earmark-spreadsheet me-3 text-primary"></i>
+                        How do I migrate my existing spreadsheets?
                     </button>
                 </h2>
                 <div id="q1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                     <div class="accordion-body text-muted">
-                        No. SalesCompass is self-service and you can start for free. Enterprise customers may choose
-                        professional services for custom ML ontology training.
+                        Simply upload your CSV or Excel files, and our smart importer will automatically map your
+                        columns to SalesCompass fields.
+                        Need help? Our migration team can do it for you at no extra cost.
                     </div>
                 </div>
             </div>
@@ -174,13 +380,63 @@
                 <h2 class="accordion-header">
                     <button class="accordion-button collapsed fw-bold py-4" type="button" data-bs-toggle="collapse"
                         data-bs-target="#q2">
-                        Can I cancel at any time?
+                        <i class="bi bi-people me-3 text-primary"></i>
+                        What if my team isn't tech-savvy?
                     </button>
                 </h2>
                 <div id="q2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                     <div class="accordion-body text-muted">
-                        Yes, our standard plans are month-to-month. You can cancel or change your plan at any time
-                        through the billing dashboard.
+                        SalesCompass is designed to be simpler than the spreadsheets you're already using. Most teams
+                        are
+                        fully productive within hours. Plus, we offer free onboarding sessions and 24/7 support.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item border-bottom">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed fw-bold py-4" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#q3">
+                        <i class="bi bi-x-circle me-3 text-primary"></i>
+                        Can I cancel at any time?
+                    </button>
+                </h2>
+                <div id="q3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-muted">
+                        Yes, our standard plans are month-to-month with no long-term contracts. You can cancel or change
+                        your plan
+                        at any time through the billing dashboard. We'll even help you export your data.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item border-bottom">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed fw-bold py-4" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#q4">
+                        <i class="bi bi-credit-card me-3 text-primary"></i>
+                        Are there any hidden fees?
+                    </button>
+                </h2>
+                <div id="q4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-muted">
+                        None. The price you see is the price you pay. No setup fees, no migration fees, no hidden
+                        charges.
+                        Enterprise customers get custom pricing based on their specific needs.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item border-bottom">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed fw-bold py-4" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#q5">
+                        <i class="bi bi-clock-history me-3 text-primary"></i>
+                        How long until I see results?
+                    </button>
+                </h2>
+                <div id="q5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-muted">
+                        Most businesses report immediate time savings from day one. Full ROI typically happens within
+                        the first
+                        week as your team eliminates manual data entry and captures previously missed opportunities.
                     </div>
                 </div>
             </div>
@@ -191,9 +447,17 @@
 <!-- Final CTA -->
 <section class="section-large text-center bg-primary text-white">
     <div class="container">
-        <h2 class="display-5 fw-extrabold mb-4 text-white">Scale your revenue today.</h2>
-        <p class="lead text-white-50 mb-6">No credit card required. Setup takes 2 minutes.</p>
-        <a href="{% url 'core:try_free' %}" class="btn btn-light text-primary btn-lg px-5 fw-bold">Try it for free</a>
+        <h2 class="display-5 fw-extrabold mb-4 text-white">Ready to Stop Losing Money to Manual Processes?</h2>
+        <p class="lead text-white-50 mb-6 mx-auto" style="max-width: 600px;">
+            Join thousands of businesses saving time and money with SalesCompass.
+        </p>
+        <div class="d-flex justify-content-center gap-3 mb-5">
+            <a href="{% url 'core:try_free' %}" class="btn btn-light text-primary btn-lg px-5 fw-bold">
+                <i class="bi bi-rocket-takeoff me-2"></i> Start Free Trial
+            </a>
+            <a href="{% url 'core:support' %}" class="btn btn-outline-light btn-lg px-5 fw-bold">Talk to Sales</a>
+        </div>
+        <p class="small text-white-50 mb-0">No credit card required • Free migration support • Cancel anytime</p>
     </div>
 </section>
 {% endblock %}

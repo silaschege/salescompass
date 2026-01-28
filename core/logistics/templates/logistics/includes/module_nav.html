@@ -1,0 +1,26 @@
+<!-- Dashboard -->
+<a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+    href="{% url 'logistics:dashboard' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-speedometer2 nav-icon"></i>
+        <span>Dashboard</span>
+    </div>
+</a>
+
+<!-- Shipments -->
+<a class="nav-link {% if request.resolver_match.url_name == 'shipment_list' or request.resolver_match.url_name == 'shipment_detail' %}active{% endif %}"
+    href="{% url 'logistics:shipment_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-truck nav-icon"></i>
+        <span>Shipments</span>
+    </div>
+</a>
+
+<!-- Carriers -->
+<a class="nav-link {% if request.resolver_match.url_name == 'carrier_list' %}active{% endif %}"
+    href="{% url 'logistics:carrier_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-box-seam nav-icon"></i>
+        <span>Carriers</span>
+    </div>
+</a>

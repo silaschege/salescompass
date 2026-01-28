@@ -1,0 +1,155 @@
+{% extends "pos/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Cash Drawer Management{% endblock %}
+
+{% block pos_content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'pos:dashboard' %}">POS</a></li>
+                    <li class="breadcrumb-item active">Cash Drawer</li>
+                </ol>
+            </nav>
+            <h1 class="h3 mb-0">Cash Drawer Management</h1>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'pos:cash_pay_in' %}" class="btn btn-success">
+                <i class="bi bi-plus-circle me-1"></i> Pay In
+            </a>
+            <a href="{% url 'pos:cash_pay_out' %}" class="btn btn-danger">
+                <i class="bi bi-dash-circle me-1"></i> Pay Out
+            </a>
+        </div>
+    </div>
+
+    {% if not session %}
+    <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center">
+        <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+        <div>
+            <h6 class="mb-1 fw-bold">No Active Session</h6>
+            <p class="mb-0">You must have an active session to perform cash drawer operations. <a
+                    href="{% url 'pos:session_open' %}" class="alert-link">Open a session here</a>.</p>
+        </div>
+    </div>
+    {% else %}
+    <div class="row g-4">
+        <!-- Drawer Status -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3"
+                            style="width: 48px; height: 48px;">
+                            <i class="bi bi-safe2 text-primary fs-4"></i>
+                        </div>
+                        <h5 class="card-title mb-0">Drawer Status</h5>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="text-muted small text-uppercase fw-bold mb-1 d-block">Current Cash</label>
+                        <h2 class="fw-bold mb-0 text-primary">KES {{
+                            drawer.current_balance|default:"0.00"|floatformat:2|intcomma }}</h2>
+                    </div>
+
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item d-flex justify-content-between px-0 py-2 border-0">
+                            <span class="text-muted">Terminal:</span>
+                            <span class="fw-bold">{{ session.terminal.terminal_name }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0 py-2 border-0">
+                            <span class="text-muted">Cashier:</span>
+                            <span class="fw-bold">{{ session.cashier.get_full_name|default:session.cashier.username
+                                }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0 py-2 border-0">
+                            <span class="text-muted">Session:</span>
+                            <span class="fw-bold">#{{ session.session_number }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Movements -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div
+                    class="card-header bg-transparent border-0 py-4 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">Recent Cash Movements</h5>
+                    <span class="badge bg-light text-dark">{{ movements|length }} entries</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4 border-0 small text-uppercase text-muted">Time</th>
+                                    <th class="border-0 small text-uppercase text-muted">Type</th>
+                                    <th class="border-0 small text-uppercase text-muted">Amount</th>
+                                    <th class="border-0 small text-uppercase text-muted">Notes</th>
+                                    <th class="pe-4 border-0 small text-uppercase text-muted text-end">User</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for movement in movements %}
+                                <tr>
+                                    <td class="ps-4 text-muted small">{{ movement.created_at|date:"H:i" }}</td>
+                                    <td>
+                                        {% if movement.movement_type == 'pay_in' %}
+                                        <span class="badge bg-success-soft text-success px-2 py-1">
+                                            <i class="bi bi-arrow-down-left me-1"></i> Pay In
+                                        </span>
+                                        {% elif movement.movement_type == 'pay_out' %}
+                                        <span class="badge bg-danger-soft text-danger px-2 py-1">
+                                            <i class="bi bi-arrow-up-right me-1"></i> Pay Out
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-info-soft text-info px-2 py-1">
+                                            {{ movement.get_movement_type_display }}
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td
+                                        class="fw-bold {% if movement.movement_type == 'pay_out' %}text-danger{% else %}text-success{% endif %}">
+                                        KES {{ movement.amount|floatformat:2|intcomma }}
+                                    </td>
+                                    <td><small class="text-muted">{{ movement.notes|default:"-"|truncatechars:30
+                                            }}</small></td>
+                                    <td class="pe-4 text-end small">{{ movement.user.username }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-5 text-muted">
+                                        <i class="bi bi-journal-text fs-1 mb-3 opacity-25 d-block"></i>
+                                        No recent cash movements.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .bg-success-soft {
+        background-color: rgba(16, 185, 129, 0.1);
+    }
+
+    .bg-danger-soft {
+        background-color: rgba(239, 68, 68, 0.1);
+    }
+
+    .bg-info-soft {
+        background-color: rgba(59, 130, 246, 0.1);
+    }
+</style>
+{% endblock %}

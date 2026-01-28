@@ -1,0 +1,21 @@
+<div class="modal fade" id="{{ modal_id }}" tabindex="-1" aria-labelledby="{{ modal_id }}Label" aria-hidden="true">
+    <div class="modal-dialog {{ modal_size|default:'' }} {{ modal_centered|default:'modal-dialog-centered' }}">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold" id="{{ modal_id }}Label">
+                    {% if modal_icon %}<i class="bi {{ modal_icon }} me-2"></i>{% endif %}
+                    {{ modal_title }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% block modal_body %}{% endblock %}
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{
+                    close_text|default:'Close' }}</button>
+                {% block modal_footer %}{% endblock %}
+            </div>
+        </div>
+    </div>
+</div>

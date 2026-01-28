@@ -1,0 +1,40 @@
+{% extends "quality_control/base.html" %}
+
+{% block page_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Non-Conformance Reports (NCR)</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered text-center">
+                <thead class="bg-danger text-white">
+                    <tr>
+                        <th>NCR #</th>
+                        <th>Reference</th>
+                        <th>Issue</th>
+                        <th>Root Cause</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ncr in ncrs %}
+                    <tr>
+                        <td>NCR-{{ ncr.id|stringformat:"04d" }}</td>
+                        <td>{{ ncr.inspection_log.source_reference }}</td>
+                        <td class="text-left small">{{ ncr.issue_description|truncatewords:10 }}</td>
+                        <td class="text-left small">{{ ncr.root_cause|default:"- " }}</td>
+                        <td><span class="badge badge-pill badge-warning">{{
+                                ncr.get_action_taken_display|default:"Pending Action" }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">No quality failures reported.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

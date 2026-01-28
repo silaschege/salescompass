@@ -3,8 +3,9 @@
 
 {% block title %}Emails - Communication{% endblock %}
 
-{% block comm_title %}<span style="color: black; text-align: center; display: block;">✉️ Email Center</span>{% endblock %}
-{% block comm_subtitle %}<span style="color: black; text-align: center; display: block;">Manage your outgoing and incoming email communications</span>{% endblock %}
+{% block comm_title %}<span style="color: black; text-align: center; display: block;">✉️ Email Center</span>{% endblock%}
+{% block comm_subtitle %}<span style="color: black; text-align: center; display: block;">Manage your outgoing and
+    incoming email communications</span>{% endblock %}
 
 {% block comm_actions %}
 <a href="{% url 'communication:email_compose' %}" class="btn btn-comm fw-bold px-4 shadow-sm">
@@ -26,10 +27,10 @@
             <table class="table table-hover align-middle mb-0 table-comm">
                 <thead>
                     <tr>
-                        <th class="ps-4">Recipient</th>
-                        <th>Subject</th>
-                        <th>Status</th>
-                        <th>Sent At</th>
+                        {% include "components/_table_header.html" with field="recipients" label="Recipient" %}
+                        {% include "components/_table_header.html" with field="subject" label="Subject" %}
+                        {% include "components/_table_header.html" with field="status" label="Status" %}
+                        {% include "components/_table_header.html" with field="sent_at" label="Sent At" %}
                         <th>Tracking</th>
                         <th class="text-end pe-4">Actions</th>
                     </tr>
@@ -78,7 +79,8 @@
                         </td>
                         <td class="text-end pe-4">
                             <div class="btn-group">
-                                <a href="#" class="btn btn-sm btn-light border"><i class="bi bi-eye"></i></a>
+                                <a href="{% url 'communication:email_detail' email.pk %}"
+                                    class="btn btn-sm btn-light border"><i class="bi bi-eye"></i></a>
                                 <button type="button"
                                     class="btn btn-sm btn-light border dropdown-toggle dropdown-toggle-split"
                                     data-bs-toggle="dropdown"></button>
@@ -91,25 +93,19 @@
                             </div>
                         </td>
                     </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center py-5">
-                            <div class="text-muted">
-                                <i class="bi bi-envelope-x display-4 mb-3 d-block"></i>
-                                <p>No emails found</p>
-                                <a href="{% url 'communication:email_compose' %}" class="btn btn-comm btn-sm">Sent your
-                                    first email</a>
-                            </div>
-                        </td>
-                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-    {% if is_paginated %}
-    <div class="card-footer bg-transparent border-top p-3 text-center">
-        {% include "communication/includes/pagination.html" %}
+    {% if emails %}
+    <div class="card-footer bg-white border-top py-3">
+        {% include "components/_pagination.html" %}
+    </div>
+    {% else %}
+    <div class="card-body">
+        {% url 'communication:email_compose' as action_url %}
+        {% include "components/_empty_state.html" with icon="bi-envelope-x" title="No emails found" message="Manage your outgoing and incoming email communications from here." action_url=action_url action_text="Compose Email" %}
     </div>
     {% endif %}
 </div>

@@ -1,0 +1,189 @@
+{% extends "inventory/base.html" %}
+{% load humanize %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Inventory Dashboard</h1>
+            <p class="text-muted mb-0">Overview of your stock and operations</p>
+        </div>
+        <div>
+            <a href="{% url 'inventory:stock_add' %}" class="btn btn-success">
+                <i class="bi bi-plus-lg me-2"></i>Add Stock
+            </a>
+            <a href="{% url 'inventory:stock_transfer' %}" class="btn btn-primary ms-2">
+                <i class="bi bi-arrow-left-right me-2"></i>Transfer
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Warehouses</h6>
+                            <h2 class="mb-0">{{ total_warehouses }}</h2>
+                        </div>
+                        <div class="bg-info bg-opacity-10 rounded-circle p-3 text-info">
+                            <i class="bi bi-building fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Products in Stock</h6>
+                            <h2 class="mb-0">{{ total_products_in_stock }}</h2>
+                        </div>
+                        <div class="bg-success bg-opacity-10 rounded-circle p-3 text-success">
+                            <i class="bi bi-box-seam fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Stock Value</h6>
+                            <h2 class="mb-0">{{ total_stock_value|floatformat:2|intcomma }}</h2>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-3 text-primary">
+                            <i class="bi bi-currency-dollar fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Low Stock Alerts</h6>
+                            <h2 class="mb-0">{{ low_stock_count }}</h2>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 rounded-circle p-3 text-warning">
+                            <i class="bi bi-exclamation-triangle fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Movements -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Movements</h5>
+                    <a href="{% url 'inventory:movement_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Movement</th>
+                                <th>Product</th>
+                                <th>From/To</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for movement in recent_movements %}
+                            <tr>
+                                <td>
+                                    {% if movement.movement_type == 'in' %}
+                                    <span class="badge bg-success-subtle text-success">Stock In</span>
+                                    {% elif movement.movement_type == 'out' %}
+                                    <span class="badge bg-danger-subtle text-danger">Stock Out</span>
+                                    {% elif movement.movement_type == 'transfer' %}
+                                    <span class="badge bg-info-subtle text-info">Transfer</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary">{{
+                                        movement.get_movement_type_display }}</span>
+                                    {% endif %}
+                                    <div class="small text-muted mt-1">{{ movement.quantity|floatformat:0 }} units</div>
+                                </td>
+                                <td>
+                                    <div class="fw-medium">{{ movement.product.product_name }}</div>
+                                    <div class="small text-muted">{{ movement.product.sku }}</div>
+                                </td>
+                                <td>
+                                    {% if movement.movement_type == 'in' %}
+                                    <div class="small">To: {{ movement.to_warehouse.warehouse_name }}</div>
+                                    {% elif movement.movement_type == 'out' %}
+                                    <div class="small">From: {{ movement.from_warehouse.warehouse_name }}</div>
+                                    {% elif movement.movement_type == 'transfer' %}
+                                    <div class="small">
+                                        From: {{ movement.from_warehouse.warehouse_name }}<br>
+                                        To: {{ movement.to_warehouse.warehouse_name }}
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted small">{{ movement.created_at|date:"M d, H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">No recent movements</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Alerts -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Active Alerts</h5>
+                    <a href="{% url 'inventory:alert_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for alert in active_alerts %}
+                        <div class="list-group-item border-0 border-bottom">
+                            <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                                <h6 class="mb-0 text-truncate" style="max-width: 70%;">{{ alert.product.product_name }}
+                                </h6>
+                                <small class="text-muted">{{ alert.created_at|timesince }} ago</small>
+                            </div>
+                            <p class="mb-1 small">
+                                {% if alert.alert_type == 'low_stock' %}
+                                <span class="badge bg-warning text-dark me-1">Low Stock</span>
+                                {% elif alert.alert_type == 'out_of_stock' %}
+                                <span class="badge bg-danger me-1">Out of Stock</span>
+                                {% else %}
+                                <span class="badge bg-secondary me-1">{{ alert.get_alert_type_display }}</span>
+                                {% endif %}
+                                {{ alert.message }}
+                            </p>
+                            <small class="text-muted">{{ alert.warehouse.warehouse_name }}</small>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-check-circle fs-2 mb-2"></i>
+                            <p class="mb-0">No active alerts</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

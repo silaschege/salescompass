@@ -1,0 +1,209 @@
+{% extends "hr/base.html" %}
+{% load humanize %}
+
+{% block hr_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h2 fw-bold mb-0">Human Capital Management</h1>
+            <p class="text-muted">IAS 19 & IPSAS 39 compliant workforce and benefit tracking</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'hr:payroll_dashboard' %}" class="btn btn-primary px-4 shadow-sm border-0">
+                <i class="bi bi-bank me-2"></i> Manage Payroll
+            </a>
+            <a href="{% url 'hr:employee_list' %}" class="btn btn-light px-4 border shadow-sm">
+                <i class="bi bi-people me-2"></i> Employees
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Section -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100 border-0 shadow-sm border-start border-primary border-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="kpi-icon-wrapper bg-primary bg-opacity-10 text-primary p-2 rounded">
+                        <i class="bi bi-person-badge h4 mb-0"></i>
+                    </div>
+                </div>
+                <div class="stat-label text-muted small text-uppercase fw-bold">Active Workforce</div>
+                <div class="stat-value h2 fw-bold text-dark mt-1">{{ employee_count }}</div>
+                <div class="text-muted extra-small mt-1">Total engaged personnel</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100 border-0 shadow-sm border-start border-success border-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="kpi-icon-wrapper bg-success bg-opacity-10 text-success p-2 rounded">
+                        <i class="bi bi-graph-up-arrow h4 mb-0"></i>
+                    </div>
+                </div>
+                <div class="stat-label text-muted small text-uppercase fw-bold">FTE Count</div>
+                <div class="stat-value h2 fw-bold text-dark mt-1">{{ fte_count }}</div>
+                <div class="text-muted extra-small mt-1">Full-time equivalents</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100 border-0 shadow-sm border-start border-warning border-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="kpi-icon-wrapper bg-warning bg-opacity-10 text-warning p-2 rounded">
+                        <i class="bi bi-calendar-check h4 mb-0"></i>
+                    </div>
+                </div>
+                <div class="stat-label text-muted small text-uppercase fw-bold">Pending Leave</div>
+                <div class="stat-value h2 fw-bold text-dark mt-1">{{ pending_leaves }}</div>
+                <div class="text-warning extra-small mt-1">Requests requiring action</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100 border-0 shadow-sm border-start border-indigo border-4"
+                style="border-color: #6366f1 !important;">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="kpi-icon-wrapper bg-indigo-50 text-indigo-600 p-2 rounded">
+                        <i class="bi bi-cash-coin h4 mb-0"></i>
+                    </div>
+                </div>
+                <div class="stat-label text-muted small text-uppercase fw-bold">Latest Payroll</div>
+                <div class="stat-value h2 fw-bold text-dark mt-1">{% if latest_payroll_amount %}${{
+                    latest_payroll_amount|floatformat:0|intcomma }}{% else %}$0{% endif %}</div>
+                <div class="text-muted extra-small mt-1">{{ latest_payroll_period|default:"No runs yet" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Recent Activity Table -->
+        <div class="col-lg-8">
+            <div class="premium-card h-100 border-0 shadow-sm">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Payroll Velocity</h5>
+                    <a href="{% url 'hr:payroll_dashboard' %}"
+                        class="btn btn-sm btn-light border small text-primary">View History</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light bg-opacity-50">
+                            <tr class="text-muted small text-uppercase fw-bold">
+                                <th class="ps-4">Period</th>
+                                <th>Status</th>
+                                <th class="text-center">Gross Payout</th>
+                                <th class="pe-4 text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for run in recent_runs %}
+                            <tr>
+                                <td class="ps-4 py-3">
+                                    <div class="fw-bold text-dark">{{ run.period_name }}</div>
+                                    <div class="extra-small text-muted">Created {{ run.created_at|date:"M d, Y" }}</div>
+                                </td>
+                                <td>
+                                    <span
+                                        class="badge {% if run.status == 'paid' %}badge-soft-success{% else %}badge-soft-warning{% endif %} px-3 rounded-pill text-uppercase">
+                                        {{ run.get_status_display }}
+                                    </span>
+                                    {% if run.is_accrued %}
+                                    <i class="bi bi-journal-check text-primary ms-1" title="GL Accrued"></i>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center fw-bold">
+                                    ${{ run.total_gross|intcomma }}
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <a href="{% url 'hr:payroll_detail' run.pk %}"
+                                        class="btn btn-sm btn-white border shadow-none btn-icon">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">No recent payroll processing.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compliance & Reports -->
+        <div class="col-lg-4">
+            <div class="premium-card p-4 mb-4 border-0 shadow-sm bg-dark text-white overflow-hidden position-relative">
+                <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                    <i class="bi bi-shield-lock" style="font-size: 5rem;"></i>
+                </div>
+                <h6 class="fw-bold mb-3 d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill me-2 text-success"></i> IAS 19 Readiness
+                </h6>
+                <p class="extra-small text-white-50 mb-4">Benefit obligations and leave liabilities are automatically
+                    Provisioned upon payroll accrual.</p>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-light btn-sm text-start py-2 border-opacity-25">
+                        <i class="bi bi-calculator me-2"></i> Leave Provision Audit
+                    </button>
+                </div>
+            </div>
+
+            <div class="premium-card p-4 border-0 shadow-sm">
+                <h6 class="fw-bold mb-4 d-flex align-items-center"><i
+                        class="bi bi-pie-chart-fill text-primary me-2"></i> Benefit Mix</h6>
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <div class="d-flex justify-content-between extra-small fw-bold text-muted mb-1">
+                            <span>BASE SALARY</span>
+                            <span>78%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" style="width: 78%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between extra-small fw-bold text-muted mb-1">
+                            <span>COMMISSIONS</span>
+                            <span>14%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-success" style="width: 14%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between extra-small fw-bold text-muted mb-1">
+                            <span>BENEFITS/INSURANCE</span>
+                            <span>8%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-warning" style="width: 8%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-indigo-50 {
+        background-color: rgba(99, 102, 241, 0.05);
+    }
+
+    .text-indigo-600 {
+        color: #6366f1;
+    }
+
+    .extra-small {
+        font-size: 0.7rem;
+    }
+
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}

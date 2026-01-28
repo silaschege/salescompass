@@ -1,0 +1,115 @@
+{% extends "inventory/base.html" %}
+{% load humanize %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:adjustment_list' %}">Adjustments</a></li>
+            <li class="breadcrumb-item active">{{ object.adjustment_number }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Adjustment Lines</h5>
+                    <!-- Future: Add Line Button -->
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Product</th>
+                                <th>Location</th>
+                                <th class="text-end">System Qty</th>
+                                <th class="text-end">Actual Qty</th>
+                                <th class="text-end">Variance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for line in lines %}
+                            <tr>
+                                <td>
+                                    <div class="fw-medium">{{ line.product.product_name }}</div>
+                                    <div class="small text-muted">{{ line.product.sku }}</div>
+                                </td>
+                                <td>{{ line.location.location_code|default:"-" }}</td>
+                                <td class="text-end text-muted">{{ line.system_quantity|floatformat:0 }}</td>
+                                <td class="text-end fw-bold">{{ line.actual_quantity|floatformat:0 }}</td>
+                                <td class="text-end">
+                                    {% if line.variance > 0 %}
+                                    <span class="text-success">+{{ line.variance|floatformat:0 }}</span>
+                                    {% elif line.variance < 0 %} <span class="text-danger">{{
+                                        line.variance|floatformat:0 }}</span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">No lines in this adjustment</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Details</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Status</span>
+                        {% if object.status == 'approved' or object.status == 'applied' %}
+                        <span class="badge bg-success-subtle text-success">{{ object.get_status_display }}</span>
+                        {% elif object.status == 'rejected' %}
+                        <span class="badge bg-danger-subtle text-danger">{{ object.get_status_display }}</span>
+                        {% else %}
+                        <span class="badge bg-warning-subtle text-warning">{{ object.get_status_display }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Reason</span>
+                        <span class="fw-medium">{{ object.get_reason_display }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Warehouse</span>
+                        <span class="fw-medium">{{ object.warehouse.warehouse_name }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Created By</span>
+                        <span class="fw-medium">{{ object.created_by.get_full_name|default:object.created_by.username
+                            }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Date</span>
+                        <span class="fw-medium">{{ object.created_at|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+                {% if object.notes %}
+                <div class="card-body border-top">
+                    <h6 class="card-subtitle mb-2 text-muted">Notes</h6>
+                    <p class="card-text small">{{ object.notes|linebreaks }}</p>
+                </div>
+                {% endif %}
+
+                {% if object.status == 'pending' %}
+                <div class="card-footer bg-white border-0 py-3 d-grid gap-2">
+                    <button class="btn btn-success">Approve Adjustment</button>
+                    <button class="btn btn-outline-danger">Reject</button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

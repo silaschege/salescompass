@@ -5,6 +5,7 @@ from tenants.models import TenantTerritory, TenantMember
 from django.db.models import Sum, Count, Avg
 from products.models import Product
 from tenants.models import TenantAwareModel as TenantModel
+from .models_contract import SalesContract, PerformanceObligation, RevenueSchedule
 
 
 SALE_TYPE_CHOICES = [
@@ -92,6 +93,10 @@ class Sale(TenantModel, TimeStampedModel):
     quantity = models.IntegerField(default=1)
     sale_date = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(blank=True)
+    
+    # IFRS 15 Integration
+    obligation = models.ForeignKey('sales.PerformanceObligation', on_delete=models.SET_NULL, null=True, blank=True, related_name='sales', help_text="The fulfillment obligation this sale satisfies")
+    is_recognized = models.BooleanField(default=False, help_text="True if revenue has been earned/recognized")
 
     def __str__(self):
         return f"{self.product.product_name} for {self.account.account_name}"

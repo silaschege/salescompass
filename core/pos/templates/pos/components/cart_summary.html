@@ -1,0 +1,25 @@
+{% load humanize %}
+<!-- This component is now integrated directly into terminal.html -->
+<!-- Keeping for backwards compatibility with other pages that may include it -->
+<div class="cart-summary">
+    <div class="summary-row">
+        <span>Subtotal</span>
+        <span id="cart-subtotal">{{ transaction.subtotal|default:"0.00" }}</span>
+    </div>
+    {% if transaction.discount_amount > 0 %}
+    <div class="summary-row text-success">
+        <span>Discount</span>
+        <span id="cart-discount">-{{ transaction.discount_amount|floatformat:2 }}</span>
+    </div>
+    {% endif %}
+    {% if transaction.tax_amount > 0 %}
+    <div class="summary-row">
+        <span>Tax</span>
+        <span id="cart-tax">{{ transaction.tax_amount|floatformat:2 }}</span>
+    </div>
+    {% endif %}
+    <div class="summary-row total">
+        <span>Total</span>
+        <span id="cart-total">{{ transaction.total_amount|default:"0.00" }}</span>
+    </div>
+</div>

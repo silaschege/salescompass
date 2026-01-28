@@ -4,7 +4,7 @@ from . import views, wizard_views, bi_builder_views
 from .bi_views import BIDashboardView, DataExplorerView, DrillDownView, MetricsAPIView, ActivityFeedAPIView, ChartDataAPIView, ComparativeAnalysisAPIView, StreamingDataAPIView
 
 app_name = 'dashboard'
-
+ 
 urlpatterns = [
     # Dashboard views
     path('', views.CockpitView.as_view(), name='cockpit'),

@@ -319,6 +319,10 @@ def process_payment(invoice, amount, provider='stripe', payment_method_id=None, 
         processed_at=timezone.now()
     )
     
+    # Integration: Post to Accounting
+    from .services import AccountingIntegrationService
+    AccountingIntegrationService.post_payment_to_gl(payment)
+    
     # Mark invoice as paid if full amount
     if amount >= invoice.amount:
         invoice.status = 'paid'

@@ -1,0 +1,77 @@
+{% extends "expenses/base.html" %}
+
+{% block expenses_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h3 fw-bold mb-0">Expense Taxonomy</h1>
+            <p class="text-muted small mb-0">Classification rules for IFRS reporting and GL mapping</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary px-4 shadow-sm border-0">
+                <i class="bi bi-plus-lg me-2"></i> New Category
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for cat in categories %}
+        <div class="col-md-6">
+            <div class="premium-card p-4 border-0 shadow-sm h-100 position-relative">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-indigo-50 text-indigo-600 rounded p-2 me-3">
+                            <i class="bi bi-tag-fill h5 mb-0"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-1">{{ cat.name }}</h5>
+                            <span
+                                class="badge {% if cat.is_capital_expenditure %}badge-soft-danger{% else %}badge-soft-primary{% endif %} rounded-pill extra-small text-uppercase">
+                                {% if cat.is_capital_expenditure %}CAPEX / IFRS 16{% else %}Operating Expense{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-muted small mb-4">{{ cat.description|default:"No description provided for this category."
+                    }}</p>
+
+                <div class="border-top pt-3 d-flex justify-content-between align-items-center">
+                    <div class="extra-small">
+                        <span class="text-muted fw-bold">GL:</span>
+                        <span class="text-dark">{{ cat.gl_account.account_code|default:"Unmapped" }}</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-light border extra-small">Edit Rules</button>
+                        <button class="btn btn-sm btn-outline-danger extra-small border-0"><i
+                                class="bi bi-trash"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="premium-card p-5 border-0 shadow-sm">
+                <i class="bi bi-tags text-muted mb-3 d-block" style="font-size: 3rem;"></i>
+                <h5 class="text-muted fw-normal">No categories defined yet</h5>
+                <button class="btn btn-primary px-4 shadow-sm border-0 mt-3">Initial Setup</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .bg-indigo-50 {
+        background-color: rgba(99, 102, 241, 0.05);
+    }
+
+    .text-indigo-600 {
+        color: #4f46e5;
+    }
+
+    .extra-small {
+        font-size: 0.7rem;
+    }
+</style>
+{% endblock %}

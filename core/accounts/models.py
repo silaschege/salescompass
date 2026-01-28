@@ -269,6 +269,10 @@ class Account(TenantModel, TimeStampedModel):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     tier = models.CharField(max_length=20, choices=TIER_CHOICES, default='free')
     
+    # Pricing
+    price_list = models.ForeignKey('products.PriceList', on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name='accounts', help_text="Assigned price list for this account")
+    
     # Address Fields
     billing_address_line1 = models.CharField(max_length=255, blank=True)
     billing_address_line2 = models.CharField(max_length=255, blank=True)

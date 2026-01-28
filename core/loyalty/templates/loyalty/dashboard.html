@@ -1,0 +1,192 @@
+{% extends "loyalty/base.html" %}
+{% load humanize %}
+
+{% block loyalty_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h2 fw-bold mb-0">Loyalty & Rewards Hub</h1>
+            <p class="text-muted">Customer engagement metrics and IFRS 15 liability tracking</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'loyalty:member_list' %}" class="btn btn-light px-4 border shadow-sm">
+                <i class="bi bi-people me-2"></i> Manage Members
+            </a>
+            <a href="{% url 'loyalty:program_setup' %}" class="btn btn-primary px-4 shadow-sm border-0">
+                <i class="bi bi-gear-fill me-2"></i> Configure Rules
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Section -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100 border-0 shadow-sm border-start border-warning border-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="kpi-icon-wrapper bg-warning bg-opacity-10 text-warning p-2 rounded">
+                        <i class="bi bi-safe h4 mb-0"></i>
+                    </div>
+                </div>
+                <div class="stat-label text-muted small text-uppercase fw-bold">Deferred Revenue</div>
+                <div class="stat-value h2 fw-bold text-dark mt-1">${{ total_liability|floatformat:2|intcomma }}</div>
+                <div class="text-muted extra-small mt-1">IFRS 15 Performance Obligation</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100 border-0 shadow-sm border-start border-primary border-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="kpi-icon-wrapper bg-primary bg-opacity-10 text-primary p-2 rounded">
+                        <i class="bi bi-star-fill h4 mb-0"></i>
+                    </div>
+                </div>
+                <div class="stat-label text-muted small text-uppercase fw-bold">Active Members</div>
+                <div class="stat-value h2 fw-bold text-dark mt-1">{{ total_members|intcomma }}</div>
+                <div class="text-success extra-small mt-1"><i class="bi bi-arrow-up-short"></i> +{{ new_members }} this
+                    month</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100 border-0 shadow-sm border-start border-info border-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="kpi-icon-wrapper bg-info bg-opacity-10 text-info p-2 rounded">
+                        <i class="bi bi-coin h4 mb-0"></i>
+                    </div>
+                </div>
+                <div class="stat-label text-muted small text-uppercase fw-bold">Points in Circulation</div>
+                <div class="stat-value h2 fw-bold text-dark mt-1">{{ total_points|intcomma }}</div>
+                <div class="text-muted extra-small mt-1">Total points balance</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100 border-0 shadow-sm border-start border-danger border-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="kpi-icon-wrapper bg-danger bg-opacity-10 text-danger p-2 rounded">
+                        <i class="bi bi-hourglass-split h4 mb-0"></i>
+                    </div>
+                </div>
+                <div class="stat-label text-muted small text-uppercase fw-bold">Breakage Risk</div>
+                <div class="stat-value h2 fw-bold text-dark mt-1">{{ expiring_soon_points|intcomma }}</div>
+                <div class="text-danger extra-small mt-1">Points expiring within 30 days</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Recent Ledger Events -->
+        <div class="col-lg-8">
+            <div class="premium-card h-100 border-0 shadow-sm">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Recent Loyalty Events</h5>
+                    <a href="{% url 'loyalty:transaction_list' %}"
+                        class="btn btn-sm btn-light border small text-primary">View Full Ledger</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light bg-opacity-50">
+                            <tr class="text-muted small text-uppercase fw-bold">
+                                <th class="ps-4">Member</th>
+                                <th>Type</th>
+                                <th class="text-center">Points</th>
+                                <th class="text-end pe-4">Revenue Deferral</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tx in recent_transactions %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">{{ tx.loyalty_account.customer.account_name }}</div>
+                                    <div class="extra-small text-muted">{{ tx.created_at|date:"M d, H:i" }}</div>
+                                </td>
+                                <td>
+                                    <span
+                                        class="badge {% if tx.transaction_type == 'earn' %}badge-soft-success{% elif tx.transaction_type == 'redeem' %}badge-soft-primary{% else %}bg-light text-muted border{% endif %} px-3 rounded-pill text-uppercase">
+                                        {{ tx.get_transaction_type_display }}
+                                    </span>
+                                </td>
+                                <td
+                                    class="text-center fw-bold {% if tx.points > 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ tx.points|stringformat:"+d" }}
+                                </td>
+                                <td class="text-end pe-4">
+                                    {% if tx.allocated_revenue > 0 %}
+                                    <span class="fw-bold text-dark">${{ tx.allocated_revenue|floatformat:2 }}</span>
+                                    {% else %}
+                                    <span class="text-muted small">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">No recent loyalty activity.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compliance & Controls -->
+        <div class="col-lg-4">
+            <div class="premium-card p-4 mb-4 border-0 shadow-sm bg-primary text-white">
+                <h6 class="fw-bold mb-3 d-flex align-items-center text-white">
+                    <i class="bi bi-shield-check me-2 h5 mb-0"></i> Financial Compliance
+                </h6>
+                <div class="extra-small text-white-50 mb-4">Real-time revenue deferral and breakage recognition based on
+                    IFRS 15 principles.</div>
+
+                <div class="d-grid gap-2">
+                    <button class="btn btn-light btn-sm text-start py-2 border-0">
+                        <i class="bi bi-calculator me-2 text-primary"></i> Run Breakage Recognition
+                    </button>
+                    <a href="{% url 'accounting:dashboard' %}" class="btn btn-primary btn-sm text-start py-2 border-0"
+                        style="background: rgba(255,255,255,0.1);">
+                        <i class="bi bi-journal-text me-2"></i> Audit Deferred Revenue
+                    </a>
+                </div>
+            </div>
+
+            <div class="premium-card p-4 border-0 shadow-sm">
+                <h6 class="fw-bold mb-4 d-flex align-items-center"><i class="bi bi-trophy text-warning me-2"></i> Tier
+                    Distribution</h6>
+                <!-- Simple bar visualization placeholder -->
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <div class="d-flex justify-content-between extra-small fw-bold text-muted mb-1">
+                            <span>BRONZE</span>
+                            <span>70%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-secondary" style="width: 70%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between extra-small fw-bold text-muted mb-1">
+                            <span>SILVER</span>
+                            <span>20%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" style="width: 20%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between extra-small fw-bold text-muted mb-1">
+                            <span>GOLD</span>
+                            <span>10%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-warning" style="width: 10%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .extra-small {
+        font-size: 0.75rem;
+    }
+</style>
+{% endblock %}

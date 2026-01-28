@@ -1,125 +1,10 @@
-{% extends "core/patterns/list_view.html" %}
+{% extends "leads/base.html" %}
 
-{% block module_nav %}
-{% include "leads/includes/module_nav.html" %}
-{% endblock %}
-
-{% block page_title %}
-<div class="text-center w-100">Leads</div>
-{% endblock %}
-
-{% block page_subtitle %}
-<div class="text-center text-dark">Manage and track your potential customers</div>
-{% endblock %}
-
-{% block actions %}
-<a href="{% url 'leads:lead_create' %}" class="btn btn-primary">
-    <i class="bi bi-plus-lg"></i> New Lead
-</a>
-<a href="{% url 'leads:lead_pipeline' %}" class="btn btn-outline-primary ms-2">
-    <i class="bi bi-kanban"></i> Pipeline View
-</a>
-{% endblock %}
-
-{% block list_content %}
-{% if leads %}
-<div class="table-responsive">
-    <table class="table table-hover mb-0">
-        <thead class="table-light">
-            <tr>
-                <th>Name</th>
-                <th>Company</th>
-                <th>Status</th>
-                <th>Score</th>
-                <th>Owner</th>
-                <th>Created</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for lead in leads %}
-            <tr>
-                <td>
-                    <a href="{% url 'leads:lead_detail' lead.pk %}" class="text-decoration-none fw-bold">
-                        {{ lead.full_name }}
-                    </a>
-                    <br>
-                    <small class="text-muted">{{ lead.job_title|default:"-" }}</small>
-                </td>
-                <td>
-                    {% if lead.account %}
-                    <a href="{% url 'accounts:account_detail' lead.account.pk %}"
-                        class="text-decoration-none text-muted">
-                        <i class="bi bi-building"></i> {{ lead.account.name }}
-                    </a>
-                    {% else %}
-                    <span class="text-muted">{{ lead.company }}</span>
-                    {% endif %}
-                </td>
-                <td>
-                    
-                    <span class="badge bg-{{ lead.status_ref.color|default:'primary' }}">
-                        {{ lead.status_ref.label|default:lead.status|title }}
-                    </span>
-                </td>
-                <td>
-                    {% if lead.lead_score %}
-                    <div class="d-flex align-items-center">
-                        <div class="progress flex-grow-1 me-2" style="height: 6px; width: 60px;">
-                            <div class="progress-bar bg-{% if lead.lead_score > 70 %}success{% elif lead.lead_score > 40 %}warning{% else %}danger{% endif %}"
-                                style="width: {{ lead.lead_score }}%;">
-                            </div>
-                        </div>
-                        <small class="text-muted">{{ lead.lead_score }}</small>
-                    </div>
-                    {% else %}
-                    <span class="text-muted">-</span>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if lead.owner %}
-                    <div class="d-flex align-items-center">
-                        <div class="avatar-circle-sm bg-primary text-white me-2">
-                            {{ lead.owner.get_initals }}
-                        </div>
-                        <small>{{ lead.owner.get_full_name }}</small>
-                    </div>
-                    {% else %}
-                    <span class="text-muted">Unassigned</span>
-                    {% endif %}
-                </td>
-                <td>{{ lead.created_at|date:"M d, Y" }}</td>
-                <td>
-                    <div class="btn-group">
-                        <a href="{% url 'leads:lead_detail' lead.pk %}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-eye"></i>
-                        </a>
-                        <a href="{% url 'leads:lead_update' lead.pk %}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% else %}
-<div class="text-center p-5">
-    <div class="mb-3">
-        <i class="bi bi-people display-1 text-muted"></i>
-    </div>
-    <h3 class="text-muted">No leads found</h3>
-    <p class="text-muted mb-4">Get started by creating your first lead.</p>
-    <a href="{% url 'leads:lead_create' %}" class="btn btn-primary">
-        <i class="bi bi-plus-lg"></i> Create Lead
-    </a>
-</div>
-{% endif %}
-{% endblock %}
-
+{% block title %}Leads | SalesCompass{% endblock %}
 
 {% block extra_head %}
+{{ block.super }}
+<!-- Keeping existing styles -->
 <style>
     .avatar-circle-sm {
         width: 24px;
@@ -132,4 +17,137 @@
         font-weight: bold;
     }
 </style>
+{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title text-center w-100">Leads</h1>
+        <p class=" text-center lead">Manage and track your potential customers</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Action Buttons & Search -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <a href="{% url 'leads:lead_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> New Lead
+            </a>
+            <a href="{% url 'leads:lead_pipeline' %}" class="btn btn-outline-primary ms-2">
+                <i class="bi bi-kanban"></i> Pipeline View
+            </a>
+        </div>
+        <div class="col-md-6 text-end">
+            <form class="d-flex justify-content-end" method="get">
+                <div class="input-group" style="max-width: 300px;">
+                    <input type="text" name="q" class="form-control" placeholder="Search..."
+                        value="{{ request.GET.q|default:'' }}">
+                    <button class="btn btn-outline-secondary" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main List Content -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            {% if leads %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            {% include "components/_table_header.html" with field="first_name" label="Name" %}
+                            {% include "components/_table_header.html" with field="company" label="Company" %}
+                            {% include "components/_table_header.html" with field="status" label="Status" %}
+                            {% include "components/_table_header.html" with field="lead_score" label="Score" %}
+                            {% include "components/_table_header.html" with field="owner" label="Owner" %}
+                            {% include "components/_table_header.html" with field="created_at" label="Created" %}
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lead in leads %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'leads:lead_detail' lead.pk %}" class="text-decoration-none fw-bold">
+                                    {{ lead.full_name }}
+                                </a>
+                                <br>
+                                <small class="text-muted">{{ lead.job_title|default:"-" }}</small>
+                            </td>
+                            <td>
+                                {% if lead.account %}
+                                <a href="{% url 'accounts:account_detail' lead.account.pk %}"
+                                    class="text-decoration-none text-muted">
+                                    <i class="bi bi-building"></i> {{ lead.account.name }}
+                                </a>
+                                {% else %}
+                                <span class="text-muted">{{ lead.company }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+
+                                <span class="badge bg-{{ lead.status_ref.color|default:'primary' }}">
+                                    {{ lead.status_ref.label|default:lead.status|title }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if lead.lead_score %}
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1 me-2" style="height: 6px; width: 60px;">
+                                        <div class="progress-bar bg-{% if lead.lead_score > 70 %}success{% elif lead.lead_score > 40 %}warning{% else %}danger{% endif %}"
+                                            style="width: {{ lead.lead_score }}%;">
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">{{ lead.lead_score }}</small>
+                                </div>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if lead.owner %}
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle-sm bg-primary text-white me-2">
+                                        {{ lead.owner.get_initals }}
+                                    </div>
+                                    <small>{{ lead.owner.get_full_name }}</small>
+                                </div>
+                                {% else %}
+                                <span class="text-muted">Unassigned</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ lead.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'leads:lead_detail' lead.pk %}"
+                                        class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'leads:lead_update' lead.pk %}"
+                                        class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card-footer bg-white py-3">
+                {% include "shared/_pagination.html" %}
+            </div>
+
+            {% else %}
+            {% url 'leads:lead_create' as action_url %}
+            {% include "components/_empty_state.html" with icon="bi-people" title="No leads found" message="Get started by creating your first lead." action_url=action_url action_text="Create Lead" %}
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}

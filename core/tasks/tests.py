@@ -13,7 +13,8 @@ from tasks.models import Task
 
 class TaskWorkflowTests(TestCase):
     def setUp(self):
-        from core.models import User, TenantModel
+        from core.models import User
+        from tenants.models import TenantAwareModel as TenantModel
         # Create a dummy user and tenant context if needed
         # Since TenantModel is abstract or used as mixin, we usually need a tenant_id.
         self.user = User.objects.create(email='test@example.com', password='password')

@@ -1,0 +1,96 @@
+{% extends "ecommerce/base.html" %}
+
+{% block ecommerce_content %}
+<div class="row g-5">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm" style="border-radius: 1rem;">
+            <div class="card-body p-5">
+                <h2 class="fw-bold mb-5">Shopping Cart ({{ cart.items.count }} items)</h2>
+
+                {% if cart.items.all %}
+                <div class="table-responsive">
+                    <table class="table table-borderless align-middle">
+                        <thead class="text-muted small text-uppercase">
+                            <tr class="border-bottom">
+                                <th class="py-3">Product</th>
+                                <th class="py-3">Price</th>
+                                <th class="py-3">Quantity</th>
+                                <th class="py-3 text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in cart.items.all %}
+                            <tr class="border-bottom">
+                                <td class="py-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center"
+                                            style="width: 64px; height: 64px;">
+                                            <i class="bi bi-box-seam text-muted"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-0">{{ item.product.product_name }}</h6>
+                                            <span class="text-muted small">SKU: {{ item.product.sku }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-4 fw-semibold">{{ item.unit_price }}</td>
+                                <td class="py-4">
+                                    <div class="d-flex align-items-center" style="max-width: 120px;">
+                                        <input type="number"
+                                            class="form-control form-control-sm text-center rounded-pill"
+                                            value="{{ item.quantity }}" min="1">
+                                    </div>
+                                </td>
+                                <td class="py-4 text-end fw-bold text-primary">{{ item.line_total }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-cart-x display-1 text-muted mb-4"></i>
+                    <h4>Your cart is empty</h4>
+                    <p class="text-muted">Explore our catalog and find great deals!</p>
+                    <a href="{% url 'ecommerce:index' %}" class="btn btn-primary rounded-pill px-5 mt-3">Start
+                        Shopping</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm" style="border-radius: 1rem; position: sticky; top: 100px;">
+            <div class="card-body p-4">
+                <h4 class="fw-bold mb-4">Order Summary</h4>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Subtotal</span>
+                    <span class="fw-semibold">{{ cart.total_amount }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Estimated Shipping</span>
+                    <span class="text-success fw-semibold">FREE</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-4">
+                    <span class="h5 fw-bold">Total</span>
+                    <span class="h5 fw-bold text-primary">{{ cart.total_amount }}</span>
+                </div>
+
+                <div class="d-grid">
+                    <button class="btn btn-primary btn-lg rounded-pill shadow-sm py-3" {% if not cart.items.all
+                        %}disabled{% endif %}>
+                        Proceed to Checkout <i class="bi bi-arrow-right ms-2"></i>
+                    </button>
+                </div>
+
+                <p class="text-center text-muted small mt-4 mb-0">
+                    <i class="bi bi-shield-check me-1"></i> Secure checkout powered by SalesCompass
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

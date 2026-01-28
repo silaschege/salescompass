@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 # NOTIFICATION TEMPLATE VIEWS
 # ============================================================================
 
-class NotificationTemplateListView(LoginRequiredMixin, ListView):
+class NotificationTemplateListView(SalesCompassListView):
     """List all notification templates"""
     model = NotificationTemplate
     template_name = 'communication/notification_template_list.html'
@@ -44,7 +44,7 @@ class NotificationTemplateListView(LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        queryset = NotificationTemplate.objects.filter(tenant=self.request.user.tenant)
+        queryset = super().get_queryset()
         search = self.request.GET.get('search')
         if search:
             queryset = queryset.filter(
@@ -54,53 +54,40 @@ class NotificationTemplateListView(LoginRequiredMixin, ListView):
         return queryset.order_by('-created_at')
 
 
-class NotificationTemplateDetailView(LoginRequiredMixin, DetailView):
+class NotificationTemplateDetailView(SalesCompassDetailView):
     """View notification template details"""
     model = NotificationTemplate
     template_name = 'communication/notification_template_detail.html'
     context_object_name = 'template'
 
-    def get_queryset(self):
-        return NotificationTemplate.objects.filter(tenant=self.request.user.tenant)
 
-
-class NotificationTemplateCreateView(LoginRequiredMixin, CreateView):
+class NotificationTemplateCreateView(SalesCompassCreateView):
     """Create new notification template"""
     model = NotificationTemplate
     form_class = NotificationTemplateForm
     template_name = 'communication/notification_template_form.html'
     success_url = reverse_lazy('communication:template_list')
+    success_message = 'Notification template created successfully!'
 
     def form_valid(self, form):
-        form.instance.tenant = self.request.user.tenant
         form.instance.created_by = self.request.user
-        messages.success(self.request, 'Notification template created successfully!')
         return super().form_valid(form)
 
 
-class NotificationTemplateUpdateView(LoginRequiredMixin, UpdateView):
+class NotificationTemplateUpdateView(SalesCompassUpdateView):
     """Update notification template"""
     model = NotificationTemplate
     form_class = NotificationTemplateForm
     template_name = 'communication/notification_template_form.html'
     success_url = reverse_lazy('communication:template_list')
-
-    def get_queryset(self):
-        return NotificationTemplate.objects.filter(tenant=self.request.user.tenant)
-
-    def form_valid(self, form):
-        messages.success(self.request, 'Notification template updated successfully!')
-        return super().form_valid(form)
+    success_message = 'Notification template updated successfully!'
 
 
-class NotificationTemplateDeleteView(LoginRequiredMixin, DeleteView):
+class NotificationTemplateDeleteView(SalesCompassDeleteView):
     """Delete notification template"""
     model = NotificationTemplate
     template_name = 'communication/notification_template_confirm_delete.html'
     success_url = reverse_lazy('communication:template_list')
-
-    def get_queryset(self):
-        return NotificationTemplate.objects.filter(tenant=self.request.user.tenant)
 
 
 # ============================================================================
@@ -155,46 +142,39 @@ class WhatsAppTemplateDeleteView(SalesCompassDeleteView):
 # EMAIL/SMS SERVICE CONFIGURATION VIEWS
 # ============================================================================
 
-class EmailSMSConfigListView(LoginRequiredMixin, ListView):
+class EmailSMSConfigListView(SalesCompassListView):
     """List email/SMS service configurations"""
     model = EmailSMSServiceConfiguration
     template_name = 'communication/email_config_list.html'
     context_object_name = 'configs'
 
-    def get_queryset(self):
-        return EmailSMSServiceConfiguration.objects.filter(tenant=self.request.user.tenant)
 
-
-class EmailSMSConfigCreateView(LoginRequiredMixin, CreateView):
+class EmailSMSConfigCreateView(SalesCompassCreateView):
     """Create email/SMS service configuration"""
     model = EmailSMSServiceConfiguration
     form_class = EmailSMSServiceConfigurationForm
     template_name = 'communication/email_config_form.html'
     success_url = reverse_lazy('communication:config_list')
+    success_message = 'Service configuration created successfully!'
 
     def form_valid(self, form):
-        form.instance.tenant = self.request.user.tenant
         form.instance.created_by = self.request.user
-        messages.success(self.request, 'Service configuration created successfully!')
         return super().form_valid(form)
 
 
-class EmailSMSConfigUpdateView(LoginRequiredMixin, UpdateView):
+class EmailSMSConfigUpdateView(SalesCompassUpdateView):
     """Update email/SMS service configuration"""
     model = EmailSMSServiceConfiguration
     form_class = EmailSMSServiceConfigurationForm
     template_name = 'communication/email_config_form.html'
     success_url = reverse_lazy('communication:config_list')
 
-    def get_queryset(self):
-        return EmailSMSServiceConfiguration.objects.filter(tenant=self.request.user.tenant)
-
 
 # ============================================================================
 # COMMUNICATION HISTORY VIEWS
 # ============================================================================
 
-class CommunicationHistoryListView(LoginRequiredMixin, ListView):
+class CommunicationHistoryListView(SalesCompassListView):
     """List communication history"""
     model = CommunicationHistory
     template_name = 'communication/history_list.html'
@@ -202,7 +182,7 @@ class CommunicationHistoryListView(LoginRequiredMixin, ListView):
     paginate_by = 50
 
     def get_queryset(self):
-        queryset = CommunicationHistory.objects.filter(tenant=self.request.user.tenant)
+        queryset = super().get_queryset()
         
         # Filter by type
         comm_type = self.request.GET.get('type')
@@ -217,21 +197,18 @@ class CommunicationHistoryListView(LoginRequiredMixin, ListView):
         return queryset.order_by('-created_at')
 
 
-class CommunicationHistoryDetailView(LoginRequiredMixin, DetailView):
+class CommunicationHistoryDetailView(SalesCompassDetailView):
     """View communication history detail"""
     model = CommunicationHistory
     template_name = 'communication/history_detail.html'
     context_object_name = 'history'
-
-    def get_queryset(self):
-        return CommunicationHistory.objects.filter(tenant=self.request.user.tenant)
 
 
 # ============================================================================
 # CUSTOMER SUPPORT TICKET VIEWS
 # ============================================================================
 
-class TicketListView(LoginRequiredMixin, ListView):
+class TicketListView(SalesCompassListView):
     """List support tickets"""
     model = CustomerSupportTicket
     template_name = 'communication/ticket_list.html'
@@ -239,7 +216,7 @@ class TicketListView(LoginRequiredMixin, ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        queryset = CustomerSupportTicket.objects.filter(tenant=self.request.user.tenant)
+        queryset = super().get_queryset()
         
         status = self.request.GET.get('status')
         if status:
@@ -253,31 +230,30 @@ class TicketListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # Use simple filter instead of aggregation on full set if possible, 
+        # but here we want counts for filter options
         context['status_counts'] = CustomerSupportTicket.objects.filter(
             tenant=self.request.user.tenant
         ).values('status').annotate(count=Count('id'))
         return context
 
 
-class TicketDetailView(LoginRequiredMixin, DetailView):
+class TicketDetailView(SalesCompassDetailView):
     """View ticket details"""
     model = CustomerSupportTicket
     template_name = 'communication/ticket_detail.html'
     context_object_name = 'ticket'
 
-    def get_queryset(self):
-        return CustomerSupportTicket.objects.filter(tenant=self.request.user.tenant)
 
-
-class TicketCreateView(LoginRequiredMixin, CreateView):
+class TicketCreateView(SalesCompassCreateView):
     """Create new support ticket"""
     model = CustomerSupportTicket
     form_class = CustomerSupportTicketForm
     template_name = 'communication/ticket_form.html'
     success_url = reverse_lazy('communication:ticket_list')
+    success_message = 'Support ticket created successfully!'
 
     def form_valid(self, form):
-        form.instance.tenant = self.request.user.tenant
         form.instance.submitted_by = self.request.user
         
         response = super().form_valid(form)
@@ -301,46 +277,38 @@ class TicketCreateView(LoginRequiredMixin, CreateView):
         except Exception as e:
             logger.warning(f"Failed to log engagement event: {e}")
         
-        messages.success(self.request, 'Support ticket created successfully!')
         return response
 
 
-class TicketUpdateView(LoginRequiredMixin, UpdateView):
+class TicketUpdateView(SalesCompassUpdateView):
     """Update support ticket"""
     model = CustomerSupportTicket
     form_class = CustomerSupportTicketForm
     template_name = 'communication/ticket_form.html'
     success_url = reverse_lazy('communication:ticket_list')
 
-    def get_queryset(self):
-        return CustomerSupportTicket.objects.filter(tenant=self.request.user.tenant)
-
 
 # ============================================================================
 # FEEDBACK AND SURVEY VIEWS
 # ============================================================================
 
-class FeedbackListView(LoginRequiredMixin, ListView):
+class FeedbackListView(SalesCompassListView):
     """List feedback forms"""
     model = FeedbackAndSurvey
     template_name = 'communication/feedback_list.html'
     context_object_name = 'feedback_forms'
 
-    def get_queryset(self):
-        return FeedbackAndSurvey.objects.filter(tenant_target=self.request.user.tenant)
 
-
-class FeedbackCreateView(LoginRequiredMixin, CreateView):
+class FeedbackCreateView(SalesCompassCreateView):
     """Create feedback form"""
     model = FeedbackAndSurvey
     form_class = FeedbackAndSurveyForm
     template_name = 'communication/feedback_form.html'
     success_url = reverse_lazy('communication:feedback_list')
+    success_message = 'Feedback form created successfully!'
 
     def form_valid(self, form):
-        form.instance.tenant_target = self.request.user.tenant
         form.instance.created_by = self.request.user
-        messages.success(self.request, 'Feedback form created successfully!')
         return super().form_valid(form)
 
 
@@ -348,7 +316,7 @@ class FeedbackCreateView(LoginRequiredMixin, CreateView):
 # EMAIL VIEWS
 # ============================================================================
 
-class EmailListView(LoginRequiredMixin, ListView):
+class EmailListView(SalesCompassListView):
     """List emails"""
     model = Email
     template_name = 'communication/email_list.html'
@@ -356,10 +324,10 @@ class EmailListView(LoginRequiredMixin, ListView):
     paginate_by = 50
 
     def get_queryset(self):
-        return Email.objects.filter(tenant=self.request.user.tenant).order_by('-created_at')
+        return super().get_queryset().order_by('-created_at')
 
 
-class EmailComposeView(LoginRequiredMixin, CreateView):
+class EmailComposeView(SalesCompassCreateView):
     """Compose and send email"""
     model = Email
     form_class = EmailForm
@@ -368,13 +336,13 @@ class EmailComposeView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # Using standardized filtering
         context['signatures'] = EmailSignature.objects.filter(user=self.request.user, tenant=self.request.user.tenant)
         context['templates'] = NotificationTemplate.objects.filter(tenant=self.request.user.tenant, template_type='email')
         return context
 
     def form_valid(self, form):
         form.instance.sender = self.request.user
-        form.instance.tenant = self.request.user.tenant
         form.instance.status = 'queued'
         response = super().form_valid(form)
         
@@ -411,7 +379,7 @@ class EmailComposeView(LoginRequiredMixin, CreateView):
 # SMS VIEWS
 # ============================================================================
 
-class SMSListView(LoginRequiredMixin, ListView):
+class SMSListView(SalesCompassListView):
     """List SMS messages"""
     model = SMS
     template_name = 'communication/sms_list.html'
@@ -419,10 +387,10 @@ class SMSListView(LoginRequiredMixin, ListView):
     paginate_by = 50
 
     def get_queryset(self):
-        return SMS.objects.filter(tenant=self.request.user.tenant).order_by('-created_at')
+        return super().get_queryset().order_by('-created_at')
 
 
-class SMSSendView(LoginRequiredMixin, CreateView):
+class SMSSendView(SalesCompassCreateView):
     """Send SMS message"""
     model = SMS
     form_class = SMSForm
@@ -431,7 +399,6 @@ class SMSSendView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.sender = self.request.user
-        form.instance.tenant = self.request.user.tenant
         form.instance.status = 'queued'
         response = super().form_valid(form)
         
@@ -465,7 +432,7 @@ class SMSSendView(LoginRequiredMixin, CreateView):
 # CALL LOG VIEWS
 # ============================================================================
 
-class CallLogListView(LoginRequiredMixin, ListView):
+class CallLogListView(SalesCompassListView):
     """List call logs"""
     model = CallLog
     template_name = 'communication/call_log_list.html'
@@ -473,19 +440,19 @@ class CallLogListView(LoginRequiredMixin, ListView):
     paginate_by = 50
 
     def get_queryset(self):
-        return CallLog.objects.filter(tenant=self.request.user.tenant).order_by('-call_started_at')
+        return super().get_queryset().order_by('-call_started_at')
 
 
-class CallLogCreateView(LoginRequiredMixin, CreateView):
+class CallLogCreateView(SalesCompassCreateView):
     """Log a call"""
     model = CallLog
     form_class = CallLogForm
     template_name = 'communication/call_log_form.html'
     success_url = reverse_lazy('communication:call_log_list')
+    success_message = 'Call logged successfully!'
 
     def form_valid(self, form):
         form.instance.user = self.request.user
-        form.instance.tenant = self.request.user.tenant
         if not form.instance.call_started_at:
             form.instance.call_started_at = timezone.now()
         
@@ -511,31 +478,27 @@ class CallLogCreateView(LoginRequiredMixin, CreateView):
         except Exception as e:
             logger.warning(f"Failed to log engagement event: {e}")
         
-        messages.success(self.request, 'Call logged successfully!')
         return response
 
 
-class CallLogDetailView(LoginRequiredMixin, DetailView):
+class CallLogDetailView(SalesCompassDetailView):
     """View call log details"""
     model = CallLog
     template_name = 'communication/call_log_detail.html'
     context_object_name = 'call'
-
-    def get_queryset(self):
-        return CallLog.objects.filter(tenant=self.request.user.tenant)
 
 
 # ============================================================================
 # DASHBOARD VIEW
 # ============================================================================
 
-class CommunicationDashboardView(LoginRequiredMixin, ListView):
+class CommunicationDashboardView(SalesCompassListView):
     """Communication dashboard"""
     template_name = 'communication/dashboard.html'
     model = Email  # Just to satisfy ListView, we'll override context
 
     def get_queryset(self):
-        return Email.objects.filter(tenant=self.request.user.tenant)[:5]
+        return super().get_queryset()[:5]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -607,49 +570,55 @@ class UnifiedInboxView(LoginRequiredMixin, ListView):
 # EMAIL SIGNATURE VIEWS
 # ============================================================================
 
-class EmailSignatureListView(LoginRequiredMixin, ListView):
+class EmailSignatureListView(SalesCompassListView):
     """List email signatures for the current user"""
     model = EmailSignature
     template_name = 'communication/signature_list.html'
     context_object_name = 'signatures'
 
     def get_queryset(self):
-        return EmailSignature.objects.filter(user=self.request.user, tenant=self.request.user.tenant)
+        # Additional filter for user
+        return super().get_queryset().filter(user=self.request.user)
 
 
-class EmailSignatureCreateView(LoginRequiredMixin, CreateView):
+class EmailSignatureCreateView(SalesCompassCreateView):
     """Create a new email signature"""
     model = EmailSignature
     form_class = EmailSignatureForm
     template_name = 'communication/signature_form.html'
     success_url = reverse_lazy('communication:signature_list')
+    success_message = 'Signature created successfully!'
 
     def form_valid(self, form):
-        form.instance.tenant = self.request.user.tenant
         form.instance.user = self.request.user
-        messages.success(self.request, 'Signature created successfully!')
         return super().form_valid(form)
 
 
-class EmailSignatureUpdateView(LoginRequiredMixin, UpdateView):
+class EmailSignatureUpdateView(SalesCompassUpdateView):
     """Update an existing email signature"""
     model = EmailSignature
     form_class = EmailSignatureForm
     template_name = 'communication/signature_form.html'
     success_url = reverse_lazy('communication:signature_list')
+    success_message = 'Signature updated successfully!'
 
     def get_queryset(self):
-        return EmailSignature.objects.filter(user=self.request.user, tenant=self.request.user.tenant)
+        return super().get_queryset().filter(user=self.request.user)
 
 
-class EmailSignatureDeleteView(LoginRequiredMixin, DeleteView):
+class EmailSignatureDeleteView(SalesCompassDeleteView):
     """Delete an email signature"""
     model = EmailSignature
     template_name = 'communication/signature_confirm_delete.html'
     success_url = reverse_lazy('communication:signature_list')
+    success_message = 'Signature deleted successfully!'
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, self.success_message)
+        return super().delete(request, *args, **kwargs)
 
     def get_queryset(self):
-        return EmailSignature.objects.filter(user=self.request.user, tenant=self.request.user.tenant)
+        return super().get_queryset().filter(user=self.request.user)
 
 
 from django.urls import reverse_lazy, reverse
@@ -835,7 +804,10 @@ class WhatsAppSendView(LoginRequiredMixin, TemplateView):
         
         # Get WhatsApp numbers from configuration or mock
         from wazo import wazo_whatsapp_service
-        context['wa_numbers'] = wazo_whatsapp_service.get_tenant_numbers(str(tenant.id))
+        if tenant:
+            context['wa_numbers'] = wazo_whatsapp_service.get_tenant_numbers(str(tenant.id))
+        else:
+            context['wa_numbers'] = []
         
         # Get contacts and leads for selection
         from accounts.models import Contact, Account
@@ -1014,7 +986,10 @@ class WhatsAppConversationView(LoginRequiredMixin, TemplateView):
         
         # Get WhatsApp numbers for reply
         from wazo import wazo_whatsapp_service
-        context['wa_numbers'] = wazo_whatsapp_service.get_tenant_numbers(str(tenant.id))
+        if tenant:
+            context['wa_numbers'] = wazo_whatsapp_service.get_tenant_numbers(str(tenant.id))
+        else:
+            context['wa_numbers'] = []
         
         return context
     

@@ -80,6 +80,22 @@ class AuditLog(models.Model):
         user_email = self.user.email if self.user else 'System'
         return f"{self.action.upper()} {self.resource_type} '{self.resource_name}' by {user_email}"
 
+    @property
+    def created_at(self):
+        return self.audit_log_created_at
+
+    @created_at.setter
+    def created_at(self, value):
+        self.audit_log_created_at = value
+
+    @property
+    def action_type(self):
+        return self.action
+
+    @action_type.setter
+    def action_type(self, value):
+        self.action = value
+
 
 class ComplianceAuditTrail(models.Model):
     """Model for specific compliance-related audit events"""

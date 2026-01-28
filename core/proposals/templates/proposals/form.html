@@ -11,72 +11,127 @@
 
     </div>
     <div class="card-body bg-white">
-    <form method="post" enctype="multipart/form-data" >
-    {% csrf_token %}
-    <div class="row g-4">
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label for="{{ form.title.id_for_label }}" class="form-label fw-semibold">Proposal Title *</label>
-                {{ form.title }}
-                {% if form.title.errors %}
-                    <div class="text-danger form-label fw-semibold" >{{ form.title.errors }}</div>
-                {% endif %}
-                <div class="form-text">e.g., "Q3 Enterprise Solution Proposal" or "Annual Service Renewal"</div>
-            </div>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label fw-semibold">Proposal Title
+                            *</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                        <div class="text-danger form-label fw-semibold">{{ form.title.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">e.g., "Q3 Enterprise Solution Proposal" or "Annual Service Renewal"</div>
+                    </div>
 
-            <div class="mb-3">
-                <label for="{{ form.opportunity.id_for_label }}" class="form-label fw-semibold">Opportunity *</label>
-                {{ form.opportunity }}
-                {% if form.opportunity.errors %}
-                    <div class="text-danger">{{ form.opportunity.errors }}</div>
-                {% endif %}
-                <div class="form-text">Select the opportunity this proposal is for</div>
-            </div>
+                    <div class="mb-3">
+                        <label for="{{ form.opportunity.id_for_label }}" class="form-label fw-semibold">Opportunity
+                            *</label>
+                        {{ form.opportunity }}
+                        {% if form.opportunity.errors %}
+                        <div class="text-danger">{{ form.opportunity.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Select the opportunity this proposal is for</div>
+                    </div>
 
-            {% if form.status %}
-            <div class="mb-3">
-                <label for="{{ form.status.id_for_label }}" class="form-label fw-semibold">Status</label>
-                {{ form.status }}
-                <div class="form-text">Current status of the proposal</div>
-                {% if form.status.errors %}
-                    <div class="text-danger">{{ form.status.errors }}</div>
-                {% endif %}
-            </div>
-            {% endif %}
+                    {% if form.status %}
+                    <div class="mb-3">
+                        <label for="{{ form.status.id_for_label }}" class="form-label fw-semibold">Status</label>
+                        {{ form.status }}
+                        <div class="form-text">Current status of the proposal</div>
+                        {% if form.status.errors %}
+                        <div class="text-danger">{{ form.status.errors }}</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
 
-            <div class="mb-3">
-                <label for="{{ form.esg_section_content.id_for_label }}" class="form-label fw-semibold">ESG Impact Statement</label>
-                {{ form.esg_section_content }}
-                <div class="form-text">
-                    Describe the environmental and social benefits of this proposal. 
-                    This content will be highlighted in a dedicated ESG section and tracked for engagement.
+                    <div class="mb-3">
+                        <label for="{{ form.esg_section_content.id_for_label }}" class="form-label fw-semibold">ESG
+                            Impact Statement</label>
+                        {{ form.esg_section_content }}
+                        <div class="form-text">
+                            Describe the environmental and social benefits of this proposal.
+                            This content will be highlighted in a dedicated ESG section and tracked for engagement.
+                        </div>
+                        {% if form.esg_section_content.errors %}
+                        <div class="text-danger">{{ form.esg_section_content.errors }}</div>
+                        {% endif %}
+                    </div>
                 </div>
-                {% if form.esg_section_content.errors %}
-                    <div class="text-danger">{{ form.esg_section_content.errors }}</div>
-                {% endif %}
-            </div>
-        </div>
 
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label for="{{ form.content.id_for_label }}" class="form-label fw-semibold">Proposal Content *</label>
-                {{ form.content }}
-                <div class="form-text">
-                    <p><strong>Formatting Tips:</strong></p>
-                    <ul>
-                        <li>You can use HTML tags for formatting (e.g., p, h2, ul)</li>
-                        <li>Use <!-- ESG_START --> and <!-- ESG_END --> to mark ESG sections</li>
-                        <li>Include tables, lists, and bold/italic text as needed</li>
-                    </ul>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.content.id_for_label }}" class="form-label fw-semibold">Proposal Content
+                            *</label>
+                        {{ form.content }}
+                        <div class="form-text">
+                            <p><strong>Formatting Tips:</strong></p>
+                            <ul>
+                                <li>You can use HTML tags for formatting (e.g., p, h2, ul)</li>
+                                <li>Use <!-- ESG_START --> and <!-- ESG_END --> to mark ESG sections</li>
+                                <li>Include tables, lists, and bold/italic text as needed</li>
+                            </ul>
+                        </div>
+                        {% if form.content.errors %}
+                        <div class="text-danger">{{ form.content.errors }}</div>
+                        {% endif %}
+                    </div>
                 </div>
-                {% if form.content.errors %}
-                    <div class="text-danger">{{ form.content.errors }}</div>
-                {% endif %}
             </div>
-        </div>
     </div>
 
-    <div class="d-flex gap-2 mt-3">
+    <!-- Line Items (CPQ) -->
+    <div class="mt-5">
+        <h4 class="fw-bold mb-3"><i class="bi bi-list-check me-2"></i>Line Items</h4>
+        <div class="table-responsive">
+            {{ lines.management_form }}
+            <table class="table table-hover align-middle" id="items-table">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 40%">Product</th>
+                        <th style="width: 15%">Qty</th>
+                        <th style="width: 20%">Unit Price</th>
+                        <th style="width: 15%">Disc %</th>
+                        <th style="width: 10%">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="formset-container">
+                    {% for line_form in lines %}
+                    <tr class="line-item-row">
+                        {% for hidden in line_form.hidden_fields %}
+                        {{ hidden }}
+                        {% endfor %}
+                        <td>
+                            {{ line_form.product }}
+                            {% if line_form.product.errors %}
+                            <div class="text-danger small">{{ line_form.product.errors }}</div>
+                            {% endif %}
+                        </td>
+                        <td>{{ line_form.quantity }}</td>
+                        <td>{{ line_form.unit_price }}</td>
+                        <td>{{ line_form.discount_percent }}</td>
+                        <td>
+                            {% if lines.can_delete %}
+                            <div class="form-check">
+                                {{ line_form.DELETE }}
+                                <label class="form-check-label text-danger" for="{{ line_form.DELETE.id_for_label }}">
+                                    <i class="bi bi-trash"></i>
+                                </label>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-info" id="add-item-btn">
+            <i class="bi bi-plus-circle me-1"></i> Add Another Item
+        </button>
+    </div>
+
+    <div class="d-flex gap-2 mt-4 border-top pt-4">
         <button type="submit" class="btn btn-primary">
             {% if object %}Update Proposal{% else %}Create Proposal{% endif %}
         </button>
@@ -85,25 +140,66 @@
         <a href="{% url 'proposals:proposal_detail' object.pk %}" class="btn btn-outline-primary">View Proposal</a>
         {% endif %}
     </div>
-</form>
-    </div>
+    </form>
+</div>
 </div>
 
 
 <script>
-// Add real-time preview functionality (optional)
-document.addEventListener('DOMContentLoaded', function() {
-    const contentField = document.getElementById('{{ form.content.id_for_label }}');
-    if (contentField) {
-        // You can add a preview tab here if desired
-        // For now, we'll just ensure proper height
-        contentField.style.minHeight = '300px';
-    }
-    
-    const esgField = document.getElementById('{{ form.esg_section_content.id_for_label }}');
-    if (esgField) {
-        esgField.style.minHeight = '150px';
-    }
-});
+    document.addEventListener('DOMContentLoaded', function () {
+        const contentField = document.getElementById('{{ form.content.id_for_label }}');
+        if (contentField) contentField.style.minHeight = '300px';
+
+        const esgField = document.getElementById('{{ form.esg_section_content.id_for_label }}');
+        if (esgField) esgField.style.minHeight = '150px';
+
+        // Formset Management
+        const formsetContainer = document.getElementById('formset-container');
+        const addItemBtn = document.getElementById('add-item-btn');
+        const totalForms = document.getElementById('id_lines-TOTAL_FORMS');
+
+        addItemBtn.addEventListener('click', function () {
+            const formCount = parseInt(totalForms.value);
+            const row = document.querySelector('.line-item-row').cloneNode(true);
+
+            // Update indices
+            row.innerHTML = row.innerHTML.replace(/lines-\d-/g, `lines-${formCount}-`);
+
+            // Clear inputs
+            row.querySelectorAll('input, select').forEach(input => {
+                if (input.type !== 'hidden') input.value = '';
+                if (input.type === 'checkbox') input.checked = false;
+            });
+
+            formsetContainer.appendChild(row);
+            totalForms.value = formCount + 1;
+
+            attachPriceListener(row);
+        });
+
+        // Price Fetching
+        function attachPriceListener(row) {
+            const select = row.querySelector('.product-select');
+            const priceInput = row.querySelector('.price-input');
+
+            select.addEventListener('change', function () {
+                const productId = this.value;
+                if (!productId) {
+                    priceInput.value = '';
+                    return;
+                }
+
+                fetch(`/pos/api/products/${productId}/barcode/`) // Reusing existing product detail API
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.product) {
+                            priceInput.value = data.product.base_price;
+                        }
+                    });
+            });
+        }
+
+        document.querySelectorAll('.line-item-row').forEach(attachPriceListener);
+    });
 </script>
 {% endblock %}

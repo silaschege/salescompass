@@ -1,0 +1,42 @@
+{% extends "accounting/base.html" %}
+
+{% block accounting_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">Journal Entries</h1>
+    <a href="{% url 'accounting:journal_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> New Entry
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="bg-light">
+                <tr>
+                    {% include "components/_table_header.html" with field="entry_number" label="Entry #" %}
+                    {% include "components/_table_header.html" with field="entry_date" label="Date" %}
+                    {% include "components/_table_header.html" with field="description" label="Description" %}
+                    {% include "components/_table_header.html" with field="status" label="Status" %}
+                    <th>Created By</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for journal in journals %}
+                ... (keep existing loop) ...
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if journals %}
+    <div class="card-footer bg-white border-top py-3">
+        {% include "components/_pagination.html" %}
+    </div>
+    {% else %}
+    <div class="card-body">
+        {% url 'accounting:journal_create' as action_url %}
+        {% include "components/_empty_state.html" with icon="bi-journal-text" title="No journal entries found" message="Create your first journal entry to track financial transactions." action_url=action_url action_text="New Entry" %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

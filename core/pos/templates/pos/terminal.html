@@ -1,0 +1,966 @@
+{% extends "pos/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}POS Terminal{% if terminal %} - {{ terminal.terminal_name }}{% endif %}{% endblock %}
+
+{% block extra_head %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    /* Odoo-inspired POS with SalesCompass Colors */
+    * {
+        font-family: 'Inter', sans-serif;
+    }
+
+    :root {
+        --sc-purple: #6d28d9;
+        --sc-purple-dark: #5b21b6;
+        --sc-purple-light: rgba(109, 40, 217, 0.1);
+        --sc-gold: #fbbf24;
+        --sc-gold-dark: #d97706;
+        --sc-success: #10b981;
+        --sc-danger: #ef4444;
+        --sc-dark: #1e1b4b;
+        --sc-gray-50: #f9fafb;
+        --sc-gray-100: #f3f4f6;
+        --sc-gray-200: #e5e7eb;
+        --sc-gray-300: #d1d5db;
+        --sc-gray-500: #6b7280;
+        --sc-gray-700: #374151;
+        --sc-gray-900: #111827;
+    }
+
+    /* Override container for Odoo-style layout */
+    .pos-container {
+        display: flex;
+        flex-direction: row;
+        background: var(--sc-gray-100) !important;
+        min-height: 100vh;
+        padding: 0 !important;
+    }
+
+    /* Hide default sidebar - we'll use category tabs instead */
+    .pos-sidebar {
+        display: none !important;
+    }
+
+    /* Left Panel - Cart (Odoo style) */
+    .pos-cart {
+        width: 420px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        border-right: 1px solid var(--sc-gray-200);
+        order: -1;
+    }
+
+    .cart-header {
+        padding: 1rem 1.25rem;
+        background: white;
+        border-bottom: 1px solid var(--sc-gray-200);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .cart-title {
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--sc-gray-900);
+    }
+
+    /* Cart Items - Odoo style list */
+    .cart-items {
+        flex: 1;
+        overflow-y: auto;
+        background: white;
+    }
+
+    .cart-item {
+        display: flex;
+        align-items: center;
+        padding: 0.875rem 1.25rem;
+        border-bottom: 1px solid var(--sc-gray-100);
+        transition: background 0.15s;
+        cursor: pointer;
+    }
+
+    .cart-item:hover {
+        background: var(--sc-gray-50);
+    }
+
+    .cart-item-info {
+        flex: 1;
+    }
+
+    .cart-item-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--sc-gray-900);
+        margin-bottom: 0.125rem;
+    }
+
+    .cart-item-details {
+        font-size: 0.8rem;
+        color: var(--sc-gray-500);
+    }
+
+    .cart-item-price {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--sc-gray-900);
+        min-width: 80px;
+        text-align: right;
+    }
+
+    /* Cart Summary - Odoo style */
+    .cart-summary {
+        padding: 1.25rem;
+        background: var(--sc-gray-50);
+        border-top: 1px solid var(--sc-gray-200);
+    }
+
+    .cart-total-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .cart-total-label {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--sc-gray-900);
+    }
+
+    .cart-total-amount {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--sc-gray-900);
+    }
+
+    .cart-taxes {
+        font-size: 0.85rem;
+        color: var(--sc-gray-500);
+        text-align: right;
+    }
+
+    /* Loyalty Points Section */
+    .loyalty-section {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--sc-gray-200);
+    }
+
+    .loyalty-box {
+        flex: 1;
+        text-align: center;
+        padding: 0.75rem;
+        background: white;
+        border-radius: 0.5rem;
+        border: 1px solid var(--sc-gray-200);
+    }
+
+    .loyalty-label {
+        font-size: 0.75rem;
+        color: var(--sc-gray-500);
+        margin-bottom: 0.25rem;
+    }
+
+    .loyalty-value {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--sc-success);
+    }
+
+    /* Action Buttons Row */
+    .cart-actions-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        background: white;
+        border-top: 1px solid var(--sc-gray-200);
+    }
+
+    .cart-action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.375rem;
+        padding: 0.625rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--sc-gray-700);
+        background: white;
+        border: 1px solid var(--sc-gray-200);
+        border-radius: 0.375rem;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .cart-action-btn:hover {
+        background: var(--sc-gray-50);
+        border-color: var(--sc-gray-300);
+    }
+
+    .cart-action-btn i {
+        font-size: 0.875rem;
+    }
+
+    .cart-action-btn.reward {
+        color: var(--sc-gold-dark);
+    }
+
+    /* Customer & Numpad Section */
+    .customer-numpad {
+        background: var(--sc-gray-100);
+        border-top: 1px solid var(--sc-gray-200);
+    }
+
+    .customer-row {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1.25rem;
+        background: white;
+        border-bottom: 1px solid var(--sc-gray-200);
+    }
+
+    .customer-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--sc-purple);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        margin-right: 0.75rem;
+    }
+
+    .customer-name {
+        font-weight: 600;
+        color: var(--sc-purple);
+    }
+
+    /* Numpad */
+    .numpad {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1px;
+        background: var(--sc-gray-200);
+    }
+
+    .numpad-btn {
+        padding: 1rem;
+        font-size: 1.1rem;
+        font-weight: 500;
+        background: white;
+        border: none;
+        cursor: pointer;
+        transition: background 0.1s;
+        color: var(--sc-gray-700);
+    }
+
+    .numpad-btn:hover {
+        background: var(--sc-gray-50);
+    }
+
+    .numpad-btn:active {
+        background: var(--sc-gray-100);
+    }
+
+    .numpad-btn.action {
+        background: var(--sc-gray-50);
+        color: var(--sc-gray-600);
+        font-size: 0.85rem;
+    }
+
+    /* Payment Button */
+    .payment-btn {
+        display: flex;
+        align-items: center;
+        background: var(--sc-purple);
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .payment-btn:hover {
+        background: var(--sc-purple-dark);
+    }
+
+    .payment-arrow {
+        width: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .payment-text {
+        flex: 1;
+        padding: 1.25rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Right Panel - Products */
+    .pos-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        margin: 0;
+        border-radius: 0 !important;
+    }
+
+    /* Category Tabs - Odoo style */
+    .category-tabs {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background: white;
+        border-bottom: 1px solid var(--sc-gray-200);
+        gap: 0.5rem;
+        overflow-x: auto;
+    }
+
+    .category-tab {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: var(--sc-gray-100);
+        border: none;
+        border-radius: 2rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--sc-gray-700);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s;
+    }
+
+    .category-tab:hover {
+        background: var(--sc-gray-200);
+    }
+
+    .category-tab.active {
+        background: var(--sc-purple);
+        color: white;
+    }
+
+    .category-tab i {
+        font-size: 1rem;
+    }
+
+    .category-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-left: auto;
+        color: var(--sc-gray-500);
+        font-size: 0.875rem;
+    }
+
+    /* Search */
+    .pos-search-bar {
+        padding: 0.75rem 1rem;
+        background: white;
+        border-bottom: 1px solid var(--sc-gray-200);
+    }
+
+    .search-input-wrapper {
+        position: relative;
+        max-width: 300px;
+        margin-left: auto;
+    }
+
+    .pos-search-input {
+        width: 100%;
+        padding: 0.625rem 1rem 0.625rem 2.5rem;
+        border: 1px solid var(--sc-gray-200);
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        background: var(--sc-gray-50);
+    }
+
+    .pos-search-input:focus {
+        outline: none;
+        border-color: var(--sc-purple);
+        background: white;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--sc-gray-400);
+    }
+
+    /* Product Grid - Odoo style */
+    .pos-grid {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        background: var(--sc-gray-50);
+    }
+
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 0.75rem;
+    }
+
+    /* Product Card - Odoo style */
+    .product-card {
+        background: white;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid var(--sc-gray-200);
+        position: relative;
+    }
+
+    .product-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .product-image {
+        height: 100px;
+        background: var(--sc-gray-100);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 0.5rem;
+    }
+
+    .product-image .placeholder-icon {
+        font-size: 2.5rem;
+        color: var(--sc-gray-300);
+    }
+
+    .product-info {
+        padding: 0.75rem;
+    }
+
+    .product-name {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--sc-gray-900);
+        margin-bottom: 0.375rem;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .product-price {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--sc-purple);
+    }
+
+    .product-unit {
+        font-size: 0.7rem;
+        color: var(--sc-gray-500);
+    }
+
+    .product-info-btn {
+        position: absolute;
+        top: 0.375rem;
+        right: 0.375rem;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        font-size: 0.7rem;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .product-card:hover .product-info-btn {
+        opacity: 1;
+    }
+
+    /* Empty states */
+    .empty-cart {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem;
+        color: var(--sc-gray-400);
+    }
+
+    .empty-cart-icon {
+        font-size: 3rem;
+        margin-bottom: 0.75rem;
+    }
+
+    /* Toast */
+    .toast-container {
+        position: fixed;
+        bottom: 1rem;
+        right: 1rem;
+        z-index: 9999;
+    }
+
+    .pos-toast {
+        background: var(--sc-dark);
+        color: white;
+        padding: 0.875rem 1.25rem;
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        animation: slideIn 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .pos-toast.success {
+        border-left: 4px solid var(--sc-success);
+    }
+
+    .pos-toast.error {
+        border-left: 4px solid var(--sc-danger);
+    }
+
+    .pos-toast.info {
+        border-left: 4px solid var(--sc-gold);
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    /* Payment Modal */
+    .payment-method-btn {
+        padding: 1.25rem;
+        border: 2px solid var(--sc-gray-200);
+        border-radius: 0.75rem;
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+    }
+
+    .payment-method-btn:hover {
+        border-color: var(--sc-purple);
+    }
+
+    .payment-method-btn.active {
+        border-color: var(--sc-purple);
+        background: var(--sc-purple-light);
+    }
+
+    .payment-method-btn i {
+        font-size: 1.5rem;
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--sc-purple);
+    }
+
+    .amount-display {
+        font-size: 2.5rem;
+        font-weight: 700;
+        text-align: center;
+        padding: 1.5rem;
+        background: var(--sc-gray-50);
+        border-radius: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .quick-amounts {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+        margin: 1rem 0;
+    }
+
+    .quick-amount {
+        padding: 0.75rem;
+        border: 1px solid var(--sc-gray-200);
+        border-radius: 0.5rem;
+        background: white;
+        cursor: pointer;
+        text-align: center;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+
+    .quick-amount:hover {
+        background: var(--sc-purple);
+        color: white;
+        border-color: var(--sc-purple);
+    }
+
+    /* Responsive */
+    @media (max-width: 991px) {
+        .pos-cart {
+            width: 100%;
+            order: 1;
+            border-right: none;
+            border-top: 1px solid var(--sc-gray-200);
+        }
+
+        .pos-main {
+            order: 0;
+        }
+
+        .pos-container {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block pos_content %}
+<!-- Right Panel - Products -->
+<div class="pos-main">
+    <!-- Category Tabs -->
+    <div class="category-tabs">
+        <button class="category-tab active" onclick="filterByCategory(event, '')">
+            <i class="bi bi-house-door"></i>
+        </button>
+        <span class="text-muted">›</span>
+        <span id="current-category-name">All Products</span>
+        <div class="search-input-wrapper ms-auto">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" id="product-search" class="pos-search-input" placeholder="Search products">
+        </div>
+    </div>
+
+    <!-- Category Pills -->
+    <div class="category-tabs" id="category-pills" style="border-bottom: none; padding-top: 0;">
+        <!-- Loaded dynamically -->
+    </div>
+
+    <!-- Product Grid -->
+    <div class="pos-grid">
+        <div class="products-grid" id="products-container"></div>
+    </div>
+</div>
+
+<!-- Left Panel - Cart -->
+<div class="pos-cart">
+    <!-- Cart Header -->
+    <div class="cart-header">
+        <span class="cart-title">Current Order</span>
+        <button class="btn btn-sm btn-outline-secondary" onclick="clearCart()">
+            <i class="bi bi-trash3"></i>
+        </button>
+    </div>
+
+    <!-- Cart Items -->
+    <div class="cart-items" id="cart-items">
+        <div class="empty-cart">
+            <i class="bi bi-cart-x empty-cart-icon"></i>
+            <p class="mb-0">No items yet</p>
+        </div>
+    </div>
+
+    <!-- Cart Summary -->
+    <div class="cart-summary">
+        <div class="cart-total-row">
+            <span class="cart-total-label">Total:</span>
+            <span class="cart-total-amount" id="cart-total">KES 0.00</span>
+        </div>
+        <div class="cart-taxes" id="cart-taxes">Taxes: KES 0.00</div>
+
+        <!-- Loyalty Points -->
+        <div class="loyalty-section">
+            <div class="loyalty-box">
+                <div class="loyalty-label">Points Won</div>
+                <div class="loyalty-value" id="points-won">+0</div>
+            </div>
+            <div class="loyalty-box">
+                <div class="loyalty-label">New Total</div>
+                <div class="loyalty-value" id="new-total">0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="cart-actions-row">
+        <button class="cart-action-btn" onclick="processReturn()"><i class="bi bi-arrow-return-left"></i>
+            Refund</button>
+        <button class="cart-action-btn" data-bs-toggle="modal" data-bs-target="#customerModal"><i
+                class="bi bi-chat-left-text"></i> Note</button>
+        <button class="cart-action-btn"><i class="bi bi-upc-scan"></i> Code</button>
+        <button class="cart-action-btn"><i class="bi bi-arrow-repeat"></i> Reset</button>
+        <button class="cart-action-btn reward"><i class="bi bi-star"></i> Reward</button>
+        <button class="cart-action-btn"><i class="bi bi-tag"></i> Internal</button>
+    </div>
+
+    <!-- Customer & Numpad -->
+    <div class="customer-numpad">
+        <div class="customer-row" id="customer-display">
+            <div class="customer-avatar"><i class="bi bi-person"></i></div>
+            <span class="customer-name" data-bs-toggle="modal" data-bs-target="#customerModal">Add Customer</span>
+        </div>
+
+        <div class="numpad">
+            <button class="numpad-btn" onclick="numpadInput('1')">1</button>
+            <button class="numpad-btn" onclick="numpadInput('2')">2</button>
+            <button class="numpad-btn" onclick="numpadInput('3')">3</button>
+            <button class="numpad-btn action">Qty</button>
+            <button class="numpad-btn" onclick="numpadInput('4')">4</button>
+            <button class="numpad-btn" onclick="numpadInput('5')">5</button>
+            <button class="numpad-btn" onclick="numpadInput('6')">6</button>
+            <button class="numpad-btn action">% Disc</button>
+            <button class="numpad-btn" onclick="numpadInput('7')">7</button>
+            <button class="numpad-btn" onclick="numpadInput('8')">8</button>
+            <button class="numpad-btn" onclick="numpadInput('9')">9</button>
+            <button class="numpad-btn action">Price</button>
+            <button class="numpad-btn" onclick="numpadInput('+/-')">+/-</button>
+            <button class="numpad-btn" onclick="numpadInput('0')">0</button>
+            <button class="numpad-btn" onclick="numpadInput('.')">.</button>
+            <button class="numpad-btn action" onclick="numpadInput('backspace')"><i
+                    class="bi bi-backspace"></i></button>
+        </div>
+
+        <button class="payment-btn w-100" id="checkout-btn" disabled data-bs-toggle="modal"
+            data-bs-target="#paymentModal">
+            <span class="payment-arrow"><i class="bi bi-chevron-right"></i></span>
+            <span class="payment-text">Payment</span>
+        </button>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 1rem;">
+            <div class="modal-header" style="background: var(--sc-purple); color: white;">
+                <h5 class="modal-title"><i class="bi bi-credit-card me-2"></i>Payment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="amount-display" id="payment-amount-due">KES 0.00</div>
+                <div class="row g-3 mb-4">
+                    <div class="col-4"><button class="payment-method-btn w-100 active" data-method="cash"
+                            onclick="selectPaymentMethod('cash')"><i
+                                class="bi bi-cash-stack"></i><span>Cash</span></button></div>
+                    <div class="col-4"><button class="payment-method-btn w-100" data-method="card"
+                            onclick="selectPaymentMethod('card')"><i
+                                class="bi bi-credit-card"></i><span>Card</span></button></div>
+                    <div class="col-4"><button class="payment-method-btn w-100" data-method="mpesa"
+                            onclick="selectPaymentMethod('mpesa')"><i
+                                class="bi bi-phone"></i><span>M-Pesa</span></button></div>
+                </div>
+                <div id="cash-section">
+                    <div class="quick-amounts">
+                        <button class="quick-amount" onclick="setQuickAmount('exact')">Exact</button>
+                        <button class="quick-amount" onclick="setQuickAmount(100)">100</button>
+                        <button class="quick-amount" onclick="setQuickAmount(500)">500</button>
+                        <button class="quick-amount" onclick="setQuickAmount(1000)">1K</button>
+                    </div>
+                    <div class="mb-3"><input type="number" class="form-control form-control-lg" id="cash-amount"
+                            placeholder="Amount tendered..." oninput="updateChange()" style="border-radius: 0.5rem;">
+                    </div>
+                    <div class="d-flex justify-content-between p-3 rounded" style="background: #ecfdf5;"><span
+                            class="fw-bold">Change:</span><span class="fs-5 fw-bold text-success" id="change-amount">KES
+                            0.00</span></div>
+                </div>
+                <div id="reference-section" class="d-none"><input type="text" class="form-control"
+                        id="payment-reference" placeholder="Reference number..." style="border-radius: 0.5rem;"></div>
+            </div>
+            <div class="modal-footer border-0 p-4 pt-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-lg px-5" id="complete-payment-btn" onclick="completePayment()"
+                    style="background: var(--sc-success); color: white; border-radius: 0.5rem;"><i
+                        class="bi bi-check-lg me-2"></i>Validate</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Modal -->
+<div class="modal fade" id="customerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 0.75rem;">
+            <div class="modal-header">
+                <h5 class="modal-title">Select Customer</h5><button type="button" class="btn-close"
+                    data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body"><input type="text" class="form-control" id="customer-search"
+                    placeholder="Search customers..." style="border-radius: 0.5rem;">
+                <div id="customer-results" class="list-group mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sale Complete Modal -->
+<div class="modal fade" id="saleCompleteModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center border-0 shadow-lg" style="border-radius: 1rem;">
+            <div class="modal-body py-5">
+                <div
+                    style="width: 80px; height: 80px; margin: 0 auto 1.5rem; background: var(--sc-success); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-check-lg text-white" style="font-size: 2.5rem;"></i>
+                </div>
+                <h4 class="mb-2">Payment Successful!</h4>
+                <p class="text-muted">Transaction #<span id="complete-txn-number"></span></p>
+                <div id="change-info" class="alert alert-success d-none">Change: <span id="change-due-display">KES
+                        0.00</span></div>
+            </div>
+            <div class="modal-footer justify-content-center border-0 pb-4">
+                <button class="btn btn-outline-secondary" id="print-receipt-btn"><i
+                        class="bi bi-printer me-2"></i>Print</button>
+                <button class="btn btn-lg px-4" onclick="startNewSale()"
+                    style="background: var(--sc-purple); color: white;"><i class="bi bi-plus-lg me-2"></i>New
+                    Order</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    const TRANSACTION_ID = "{{ transaction.id|default:'' }}";
+    const CSRF_TOKEN = "{{ csrf_token }}";
+    let currentTransactionId = TRANSACTION_ID, currentCategory = '', selectedPaymentMethod = 'cash', cartTotal = 0, searchTimeout = null, numpadValue = '';
+
+    // Format currency helper
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES' }).format(amount);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('POS Terminal loaded');
+        loadCategories();
+        loadProducts();
+        if (currentTransactionId) loadCart();
+        setupSearch();
+    });
+
+    function loadProducts(query = '', categoryId = '') {
+        currentCategory = categoryId;
+        const container = document.getElementById('products-container');
+        if (!container) { console.error('products-container not found'); return; }
+        container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-secondary"></div><p class="mt-2 text-muted">Loading...</p></div>';
+        let url = '/pos/api/products/';
+        const params = new URLSearchParams();
+        if (query && query.length >= 2) { url = '/pos/api/products/search/'; params.append('q', query); }
+        if (categoryId) params.append('category', categoryId);
+        if (params.toString()) url += '?' + params.toString();
+        console.log('Fetching products from:', url);
+        fetch(url).then(r => r.json()).then(data => {
+            console.log('Products received:', data);
+            container.innerHTML = '';
+            const products = data.products || [];
+            if (!products.length) { container.innerHTML = '<div class="text-center py-5 text-muted"><i class="bi bi-inbox fs-1"></i><p class="mt-2">No products found</p></div>'; return; }
+            products.forEach(p => container.appendChild(createProductCard(p)));
+        }).catch(e => { console.error('Error loading products:', e); container.innerHTML = '<div class="text-center py-5 text-danger">Error loading products</div>'; });
+    }
+
+    function createProductCard(p) {
+        const div = document.createElement('div');
+        const price = parseFloat(p.price) || 0;
+        const img = p.image ? `<img src="${p.image}" alt="${p.name}">` : '<i class="bi bi-box placeholder-icon"></i>';
+        div.innerHTML = `<div class="product-card" onclick="addToCart(${p.id})"><button class="product-info-btn"><i class="bi bi-info"></i></button><div class="product-image">${img}</div><div class="product-info"><div class="product-name">${p.name}</div><div class="product-price">${formatCurrency(price)}</div></div></div>`;
+        return div.firstChild;
+    }
+
+    function loadCategories() {
+        fetch('/pos/api/categories/').then(r => r.json()).then(cats => {
+            const pills = document.getElementById('category-pills');
+            if (!pills) return;
+            pills.innerHTML = '<button class="category-tab active" onclick="filterByCategory(event, \'\')">All</button>';
+            if (cats && cats.length) cats.forEach(c => {
+                const btn = document.createElement('button');
+                btn.className = 'category-tab';
+                btn.textContent = c.name;
+                btn.onclick = (e) => filterByCategory(e, c.id);
+                pills.appendChild(btn);
+            });
+        }).catch(e => console.error('Error loading categories:', e));
+    }
+
+    function filterByCategory(event, categoryId) { event.preventDefault(); document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active')); event.target.classList.add('active'); document.getElementById('current-category-name').textContent = event.target.textContent || 'All Products'; loadProducts(document.getElementById('product-search').value, categoryId); }
+    function setupSearch() { document.getElementById('product-search')?.addEventListener('input', e => { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => loadProducts(e.target.value, currentCategory), 300); }); }
+
+    function addToCart(productId) {
+        if (!currentTransactionId) { showToast('No active session', 'error'); return; }
+        fetch(`/pos/api/transactions/${currentTransactionId}/lines/`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN }, body: JSON.stringify({ product_id: productId, quantity: 1 }) })
+            .then(r => r.json()).then(d => { if (d.id) { loadCart(); showToast('Added', 'success'); } else showToast(d.error || 'Error', 'error'); });
+    }
+
+    function loadCart() { if (!currentTransactionId) return; fetch(`/pos/api/transactions/${currentTransactionId}/`).then(r => r.json()).then(d => updateCartUI(d)); }
+
+    function updateCartUI(t) {
+        const c = document.getElementById('cart-items'), btn = document.getElementById('checkout-btn');
+        const lines = t.lines || [];
+        if (!lines.length) { c.innerHTML = '<div class="empty-cart"><i class="bi bi-cart-x empty-cart-icon"></i><p class="mb-0">No items yet</p></div>'; btn.disabled = true; return; }
+        c.innerHTML = ''; lines.forEach(l => { const i = document.createElement('div'); i.className = 'cart-item'; i.innerHTML = `<div class="cart-item-info"><div class="cart-item-name">${l.product_name}</div><div class="cart-item-details">${Math.round(l.quantity)} Units x ${formatCurrency(parseFloat(l.unit_price))} / Units</div></div><div class="cart-item-price">${formatCurrency(parseFloat(l.line_total))}</div>`; i.onclick = () => selectCartItem(l.id); c.appendChild(i); }); btn.disabled = false;
+        const total = parseFloat(t.total || t.total_amount) || 0, tax = parseFloat(t.tax_amount) || 0;
+        document.getElementById('cart-total').textContent = formatCurrency(total);
+        document.getElementById('cart-taxes').textContent = 'Taxes: ' + formatCurrency(tax);
+        document.getElementById('payment-amount-due').textContent = formatCurrency(total);
+        document.getElementById('points-won').textContent = '+' + Math.floor(total / 10);
+        document.getElementById('new-total').textContent = Math.floor(total);
+        cartTotal = total;
+    }
+
+    function selectCartItem(lineId) { /* For editing quantity via numpad */ }
+    function numpadInput(val) { /* Numpad logic */ }
+
+    function clearCart() { if (!currentTransactionId || !confirm('Clear cart?')) return; fetch(`/pos/api/transactions/${currentTransactionId}/clear/`, { method: 'POST', headers: { 'X-CSRFToken': CSRF_TOKEN } }).then(r => r.json()).then(d => { if (d.success) { loadCart(); showToast('Cleared', 'info'); } }); }
+    function selectPaymentMethod(m) { selectedPaymentMethod = m; document.querySelectorAll('.payment-method-btn').forEach(b => b.classList.toggle('active', b.dataset.method === m)); document.getElementById('cash-section').classList.toggle('d-none', m !== 'cash'); document.getElementById('reference-section').classList.toggle('d-none', m === 'cash'); }
+    function setQuickAmount(a) { document.getElementById('cash-amount').value = a === 'exact' ? cartTotal : a; updateChange(); }
+    function updateChange() { const t = parseFloat(document.getElementById('cash-amount').value) || 0; document.getElementById('change-amount').textContent = formatCurrency(Math.max(0, t - cartTotal)); }
+
+    function completePayment() {
+        let a = cartTotal; if (selectedPaymentMethod === 'cash') { a = parseFloat(document.getElementById('cash-amount').value) || 0; if (a < cartTotal) { showToast('Insufficient amount', 'error'); return; } }
+        const ref = document.getElementById('payment-reference')?.value || '', btn = document.getElementById('complete-payment-btn');
+        btn.disabled = true;
+        fetch(`/pos/api/transactions/${currentTransactionId}/pay/`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN }, body: JSON.stringify({ payment_methods: [{ method: selectedPaymentMethod, amount: a, reference_number: ref }] }) })
+            .then(r => r.json()).then(d => {
+                if (d.success && d.status === 'completed') { bootstrap.Modal.getInstance(document.getElementById('paymentModal'))?.hide(); document.getElementById('complete-txn-number').textContent = d.transaction_number || ''; const ci = document.getElementById('change-info'); if (d.change_due && parseFloat(d.change_due) > 0) { ci.classList.remove('d-none'); document.getElementById('change-due-display').textContent = formatCurrency(parseFloat(d.change_due)); } else ci.classList.add('d-none'); new bootstrap.Modal(document.getElementById('saleCompleteModal')).show(); }
+                else showToast(d.error || 'Failed', 'error');
+            }).finally(() => { btn.disabled = false; });
+    }
+
+    function startNewSale() { window.location.href = '/pos/terminal/'; }
+    function processReturn() { window.location.href = "{% url 'pos:refund_list' %}"; }
+    function showToast(msg, type = 'info') { const c = document.getElementById('toast-container'), t = document.createElement('div'); t.className = `pos-toast ${type}`; t.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : 'info-circle'}"></i><span>${msg}</span>`; c.appendChild(t); setTimeout(() => t.remove(), 3000); }
+</script>
+{% endblock %}

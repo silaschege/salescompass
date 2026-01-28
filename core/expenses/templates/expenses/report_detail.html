@@ -1,0 +1,164 @@
+{% extends "expenses/base.html" %}
+{% load humanize %}
+
+{% block expenses_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item small"><a href="{% url 'expenses:report_list' %}"
+                            class="text-decoration-none text-muted">Reports</a></li>
+                    <li class="breadcrumb-item active small text-primary fw-bold" aria-current="page">{{
+                        report.report_number }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3 fw-bold mb-0">{{ report.title }}</h1>
+        </div>
+        <div class="d-flex gap-2">
+            {% if report.status == 'draft' %}
+            <a href="{% url 'expenses:line_create' report.pk %}" class="btn btn-light px-4 border shadow-sm">
+                <i class="bi bi-plus-lg me-2"></i> Add Line
+            </a>
+            <form method="post" action="{% url 'expenses:report_submit' report.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary px-4 shadow-sm border-0">
+                    <i class="bi bi-send-check me-2"></i> Submit Report
+                </button>
+            </form>
+            {% elif report.status == 'submitted' %}
+            <form method="post" action="{% url 'expenses:report_approve' report.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success px-4 shadow-sm border-0">
+                    <i class="bi bi-check2-circle me-2"></i> Approve Report
+                </button>
+            </form>
+            {% elif report.status == 'approved' %}
+            <form method="post" action="{% url 'expenses:report_pay' report.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary px-4 shadow-sm border-0">
+                    <i class="bi bi-bank me-2"></i> Record Payment
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Summary Sidebar -->
+        <div class="col-lg-4">
+            <div class="premium-card p-4 border-0 shadow-sm mb-4">
+                <h6 class="fw-bold mb-4">Report Summary</h6>
+                <div class="list-group list-group-flush small">
+                    <div
+                        class="list-group-item px-0 py-3 bg-transparent d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Status</span>
+                        <span
+                            class="badge {% if report.status == 'approved' %}badge-soft-success{% elif report.status == 'submitted' %}badge-soft-warning{% elif report.status == 'paid' %}badge-soft-primary{% else %}bg-light text-muted border{% endif %} px-3 rounded-pill text-uppercase">
+                            {{ report.get_status_display }}
+                        </span>
+                    </div>
+                    <div
+                        class="list-group-item px-0 py-3 bg-transparent d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Total Amount</span>
+                        <span class="h5 fw-bold mb-0 text-dark">${{ report.total_amount|intcomma }}</span>
+                    </div>
+                    <div
+                        class="list-group-item px-0 py-3 bg-transparent d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Employee</span>
+                        <span class="fw-bold">{{ report.employee.get_full_name }}</span>
+                    </div>
+                    <div
+                        class="list-group-item px-0 py-3 bg-transparent d-flex justify-content-between align-items-center border-0">
+                        <span class="text-muted">GL Accrual</span>
+                        {% if report.is_accrued %}
+                        <span class="text-success small fw-bold"><i class="bi bi-check-circle-fill"></i> POSTED</span>
+                        {% else %}
+                        <span class="text-muted small">PENDING</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="premium-card p-4 border-0 shadow-sm bg-light bg-opacity-50">
+                <h6 class="fw-bold mb-2 small text-uppercase">Notes</h6>
+                <p class="small text-muted mb-0">{{ report.notes|default:"No notes provided." }}</p>
+            </div>
+        </div>
+
+        <!-- Line Items -->
+        <div class="col-lg-8">
+            <div class="premium-card h-100 border-0 shadow-sm">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Expense Lines</h5>
+                    <span class="text-muted small">{{ report.lines.count }} items</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light bg-opacity-50 small text-uppercase fw-bold">
+                            <tr>
+                                <th class="ps-4">Date</th>
+                                <th>Category & Description</th>
+                                <th class="text-center">Allocation</th>
+                                <th class="pe-4 text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for line in report.lines.all %}
+                            <tr>
+                                <td class="ps-4 py-3">
+                                    <div class="small fw-semibold">{{ line.date|date:"M d, Y" }}</div>
+                                </td>
+                                <td class="py-3">
+                                    <div class="fw-bold small">{{ line.category.name }}</div>
+                                    <div class="extra-small text-muted">{{ line.description }}</div>
+                                    {% if line.receipt %}
+                                    <div class="mt-1"><a href="{{ line.receipt.url }}"
+                                            class="extra-small text-primary"><i class="bi bi-paperclip"></i> View
+                                            Receipt</a></div>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 text-center">
+                                    {% if line.is_capex %}
+                                    <span
+                                        class="badge bg-danger bg-opacity-10 text-danger rounded-pill extra-small">CAPEX</span>
+                                    {% if line.related_asset %}
+                                    <div class="extra-small mt-1"><a href="#"
+                                            class="text-decoration-none text-muted">Asset: {{
+                                            line.related_asset.asset_number }}</a></div>
+                                    {% endif %}
+                                    {% else %}
+                                    <span
+                                        class="badge bg-primary bg-opacity-10 text-primary rounded-pill extra-small">OPEX</span>
+                                    {% endif %}
+
+                                    {% if line.related_shipment %}
+                                    <div class="extra-small mt-1 text-muted"><i class="bi bi-truck"></i> {{
+                                        line.related_shipment.shipment_number }}</div>
+                                    {% endif %}
+                                </td>
+                                <td class="pe-4 py-3 text-end">
+                                    <div class="fw-bold text-dark">${{ line.amount|intcomma }}</div>
+                                    {% if line.tax_amount > 0 %}
+                                    <div class="extra-small text-muted">Incl. ${{ line.tax_amount }} tax</div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">No line items in this report.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .extra-small {
+        font-size: 0.7rem;
+    }
+</style>
+{% endblock %}

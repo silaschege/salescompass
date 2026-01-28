@@ -1,0 +1,22 @@
+<div class="modal fade" id="{{ modal_id }}" tabindex="-1" aria-labelledby="{{ modal_id }}Label" aria-hidden="true">
+    <div class="modal-dialog modal-{{ size|default:'md' }} {{ scrollable|yesno:'modal-dialog-scrollable,' }}">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom py-3">
+                <h5 class="modal-title fw-bold" id="{{ modal_id }}Label">
+                    {% if icon %}<i class="bi {{ icon }} me-2"></i>{% endif %}
+                    {{ title }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                {% block modal_body %}{% endblock %}
+            </div>
+            {% if show_footer|default:True %}
+            <div class="modal-footer border-top py-3">
+                <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Close</button>
+                {% block modal_footer %}{% endblock %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>

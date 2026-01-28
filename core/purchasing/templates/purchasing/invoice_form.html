@@ -1,0 +1,45 @@
+{% extends "purchasing/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block purchasing_content %}
+<div class="animate-fade-in p-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex align-items-center mb-4">
+                <a href="{% url 'purchasing:invoice_list' %}"
+                    class="btn btn-light btn-icon rounded-circle me-3 border-0 shadow-sm">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <h1 class="h3 fw-bold mb-0">{% if form.instance.pk %}Edit Bill{% else %}Record Vendor Bill{% endif %}
+                </h1>
+            </div>
+
+            <div class="premium-card p-4 border-0 shadow-sm">
+                <div class="px-2 py-3 mb-4 bg-light bg-opacity-50 rounded">
+                    <h6 class="fw-bold mb-1 small text-uppercase text-muted"><i class="bi bi-shield-check me-2"></i>
+                        Financial Recognition</h6>
+                    <p class="text-muted extra-small mb-0">Recording an invoice creates a liability in your Accounts
+                        Payable. Ensure the dates align with your fiscal reporting period.</p>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+
+                    <div class="d-flex justify-content-end gap-2 mt-5 pt-3 border-top">
+                        <a href="{% url 'purchasing:invoice_list' %}" class="btn btn-light px-4 border">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4 shadow-sm border-0">
+                            Save Invoice
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .extra-small {
+        font-size: 0.75rem;
+    }
+</style>
+{% endblock %}
