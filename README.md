@@ -110,30 +110,34 @@ The ML engine is a decoupled FastAPI application that provides:
 - PostgreSQL 15+
 - Redis 7+
 
-### Quick Start (Docker)
+### ⚡ Quick Start (Docker)
 The easiest way to get started is using the unified Docker Compose setup:
 
-```bash
-# 1. Clone the repository
-git clone https://github.com/silaschege/salescompass.git
-cd salescompass
+1. **Clone & Enter**:
+   ```bash
+   git clone https://github.com/silaschege/salescompass.git
+   cd salescompass/core
+   ```
+2. **Environment Setup**:
+   ```bash
+   cp .env.example .env
+   # Edit .env to set your keys
+   ```
+3. **Launch Platform**:
+   ```bash
+   docker-compose up -d
+   ```
 
-# 2. Configure environment
-cd core
-cp .env.example .env
-
-# 3. Spin up the platform
-docker-compose up -d
-```
-
-Access the **CRM Dashboard** at `http://localhost:8000` and the **ML API Docs** at `http://localhost:8001/docs`.
+#### 🌐 Access Points
+- **CRM Dashboard**: [http://localhost:8000](http://localhost:8000)
+- **ML Engine API**: [http://localhost:8001/docs](http://localhost:8001/docs)
 
 ---
 
-## Configuration
+## 🔥 Configuration
 
 | Variable | Description | Default |
-|----------|-------------|---------|
+|:---|:---|:---|
 | `SECRET_KEY` | Django security token | *Required* |
 | `DATABASE_URL` | PostgreSQL connection string | `db.sqlite3` (dev) |
 | `REDIS_URL` | Redis connection URL | `redis://localhost:6379/0` |
