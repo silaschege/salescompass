@@ -135,7 +135,7 @@ The ML engine is a separate FastAPI application that provides:
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-org/salescompass.git
+git clone https://github.com/silaschege/salescompass.git
 cd salescompass
 ```
 
@@ -232,6 +232,8 @@ After starting the server, visit:
 - **ML Engine API**: `http://localhost:8001/docs` (interactive Swagger UI)
 
 ## Deployment
+
+For a detailed step-by-step deployment guide, please refer to the [Implementation Plan](.gemini/antigravity/brain/9efab295-5152-468f-aeb1-82ee11fd6fba/implementation_plan.md).
 
 ### Production Deployment
 For production environments, ensure:
