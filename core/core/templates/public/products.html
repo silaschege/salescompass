@@ -1,0 +1,212 @@
+{% extends "public/base.html" %}
+{% load static %}
+
+{% block title %}Apps & Features - Everything the Black Book Can't Do | SalesCompass{% endblock %}
+
+{% block content %}
+<!-- Products Hero -->
+<section class="section-large text-center position-relative overflow-hidden">
+  <div class="container position-relative z-1">
+    <span class="transformation-badge mb-4"><i class="bi bi-grid-1x2"></i> The Modern Alternative</span>
+    <h1 class="display-3 fw-extrabold mb-4">Everything the <br><span class="highlight-handwritten">Black Book</span>
+      Can't Offer.</h1>
+    <p class="lead text-muted mb-6 mx-auto" style="max-width: 650px;">
+      Manual methods have a ceiling. SalesCompass removes the limits on your growth with 24 integrated apps.
+    </p>
+    <div class="d-flex justify-content-center gap-3">
+      <a href="{% url 'core:try_free' %}" class="btn btn-primary px-5">Start Free Trial</a>
+      <a href="#comparison" class="btn btn-outline-primary px-5">Compare vs Manual</a>
+    </div>
+  </div>
+</section>
+
+<!-- Comparison Grid Section -->
+<section class="section bg-light border-top border-light" id="comparison">
+  <div class="container">
+    <div class="text-center mb-10">
+      <h2 class="fw-extrabold mb-3">Why Top Teams Switch</h2>
+      <p class="text-muted">The difference is in the data.</p>
+    </div>
+
+    <div class="table-responsive">
+      <table class="feature-compare-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th class="col-old">The "Black Book" Method</th>
+            <th class="col-new">SalesCompass Intelligent Suite</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="fw-bold">Data Entry</td>
+            <td>Manual, error-prone, repetitive</td>
+            <td class="fw-bold text-success"><i class="bi bi-check2 me-1"></i> Automated & Synced</td>
+          </tr>
+          <tr>
+            <td class="fw-bold">Lead Scoring</td>
+            <td>Gut feeling & guesswork</td>
+            <td class="fw-bold text-success"><i class="bi bi-check2 me-1"></i> AI Predictive Models</td>
+          </tr>
+          <tr>
+            <td class="fw-bold">Collaboration</td>
+            <td>Email chains & lost sticky notes</td>
+            <td class="fw-bold text-success"><i class="bi bi-check2 me-1"></i> Real-time Unified Hub</td>
+          </tr>
+          <tr>
+            <td class="fw-bold">Reporting</td>
+            <td>Hours of spreadsheet wrestling</td>
+            <td class="fw-bold text-success"><i class="bi bi-check2 me-1"></i> Instant Live Dashboards</td>
+          </tr>
+          <tr>
+            <td class="fw-bold">Accessibility</td>
+            <td>Stuck on one desktop file</td>
+            <td class="fw-bold text-success"><i class="bi bi-check2 me-1"></i> Cloud & Mobile Anywhere</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Main Apps Explorer (Categorized by Pain Points) -->
+<section class="section bg-white border-top border-light" id="browse">
+  <div class="container">
+
+    <!-- CRM Section -->
+    <div class="row g-5 align-items-center mb-12">
+      <div class="col-lg-4">
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <div class="app-icon app-crm m-0 app-icon-sm"><i class="bi bi-people-fill"></i></div>
+          <h2 class="fw-extrabold mb-0">CRM & Leads</h2>
+        </div>
+        <div class="pain-point-card pain-point-problem mb-4">
+          <div class="pain-point-title">The Problem:</div>
+          <div class="pain-point-desc">"I forget who to call and when. My leads are scattered across emails and
+            notebooks."</div>
+        </div>
+        <div class="pain-point-card pain-point-solution">
+          <div class="pain-point-title">The Solution:</div>
+          <div class="pain-point-desc">Automated capture and intelligent scoring ensures you never miss a hot lead
+            again.</div>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="card-clean p-5 h-100">
+              <h3 class="fw-bold mb-3">Intelligent Capture</h3>
+              <p class="text-muted small mb-4">Web forms, email parsing, and social integration automatically populate
+                your CRM.</p>
+              <ul class="list-unstyled space-y-2 extra-small mb-0">
+                <li><i class="bi bi-check-lg text-success me-2"></i>Web-to-Lead Forms</li>
+                <li><i class="bi bi-check-lg text-success me-2"></i>Duplicate Detection</li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card-clean p-5 h-100">
+              <h3 class="fw-bold mb-3">Predictive Scoring</h3>
+              <p class="text-muted small mb-4">ML models analyze historical data to tell you exactly which leads will
+                close.</p>
+              <ul class="list-unstyled space-y-2 extra-small mb-0">
+                <li><i class="bi bi-check-lg text-success me-2"></i>Win Probability AI</li>
+                <li><i class="bi bi-check-lg text-success me-2"></i>Behavioral Signals</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sales Section -->
+    <div class="row g-5 align-items-center mb-12 border-top border-light pt-12">
+      <div class="col-lg-4 order-lg-last">
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <div class="app-icon app-sales m-0 app-icon-sm"><i class="bi bi-graph-up-arrow"></i></div>
+          <h2 class="fw-extrabold mb-0">Sales & Pipeline</h2>
+        </div>
+        <div class="pain-point-card pain-point-problem mb-4">
+          <div class="pain-point-title">The Problem:</div>
+          <div class="pain-point-desc">"I spend more time updating pipeline spreadsheets than actually selling."</div>
+        </div>
+        <div class="pain-point-card pain-point-solution">
+          <div class="pain-point-title">The Solution:</div>
+          <div class="pain-point-desc">Drag-and-drop pipelines with automated stage moves and instant CPQ quotes.</div>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="card-clean p-5 h-100">
+              <h3 class="fw-bold mb-3">Visual Pipeline</h3>
+              <p class="text-muted small mb-4">Kanban boards that update themselves based on activity and email
+                triggers.</p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card-clean p-5 h-100">
+              <h3 class="fw-bold mb-3">One-Click CPQ</h3>
+              <p class="text-muted small mb-4">Generate complex quotes with tiered pricing and discounts in seconds, not
+                hours.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytics Section -->
+    <div class="row g-5 align-items-center pt-12 border-top border-light">
+      <div class="col-lg-4">
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <div class="app-icon app-reports m-0 app-icon-sm"><i class="bi bi-bar-chart-fill"></i></div>
+          <h2 class="fw-extrabold mb-0">Intelligence</h2>
+        </div>
+        <div class="pain-point-card pain-point-problem mb-4">
+          <div class="pain-point-title">The Problem:</div>
+          <div class="pain-point-desc">"My reports are always a week old, and I don't trust the numbers."</div>
+        </div>
+        <div class="pain-point-card pain-point-solution">
+          <div class="pain-point-title">The Solution:</div>
+          <div class="pain-point-desc">Real-time BI dashboards that combine data from every department instantly.</div>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="roi-calculator text-center">
+          <h3 class="fw-bold mb-4">Calculate Your Time Savings</h3>
+          <div class="row g-4 mb-4">
+            <div class="col-md-6">
+              <label class="roi-input-label">Hours / Week Manually Reporting</label>
+              <input type="number" class="roi-input" value="10">
+            </div>
+            <div class="col-md-6">
+              <label class="roi-input-label">Hourly Cost of Staff</label>
+              <input type="number" class="roi-input" value="45">
+            </div>
+          </div>
+          <div class="roi-result">
+            <div class="roi-result-number">Significant</div>
+            <div class="roi-result-label">Potential Monthly Savings</div>
+          </div>
+          <p class="small text-muted mt-3 mb-0">* Based on eliminating manual report generation time</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Final CTA -->
+<section class="section-large text-center bg-gray-900 mt-12">
+  <div class="container py-4">
+    <h2 class="display-5 fw-extrabold mb-4 text-white">Stop Compensating for Bad Tools.</h2>
+    <p class="lead text-white-50 mb-6 mx-auto" style="max-width: 600px;">
+      Give your team the power of a modern, unified platform.
+    </p>
+    <div class="d-flex justify-content-center gap-3">
+      <a href="{% url 'core:try_free' %}" class="btn btn-primary btn-large px-5">Start Transformation</a>
+      <a href="{% url 'core:company' %}" class="btn btn-outline-light btn-large px-5">Contact Sales</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

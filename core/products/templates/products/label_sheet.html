@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Bulk Product Labels</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f4f4;
+        }
+
+        .sheet {
+            width: 210mm;
+            padding: 5mm;
+            margin: 0 auto;
+            background: white;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5mm;
+        }
+
+        .label {
+            border: 0.1mm solid #ddd;
+            padding: 5mm;
+            text-align: center;
+            height: 40mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .name {
+            font-size: 10pt;
+            font-weight: bold;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .price {
+            font-size: 12pt;
+            font-weight: bold;
+            margin: 2mm 0;
+        }
+
+        .sku {
+            font-size: 8pt;
+            color: #666;
+        }
+
+        .barcode img {
+            width: 100%;
+            height: 12mm;
+        }
+
+        .no-print {
+            padding: 20px;
+            text-align: center;
+            background: #333;
+            color: white;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+
+            body {
+                background: white;
+            }
+
+            .sheet {
+                width: auto;
+                padding: 0;
+            }
+
+            .label {
+                border: 0.1mm solid #eee;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="no-print">
+        <button onclick="window.print()"
+            style="padding: 10px 20px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold;">Print
+            Label Sheet (A4)</button>
+        <p>This sheet contains {{ products|length }} labels.</p>
+    </div>
+
+    <div class="sheet">
+        {% for product in products %}
+        <div class="label">
+            <div class="name">{{ product.product_name }}</div>
+            <div class="sku">{{ product.sku }}</div>
+            <div class="barcode">
+                <img src="{% url 'products:product_barcode' product.id %}" alt="Barcode">
+            </div>
+            <div class="price">KSh {{ product.base_price|floatformat:2 }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+
+</html>

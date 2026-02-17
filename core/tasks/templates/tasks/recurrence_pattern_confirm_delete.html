@@ -1,0 +1,58 @@
+<!-- recurrence_pattern_form.html -->
+{% extends "tasks/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">{% block title %}{% endblock %}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.name|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.frequency|as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.interval|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.week_days|as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.month_days|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.months|as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.end_date|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.occurrences|as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end mt-3">
+                            <a href="{% url 'tasks:pattern_list' %}" class="btn btn-secondary me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save Pattern</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

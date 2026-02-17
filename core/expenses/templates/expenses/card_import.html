@@ -1,0 +1,64 @@
+{% extends 'expenses/base.html' %}
+
+{% block expenses_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center mb-4">
+            <a href="{% url 'expenses:card_list' %}"
+                class="btn btn-icon btn-light me-3 text-secondary shadow-sm rounded-circle"
+                style="width: 40px; height: 40px;">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h4 class="mb-1 fw-bold text-dark">Import Transactions</h4>
+                <p class="text-muted mb-0">Upload bank statement CSV to reconcile expenses.</p>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase text-muted mb-2">Select Card</label>
+                        <select name="card_id" class="form-select form-control-lg bg-light border-0" required>
+                            <option value="">-- Choose Corporate Card --</option>
+                            {% for card in cards %}
+                            <option value="{{ card.id }}">{{ card.name }} (Last 4: {{ card.last_4_digits }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase text-muted mb-2">Upload CSV
+                            Statement</label>
+                        <div
+                            class="upload-zone p-5 border border-2 border-dashed rounded-4 text-center bg-light position-relative">
+                            <input type="file" name="csv_file"
+                                class="position-absolute top-0 start-0 w-100 h-100 opacity-0 cursor-pointer"
+                                accept=".csv" required
+                                onchange="document.getElementById('file-name').innerText = this.files[0].name">
+                            <i class="bi bi-file-earmark-spreadsheet fs-1 text-primary mb-3 d-block"></i>
+                            <h6 class="fw-bold mb-1">Drag file here or click to upload</h6>
+                            <p class="text-muted small mb-3">Accepted format: .csv</p>
+                            <span id="file-name"
+                                class="badge badge-soft-primary px-3 py-2 rounded-pill d-none-empty"></span>
+                        </div>
+                        <div class="form-text mt-2">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Expected columns: <strong>Date, Merchant, Amount, Currency, Description, Ref</strong>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                            <i class="bi bi-cloud-upload me-2"></i> Process Import
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

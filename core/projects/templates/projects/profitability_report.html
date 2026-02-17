@@ -1,0 +1,61 @@
+{% extends "projects/base.html" %}
+{% load humanize %}
+
+{% block page_content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Project Profitability Report</h1>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Profitability Overview</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Project</th>
+                        <th>Revenue</th>
+                        <th>Cost</th>
+                        <th>Profit</th>
+                        <th>Margin</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in project_data %}
+                    <tr>
+                        <td>{{ item.project.name }}</td>
+                        <td>${{ item.data.total_revenue|intcomma }}</td>
+                        <td>${{ item.data.total_cost|intcomma }}</td>
+                        <td class="{% if item.data.profit > 0 %}text-success{% else %}text-danger{% endif %}">
+                            ${{ item.data.profit|intcomma }}
+                        </td>
+                        <td>
+                            <div class="row no-gutters align-items-center">
+                                <div class="col-auto">
+                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">{{
+                                        item.data.margin|floatformat:1 }}%</div>
+                                </div>
+                                <div class="col">
+                                    <div class="progress progress-sm mr-2">
+                                        <div class="progress-bar {% if item.data.margin > 30 %}bg-success{% elif item.data.margin > 10 %}bg-info{% else %}bg-warning{% endif %}"
+                                            role="progressbar" style="width: {{ item.data.margin }}%"
+                                            aria-valuenow="{{ item.data.margin }}" aria-valuemin="0"
+                                            aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">No project data available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

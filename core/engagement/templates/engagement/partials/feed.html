@@ -1,0 +1,103 @@
+{# Reusable Engagement Feed Partial #}
+{# Expects context variable: engagement_events (QuerySet) #}
+
+<div class="engagement-feed-container">
+    {% if engagement_events %}
+    <div class="timeline">
+        {% for event in engagement_events %}
+        <div class="timeline-item d-flex mb-4">
+            <div class="timeline-icon mr-3">
+                {% if event.event_type == 'email_opened' or event.event_type == 'email_replied' %}
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                    style="width: 40px; height: 40px;">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                {% elif 'call' in event.event_type %}
+                <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center"
+                    style="width: 40px; height: 40px;">
+                    <i class="fas fa-phone"></i>
+                </div>
+                {% elif 'meeting' in event.event_type %}
+                <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center"
+                    style="width: 40px; height: 40px;">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                {% elif 'opportunity' in event.event_type %}
+                <div class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center"
+                    style="width: 40px; height: 40px;">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                {% elif 'case' in event.event_type %}
+                <div class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center"
+                    style="width: 40px; height: 40px;">
+                    <i class="fas fa-ticket-alt"></i>
+                </div>
+                {% else %}
+                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+                    style="width: 40px; height: 40px;">
+                    <i class="fas fa-stream"></i>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="timeline-content flex-grow-1">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body py-2 px-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="mb-0 font-weight-bold text-dark">
+                                {{ event.title|default:event.get_event_type_display }}
+                            </h6>
+                            <small class="text-muted">{{ event.created_at|timesince }} ago</small>
+                        </div>
+
+                        <p class="mb-1 text-secondary small">
+                            {{ event.description|truncatechars:200 }}
+                        </p>
+
+                        <div class="d-flex align-items-center small text-muted mt-2">
+                            {% if event.created_by %}
+                            <span class="mr-3"><i class="fas fa-user mr-1"></i> {{
+                                event.created_by.get_full_name|default:event.created_by.email }}</span>
+                            {% endif %}
+
+                            {% if event.engagement_score > 0 %}
+                            <span class="badge badge-light border text-primary">
+                                +{{ event.engagement_score }} pts
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-4">
+        <p class="text-muted mb-0">No engagement history found.</p>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+    }
+
+    .timeline:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 20px;
+        /* Center of the 40px icon */
+        width: 2px;
+        background: #e9ecef;
+        z-index: 0;
+    }
+
+    .timeline-item {
+        position: relative;
+        z-index: 1;
+    }
+</style>

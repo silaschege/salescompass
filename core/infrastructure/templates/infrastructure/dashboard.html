@@ -1,0 +1,239 @@
+<!-- NEW_FILE_CODE -->
+{% extends 'infrastructure/base.html' %}
+{% load static %}
+
+{% block title %}Resource Monitoring Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>Resource Monitoring Dashboard</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'infrastructure:dashboard' %}">Infrastructure</a></li>
+                    <li class="breadcrumb-item active">Resource Monitoring</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Resource Monitoring Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Total Monitored Resources</h5>
+                    <p class="card-text display-4">{{ total_monitored_resources }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-danger">
+                <div class="card-body">
+                    <h5 class="card-title">Critical Resources</h5>
+                    <p class="card-text display-4">{{ critical_resources }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title">Warning Resources</h5>
+                    <p class="card-text display-4">{{ warning_resources }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Healthy Resources</h5>
+                    <p class="card-text display-4">{{ healthy_resources }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resource Types Distribution -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Resource Types Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Resource Type</th>
+                                    <th>Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for resource_type in resource_types %}
+                                <tr>
+                                    <td>{{ resource_type.resource_type|title }}</td>
+                                    <td>{{ resource_type.count }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2">No resource types found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tenant Utilization -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Top 10 Tenants by Resource Count</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Tenant</th>
+                                    <th>Resource Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tenant_data in tenant_utilization %}
+                                <tr>
+                                    <td>{{ tenant_data.resource_count__tenant__name|default:"N/A" }}</td>
+                                    <td>{{ tenant_data.resource_count }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2">No tenant utilization data found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Alerts -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Recent Resource Alerts</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Alert Message</th>
+                                    <th>Resource Type</th>
+                                    <th>Service Name</th>
+                                    <th>Status</th>
+                                    <th>Created At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for alert in recent_alerts %}
+                                <tr>
+                                    <td>{{ alert.message }}</td>
+                                    <td>{{ alert.resource_monitoring.resource_type|title }}</td>
+                                    <td>{{ alert.resource_monitoring.service_name }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if alert.status == 'open' %}bg-warning
+                                            {% elif alert.status == 'acknowledged' %}bg-info
+                                            {% elif alert.status == 'resolved' %}bg-success
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ alert.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ alert.created_at|date:"M d, Y H:i" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5">No recent alerts.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'infrastructure:resource_alert_list' %}" class="btn btn-outline-primary">
+                            View All Alerts
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Resource Management</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <i class="fas fa-tachometer-alt fa-2x text-primary mb-2"></i>
+                                    <h6 class="card-title">Resource Monitoring</h6>
+                                    <a href="{% url 'infrastructure:resource_monitoring_list' %}" class="btn btn-sm btn-outline-primary mt-2">
+                                        Manage
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <i class="fas fa-bell fa-2x text-warning mb-2"></i>
+                                    <h6 class="card-title">Alerts</h6>
+                                    <a href="{% url 'infrastructure:resource_alert_list' %}" class="btn btn-sm btn-outline-warning mt-2">
+                                        Manage
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <i class="fas fa-chart-bar fa-2x text-success mb-2"></i>
+                                    <h6 class="card-title">Quotas</h6>
+                                    <a href="{% url 'infrastructure:resource_quota_list' %}" class="btn btn-sm btn-outline-success mt-2">
+                                        Manage
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <i class="fas fa-file-alt fa-2x text-info mb-2"></i>
+                                    <h6 class="card-title">Usage Reports</h6>
+                                    <a href="{% url 'infrastructure:resource_usage_report_list' %}" class="btn btn-sm btn-outline-info mt-2">
+                                        Manage
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

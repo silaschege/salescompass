@@ -1,0 +1,120 @@
+{% extends "inventory/base.html" %}
+
+{% block title %}Ship Transfer{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-1">
+                            <li class="breadcrumb-item"><a href="{% url 'inventory:transfer_list' %}"
+                                    class="text-decoration-none">Transfers</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'inventory:transfer_detail' transfer.pk %}"
+                                    class="text-decoration-none">{{ transfer.transfer_number }}</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Ship</li>
+                        </ol>
+                    </nav>
+                    <h1 class="h3 mb-0">Prepare Shipment</h1>
+                </div>
+                <a href="{% url 'inventory:transfer_detail' transfer.pk %}" class="btn btn-light border shadow-sm">
+                    <i class="bi bi-x-lg me-1"></i>Cancel
+                </a>
+            </div>
+
+            <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center mb-4">
+                <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+                <div>
+                    <strong>Action Required:</strong> Please specify the source locations and serial numbers for the
+                    items below.
+                    Stock will be deducted from <strong>{{ transfer.source_warehouse.warehouse_name }}</strong> upon
+                    confirmation.
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h6 class="mb-0 fw-bold">Items to Ship</h6>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Product Details</th>
+                                    <th width="150" class="text-end">Requested</th>
+                                    <th width="250">Source Location</th>
+                                    <th width="300" class="pe-4">Tracking (Serial Numbers)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for line in lines %}
+                                <tr>
+                                    <td class="ps-4 align-top py-3">
+                                        <div class="fw-bold text-dark">{{ line.product.product_name }}</div>
+                                        <div class="small text-muted">{{ line.product.sku }}</div>
+                                        {% if line.product.has_serial_numbers %}
+                                        <span class="badge bg-info-soft text-info mt-1">Serial Tracking Required</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end align-top py-3">
+                                        <span class="badge bg-light text-dark border px-3 rounded-pill">{{
+                                            line.quantity_requested|floatformat:2 }}</span>
+                                    </td>
+                                    <td class="align-top py-3">
+                                        <select name="location_{{ line.id }}"
+                                            class="form-select form-select-sm border-primary-soft shadow-sm">
+                                            <option value="">-- Default Location --</option>
+                                            {% for loc in locations %}
+                                            <option value="{{ loc.id }}" {% if line.from_location_id==loc.id
+                                                %}selected{% endif %}>
+                                                {{ loc.location_code }} {% if loc.zone %}({{ loc.zone.zone_name }}){%
+                                                endif %}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td class="pe-4 align-top py-3">
+                                        {% if line.product.has_serial_numbers %}
+                                        <textarea name="sns_{{ line.id }}"
+                                            class="form-control form-control-sm border-primary" rows="2"
+                                            placeholder="Enter serial numbers (comma or newline separated)">{{ line.serial_numbers }}</textarea>
+                                        {% else %}
+                                        <div class="small text-muted fst-italic">No serial tracking for this item.</div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer bg-light border-0 py-3 text-end">
+                        <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm">
+                            <i class="bi bi-truck me-2"></i>Ship Now
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-info-soft {
+        background-color: rgba(13, 202, 240, 0.1);
+    }
+
+    .border-primary-soft {
+        border-color: rgba(13, 110, 253, 0.2);
+    }
+
+    .breadcrumb-item+.breadcrumb-item::before {
+        content: "›";
+    }
+</style>
+{% endblock %}

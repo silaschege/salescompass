@@ -1,0 +1,193 @@
+{% extends "marketing/base.html" %}
+
+{% block title %}{% if object %}Edit {{ object.campaign_name }}{% else %}New Email Campaign{% endif %} - SalesCompass{%
+endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">{% if object %}Edit Email Campaign{% else %}Create New Email Campaign{% endif %}</h1>
+        <p class="text-white text-center lead">
+            {% if object %}Update your email campaign settings{% else %}Configure your new automated email campaign{%
+            endif %}
+        </p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <!-- Campaign & Subject -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.campaign.id_for_label }}"
+                                    class="form-label fw-bold text-primary">Parent Campaign</label>
+                                {{ form.campaign }}
+                                {% if form.campaign.errors %}<div class="text-danger small">{{ form.campaign.errors }}
+                                </div>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.campaign_name.id_for_label }}"
+                                    class="form-label fw-bold text-primary">Email Campaign Name</label>
+                                {{ form.campaign_name }}
+                                {% if form.campaign_name.errors %}<div class="text-danger small">{{
+                                    form.campaign_name.errors }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.subject.id_for_label }}" class="form-label fw-bold text-primary">Email
+                                Subject Line</label>
+                            {{ form.subject }}
+                            {% if form.subject.errors %}<div class="text-danger small">{{ form.subject.errors }}</div>{%
+                            endif %}
+                        </div>
+
+                        <!-- Content -->
+                        <div class="mb-4">
+                            <label for="{{ form.content.id_for_label }}" class="form-label fw-bold text-primary">Email
+                                Content (HTML)</label>
+                            {{ form.content }}
+                            <div class="form-text small">You can use merge tags like <code>{{ lead.first_name }}</code>
+                                for personalization.</div>
+                            {% if form.content.errors %}<div class="text-danger small">{{ form.content.errors }}</div>{%
+                            endif %}
+                        </div>
+
+                        <!-- Recipients -->
+                        <div class="mb-4">
+                            <label for="{{ form.recipients.id_for_label }}"
+                                class="form-label fw-bold text-primary">Recipients</label>
+                            {{ form.recipients }}
+                            <div class="form-text small">Enter a JSON list of emails or select a segment in the parent
+                                campaign.</div>
+                            {% if form.recipients.errors %}<div class="text-danger small">{{ form.recipients.errors }}
+                            </div>{% endif %}
+                        </div>
+
+                        <!-- Settings -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <label for="{{ form.status.id_for_label }}"
+                                        class="form-label fw-bold text-primary">Status</label>
+                                    {{ form.status }}
+                                    {% if form.status.errors %}<div class="text-danger small">{{ form.status.errors }}
+                                    </div>{% endif %}
+                                </div>
+                                <div class="mb-4">
+                                    <label for="{{ form.email_provider_ref.id_for_label }}"
+                                        class="form-label fw-bold text-primary">Email Provider</label>
+                                    {{ form.email_provider_ref }}
+                                    {% if form.email_provider_ref.errors %}<div class="text-danger small">{{
+                                        form.email_provider_ref.errors }}</div>{% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <label for="{{ form.scheduled_send_time.id_for_label }}"
+                                        class="form-label fw-bold text-primary">Scheduled Send Time</label>
+                                    {{ form.scheduled_send_time }}
+                                    {% if form.scheduled_send_time.errors %}<div class="text-danger small">{{
+                                        form.scheduled_send_time.errors }}</div>{% endif %}
+                                </div>
+                                <div class="mb-4 pt-4">
+                                    <div class="form-check form-switch">
+                                        {{ form.tracking_enabled }}
+                                        <label class="form-check-label"
+                                            for="{{ form.tracking_enabled.id_for_label }}">Enable Open/Click
+                                            Tracking</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <a href="{% url 'marketing:email_campaign_list' %}" class="btn btn-light">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if object %}Update Email Campaign{% else %}Create Email Campaign{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Sidebar -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 text-primary">Email Tips</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Personalization:</h6>
+                    <p class="small text-muted">Personalized subject lines can increase open rates by 26%.</p>
+
+                    <h6 class="mt-4">Deliverability:</h6>
+                    <p class="small text-muted">Avoid using too many exclamation marks or "all caps" in your subject to
+                        stay out of spam folders.</p>
+
+                    <h6 class="mt-4">Tracking:</h6>
+                    <p class="small text-muted">When tracking is enabled, we'll embed a tiny invisible pixel to detect
+                        opens and rewrite links to track clicks.</p>
+
+                    <div class="mt-auto p-3 bg-light rounded text-center">
+                        <p class="small mb-0">Need HTML help? <a href="{% url 'marketing:email_template_list' %}">Use a
+                                template</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .form-label {
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control,
+    .form-select {
+        border: 1px solid #e3e6f3;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #6f42c1;
+        box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+    }
+
+    textarea.form-control {
+        min-height: 120px;
+    }
+
+    .card {
+        border-radius: 1rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .btn {
+        padding: 0.6rem 1.5rem;
+        font-weight: 600;
+        border-radius: 0.5rem;
+    }
+</style>
+{% endblock %}

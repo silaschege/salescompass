@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4 text-gray-800">Provision New Tenant</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">New Tenant Details</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-4">Use this form to manually provision a new tenant and administrative user. This
+                        action is restricted to superusers.</p>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <h5 class="mb-3 border-bottom pb-2">Admin User</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.first_name|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.last_name|as_crispy_field }}
+                            </div>
+                        </div>
+                        {{ form.email|as_crispy_field }}
+                        {{ form.password|as_crispy_field }}
+
+                        <h5 class="mt-4 mb-3 border-bottom pb-2">Organization</h5>
+                        {{ form.company_name|as_crispy_field }}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.subdomain|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.plan|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check me-2"></i>Provision Tenant
+                            </button>
+                            <a href="{% url 'tenants:tenant_list' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

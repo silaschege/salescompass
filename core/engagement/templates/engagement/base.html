@@ -1,0 +1,124 @@
+{% extends 'core/base_module.html' %}
+
+{% block module_nav %}
+<div class="nav-section-title">Main</div>
+<a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+    href="{% url 'engagement:dashboard' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-speedometer2 nav-icon"></i>
+        <span>Dashboard</span>
+    </div>
+</a>
+<a class="nav-link {% if request.resolver_match.url_name == 'account_breakdowns' %}active{% endif %}"
+    href="{% url 'engagement:account_breakdowns' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-bar-chart-steps nav-icon"></i>
+        <span>Account Breakdowns</span>
+    </div>
+</a>
+<a class="nav-link {% if request.resolver_match.url_name == 'feed' %}active{% endif %}"
+    href="{% url 'engagement:feed' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-activity nav-icon"></i>
+        <span>Live Feed</span>
+    </div>
+</a>
+
+<div class="nav-section-title">Actions</div>
+
+<!--Next Action Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#NextBestAction">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-lightning nav-icon"></i>
+        <span>Next Best Actions</span>
+    </div>
+</a>
+<div class="collapse" id="NextBestAction">
+    <a class="nav-link {% if request.resolver_match.url_name == 'next_best_action' %}active{% endif %}"
+        href="{% url 'engagement:next_best_action' %}">List</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'next_best_action_create' %}active{% endif %}"
+        href="{% url 'engagement:next_best_action_create' %}">Create</a>
+</div>
+
+<!-- Playbooks Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Playbooks">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-journal-text nav-icon"></i>
+        <span>Playbooks</span>
+    </div>
+</a>
+<div class="collapse" id="Playbooks">
+    <a class="nav-link {% if request.resolver_match.url_name == 'playbook_list' %}active{% endif %}"
+        href="{% url 'engagement:playbook_list' %}">List</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'playbook_create' %}active{% endif %}"
+        href="{% url 'engagement:playbook_create' %}">Create</a>
+</div>
+
+
+<!-- Workflows Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Workflows">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-diagram-3 nav-icon"></i>
+        <span>Workflows</span>
+    </div>
+</a>
+<div class="collapse" id="Workflows">
+    <a class="nav-link {% if request.resolver_match.url_name == 'workflow_list' %}active{% endif %}"
+        href="{% url 'engagement:workflow_list' %}">List</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'workflow_create' %}active{% endif %}"
+        href="{% url 'engagement:workflow_create' %}">Create</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'workflow_execution_list' %}active{% endif %}"
+        href="{% url 'engagement:workflow_execution_list' %}">Executions</a>
+</div>
+
+<div class="nav-section-title">Reports</div>
+<!-- Reports Dropdown -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Reports">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-bar-chart nav-icon"></i>
+        <span>Reports</span>
+    </div>
+</a>
+<div class="collapse" id="Reports">
+    <a class="nav-link {% if request.resolver_match.url_name == 'disengaged_accounts' %}active{% endif %}"
+        href="{% url 'engagement:disengaged_accounts' %}">Disengaged Accounts</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'top_engaged_accounts' %}active{% endif %}"
+        href="{% url 'engagement:top_engaged_accounts' %}">Top Engaged Accounts</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'leaderboard' %}active{% endif %}"
+        href="{% url 'engagement:leaderboard' %}">Engagement Leaderboard</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'attribution_report' %}active{% endif %}"
+        href="{% url 'engagement:attribution_report' %}">Attribution Report</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'data_quality' %}active{% endif %}"
+        href="{% url 'engagement:data_quality' %}">Data Quality</a>
+</div>
+
+<div class="nav-section-title">Optimization</div>
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Optimization">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-flask nav-icon"></i>
+        <span>A/B Testing</span>
+    </div>
+</a>
+<div class="collapse" id="Optimization">
+    <a class="nav-link {% if request.resolver_match.url_name == 'experiment_list' %}active{% endif %}"
+        href="{% url 'engagement:experiment_list' %}">Experiments</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'experiment_create' %}active{% endif %}"
+        href="{% url 'engagement:experiment_create' %}">New Experiment</a>
+</div>
+
+<div class="nav-section-title">Configuration</div>
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#Configuration">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-gear nav-icon"></i>
+        <span>Settings</span>
+    </div>
+</a>
+<div class="collapse" id="Configuration">
+    <a class="nav-link {% if request.resolver_match.url_name == 'configuration' %}active{% endif %}"
+        href="{% url 'engagement:configuration' %}">General Settings</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'automation_rule_list' %}active{% endif %}"
+        href="{% url 'engagement:automation_rule_list' %}">Automation Rules</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'webhook_list' %}active{% endif %}"
+        href="{% url 'engagement:webhook_list' %}">Webhooks</a>
+</div>
+{% endblock %}

@@ -1,0 +1,192 @@
+{% extends "inventory/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}New Transfer{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">Create Transfer</h1>
+                    <p class="text-muted small mb-0">Initiate a stock movement between warehouses.</p>
+                </div>
+                <a href="{% url 'inventory:transfer_list' %}" class="btn btn-light border shadow-sm">
+                    <i class="bi bi-x-lg me-1"></i>Cancel
+                </a>
+            </div>
+
+            <form method="post" id="transfer_form">
+                {% csrf_token %}
+
+                <div class="row g-4">
+                    <!-- Left Column: Logistics -->
+                    <div class="col-lg-4">
+                        <div class="card border-0 shadow-sm sticky-top" style="top: 1rem;">
+                            <div class="card-header bg-white border-bottom py-3">
+                                <h6 class="mb-0 fw-bold">Transfer Info</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    {{ form.source_warehouse|as_crispy_field }}
+                                </div>
+                                <div class="text-center my-3 opacity-50">
+                                    <i class="bi bi-arrow-down fs-4"></i>
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.destination_warehouse|as_crispy_field }}
+                                </div>
+                                <hr>
+                                {{ form.notes|as_crispy_field }}
+                            </div>
+                            <div class="card-footer bg-light border-0 py-3">
+                                <button type="submit" class="btn btn-primary w-100 py-2 shadow-sm">
+                                    <i class="bi bi-check2-circle me-2"></i>Create Draft Transfer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Line Items -->
+                    <div class="col-lg-8">
+                        <div class="card border-0 shadow-sm">
+                            <div
+                                class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 fw-bold">Transfer Items</h6>
+                                <button type="button" id="add-item-btn"
+                                    class="btn btn-sm btn-outline-primary fw-bold px-3">
+                                    <i class="bi bi-plus-lg me-1"></i>Add Item
+                                </button>
+                            </div>
+                            <div class="card-body p-0">
+                                {{ formset.management_form }}
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0" id="product-table">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th width="65%" class="ps-4">Product Selection</th>
+                                                <th width="25%">Quantity</th>
+                                                <th width="10%" class="text-center pe-4"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="formset-container">
+                                            {% for line_form in formset %}
+                                            <tr class="product-form-row">
+                                                <td class="ps-4">
+                                                    {{ line_form.product|as_crispy_field }}
+                                                </td>
+                                                <td>
+                                                    {{ line_form.quantity|as_crispy_field }}
+                                                </td>
+                                                <td class="text-center pe-4">
+                                                    {% if line_form.instance.pk %}
+                                                    <div class="form-check justify-content-center">
+                                                        {{ line_form.DELETE }}
+                                                    </div>
+                                                    {% else %}
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-outline-danger border-0 remove-row">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div id="empty-form" class="d-none">
+                                    <tr class="product-form-row">
+                                        <td class="ps-4">
+                                            {{ formset.empty_form.product|as_crispy_field }}
+                                        </td>
+                                        <td>
+                                            {{ formset.empty_form.quantity|as_crispy_field }}
+                                        </td>
+                                        <td class="text-center pe-4">
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-danger border-0 remove-row">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-white py-3 border-top">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <p class="text-muted small mb-0">
+                                        <i class="bi bi-info-circle me-1"></i> Stock availability will be verified upon
+                                        shipping.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Styling for crispy fields to look cleaner in tables */
+    .product-form-row .mb-3 {
+        margin-bottom: 0 !important;
+    }
+
+    .product-form-row label {
+        display: none;
+    }
+
+    .sticky-top {
+        z-index: 10;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const formsetContainer = document.getElementById('formset-container');
+        const totalForms = document.getElementById('id_form-TOTAL_FORMS');
+        const emptyFormTemplate = document.querySelector('#empty-form .product-form-row');
+        const addItemBtn = document.getElementById('add-item-btn');
+
+        // Add row
+        addItemBtn.addEventListener('click', function () {
+            const formCount = parseInt(totalForms.value);
+            const newRow = emptyFormTemplate.cloneNode(true);
+
+            // Update indices
+            newRow.innerHTML = newRow.innerHTML.replace(/__prefix__/g, formCount);
+
+            // Add event listener to new remove button
+            newRow.querySelector('.remove-row').addEventListener('click', function () {
+                this.closest('tr').remove();
+                // We don't necessarily update TOTAL_FORMS here if they are just extra rows
+                // Django expects them to be sequential, so it's safer to just hide if needed
+                // or update indices. For simple case, we'll just remove and user can add another.
+                // NOTE: Proper way is to update indices of all subsequent rows.
+            });
+
+            formsetContainer.appendChild(newRow);
+            totalForms.value = formCount + 1;
+        });
+
+        // Initialize existing remove buttons
+        document.querySelectorAll('.remove-row').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const row = this.closest('tr');
+                // If it's the only row, just clear it
+                if (document.querySelectorAll('.product-form-row').length > 1) {
+                    row.remove();
+                    // Optional: update TOTAL_FORMS and indices
+                } else {
+                    row.querySelector('select').value = '';
+                    row.querySelector('input').value = '';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

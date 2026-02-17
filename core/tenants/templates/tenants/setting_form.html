@@ -1,0 +1,91 @@
+{% extends 'tenants/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">{% if form.instance.pk %}Edit{% else %}Create{% endif %} Setting</h1>
+        <p class="text-white text-center lead">Define a tenant setting</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card shadow" style="max-width: 800px; margin: 0 auto;">
+        <div class="card-body p-4">
+            <form method="post">
+                {% csrf_token %}
+
+                <h5 class="mb-3 text-secondary border-bottom pb-2">Basic Info</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.group|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.setting_name|as_crispy_field }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.setting_label|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.order|as_crispy_field }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    {{ form.setting_description|as_crispy_field }}
+                </div>
+
+                <h5 class="mb-3 mt-4 text-secondary border-bottom pb-2">Value Configuration</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.setting_type|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.setting_type_ref|as_crispy_field }}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        {{ form.value_text|as_crispy_field }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.value_number|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch mt-4 pt-2">
+                            {{ form.value_boolean }}
+                            <label class="form-check-label" for="{{ form.value_boolean.id_for_label }}">Value
+                                Boolean</label>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="mb-3 mt-4 text-secondary border-bottom pb-2">Visibility & Rules</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.is_required }}
+                            <label class="form-check-label" for="{{ form.is_required.id_for_label }}">Required</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.is_visible }}
+                            <label class="form-check-label" for="{{ form.is_visible.id_for_label }}">Visible</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 border-top pt-3 d-flex justify-content-between">
+                    <a href="{% url 'tenants:setting_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-4">Save Setting</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

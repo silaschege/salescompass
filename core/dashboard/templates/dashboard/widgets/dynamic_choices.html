@@ -1,0 +1,50 @@
+{% load dashboard_extras %}
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Dynamic Choices</h5>
+    </div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col-6 col-md-4 mb-3">
+                <div class="metric-card bg-primary text-white p-3 rounded">
+                    <h3>{{ metrics.system_config_types_count|default:0 }}</h3>
+                    <p class="mb-0">Config Types</p>
+                </div>
+            <div class="col-6 col-md-4 mb-3">
+                <div class="metric-card bg-success text-white p-3 rounded">
+                    <h3>{{ metrics.system_config_categories_count|default:0 }}</h3>
+                    <p class="mb-0">Config Categories</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 mb-3">
+                <div class="metric-card bg-info text-white p-3 rounded">
+                    <h3>{{ metrics.system_event_types_count|default:0 }}</h3>
+                    <p class="mb-0">Event Types</p>
+                </div>
+            <div class="col-6 col-md-4 mb-3">
+                <div class="metric-card bg-warning text-white p-3 rounded">
+                    <h3>{{ metrics.health_check_types_count|default:0 }}</h3>
+                    <p class="mb-0">Health Checks</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 mb-3">
+                <div class="metric-card bg-danger text-white p-3 rounded">
+                    <h3>{{ metrics.maintenance_types_count|default:0 }}</h3>
+                    <p class="mb-0">Maintenance Types</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 mb-3">
+                <div class="metric-card bg-secondary text-white p-3 rounded">
+                    <h3>{{ metrics.notification_types_count|default:0 }}</h3>
+                    <p class="mb-0">Notification Types</p>
+                </div>
+            </div>
+        </div>
+        <div class="mt-3">
+            <a href="{% url 'dynamic_choices_dashboard' %}" class="btn btn-primary btn-sm w-100">
+                <i class="bi bi-list-check me-1"></i>Manage Dynamic Choices
+            </a>
+        </div>
+    </div>
+</div>

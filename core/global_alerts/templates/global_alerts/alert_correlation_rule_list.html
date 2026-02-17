@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Alert Correlation Rules{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>Alert Correlation Rules</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'global_alerts:dashboard' %}">Global Alerts</a></li>
+                    <li class="breadcrumb-item active">Correlation Rules</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <a href="{% url 'global_alerts:dashboard' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+                <div>
+                    <a href="{% url 'global_alerts:correlation_rule_create' %}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Create Correlation Rule
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" name="search" placeholder="Search rules..." value="{{ search_query }}">
+                        </div>
+                        <div class="col-md-4">
+                            <select name="rule_type" class="form-select">
+                                <option value="">All Rule Types</option>
+                                {% for value, label in rule_types %}
+                                <option value="{{ value }}" {% if selected_rule_type == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select name="is_active" class="form-select">
+                                <option value="">All Statuses</option>
+                                <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active</option>
+                                <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                            <a href="{% url 'global_alerts:correlation_rule_list' %}" class="btn btn-secondary">Clear</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Correlation Rules</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Rule Type</th>
+                                    <th>Status</th>
+                                    <th>Created By</th>
+                                    <th>Created At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rule in rules %}
+                                <tr>
+                                    <td>{{ rule.name }}</td>
+                                    <td>{{ rule.description|truncatewords:15 }}</td>
+                                    <td>{{ rule.rule_type|title }}</td>
+                                    <td>
+                                        <span class="badge {% if rule.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                            {% if rule.is_active %}Active{% else %}Inactive{% endif %}
+                                        </span>
+                                    </td>
+                                    <td>{{ rule.created_by.email|default:"System" }}</td>
+                                    <td>{{ rule.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'global_alerts:correlation_rule_update' rule.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        <a href="{% url 'global_alerts:correlation_rule_delete' rule.id %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7">No correlation rules found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if is_paginated %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_rule_type %}&rule_type={{ selected_rule_type }}{% endif %}{% if selected_status %}&is_active={{ selected_status }}{% endif %}">First</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_rule_type %}&rule_type={{ selected_rule_type }}{% endif %}{% if selected_status %}&is_active={{ selected_status }}{% endif %}">Previous</a>
+                                </li>
+                            {% endif %}
+
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_rule_type %}&rule_type={{ selected_rule_type }}{% endif %}{% if selected_status %}&is_active={{ selected_status }}{% endif %}">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_rule_type %}&rule_type={{ selected_rule_type }}{% endif %}{% if selected_status %}&is_active={{ selected_status }}{% endif %}">Last</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

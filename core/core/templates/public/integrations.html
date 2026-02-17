@@ -1,0 +1,169 @@
+{% extends "public/base.html" %}
+{% load static %}
+
+{% block title %}Integrations - Connect Your Stack | SalesCompass{% endblock %}
+
+{% block content %}
+<!-- Integrations Hero -->
+<section class="section-large text-center position-relative overflow-hidden">
+    <div class="container position-relative z-1">
+        <h1 class="display-3 fw-extrabold mb-4">Connect your entire <br><span class="highlight-handwritten">revenue
+                stack.</span></h1>
+        <p class="lead text-muted mb-6 mx-auto" style="max-width: 600px;">
+            SalesCompass integrates with over 200+ tools to sync your data bi-directionally in real-time.
+            Eliminate silos and automate your workflow.
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="#directory" class="btn btn-primary px-5">Browse Directory</a>
+            <a href="{% url 'core:api_docs' %}" class="btn btn-outline-primary px-5">API Documentation</a>
+        </div>
+    </div>
+</section>
+
+<!-- Integrations Directory -->
+<section id="directory" class="section bg-light border-top border-light">
+    <div class="container">
+
+        <!-- Communication -->
+        <div class="mb-12">
+            <h3 class="fw-extrabold mb-5">Communication</h3>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="card-clean p-4 d-flex align-items-center gap-4 bg-white">
+                        <div class="rounded-3 bg-light p-3 fs-2"><i class="bi bi-slack"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Slack</h6>
+                            <p class="extra-small text-muted mb-0">Real-time alerts & commands</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card-clean p-4 d-flex align-items-center gap-4 bg-white">
+                        <div class="rounded-3 bg-light p-3 fs-2"><i class="bi bi-envelope-fill text-primary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Outlook / Gmail</h6>
+                            <p class="extra-small text-muted mb-0">Full inbox synchronization</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card-clean p-4 d-flex align-items-center gap-4 bg-white">
+                        <div class="rounded-3 bg-light p-3 fs-2"><i class="bi bi-telephone-fill text-success"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Zoom / Teams</h6>
+                            <p class="extra-small text-muted mb-0">Meeting recording & transcription</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Marketing -->
+        <div class="mb-12">
+            <h3 class="fw-extrabold mb-5">Marketing</h3>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="card-clean p-4 d-flex align-items-center gap-4 bg-white">
+                        <div class="rounded-3 bg-light p-3 fs-2"><i class="bi bi-megaphone-fill text-warning"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Mailchimp</h6>
+                            <p class="extra-small text-muted mb-0">Campaign sync & ROI tracking</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card-clean p-4 d-flex align-items-center gap-4 bg-white">
+                        <div class="rounded-3 bg-light p-3 fs-2"><i class="bi bi-share-fill text-primary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">HubSpot</h6>
+                            <p class="extra-small text-muted mb-0">Bi-directional CRM sync</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card-clean p-4 d-flex align-items-center gap-4 bg-white">
+                        <div class="rounded-3 bg-light p-3 fs-2"><i class="bi bi-graph-up-arrow text-secondary"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Google Ads</h6>
+                            <p class="extra-small text-muted mb-0">Advanced lead attribution</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Finance -->
+        <div>
+            <h3 class="fw-extrabold mb-5">Payments & Finance</h3>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="card-clean p-4 d-flex align-items-center gap-4 bg-white">
+                        <div class="rounded-3 bg-light p-3 fs-2"><i class="bi bi-stripe text-primary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Stripe</h6>
+                            <p class="extra-small text-muted mb-0">Subscription & invoice sync</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card-clean p-4 d-flex align-items-center gap-4 bg-white">
+                        <div class="rounded-3 bg-light p-3 fs-2"><i class="bi bi-file-text-fill text-secondary"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">QuickBooks</h6>
+                            <p class="extra-small text-muted mb-0">Automated financial reporting</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card-clean p-4 d-flex align-items-center gap-4 bg-white">
+                        <div class="rounded-3 bg-light p-3 fs-2"><i class="bi bi-paypal text-primary"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">PayPal</h6>
+                            <p class="extra-small text-muted mb-0">Flexible payment processing</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Request -->
+        <div class="mt-12 text-center">
+            <p class="text-muted">Don't see your tool? <a href="{% url 'core:support' %}"
+                    class="text-primary fw-bold">Request an Integration &rarr;</a></p>
+        </div>
+    </div>
+</section>
+
+<!-- Developer Section -->
+<section class="section bg-gray-900 text-white">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <h2 class="display-5 fw-extrabold mb-4 text-white">Build your own flow.</h2>
+                <p class="text-white-50 mb-6">
+                    Use our enterprise-grade REST API and Webhook engine to build custom
+                    integrations tailored to your unique sales motion.
+                </p>
+                <a href="{% url 'core:api_docs' %}" class="btn btn-primary px-5 rounded-pill fw-bold">Read Developer
+                    Docs</a>
+            </div>
+            <div class="col-lg-6">
+                <div
+                    class="p-5 bg-black bg-opacity-50 rounded-4 font-monospace border border-white border-opacity-10 shadow-xl">
+                    <div class="text-primary-light mb-2">// Fetch lead details with ML score</div>
+                    <div class="text-white-50">GET <span class="text-white">/api/v1/leads/{id}</span></div>
+                    <div class="text-white-50 mt-3 text-break">
+                        {<br>
+                        &nbsp;&nbsp;"id": "lead_9921",<br>
+                        &nbsp;&nbsp;"score": 0.94,<br>
+                        &nbsp;&nbsp;"status": "hot"<br>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

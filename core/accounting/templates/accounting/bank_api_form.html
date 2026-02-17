@@ -1,0 +1,28 @@
+{% extends "accounting/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block accounting_content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">{% if form.instance.pk %}Edit{% else %}Connect{% endif %} Bank API</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="alert alert-warning small mt-3">
+                        <i class="bi bi-shield-lock"></i> Credentials should be stored securely. Ensure you are using a
+                        secure connection.
+                    </div>
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <a href="{% url 'accounting:bank_api_list' %}" class="btn btn-light">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save Configuration</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

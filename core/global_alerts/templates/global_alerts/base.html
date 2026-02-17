@@ -1,0 +1,75 @@
+{% extends 'core/base_module.html' %}
+
+{% block module_nav %}
+<!-- Dashboard -->
+<a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+    href="{% url 'global_alerts:dashboard' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-speedometer2 nav-icon"></i>
+        <span>Dashboard</span>
+    </div>
+</a>
+
+<!-- Alert Management -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#alertsMenu">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-bell nav-icon"></i>
+        <span>Alert Management</span>
+    </div>
+</a>
+<div class="collapse" id="alertsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'alert_list' %}active{% endif %}"
+        href="{% url 'global_alerts:alert_list' %}">All Alerts</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'alert_create' %}active{% endif %}"
+        href="{% url 'global_alerts:alert_create' %}">Create New Alert</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'active_alerts' %}active{% endif %}"
+        href="{% url 'global_alerts:active_alerts' %}">Active Alerts</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'scheduled_alerts' %}active{% endif %}"
+        href="{% url 'global_alerts:scheduled_alerts' %}">Scheduled Alerts</a>
+</div>
+
+<!-- Alert Types -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#typesMenu">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-tags nav-icon"></i>
+        <span>Alert Types</span>
+    </div>
+</a>
+<div class="collapse" id="typesMenu">
+    <a class="nav-link" href="{% url 'global_alerts:alerts_by_type' 'maintenance' %}">Maintenance</a>
+    <a class="nav-link" href="{% url 'global_alerts:alerts_by_type' 'outage' %}">Critical Outage</a>
+    <a class="nav-link" href="{% url 'global_alerts:alerts_by_type' 'announcement' %}">Announcements</a>
+    <a class="nav-link" href="{% url 'global_alerts:alerts_by_type' 'security' %}">Security Alerts</a>
+</div>
+
+<!-- Severity Levels -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#severityMenu">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-exclamation-triangle nav-icon"></i>
+        <span>Severity Levels</span>
+    </div>
+</a>
+<div class="collapse" id="severityMenu">
+    <a class="nav-link" href="{% url 'global_alerts:alerts_by_severity' 'info' %}">Info (Blue)</a>
+    <a class="nav-link" href="{% url 'global_alerts:alerts_by_severity' 'warning' %}">Warning
+        (Yellow)</a>
+    <a class="nav-link" href="{% url 'global_alerts:alerts_by_severity' 'critical' %}">Critical
+        (Red)</a>
+</div>
+
+<!-- Targeting -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#targetingMenu">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-bullseye nav-icon"></i>
+        <span>Targeting</span>
+    </div>
+</a>
+<div class="collapse" id="targetingMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'global_alerts' %}active{% endif %}"
+        href="{% url 'global_alerts:global_alerts' %}">Global Alerts</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'tenant_specific' %}active{% endif %}"
+        href="{% url 'global_alerts:tenant_specific' %}">Tenant Specific</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}"
+        href="{% url 'global_alerts:analytics' %}">Analytics</a>
+</div>
+{% endblock %}

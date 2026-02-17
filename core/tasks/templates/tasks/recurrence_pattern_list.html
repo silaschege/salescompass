@@ -1,0 +1,81 @@
+{% extends "tasks/base.html" %}
+{% load static %}
+{% block title %}Recurrence Patterns - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container text-center">
+        <h1 class="block-title">Recurrence Patterns</h1>
+        <p class="text-white lead">Manage automated rules for recurring tasks</p>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="{% url 'tasks:dashboard' %}" class="btn btn-link text-decoration-none text-muted p-0">
+                <i class="bi bi-arrow-left"></i> Dashboard
+            </a>
+        </div>
+        <a href="{% url 'tasks:pattern_create' %}" class="btn btn-primary shadow-sm">
+            <i class="bi bi-plus-lg"></i> Create Rule
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            {% if object_list %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr class="small text-muted text-uppercase">
+                            <th class="ps-4">Rule Name</th>
+                            <th>Frequency</th>
+                            <th>Repeat Interval</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pattern in object_list %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold text-dark">{{ pattern.name }}</div>
+                            </td>
+                            <td>
+                                <span class="badge bg-soft-info text-info border"
+                                    style="background-color: rgba(13, 202, 240, 0.05);">
+                                    <i class="bi bi-arrow-repeat me-1"></i> {{ pattern.get_frequency_display }}
+                                </span>
+                            </td>
+                            <td>
+                                Every <span class="fw-bold">{{ pattern.interval }}</span> {{ pattern.frequency }}
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'tasks:pattern_update' pattern.pk %}"
+                                        class="btn btn-outline-primary" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'tasks:pattern_delete' pattern.pk %}" class="btn btn-outline-danger"
+                                        title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="display-1 text-muted opacity-25 mb-3"><i class="bi bi-clock-history"></i></div>
+                <h4 class="text-muted">No Recurrence Rules</h4>
+                <p class="text-secondary">Automate your workflow by defining recurring task patterns.</p>
+                <a href="{% url 'tasks:pattern_create' %}" class="btn btn-primary mt-2">Add Rule</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

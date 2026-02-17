@@ -1,0 +1,130 @@
+{% extends "ml_dashboard/base_ml.html" %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem;">
+    <div>
+        <h1 style="margin: 0; font-size: 2.2rem; font-weight: 700;">Agent Policies</h1>
+        <p style="color: var(--text-muted); margin-top: 0.5rem;">Configure autonomous behavior for ML-driven sales
+            actions.</p>
+    </div>
+    <button class="btn btn-primary"><i class="fas fa-plus"></i> New Policy</button>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 3rem;">
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+            <div>
+                <h3 style="margin: 0;">Lead Nurture Agent</h3>
+                <span class="badge badge-success" style="margin-top: 0.5rem; display: inline-block;">Active</span>
+            </div>
+            <div
+                style="width: 48px; height: 48px; border-radius: 12px; background: rgba(99, 102, 241, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-robot fa-lg"></i>
+            </div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+            <thead>
+                <tr style="text-align: left; border-bottom: 1px solid var(--border); color: var(--text-muted);">
+                    <th style="padding: 0.8rem 0;">CONDITION</th>
+                    <th style="padding: 0.8rem 0;">ACTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 1rem 0;">Score <b>>= 90</b></td>
+                    <td style="padding: 1rem 0;"><span style="color: #ef4444;"><i class="fas fa-bell"></i> Slack Alert
+                            Rep+Mgr</span></td>
+                </tr>
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 1rem 0;">Score <b>>= 75</b></td>
+                    <td style="padding: 1rem 0;"><i class="fas fa-paper-plane"></i> Auto-Send Demo Email</td>
+                </tr>
+                <tr>
+                    <td style="padding: 1rem 0;">Score <b>
+                            < 50</b>
+                    </td>
+                    <td style="padding: 1rem 0; color: var(--text-muted);"><i class="fas fa-list"></i> Low Touch Sync
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <button class="btn btn-sm"
+                style="background: rgba(255,255,255,0.05); color: var(--text-main); font-size: 0.75rem;"><i
+                    class="fas fa-edit"></i> Edit Rules</button>
+            <button class="btn btn-sm"
+                style="background: rgba(255,255,255,0.05); color: var(--text-main); font-size: 0.75rem;"><i
+                    class="fas fa-history"></i> Logs</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+            <div>
+                <h3 style="margin: 0;">Opportunity Assistant</h3>
+                <span class="badge badge-warning" style="margin-top: 0.5rem; display: inline-block;">Staging</span>
+            </div>
+            <div
+                style="width: 48px; height: 48px; border-radius: 12px; background: rgba(168, 85, 247, 0.1); color: var(--secondary); display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-briefcase fa-lg"></i>
+            </div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+            <thead>
+                <tr style="text-align: left; border-bottom: 1px solid var(--border); color: var(--text-muted);">
+                    <th style="padding: 0.8rem 0;">CONDITION</th>
+                    <th style="padding: 0.8rem 0;">ACTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 1rem 0;">Win Prob <b>
+                            < 20%</b>
+                    </td>
+                    <td style="padding: 1rem 0;"><i class="fas fa-exclamation-triangle"
+                            style="color: var(--accent);"></i> Flag as Stagnant</td>
+                </tr>
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 1rem 0;">Win Prob <b>> 80%</b></td>
+                    <td style="padding: 1rem 0;"><i class="fas fa-building-columns"></i> Notify Finance</td>
+                </tr>
+                <tr>
+                    <td style="padding: 1rem 0;">No Activity <b>> 7d</b></td>
+                    <td style="padding: 1rem 0;"><i class="fas fa-clock"></i> Alert VP Sales</td>
+                </tr>
+            </tbody>
+        </table>
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <button class="btn btn-sm"
+                style="background: rgba(255,255,255,0.05); color: var(--text-main); font-size: 0.75rem;"><i
+                    class="fas fa-play"></i> Deploy to Prod</button>
+            <button class="btn btn-sm"
+                style="background: rgba(255,255,255,0.05); color: var(--text-main); font-size: 0.75rem;"><i
+                    class="fas fa-edit"></i> Edit Rules</button>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="background: rgba(255,255,255,0.02);">
+    <h3 style="margin-top: 0;">Instructions for Managers</h3>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; margin-top: 1.5rem;">
+        <div>
+            <p style="font-weight: 700; color: var(--primary); margin-bottom: 0.5rem;">1. Define Thresholds</p>
+            <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.6;">Work with your Data Science team
+                to see where the "sweet spot" is for lead conversion.</p>
+        </div>
+        <div>
+            <p style="font-weight: 700; color: var(--secondary); margin-bottom: 0.5rem;">2. Select Channels</p>
+            <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.6;">Configure where alerts should be
+                sent (Slack, Internal Notification, or CRM Task).</p>
+        </div>
+        <div>
+            <p style="font-weight: 700; color: var(--accent); margin-bottom: 0.5rem;">3. Review Logs</p>
+            <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.6;">Check the monthly Action Log to
+                verify that automated steps are driving revenue.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

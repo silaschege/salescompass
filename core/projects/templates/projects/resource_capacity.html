@@ -1,0 +1,72 @@
+{% extends "projects/base.html" %}
+{% load humanize %}
+
+{% block page_content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Resource Capacity Planning</h1>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Team Utilization</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Resource</th>
+                        <th>Utilization %</th>
+                        <th>Status</th>
+                        <th>Allocations</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in resource_data %}
+                    <tr>
+                        <td>{{ item.user.get_full_name|default:item.user.email }}</td>
+                        <td>
+                            <div class="row no-gutters align-items-center">
+                                <div class="col-auto">
+                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">{{item.total_allocation_percentage }}%</div>
+                                </div>
+                                <div class="col">
+                                    <div class="progress progress-sm mr-2">
+                                        <div class="progress-bar {% if item.total_allocation_percentage > 100 %}bg-danger{% elif item.total_allocation_percentage > 80 %}bg-warning{% else %}bg-success{% endif %}"
+                                            role="progressbar" style="width: {{ item.total_allocation_percentage }}%"
+                                            aria-valuenow="{{ item.total_allocation_percentage }}" aria-valuemin="0"
+                                            aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if item.is_over_capacity %}
+                            <span class="badge badge-danger">Over Capacity</span>
+                            {% elif item.total_allocation_percentage > 80 %}
+                            <span class="badge badge-warning">Near Capacity</span>
+                            {% else %}
+                            <span class="badge badge-success">Available</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <ul class="list-unstyled mb-0">
+                                {% for alloc in item.allocations %}
+                                <li><small>{{ alloc.project.name }} ({{ alloc.allocation_percentage }}%)</small></li>
+                                {% empty %}
+                                <li><small class="text-muted">No active projects</small></li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">No resource data available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

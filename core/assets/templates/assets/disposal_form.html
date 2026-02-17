@@ -1,0 +1,86 @@
+{% extends "assets/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block asset_content %}
+<div class="p-4">
+    <div class="d-flex align-items-center mb-5">
+        <a href="{% url 'assets:asset_detail' asset.pk %}"
+            class="btn btn-light btn-icon rounded-circle me-3 border-0 shadow-sm">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <h1 class="h3 fw-bold mb-0">Asset Retirement / Disposal</h1>
+            <p class="text-muted mb-0">{{ asset.name }} ({{ asset.asset_number }})</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="premium-card p-4 border-0 shadow-sm mb-4">
+                <div class="alert alert-warning border-0 shadow-none mb-4">
+                    <h6 class="fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i> Compliance Warning</h6>
+                    <p class="small mb-0">Disposing of an asset will stop all future depreciation and permanently remove
+                        it from the active registry. This action will generate a Gain/Loss journal entry in the General
+                        Ledger (IAS 16).</p>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ form.disposal_date|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.disposal_type|as_crispy_field }}
+                        </div>
+                        <div class="col-12">
+                            {{ form.disposal_proceeds|as_crispy_field }}
+                        </div>
+                        <div class="col-12">
+                            {{ form.notes|as_crispy_field }}
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-top">
+                        <button type="submit" class="btn btn-danger px-4 shadow-sm border-0">
+                            Confirm Disposal & Post to Ledger
+                        </button>
+                        <a href="{% url 'assets:asset_detail' asset.pk %}"
+                            class="btn btn-light px-4 border ms-2">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="premium-card p-4 border-0 shadow-sm bg-dark text-white">
+                <h6 class="fw-bold mb-4 text-primary text-uppercase small">Current Book Values</h6>
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex justify-content-between border-bottom border-white border-opacity-10 pb-2">
+                        <span class="text-white-50 small">Original Cost</span>
+                        <span class="fw-bold">${{ asset.purchase_cost|stringformat:".2f" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between border-bottom border-white border-opacity-10 pb-2">
+                        <span class="text-white-50 small">Carrying Amount (NBV)</span>
+                        <span class="fw-bold">${{ asset.current_value|stringformat:".2f" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between pb-2">
+                        <span class="text-white-50 small">Accumulated Depreciation</span>
+                        <span class="fw-bold text-warning">-${{
+                            asset.purchase_cost|add:"-asset.current_value"|stringformat:".2f" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+{% endblock %}

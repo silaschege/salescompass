@@ -1,0 +1,317 @@
+{% extends "core/base_module.html" %}
+{% load static %}
+
+{% block module_title %}Tenant Management - SalesCompass{% endblock %}
+
+{% block module_css %}
+<style>
+    /* Tenants module specific styling */
+    .nav-link.dropdown-toggle::after {
+        margin-left: auto;
+        float: right;
+    }
+
+    .header-bar {
+        background: linear-gradient(135deg, #6f42c1 0%, #8e5ed9 100%);
+        color: #fff;
+        padding: 2rem 0 1rem 1rem;
+        border-radius: 0 0 2rem 2rem;
+        box-shadow: 0 4px 24px rgba(111, 66, 193, 0.15);
+        margin-bottom: 2rem;
+    }
+
+    .footer-bar {
+        background: linear-gradient(135deg, #6f42c1 0%, #8e5ed9 100%);
+        color: #fff;
+        padding: 1rem 0;
+        border-radius: 2rem 2rem 0 0;
+        box-shadow: 0 -4px 24px rgba(111, 66, 193, 0.08);
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    .table thead {
+        background: linear-gradient(135deg, #6f42c1 0%, #7952b3 100%);
+        color: #fff;
+    }
+
+    .block-title {
+        color: #fff;
+        font-size: 2rem;
+        letter-spacing: 0.5px;
+        margin-bottom: 0;
+        text-align: center;
+    }
+
+    /* Card hover effects */
+    .card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* Nav section headers */
+    .nav-section-header {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #6c757d;
+        padding: 1rem 1rem 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    /* Collapse animation */
+    .collapse {
+        transition: height 0.2s ease;
+    }
+</style>
+{% endblock %}
+
+{% block module_nav %}
+<!-- Quick Access -->
+<div class="nav-section-header">Quick Access</div>
+<a class="nav-link {% if request.resolver_match.url_name == 'tenant_list' %}active{% endif %}"
+    href="{% url 'tenants:tenant_list' %}">
+    <i class="bi bi-speedometer2 nav-icon"></i> Dashboard
+</a>
+<a class="nav-link {% if request.resolver_match.url_name == 'tenant_onboarding_signup' %}active{% endif %}"
+    href="{% url 'tenants:tenant_onboarding_signup' %}">
+    <i class="bi bi-rocket-takeoff nav-icon"></i> Onboarding Wizard
+</a>
+
+<!-- Tenant Management -->
+<div class="nav-section-header">Tenants</div>
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#tenantMgmtMenu">
+    <i class="bi bi-building nav-icon"></i> Tenant Management
+</a>
+<div class="collapse" id="tenantMgmtMenu">
+    <a class="nav-link ms-3" href="{% url 'tenants:tenant_list' %}">All Tenants</a>
+    <a class="nav-link ms-3" href="{% url 'tenants:create' %}">Create New Tenant</a>
+    <a class="nav-link ms-3" href="{% url 'tenants:search' %}">Search Tenants</a>
+</div>
+
+<!-- Provisioning & Onboarding -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#provisioningMenu">
+    <i class="bi bi-box-seam nav-icon"></i> Provisioning
+</a>
+<div class="collapse" id="provisioningMenu">
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'provision_tenant' %}active{% endif %}"
+        href="{% url 'tenants:provision_tenant' %}">Provision Tenant</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'subdomain_assignment' %}active{% endif %}"
+        href="{% url 'tenants:subdomain_assignment' %}">Subdomain Assignment</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'database_initialization' %}active{% endif %}"
+        href="{% url 'tenants:database_initialization' %}">Database Init</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'admin_user_setup' %}active{% endif %}"
+        href="{% url 'tenants:admin_user_setup' %}">Admin User Setup</a>
+</div>
+
+<!-- Data Management -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#dataMgmtMenu">
+    <i class="bi bi-database nav-icon"></i> Data Management
+</a>
+<div class="collapse" id="dataMgmtMenu">
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'data_export' %}active{% endif %}"
+        href="{% url 'tenants:data_export' %}">Export Data</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'data_import' %}active{% endif %}"
+        href="{% url 'tenants:data_import' %}">Import Data</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'clone_tenant' %}active{% endif %}"
+        href="{% url 'tenants:clone_tenant' %}">Clone Tenant</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'clone_history' %}active{% endif %}"
+        href="{% url 'tenants:clone_history' %}">Clone History</a>
+</div>
+
+<!-- Lifecycle Management -->
+<div class="nav-section-header">Operations</div>
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#lifecycleMenu">
+    <i class="bi bi-arrow-repeat nav-icon"></i> Lifecycle
+</a>
+<div class="collapse" id="lifecycleMenu">
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'lifecycle-dashboard' %}active{% endif %}"
+        href="{% url 'tenants:lifecycle-dashboard' %}">Dashboard</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'status-management' %}active{% endif %}"
+        href="{% url 'tenants:status-management' %}">Status Management</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'automated-lifecycle-rules' %}active{% endif %}"
+        href="{% url 'tenants:automated-lifecycle-rules' %}">Automation Rules</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'lifecycle-workflows' %}active{% endif %}"
+        href="{% url 'tenants:lifecycle-workflows' %}">Workflows</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'lifecycle-event-log' %}active{% endif %}"
+        href="{% url 'tenants:lifecycle-event-log' %}">Event Log</a>
+</div>
+
+<!-- Data Preservation -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#preservationMenu">
+    <i class="bi bi-shield-check nav-icon"></i> Preservation
+</a>
+<div class="collapse" id="preservationMenu">
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'data-preservation' %}active{% endif %}"
+        href="{% url 'tenants:data-preservation' %}">Data Preservation</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'data-restoration' %}active{% endif %}"
+        href="{% url 'tenants:data-restoration' %}">Data Restoration</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'preservation_strategy_list' %}active{% endif %}"
+        href="{% url 'tenants:preservation_strategy_list' %}">Strategies</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'preservation_schedule_list' %}active{% endif %}"
+        href="{% url 'tenants:preservation_schedule_list' %}">Schedules</a>
+</div>
+
+<!-- Module Entitlements -->
+<div class="nav-section-header">Configuration</div>
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#entitlementsMenu">
+    <i class="bi bi-puzzle nav-icon"></i> Entitlements
+</a>
+<div class="collapse" id="entitlementsMenu">
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'plan_selection' %}active{% endif %}"
+        href="{% url 'tenants:plan_selection' %}">Manage Modules</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'feature_toggles' %}active{% endif %}"
+        href="{% url 'tenants:feature_toggles' %}">Feature Toggles</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'usage_limits' %}active{% endif %}"
+        href="{% url 'tenants:usage_limits' %}">Usage Limits</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'feature_entitlements' %}active{% endif %}"
+        href="{% url 'tenants:feature_entitlements' %}">Feature Entitlements</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'bulk_feature_entitlement' %}active{% endif %}"
+        href="{% url 'tenants:bulk_feature_entitlement' %}">Bulk Entitlements</a>
+</div>
+
+<!-- Domain & Branding -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#brandingMenu">
+    <i class="bi bi-palette nav-icon"></i> Domain & Branding
+</a>
+<div class="collapse" id="brandingMenu">
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'domain_management_list' %}active{% endif %}"
+        href="{% url 'tenants:domain_management_list' %}">Custom Domains</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'ssl_certificates' %}active{% endif %}"
+        href="{% url 'tenants:ssl_certificates' %}">SSL Certificates</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'branding_config_list' %}active{% endif %}"
+        href="{% url 'tenants:branding_config_list' %}">Branding Configuration</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'white_label_settings' %}active{% endif %}"
+        href="{% url 'tenants:white_label_settings' %}">White-label Settings</a>
+</div>
+
+<!-- Settings Configuration -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#settingsConfigMenu">
+    <i class="bi bi-sliders nav-icon"></i> Settings
+</a>
+<div class="collapse" id="settingsConfigMenu">
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'setting_list' %}active{% endif %}"
+        href="{% url 'tenants:setting_list' %}">All Settings</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'setting_group_list' %}active{% endif %}"
+        href="{% url 'tenants:setting_group_list' %}">Setting Groups</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'setting_type_list' %}active{% endif %}"
+        href="{% url 'tenants:setting_type_list' %}">Setting Types</a>
+</div>
+
+<!-- Usage & Metering -->
+<div class="nav-section-header">Monitoring</div>
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#usageMenu">
+    <i class="bi bi-speedometer2 nav-icon"></i> Usage & Metering
+</a>
+<div class="collapse" id="usageMenu">
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'usage_metrics' %}active{% endif %}"
+        href="{% url 'tenants:usage_metrics' %}">Usage Metrics</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'usage_report' %}active{% endif %}"
+        href="{% url 'tenants:usage_report' %}">Usage Report</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'usage_alerts' %}active{% endif %}"
+        href="{% url 'tenants:usage_alerts' %}">Usage Alerts</a>
+</div>
+
+<!-- Overages & Notifications -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#overageMenu">
+    <i class="bi bi-bell nav-icon"></i> Alerts & Notifications
+</a>
+<div class="collapse" id="overageMenu">
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'overage_alerts' %}active{% endif %}"
+        href="{% url 'tenants:overage_alerts' %}">Overage Alerts</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'alert_thresholds' %}active{% endif %}"
+        href="{% url 'tenants:alert_thresholds' %}">Alert Thresholds</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}"
+        href="{% url 'tenants:notifications' %}">Notifications</a>
+</div>
+
+<!-- Data Isolation & Audit -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#auditMenu">
+    <i class="bi bi-shield-lock nav-icon"></i> Data Isolation
+</a>
+<div class="collapse" id="auditMenu">
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'data_isolation_audits' %}active{% endif %}"
+        href="{% url 'tenants:data_isolation_audits' %}">Isolation Audits</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'data_isolation_violations' %}active{% endif %}"
+        href="{% url 'tenants:data_isolation_violations' %}">Violations</a>
+</div>
+
+<!-- Member Management -->
+<div class="nav-section-header">Organization</div>
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#memberMenu">
+    <i class="bi bi-people nav-icon"></i> Members
+</a>
+<div class="collapse" id="memberMenu">
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'member_list' %}active{% endif %}"
+        href="{% url 'tenants:member_list' %}">All Members</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'member_create' %}active{% endif %}"
+        href="{% url 'tenants:member_create' %}">Add Member</a>
+</div>
+
+<!-- Roles & Territories -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#rolesTerritoryMenu">
+    <i class="bi bi-person-badge nav-icon"></i> Roles & Territories
+</a>
+<div class="collapse" id="rolesTerritoryMenu">
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'role_list' %}active{% endif %}"
+        href="{% url 'tenants:role_list' %}">Roles</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'territory_list' %}active{% endif %}"
+        href="{% url 'tenants:territory_list' %}">Territories</a>
+</div>
+
+<!-- Billing Oversight -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#billingOversightMenu">
+    <i class="bi bi-credit-card nav-icon"></i> Billing
+</a>
+<div class="collapse" id="billingOversightMenu">
+    <a class="nav-link ms-3" href="{% url 'billing:portal' %}">Billing Portal</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'subscription_overview' %}active{% endif %}"
+        href="{% url 'tenants:subscription_overview' %}">Subscription Overview</a>
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'revenue_analytics' %}active{% endif %}"
+        href="{% url 'tenants:revenue_analytics' %}">Revenue Analytics</a>
+</div>
+
+<!-- Templates & Governance -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#governanceMenu">
+    <i class="bi bi-file-earmark-text nav-icon"></i> Governance
+</a>
+<div class="collapse" id="governanceMenu">
+    <a class="nav-link ms-3 {% if request.resolver_match.url_name == 'notification_template_list' %}active{% endif %}"
+        href="{% url 'tenants:notification_template_list' %}">Notification Templates</a>
+</div>
+{% endblock %}
+
+{% block module_content %}
+{% block page_content %}
+<!-- Page-specific content goes here -->
+{% endblock %}
+{% endblock %}
+
+{% block module_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Set active link based on current URL
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+                // Also expand parent collapse if it's a sub-menu item
+                let parentCollapse = link.closest('.collapse');
+                if (parentCollapse) {
+                    new bootstrap.Collapse(parentCollapse, { toggle: false }).show();
+                    let parentLink = document.querySelector(`[data-bs-target="#${parentCollapse.id}"]`);
+                    if (parentLink) {
+                        parentLink.classList.remove('collapsed');
+                        parentLink.setAttribute('aria-expanded', 'true');
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

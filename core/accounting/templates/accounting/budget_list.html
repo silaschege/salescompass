@@ -1,0 +1,50 @@
+{% extends "accounting/base.html" %}
+{% load humanize %}
+
+{% block accounting_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">Budgets</h1>
+    <a href="{% url 'accounting:budget_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> New Budget
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="bg-light">
+                <tr>
+                    <th>Fiscal Year</th>
+                    <th>Account</th>
+                    <th class="text-end">Budgeted Amount</th>
+                    <th>Created</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for budget in budgets %}
+                <tr>
+                    <td>{{ budget.fiscal_year.name }}</td>
+                    <td>{{ budget.account.account_name }}</td>
+                    <td class="text-end fw-bold text-primary">{{ budget.amount|floatformat:2|intcomma }}</td>
+                    <td>{{ budget.created_at|date:"M d, Y" }}</td>
+                    <td class="text-end">
+                        <a href="{% url 'accounting:budget_update' budget.pk %}"
+                            class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">
+                        <i class="bi bi-piggy-bank h1 d-block mb-3"></i>
+                        No budgets defined yet. Create one to track your spending.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

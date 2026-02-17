@@ -1,0 +1,239 @@
+/* Odoo-inspired Design System for Tasks */
+
+:root {
+    --odoo-primary: #714B67;
+    --odoo-secondary: #00A09D;
+    --odoo-bg: #F8F9FA;
+    --odoo-border: #dee2e6;
+    --odoo-text-muted: #666666;
+    --odoo-font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+    background-color: var(--odoo-bg);
+    font-family: var(--odoo-font-family);
+}
+
+/* Control Panel */
+.o_control_panel {
+    background-color: white;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--odoo-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.o_cp_left {
+    display: flex;
+    flex-direction: column;
+}
+
+.o_cp_top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.o_cp_bottom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Breadcrumbs */
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.breadcrumb-item+.breadcrumb-item::before {
+    content: "/";
+}
+
+/* Buttons */
+.btn-odoo-primary {
+    background-color: var(--odoo-primary);
+    color: white;
+    border: 1px solid var(--odoo-primary);
+}
+
+.btn-odoo-primary:hover {
+    background-color: #5d3d55;
+    color: white;
+}
+
+.btn-odoo-secondary {
+    background-color: white;
+    color: var(--odoo-primary);
+    border: 1px solid var(--odoo-border);
+}
+
+.btn-odoo-secondary:hover {
+    background-color: #f8f9fa;
+    border-color: #cdd2d6;
+}
+
+/* Form View - Sheet */
+.o_form_view {
+    background-color: var(--odoo-bg);
+    padding: 16px;
+}
+
+.o_form_sheet_bg {
+    background-color: #F8F9FA;
+    border-bottom: 1px solid var(--odoo-border);
+}
+
+.o_form_sheet {
+    background-color: white;
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 32px 64px;
+    border: 1px solid var(--odoo-border);
+    box-shadow: 0 5px 20px -15px rgba(0, 0, 0, 0.5);
+    min-height: 500px;
+}
+
+/* Status Bar */
+.o_form_statusbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: white;
+    border-bottom: 1px solid var(--odoo-border);
+    padding: 0 16px;
+    min-height: 40px;
+}
+
+.o_statusbar_status {
+    display: flex;
+    align-items: center;
+}
+
+.o_arrow_button {
+    position: relative;
+    padding: 4px 16px 4px 24px;
+    height: 100%;
+    border: none;
+    background: transparent;
+    color: var(--odoo-text-muted);
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.o_arrow_button:after,
+.o_arrow_button:before {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    right: -10px;
+    border-top: 20px solid transparent;
+    border-bottom: 20px solid transparent;
+    border-left: 10px solid white;
+    z-index: 2;
+}
+
+.o_arrow_button:before {
+    right: -11px;
+    border-left: 10px solid var(--odoo-border);
+    z-index: 1;
+}
+
+.o_arrow_button.btn-primary {
+    background-color: #e9ecef;
+    color: var(--odoo-primary);
+    font-weight: bold;
+}
+
+.o_arrow_button.btn-primary:after {
+    border-left-color: #e9ecef;
+}
+
+/* Chatter */
+.o_chatter {
+    background-color: white;
+    border-top: 1px solid var(--odoo-border);
+    padding: 24px;
+    max-width: 1140px;
+    margin: 32px auto;
+}
+
+/* Kanban View */
+.o_kanban_view {
+    display: flex;
+    overflow-x: auto;
+    padding: 16px;
+    gap: 16px;
+}
+
+.o_kanban_group {
+    flex: 0 0 300px;
+    background-color: #eff1f3;
+    border-radius: 4px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+.o_kanban_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    margin-bottom: 8px;
+}
+
+.o_kanban_record {
+    background-color: white;
+    border: 1px solid var(--odoo-border);
+    border-bottom: 2px solid #ced4da;
+    border-radius: 3px;
+    padding: 12px;
+    margin-bottom: 8px;
+    user-select: none;
+    cursor: pointer;
+    transition: box-shadow 0.3s;
+}
+
+.o_kanban_record:hover {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.o_kanban_record_title {
+    font-weight: bold;
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.o_kanban_record_subtitle {
+    font-size: 0.875rem;
+    color: var(--odoo-text-muted);
+}
+
+.o_kanban_record_bottom {
+    margin-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.o_priority_star {
+    color: #f0ad4e;
+    cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .o_form_sheet {
+        padding: 16px;
+    }
+}

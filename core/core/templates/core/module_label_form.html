@@ -1,0 +1,50 @@
+{% extends "settings_base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Module Label - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">{% if form.instance.pk %}Edit{% else %}Create{% endif %} Module Label</h1>
+        <p class="text-white text-center lead">Customize how modules appear in the navigation</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card shadow" style="max-width: 800px; margin: 0 auto;">
+        <div class="card-body p-4">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.module_key|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.custom_label|as_crispy_field }}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.module_key_ref|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch mt-4 pt-2">
+                            {{ form.module_label_is_active }}
+                            <label class="form-check-label"
+                                for="{{ form.module_label_is_active.id_for_label }}">Active</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 border-top pt-3 d-flex justify-content-between">
+                    <a href="{% url 'core:module_label_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-4">Save Label</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

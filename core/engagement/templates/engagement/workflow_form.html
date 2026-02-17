@@ -1,0 +1,171 @@
+{% extends "engagement/base.html" %}
+
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Workflow - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">{% if form.instance.pk %}Edit{% else %}Create{% endif %} Workflow</h1>
+        <p class="text-white text-center lead">Define automated engagement workflows</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h2 class="mb-0">{% if form.instance.pk %}Edit Workflow{% else %}Create Workflow{% endif %}</h2>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.workflow_name.id_for_label }}" class="form-label fw-bold">
+                                        Workflow Name <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.workflow_name }}
+                                    {% if form.workflow_name.errors %}
+                                        <div class="text-danger mt-1">{{ form.workflow_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="{{ form.workflow_type.id_for_label }}" class="form-label fw-bold">
+                                        Type <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.workflow_type }}
+                                    {% if form.workflow_type.errors %}
+                                        <div class="text-danger mt-1">{{ form.workflow_type.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="{{ form.trigger_condition.id_for_label }}" class="form-label fw-bold">
+                                        Trigger <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.trigger_condition }}
+                                    {% if form.trigger_condition.errors %}
+                                        <div class="text-danger mt-1">{{ form.trigger_condition.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.workflow_description.id_for_label }}" class="form-label fw-bold">
+                                Description
+                            </label>
+                            {{ form.workflow_description }}
+                            {% if form.workflow_description.errors %}
+                                <div class="text-danger mt-1">{{ form.workflow_description.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4 form-check form-switch">
+                            {{ form.is_active }}
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">Active</label>
+                            <div class="form-text">Inactive workflows will not be triggered.</div>
+                        </div>
+                        
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Configuration</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.task_title_template.id_for_label }}" class="form-label fw-bold">
+                                                Task Title Template
+                                            </label>
+                                            {{ form.task_title_template }}
+                                            <div class="form-text">Template for task titles. Available variables: {account_name}, {event_type}</div>
+                                            {% if form.task_title_template.errors %}
+                                                <div class="text-danger mt-1">{{ form.task_title_template.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="{{ form.task_due_date_offset.id_for_label }}" class="form-label fw-bold">
+                                                Task Due Date Offset (days)
+                                            </label>
+                                            {{ form.task_due_date_offset }}
+                                            {% if form.task_due_date_offset.errors %}
+                                                <div class="text-danger mt-1">{{ form.task_due_date_offset.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.task_description_template.id_for_label }}" class="form-label fw-bold">
+                                                Task Description Template
+                                            </label>
+                                            {{ form.task_description_template }}
+                                            <div class="form-text">Template for task descriptions. Available variables: {account_name}, {event_type}, {engagement_score}</div>
+                                            {% if form.task_description_template.errors %}
+                                                <div class="text-danger mt-1">{{ form.task_description_template.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="{{ form.task_priority.id_for_label }}" class="form-label fw-bold">
+                                                Task Priority
+                                            </label>
+                                            {{ form.task_priority }}
+                                            {% if form.task_priority.errors %}
+                                                <div class="text-danger mt-1">{{ form.task_priority.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'engagement:workflow_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Save Workflow
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .form-control, .form-select {
+        border: 1px solid #e3e6f3;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #6f42c1;
+        box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+    }
+    
+    textarea.form-control {
+        min-height: 100px;
+        resize: vertical;
+    }
+    
+    .form-check-input:checked {
+        background-color: #6f42c1;
+        border-color: #6f42c1;
+    }
+</style>
+{% endblock %}

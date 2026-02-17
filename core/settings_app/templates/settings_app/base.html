@@ -1,0 +1,85 @@
+{% extends 'core/base_module.html' %}
+
+{% block title %}Settings - SalesCompass{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+{% endblock %}
+
+{% block module_nav %}
+<!-- Dashboard -->
+<a class="nav-link ms-3" href="{% url 'settings_app:dashboard' %}">Dashboard</a>
+
+<!-- System Configuration -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#systemMenu">
+    System Configuration
+</a>
+<div class="collapse" id="systemMenu">
+    <a class="nav-link ms-3" href="{% url 'settings_app:tenant_settings' %}">Tenant Settings</a>
+    <a class="nav-link ms-3" href="{% url 'settings_app:list' %}">Module Settings</a>
+</div>
+
+<!-- Lead Settings -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#leadSettingsMenu">
+    Lead Settings
+</a>
+<div class="collapse" id="leadSettingsMenu">
+    <a class="nav-link ms-3" href="{% url 'settings_app:lead_status_list' %}">Statuses</a>
+    <a class="nav-link ms-3" href="{% url 'settings_app:lead_source_list' %}">Sources</a>
+</div>
+ 
+<!-- Opportunity Settings -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#oppSettingsMenu">
+    Opportunity Settings
+</a>
+<div class="collapse" id="oppSettingsMenu">
+    <a class="nav-link ms-3" href="{% url 'settings_app:opportunity_stage_list' %}">Stages</a>
+</div>
+
+<!-- Team Management -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#teamMenu">
+    Team Management
+</a>
+<div class="collapse" id="teamMenu">
+    <a class="nav-link ms-3" href="{% url 'tenants:member_list' %}">Team Members</a>
+    <a class="nav-link ms-3" href="{% url 'tenants:member_create' %}">Add Member</a>
+    <a class="nav-link ms-3" href="{% url 'tenants:role_list' %}">Roles & Permissions</a>
+</div>
+
+<!-- Territories -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#territoriesMenu">
+    Territories
+</a>
+<div class="collapse" id="territoriesMenu">
+    <a class="nav-link ms-3" href="{% url 'tenants:territory_list' %}">List</a>
+    <a class="nav-link ms-3" href="{% url 'tenants:territory_create' %}">Create</a>
+</div>
+
+<!-- Customization -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#customizationMenu">
+    Customization
+</a>
+<div class="collapse" id="customizationMenu">
+    <a class="nav-link ms-3" href="{% url 'settings_app:custom_field_list' %}">Custom Fields</a>
+    <a class="nav-link ms-3" href="{% url 'settings_app:module_label_list' %}">Module Labels</a>
+</div>
+
+<!-- Automation -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#automationMenu">
+    Automation
+</a>
+<div class="collapse" id="automationMenu">
+    <a class="nav-link ms-3" href="{% url 'settings_app:assignment_rule_list' %}">Assignment Rules</a>
+    <a class="nav-link ms-3" href="{% url 'settings_app:pipeline_stage_list' %}">Pipeline Stages</a>
+    <a class="nav-link ms-3" href="{% url 'settings_app:scoring_rules_list' %}">Lead Scoring</a>
+</div>
+
+<!-- Integrations -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#integrationsMenu">
+    Integrations
+</a>
+<div class="collapse" id="integrationsMenu">
+    <a class="nav-link ms-3" href="{% url 'settings_app:apikey_list' %}">API Keys</a>
+    <a class="nav-link ms-3" href="{% url 'settings_app:webhook_list' %}">Webhooks</a>
+</div>
+{% endblock %}

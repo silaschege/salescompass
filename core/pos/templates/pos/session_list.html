@@ -1,0 +1,348 @@
+{% extends "pos/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}POS Sessions - SalesCompass{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .stats-card {
+        border: none;
+        border-radius: 1rem;
+        transition: transform 0.2s;
+        overflow: hidden;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stats-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-active {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .status-closed {
+        background-color: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+    }
+
+    .session-table {
+        border-collapse: separate;
+        border-spacing: 0 0.5rem;
+    }
+
+    .session-table tr {
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border-radius: 0.75rem;
+    }
+
+    .session-table td,
+    .session-table th {
+        border: none;
+        padding: 1.25rem 1rem;
+        vertical-align: middle;
+    }
+
+    .session-table tr td:first-child {
+        border-top-left-radius: 0.75rem;
+        border-bottom-left-radius: 0.75rem;
+    }
+
+    .session-table tr td:last-child {
+        border-top-right-radius: 0.75rem;
+        border-bottom-right-radius: 0.75rem;
+    }
+
+    .search-box {
+        background: #fff;
+        border: 1px solid var(--pos-gray-200);
+        border-radius: 0.75rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .search-box input {
+        border: none;
+        outline: none;
+        box-shadow: none;
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block pos_content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1 fw-bold text-dark">POS Sessions</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'pos:dashboard' %}" class="text-decoration-none">POS</a>
+                    </li>
+                    <li class="breadcrumb-item active">Sessions</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{% url 'pos:session_open' %}" class="btn btn-primary btn-lg shadow-sm"
+            style="background: var(--pos-primary); border: none; border-radius: 0.75rem;">
+            <i class="bi bi-plus-circle me-2"></i>New Session
+        </a>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card shadow-sm">
+                <div class="card-body d-flex align-items-center p-4">
+                    <div class="stats-icon bg-primary bg-opacity-10 text-primary me-3">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted small mb-1">Total Sessions</h6>
+                        <h4 class="mb-0 fw-bold">{{ sessions.count }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card shadow-sm">
+                <div class="card-body d-flex align-items-center p-4">
+                    <div class="stats-icon bg-success bg-opacity-10 text-success me-3">
+                        <i class="bi bi-play-fill"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted small mb-1">Active Now</h6>
+                        <h4 class="mb-0 fw-bold" id="active-count">0</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card shadow-sm">
+                <div class="card-body d-flex align-items-center p-4">
+                    <div class="stats-icon bg-warning bg-opacity-10 text-warning me-3">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted small mb-1">Total Volume</h6>
+                        <h4 class="mb-0 fw-bold">KES {{ total_volume|default:"0"|floatformat:0|intcomma }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card shadow-sm">
+                <div class="card-body d-flex align-items-center p-4">
+                    <div class="stats-icon bg-info bg-opacity-10 text-info me-3">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted small mb-1">Cashiers</h6>
+                        <h4 class="mb-0 fw-bold" id="cashier-count">0</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="card mb-4 border-0 shadow-sm" style="border-radius: 1rem;">
+        <div class="card-body">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-4">
+                    <div class="search-box d-flex align-items-center">
+                        <i class="bi bi-search text-muted me-2"></i>
+                        <input type="text" id="sessionSearch" placeholder="Search terminal or cashier..."
+                            onkeyup="filterSessions()">
+                    </div>
+                </div>
+                <div class="col-md-8 text-end">
+                    <div class="btn-group shadow-sm" style="border-radius: 0.75rem; overflow: hidden;">
+                        <button class="btn btn-outline-secondary active" onclick="filterStatus('all')">All</button>
+                        <button class="btn btn-outline-secondary" onclick="filterStatus('active')">Active</button>
+                        <button class="btn btn-outline-secondary" onclick="filterStatus('closed')">Closed</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sessions List -->
+    <div class="table-responsive">
+        <table class="table session-table">
+            <thead>
+                <tr class="text-muted small text-uppercase">
+                    <th class="ps-3">Session Details</th>
+                    <th>Terminal</th>
+                    <th>Opened By</th>
+                    <th>Duration</th>
+                    <th class="text-center">Transactions</th>
+                    <th>Status</th>
+                    <th class="text-end pe-3">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="sessionsTableBody">
+                {% for session in sessions %}
+                <tr class="session-row" data-status="{{ session.status }}">
+                    <td class="ps-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light p-2 rounded me-3">
+                                <i class="bi bi-hash text-primary"></i>
+                            </div>
+                            <div>
+                                <a href="{% url 'pos:session_detail' session.pk %}"
+                                    class="fw-bold text-dark text-decoration-none">
+                                    {{ session.session_number }}
+                                </a>
+                                <div class="text-muted small">ID: {{ session.id }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="terminal-name">
+                        <div class="fw-medium">{{ session.terminal.terminal_name }}</div>
+                        <div class="text-muted small">{{ session.terminal.warehouse.name|default:"Main Warehouse" }}
+                        </div>
+                    </td>
+                    <td class="cashier-name">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-soft-primary rounded-circle text-primary fw-bold me-2 d-flex align-items-center justify-content-center"
+                                style="width: 28px; height: 28px; font-size: 0.7rem; background: var(--pos-primary-light);">
+                                {{ session.cashier.username|slice:":1"|upper }}
+                            </div>
+                            <span class="fw-medium">{{ session.cashier.get_full_name|default:session.cashier.username}}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="fw-medium">{{ session.opened_at|date:"M d, H:i" }}</div>
+                        <div class="text-muted small">
+                            {% if session.closed_at %}
+                            Closed: {{ session.closed_at|date:"H:i" }}
+                            {% else %}
+                            Running...
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-light text-dark border fw-bold">{{ session.transactions.count }}</span>
+                    </td>
+                    <td>
+                        {% if session.status == 'active' %}
+                        <span class="status-badge status-active">Active</span>
+                        {% else %}
+                        <span class="status-badge status-closed">Closed</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-3">
+                        <div class="btn-group">
+                            <a href="{% url 'pos:session_detail' session.pk %}" class="btn btn-sm btn-light"
+                                title="View Details">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            {% if session.status == 'active' %}
+                            <a href="{% url 'pos:session_close' session.pk %}" class="btn btn-sm btn-light text-danger"
+                                title="Close Session">
+                                <i class="bi bi-stop-circle"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr id="emptyStateRow">
+                    <td colspan="7" class="text-center py-5">
+                        <div class="py-5">
+                            <i class="bi bi-inbox fs-1 text-muted opacity-50 mb-3 d-block"></i>
+                            <p class="text-muted mb-4">No sessions found matching your criteria</p>
+                            <a href="{% url 'pos:session_open' %}" class="btn btn-primary"
+                                style="background: var(--pos-primary); border: none;">Start First Session</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    function filterSessions() {
+        let input = document.getElementById('sessionSearch');
+        let filter = input.value.toLowerCase();
+        let table = document.getElementById('sessionsTableBody');
+        let tr = table.getElementsByClassName('session-row');
+        let visibleCount = 0;
+
+        for (let i = 0; i < tr.length; i++) {
+            let terminal = tr[i].getElementsByClassName('terminal-name')[0].textContent.toLowerCase();
+            let cashier = tr[i].getElementsByClassName('cashier-name')[0].textContent.toLowerCase();
+
+            if (terminal.indexOf(filter) > -1 || cashier.indexOf(filter) > -1) {
+                tr[i].style.display = "";
+                visibleCount++;
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
+    }
+
+    function filterStatus(status) {
+        // Toggle active class on buttons
+        const btns = document.querySelectorAll('.btn-group .btn');
+        btns.forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+
+        let table = document.getElementById('sessionsTableBody');
+        let tr = table.getElementsByClassName('session-row');
+        let visibleCount = 0;
+
+        for (let i = 0; i < tr.length; i++) {
+            if (status === 'all' || tr[i].getAttribute('data-status') === status) {
+                tr[i].style.display = "";
+                visibleCount++;
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Calculate active sessions and unique cashiers for stats cards
+        const rows = document.querySelectorAll('.session-row');
+        let active = 0;
+        const cashiers = new Set();
+
+        rows.forEach(row => {
+            if (row.getAttribute('data-status') === 'active') active++;
+            cashiers.add(row.querySelector('.cashier-name span').textContent.trim());
+        });
+
+        document.getElementById('active-count').textContent = active;
+        document.getElementById('cashier-count').textContent = cashiers.size;
+    });
+</script>
+{% endblock %}

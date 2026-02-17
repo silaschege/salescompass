@@ -1,0 +1,115 @@
+﻿
+-----
+
+WeasyPrint could not import some external libraries. Please carefully follow the installation steps before reporting an issue:
+https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#installation
+https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#troubleshooting 
+
+-----
+
+Operations to perform:
+  Apply all migrations: billing
+Running migrations:
+c:\Users\User\Documents\GitHub\salescompass-main\env\Scripts\python.exe : Traceback (most recent call last):
+At line:1 char:1
++ c:\Users\User\Documents\GitHub\salescompass-main\env\Scripts\python.e ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo              : NotSpeci    fied: (Traceback     (most recent call     last)::String) [    ], RemoteExceptio    n
+    + FullyQualifiedE    rrorId : NativeCo    mmandError
+ 
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\db\backends\sqlite3\base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: index billing_invoice_tenant_id_0888f9df already exists
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\User\Documents\GitHub\salescompass-main\core\manage.py", line 21, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\core\manage.py", line 17, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\core\management\base.py", line 420, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\core\management\base.py", line 464, in execute
+    output = self.handle(*args, **options)
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\core\management\base.py", line 111, in wrapper
+    res = handle_func(*args, **kwargs)
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\core\management\commands\migrate.py", line 354, in handle
+    post_migrate_state = executor.migrate(
+        targets,
+    ...<3 lines>...
+        fake_initial=fake_initial,
+    )
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\db\migrations\executor.py", line 137, in migrate
+    state = self._migrate_all_forwards(
+        state, plan, full_plan, fake=fake, fake_initial=fake_initial
+    )
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\db\migrations\executor.py", line 169, in _migrate_all_forwards
+    state = self.apply_migration(
+        state, migration, fake=fake, fake_initial=fake_initial
+    )
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\db\migrations\executor.py", line 257, in apply_migration
+    state = migration.apply(state, schema_editor)
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\db\migrations\migration.py", line 132, in apply
+    operation.database_forwards(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.app_label, schema_editor, old_state, project_state
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\db\migrations\operations\fields.py", line 118, in database_forwards
+    schema_editor.add_field(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        from_model,
+        ^^^^^^^^^^^
+        field,
+        ^^^^^^
+    )
+    ^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\db\backends\sqlite3\schema.py", line 325, in add_field
+    self._remake_table(model, create_field=field)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\db\backends\sqlite3\schema.py", line 274, in _remake_table
+    self.execute(sql)
+    ~~~~~~~~~~~~^^^^^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\db\backends\base\schema.py", line 205, in execute
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\db\backends\sqlite3\base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: index billing_invoice_tenant_id_0888f9df already exists
+  Applying billing.0007_adjustmenttype_billingprofile_invoice_and_more...

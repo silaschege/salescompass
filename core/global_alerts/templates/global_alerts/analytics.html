@@ -1,0 +1,81 @@
+{% extends "global_alerts/base.html" %}
+
+{% block title %}Alert Analytics{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Alert Analytics</h1>
+
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3>{{ total_alerts }}</h3>
+                    <p class="text-muted">Total Alerts</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-success">{{ active_alerts }}</h3>
+                    <p class="text-muted">Active Now</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-warning">{{ scheduled_alerts }}</h3>
+                    <p class="text-muted">Scheduled</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3>{{ global_alerts }}</h3>
+                    <p class="text-muted">Global Alerts</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>By Severity</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        {% for item in severity_breakdown %}
+                        <tr>
+                            <td>{{ item.severity|title }}</td>
+                            <td>{{ item.count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>By Type</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        {% for item in type_breakdown %}
+                        <tr>
+                            <td>{{ item.alert_type|title }}</td>
+                            <td>{{ item.count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

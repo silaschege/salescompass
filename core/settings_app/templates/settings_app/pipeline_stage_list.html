@@ -1,0 +1,53 @@
+{% extends "settings_app/base.html" %}
+
+{% block title %}Pipeline Stages - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Pipeline Stages</h1>
+        <p class="text-white text-center lead">Configure sales pipeline stages</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Stages</h2>
+        <a href="{% url 'settings_app:pipeline_stage_create' %}" class="btn btn-primary">+ New Stage</a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            {% if object_list %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Order</th>
+                            <th>Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stage in object_list %}
+                        <tr>
+                            <td>{{ stage.name }}</td>
+                            <td>{{ stage.order }}</td>
+                            <td>{{ stage.pipeline_type }}</td>
+                            <td>
+                                <a href="{% url 'settings_app:pipeline_stage_update' stage.pk %}"
+                                    class="btn btn-sm btn-outline-primary">Edit</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No pipeline stages found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

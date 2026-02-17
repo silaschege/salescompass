@@ -1,0 +1,92 @@
+{% extends 'leads/base.html' %}
+
+{% block title %}Campaign Metrics: {{ campaign }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>Campaign Metrics: {{ campaign }}</h1>
+            
+            <!-- Campaign Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h5>Total Leads</h5>
+                            <h2>{{ total_leads }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <h5>Total CAC</h5>
+                            <h2>${{ total_cac|floatformat:2 }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <h5>Average CAC</h5>
+                            <h2>${{ average_cac|floatformat:2 }}</h2>
+                        </div>
+                    </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body">
+                            <h5>Conversion Rate</h5>
+                            <h2>{{ conversion_rate|floatformat:2 }}%</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Campaign Lead List -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Leads from {{ campaign }} Campaign</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Company</th>
+                                    <th>Marketing Channel</th>
+                                    <th>CAC Cost</th>
+                                    <th>Acquisition Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lead in leads %}
+                                <tr>
+                                    <td><a href="{% url 'leads:lead_detail' pk=lead.pk %}">{{ lead.full_name }}</a></td>
+                                    <td>{{ lead.company }}</td>
+                                    <td>{{ lead.marketing_channel }}</td>
+                                    <td>${{ lead.cac_cost|floatformat:2 }}</td>
+                                    <td>{{ lead.lead_acquisition_date|date:"M d, Y" }}</td>
+                                    <td>{{ lead.status }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6">No leads found for this campaign.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Back Button -->
+            <div class="mt-3">
+                <a href="{% url 'leads:cac_analytics' %}" class="btn btn-secondary">Back to CAC Analytics</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

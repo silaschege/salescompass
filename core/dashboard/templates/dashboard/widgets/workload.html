@@ -1,0 +1,48 @@
+<div class="card h-100 shadow-sm">
+    <div class="card-header bg-white py-2">
+        <h6 class="mb-0"><i class="bi bi-people me-2 text-primary"></i>{{ widget.widget_name }}</h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="bg-light small">
+                    <tr>
+                        <th class="ps-3 border-0">Person</th>
+                        <th class="border-0">Capacity</th>
+                        <th class="border-0 text-end pe-3">Tasks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in widget.data.team_members|default:widget.data.sample_members %}
+                    <tr>
+                        <td class="ps-3">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar rounded-circle bg-light d-flex align-items-center justify-content-center me-2"
+                                    style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                    {{ member.initials }}
+                                </div>
+                                <div class="small fw-bold">{{ member.name }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="progress" style="height: 6px; width: 80px;">
+                                <div class="progress-bar {% if member.load > 90 %}bg-danger{% elif member.load > 70 %}bg-warning{% else %}bg-primary{% endif %}"
+                                    role="progressbar" style="width: {{ member.load }}%"></div>
+                            </div>
+                        </td>
+                        <td class="text-end pe-3">
+                            <span class="badge bg-light text-dark border">{{ member.tasks_count }}</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center py-4 text-muted small">
+                            No team data available
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

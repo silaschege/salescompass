@@ -1,0 +1,105 @@
+{% extends "engagement/base.html" %}
+
+{% block title %}Clone Playbook - {{ template_playbook.name }}{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Clone Playbook</h1>
+        <p class="text-white text-center lead">Create a new playbook based on "{{ template_playbook.name }}"</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h2 class="mb-0">Clone "{{ template_playbook.name }}"</h2>
+                    <p class="text-muted">{{ template_playbook.description }}</p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label fw-bold">
+                                Playbook Name <span class="text-danger">*</span>
+                            </label>
+                            {{ form.name }}
+                            <div class="form-text">Enter a name for the new playbook.</div>
+                            {% if form.name.errors %}
+                                <div class="text-danger mt-1">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">
+                                Description
+                            </label>
+                            {{ form.description }}
+                            <div class="form-text">Describe the purpose of this playbook.</div>
+                            {% if form.description.errors %}
+                                <div class="text-danger mt-1">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Template Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-2">
+                                            <small class="text-muted">Industry</small>
+                                            <div class="fw-bold">{{ template_playbook.get_industry_display|default:"Not specified" }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-2">
+                                            <small class="text-muted">Steps</small>
+                                            <div class="fw-bold">{{ template_playbook.steps.count }} steps</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'engagement:playbook_detail' template_playbook.pk %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Template
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-copy"></i> Clone Playbook
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .form-control, .form-select {
+        border: 1px solid #e3e6f3;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #6f42c1;
+        box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+    }
+    
+    textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+    }
+</style>
+{% endblock %}

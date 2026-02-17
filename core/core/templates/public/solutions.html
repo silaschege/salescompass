@@ -1,0 +1,193 @@
+{% extends "public/base.html" %}
+{% load static %}
+
+{% block title %}Solutions - Scale Your Revenue with SalesCompass{% endblock %}
+
+{% block content %}
+<!-- Solutions Hero -->
+<section class="section-large text-center position-relative overflow-hidden">
+    <div class="container position-relative z-1">
+        <h1 class="display-3 fw-extrabold mb-4">Scalable solutions for <br><span class="highlight-handwritten">every
+                business.</span></h1>
+        <p class="lead text-muted mb-6 mx-auto" style="max-width: 650px;">
+            Whether you are a scaling startup or a global enterprise, SalesCompass provides
+            the intelligence and governance to win at every stage.
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'core:try_free' %}" class="btn btn-primary px-5">Get Started</a>
+            <a href="{% url 'core:pricing' %}" class="btn btn-outline-primary px-5">See Pricing</a>
+        </div>
+    </div>
+</section>
+
+<!-- Scalability Tiers -->
+<section class="section bg-light border-top border-light">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Startups -->
+            <div class="col-lg-4">
+                <div class="card-clean p-5 h-100 border-top border-4 border-warning">
+                    <div class="app-icon app-automation app-icon-sm mb-4"><i class="bi bi-rocket-takeoff-fill"></i>
+                    </div>
+                    <h3 class="fw-bold mb-3">Scaling Startups</h3>
+                    <p class="text-muted small mb-4">Move at the speed of light. All-in-one platform to consolidate your
+                        stack and automate your hustle.</p>
+                    <ul class="list-unstyled space-y-2 small mb-0">
+                        <li><i class="bi bi-check2 text-warning me-2"></i>Out-of-the-box Automations</li>
+                        <li><i class="bi bi-check2 text-warning me-2"></i>Unified Lead & Deal Pipeline</li>
+                        <li><i class="bi bi-check2 text-warning me-2"></i>Instant Setup & Onboarding</li>
+                    </ul>
+                </div>
+            </div>
+            <!-- Mid-Market -->
+            <div class="col-lg-4">
+                <div class="card-clean p-5 h-100 border-top border-4 border-primary">
+                    <div class="app-icon app-crm app-icon-sm mb-4"><i class="bi bi-shield-check"></i></div>
+                    <h3 class="fw-bold mb-3">Mid-Market</h3>
+                    <p class="text-muted small mb-4">Add depth without complexity. Advanced intelligence and forecasting
+                        for teams ready to dominate.</p>
+                    <ul class="list-unstyled space-y-2 small mb-0">
+                        <li><i class="bi bi-check2 text-primary me-2"></i>Predictive Forecasting</li>
+                        <li><i class="bi bi-check2 text-primary me-2"></i>Multi-touch Attribution</li>
+                        <li><i class="bi bi-check2 text-primary me-2"></i>Territory Optimization</li>
+                    </ul>
+                </div>
+            </div>
+            <!-- Enterprise -->
+            <div class="col-lg-4">
+                <div class="card-clean p-5 h-100 border-top border-4 border-indigo">
+                    <div class="app-icon app-ml app-icon-sm mb-4"><i class="bi bi-building-fill-lock"></i></div>
+                    <h3 class="fw-bold mb-3">Enterprise</h3>
+                    <p class="text-muted small mb-4">Deep governance and global scale. Unleash the power of the Sales
+                        Ontology across divisions.</p>
+                    <ul class="list-unstyled space-y-2 small mb-0">
+                        <li><i class="bi bi-check2 text-indigo me-2"></i>Multi-Tenant Governance</li>
+                        <li><i class="bi bi-check2 text-indigo me-2"></i>ESG Performance Metrics</li>
+                        <li><i class="bi bi-check2 text-indigo me-2"></i>Advanced ML Orchestration</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Industry Solutions -->
+<section class="section bg-white">
+    <div class="container">
+        <div class="text-center mb-10">
+            <h2 class="fw-extrabold mb-3">Tailored for your industry</h2>
+            <p class="text-muted">Specific blueprints designed for your unique business motion.</p>
+        </div>
+
+        <div class="row g-5">
+            <!-- SaaS -->
+            <div class="col-md-6">
+                <div class="d-flex gap-4 p-4 rounded-4 hover-bg-light transition-base">
+                    <div class="app-icon app-sales m-0"><i class="bi bi-cloud-check-fill"></i></div>
+                    <div>
+                        <h4 class="fw-bold mb-2">Modern SaaS</h4>
+                        <p class="text-muted small mb-3">Optimize for recurring revenue with PLG triggers and deep
+                            subscription intelligence.</p>
+                        <a href="#" class="text-primary fw-bold small text-decoration-none">Explore SaaS Blueprint
+                            &rarr;</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Services -->
+            <div class="col-md-6">
+                <div class="d-flex gap-4 p-4 rounded-4 hover-bg-light transition-base">
+                    <div class="app-icon app-marketing m-0"><i class="bi bi-briefcase-fill"></i></div>
+                    <div>
+                        <h4 class="fw-bold mb-2">Professional Services</h4>
+                        <p class="text-muted small mb-3">Bridge the gap between sales and delivery with integrated
+                            project resource tracking.</p>
+                        <a href="#" class="text-primary fw-bold small text-decoration-none">Explore Services Blueprint
+                            &rarr;</a>
+                    </div>
+                </div>
+            </div>
+            <!-- High Tech -->
+            <div class="col-md-6">
+                <div class="d-flex gap-4 p-4 rounded-4 hover-bg-light transition-base">
+                    <div class="app-icon app-reports m-0"><i class="bi bi-cpu-fill"></i></div>
+                    <div>
+                        <h4 class="fw-bold mb-2">High Tech Manufacturing</h4>
+                        <p class="text-muted small mb-3">Complex supply chains and long sales cycles managed with
+                            precision forecasting.</p>
+                        <a href="#" class="text-primary fw-bold small text-decoration-none">Explore High Tech Blueprint
+                            &rarr;</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Finance -->
+            <div class="col-md-6">
+                <div class="d-flex gap-4 p-4 rounded-4 hover-bg-light transition-base">
+                    <div class="app-icon app-commissions m-0"><i class="bi bi-bank2"></i></div>
+                    <div>
+                        <h4 class="fw-bold mb-2">Financial Services</h4>
+                        <p class="text-muted small mb-3">Highest standards of security and compliance for sensitive
+                            revenue management.</p>
+                        <a href="#" class="text-primary fw-bold small text-decoration-none">Explore Finance Blueprint
+                            &rarr;</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Outcome Section -->
+<section class="section bg-gray-900 ">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h2 class="display-5 fw-extrabold mb-4 text-white">Real solutions. <br><span
+                        class="highlight-handwritten">Real outcomes.</span></h2>
+                <p class="text-white-50 mb-5">
+                    SalesCompass isn't just a database. It's the nervous system of your revenue organization.
+                    See how we transform productivity across every department.
+                </p>
+                <div class="row g-4">
+                    <div class="col-6">
+                        <div class="h2 fw-extrabold text-primary mb-0">85%</div>
+                        <p class="small text-white-50">Reduction in manual data entry</p>
+                    </div>
+                    <div class="col-6">
+                        <div class="h2 fw-extrabold text-primary mb-0">34%</div>
+                        <p class="small text-white-50">Increase in pipeline velocity</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 mt-6 mt-lg-0">
+                <div class="p-5 bg-white bg-opacity-5 rounded-4 border border-white border-opacity-10">
+                    <i class="bi bi-quote fs-1 text-primary opacity-50 mb-4"></i>
+                    <p class="lead mb-4">
+                        "SalesCompass allowed us to unify three different legacy systems into one single source of
+                        truth.
+                        The ML insights alone paid for the platform in the first month."
+                    </p>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-primary" style="width: 48px; height: 48px;"></div>
+                        <div>
+                            <strong class="d-block">Sarah Jenkins</strong>
+                            <span class="small text-white-50">CRO at Technova Global</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Final CTA -->
+<section class="section-large text-center bg-white">
+    <div class="container">
+        <h2 class="display-4 fw-extrabold mb-4">Ready to find your solution?</h2>
+        <p class="lead text-muted mb-6">Join 15 million users who trust SalesCompass every day.</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'core:try_free' %}" class="btn btn-primary px-5">Get Started Free</a>
+            <a href="{% url 'core:support' %}" class="btn btn-outline-primary px-5">Contact an Expert</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

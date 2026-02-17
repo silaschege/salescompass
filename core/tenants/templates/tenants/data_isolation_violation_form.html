@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Update Data Isolation Violation - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col">
+      <h2><i class="bi bi-exclamation-triangle me-2"></i>{{ title }}</h2>
+      <p class="text-muted">{{ subtitle }}</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Update Violation</h5>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+              <label for="{{ form.violation_type.id_for_label }}" class="form-label">Violation Type</label>
+              {{ form.violation_type }}
+              <div class="form-text">{{ form.violation_type.help_text }}</div>
+              {% if form.violation_type.errors %}
+              <div class="text-danger">{{ form.violation_type.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-3">
+              <label for="{{ form.severity.id_for_label }}" class="form-label">Severity</label>
+              {{ form.severity }}
+              <div class="form-text">{{ form.severity.help_text }}</div>
+              {% if form.severity.errors %}
+              <div class="text-danger">{{ form.severity.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-3">
+              <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+              {{ form.description }}
+              <div class="form-text">{{ form.description.help_text }}</div>
+              {% if form.description.errors %}
+              <div class="text-danger">{{ form.description.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-3">
+              <label for="{{ form.resolution_status.id_for_label }}" class="form-label">Resolution Status</label>
+              {{ form.resolution_status }}
+              <div class="form-text">{{ form.resolution_status.help_text }}</div>
+              {% if form.resolution_status.errors %}
+              <div class="text-danger">{{ form.resolution_status.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save me-1"></i>Update Violation
+            </button>
+            <a href="{% url 'tenants:data_isolation_violations' %}" class="btn btn-secondary">Cancel</a>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Violation Details</h5>
+        </div>
+        <div class="card-body">
+          <p><strong>Model:</strong> {{ object.model_name }}</p>
+          <p><strong>Record ID:</strong> {{ object.record_id }}</p>
+          <p><strong>Field:</strong> {{ object.field_name }}</p>
+          <p><strong>Expected Tenant:</strong> {{ object.expected_tenant.name }}</p>
+          <p><strong>Actual Tenant:</strong> {{ object.actual_tenant.name|default:"None" }}</p>
+          
+          <div class="mt-3">
+            <h6>Current Status:</h6>
+            <span class="badge bg-{{ object.resolution_status }}">{{ object.get_resolution_status_display }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

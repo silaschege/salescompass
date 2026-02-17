@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Receipt Print Preview</h1>
+        <button class="btn btn-secondary" onclick="window.close()">Close</button>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Virtual Terminal: {{ terminal.terminal_name }}</h6>
+                    <small>Character Width: {{ terminal.printer_width }} chars</small>
+                </div>
+                <div class="card-body bg-light text-center">
+                    <!-- Virtual Roll Paper Surface -->
+                    <div id="receipt-roll" class="receipt-paper"
+                        style="width: {{ terminal.printer_width|default:48|mul:8 }}px;">
+                        <div class="receipt-content">
+                            <pre id="receipt-text">{{ receipt_text }}</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <small class="text-muted italic">This is a simulated view of how the thermal printer will output the
+                        receipt.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .receipt-paper {
+        background: white;
+        margin: 0 auto;
+        padding: 2.5cm 1cm;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        text-align: left;
+        min-height: 400px;
+    }
+
+    #receipt-text {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 14px;
+        line-height: 1.2;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        color: #000;
+    }
+
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+
+        #receipt-roll,
+        #receipt-roll * {
+            visibility: visible;
+        }
+
+        #receipt-roll {
+            position: absolute;
+            left: 0;
+            top: 0;
+            box-shadow: none;
+            border: none;
+        }
+    }
+</style>
+{% endblock %}

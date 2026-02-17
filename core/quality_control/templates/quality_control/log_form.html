@@ -1,0 +1,200 @@
+{% extends "quality_control/base.html" %}
+
+{% block page_content %}
+<div class="card">
+    <div class="card-header">
+        <h3>New Inspection Log</h3>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Inspection Rule</label>
+                    {{ form.rule }}
+                    {{ form.rule.errors }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Reference (PO/WO/Serial)</label>
+                    {{ form.source_reference }}
+                    {{ form.source_reference.errors }}
+                </div>
+            </div>
+
+            <!-- Sampling Info -->
+            <div id="sampling_info" class="d-none border p-3 rounded mb-3 bg-light">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <label class="form-label mb-0">Lot Size</label>
+                        <input type="number" id="lot_size" class="form-control" placeholder="Enter batch quantity">
+                    </div>
+                    <div class="col-md-8">
+                        <div class="d-flex justify-content-around text-center">
+                            <div>
+                                <small class="text-muted d-block text-uppercase">Sample Size</small>
+                                <h3 id="sample_size_display" class="mb-0">-</h3>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block text-uppercase">Ac / Re</small>
+                                <h3 id="ac_re_display" class="mb-0">- / -</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Status</label>
+                {{ form.status }}
+                {{ form.status.errors }}
+            </div>
+
+            <!-- Dynamic Inspection Form -->
+            <div id="inspection-area" class="d-none border p-3 rounded bg-light mb-3">
+                <h5>Checklist</h5>
+                <div id="checklist-questions">
+                    <!-- Rendered via JS -->
+                </div>
+            </div>
+
+            {{ form.results_data }}
+
+            <div class="mb-3">
+                <label class="form-label">Overall Comments</label>
+                {{ form.comments }}
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit Inspection</button>
+            <a href="{% url 'quality_control:log_list' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+
+<script>
+    const ruleSelect = document.getElementById('id_rule');
+    const inspectionArea = document.getElementById('inspection-area');
+    const checklistContainer = document.getElementById('checklist-questions');
+    const resultsInput = document.getElementById('id_results_data');
+    let currentResults = {};
+    let currentRule = null;
+
+    async function loadRule(ruleId) {
+        if (!ruleId) {
+            inspectionArea.classList.add('d-none');
+            document.getElementById('sampling_info').classList.add('d-none');
+            return;
+        }
+
+        const response = await fetch(`/quality-control/api/rule/${ruleId}/`);
+        if (response.ok) {
+            currentRule = await response.json();
+
+            // Handle Sampling UI
+            const samplingDiv = document.getElementById('sampling_info');
+            if (currentRule.sampling_type === 'acceptance_sampling') {
+                samplingDiv.classList.remove('d-none');
+                updateSampling();
+            } else {
+                samplingDiv.classList.add('d-none');
+            }
+
+            renderChecklist(currentRule.check_list);
+            inspectionArea.classList.remove('d-none');
+        }
+    }
+
+    async function updateSampling() {
+        if (!currentRule || currentRule.sampling_type !== 'acceptance_sampling') return;
+
+        const lotSize = document.getElementById('lot_size').value || 0;
+        if (lotSize <= 0) {
+            document.getElementById('sample_size_display').innerText = '-';
+            document.getElementById('ac_re_display').innerText = '- / -';
+            return;
+        }
+
+        const response = await fetch(`/quality-control/api/sampling/calculate/?lot_size=${lotSize}&aql=${currentRule.aql_level}&level=${currentRule.inspection_level}`);
+        if (response.ok) {
+            const result = await response.json();
+
+            document.getElementById('sample_size_display').innerText = result.sample_size;
+            document.getElementById('ac_re_display').innerText = `${result.acceptance_number} / ${result.rejection_number}`;
+        } else {
+            console.error('Failed to fetch sampling data');
+            document.getElementById('sample_size_display').innerText = '-';
+            document.getElementById('ac_re_display').innerText = '- / -';
+        }
+    }
+
+    document.getElementById('lot_size').addEventListener('input', updateSampling);
+    ruleSelect.addEventListener('change', (e) => loadRule(e.target.value));
+
+    // Initial load
+    if (ruleSelect.value) {
+        loadRule(ruleSelect.value);
+    }
+
+    function renderChecklist(items) {
+        checklistContainer.innerHTML = '';
+        // Parse if string
+        if (typeof items === 'string') items = JSON.parse(items);
+
+        // Initialize results
+        currentResults = {};
+        items.forEach(item => currentResults[item.id] = null);
+        resultsInput.value = JSON.stringify(currentResults);
+
+        items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'mb-3 border-bottom pb-2';
+
+            let inputHtml = '';
+
+            if (item.type === 'bool') {
+                inputHtml = `
+                    <div class="btn-group" role="group">
+                        <input type="radio" class="btn-check" name="temp_${item.id}" id="${item.id}_pass" value="pass" 
+                            onchange="updateResult('${item.id}', true)">
+                        <label class="btn btn-outline-success" for="${item.id}_pass">Pass</label>
+                        
+                        <input type="radio" class="btn-check" name="temp_${item.id}" id="${item.id}_fail" value="fail"
+                            onchange="updateResult('${item.id}', false)">
+                        <label class="btn btn-outline-danger" for="${item.id}_fail">Fail</label>
+                    </div>
+                `;
+            } else if (item.type === 'number') {
+                inputHtml = `
+                    <input type="number" class="form-control" style="width: 150px" 
+                        onchange="updateResult('${item.id}', this.value)">
+                `;
+            } else if (item.type === 'text') {
+                inputHtml = `
+                    <input type="text" class="form-control" 
+                        onchange="updateResult('${item.id}', this.value)">
+                `;
+            } else if (item.type === 'photo') {
+                inputHtml = `
+                    <div class="mb-1">
+                        <input type="file" class="form-control" name="attachment_${item.id}" accept="image/*"
+                             onchange="updateResult('${item.id}', 'See Attachment')">
+                    </div>
+                    <small class="text-muted">Upload photo evidence</small>
+                `;
+            }
+
+            div.innerHTML = `
+                <label class="form-label fw-bold">${item.label} ${item.required ? '<span class="text-danger">*</span>' : ''}</label>
+                <div>${inputHtml}</div>
+            `;
+            checklistContainer.appendChild(div);
+        });
+    }
+
+    function updateResult(itemId, value) {
+        currentResults[itemId] = value;
+        resultsInput.value = JSON.stringify(currentResults);
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,70 @@
+<div class="modal-header">
+    <h5 class="modal-title">A/B Test Results: {{ ab_test.name }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <h6>Campaign: {{ ab_test.campaign.campaign_name }}</h6>
+                <p>{{ ab_test.description }}</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Variant</th>
+                                <th>Responses</th>
+                                <th>Opens</th>
+                                <th>Clicks</th>
+                                <th>Open Rate</th>
+                                <th>Click Rate</th>
+                                <th>CTR</th>
+                                <th>Winner</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for data in variants_data %}
+                            <tr>
+                                <td>{{ data.variant.get_variant_display }}</td>
+                                <td>{{ data.total_responses }}</td>
+                                <td>{{ data.opens }}</td>
+                                <td>{{ data.clicks }}</td>
+                                <td>{{ data.open_rate|floatformat:2 }}%</td>
+                                <td>{{ data.click_rate|floatformat:2 }}%</td>
+                                <td>{{ data.click_through_rate|floatformat:2 }}%</td>
+                                <td>
+                                    {% if ab_test.winner_variant == data.variant.variant %}
+                                        <span class="badge bg-success">Winner</span>
+                                    {% elif ab_test.is_winner_declared %}
+                                        <span class="text-muted">-</span>
+                                    {% else %}
+                                        <span class="text-muted">Pending</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <h6>Statistical Significance</h6>
+                <p class="text-muted">
+                    Statistical significance calculations would be displayed here to help determine if the differences 
+                    between variants are meaningful or due to chance.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+</div>

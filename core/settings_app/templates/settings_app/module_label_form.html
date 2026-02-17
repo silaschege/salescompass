@@ -1,0 +1,300 @@
+{% extends 'settings_app/base.html' %}
+{% load static %}
+
+{% block title %}{{ form_title|default:"Module Label" }} - Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    .form-section {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+
+    .form-section h3 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 20px 0;
+        color: #333;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 10px;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .page-header h1 {
+        font-size: 28px;
+        font-weight: 600;
+        margin: 0 0 8px 0;
+    }
+
+    .page-header .subtitle {
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: #374151;
+    }
+
+    .form-group label.required::after {
+        content: " *";
+        color: #ef4444;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .help-text {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 30px;
+    }
+
+    .btn {
+        padding: 10px 24px;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-primary {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #2563eb;
+    }
+
+    .btn-secondary {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .btn-secondary:hover {
+        background: #d1d5db;
+    }
+
+    .info-box {
+        background: #eff6ff;
+        border-left: 4px solid #3b82f6;
+        padding: 16px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+    }
+
+    .info-box h4 {
+        margin: 0 0 8px 0;
+        color: #1e40af;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .info-box p {
+        margin: 0;
+        color: #1e40af;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .example-box {
+        background: #f9fafb;
+        padding: 12px;
+        border-radius: 6px;
+        margin-top: 8px;
+        font-family: monospace;
+        font-size: 12px;
+        color: #374151;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1>{{ form_title|default:"Customize Module Label" }}</h1>
+        <p class="subtitle">White-label your CRM by customizing module names</p>
+    </div>
+
+    <!-- Info Box -->
+    <div class="info-box">
+        <h4>What are Module Labels?</h4>
+        <p>
+            Module labels allow you to rename CRM modules to match your business terminology.
+            For example, you can change "Leads" to "Prospects" or "Opportunities" to "Deals".
+        </p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- Module Selection -->
+        <div class="form-section">
+            <h3>Module Information</h3>
+
+            <div class="form-group">
+                <label for="module_key" class="required">Module</label>
+                <select name="module_key" id="module_key" class="form-control" required>
+                    <option value="">Select a module...</option>
+                    <option value="leads" {% if form.module_key.value=='leads' %}selected{% endif %}>Leads</option>
+                    <option value="accounts" {% if form.module_key.value=='accounts' %}selected{% endif %}>Accounts
+                    </option>
+                    <option value="opportunities" {% if form.module_key.value=='opportunities' %}selected{% endif %}>
+                        Opportunities</option>
+                    <option value="cases" {% if form.module_key.value=='cases' %}selected{% endif %}>Cases</option>
+                    <option value="proposals" {% if form.module_key.value=='proposals' %}selected{% endif %}>Proposals
+                    </option>
+                    <option value="products" {% if form.module_key.value=='products' %}selected{% endif %}>Products
+                    </option>
+                    <option value="tasks" {% if form.module_key.value=='tasks' %}selected{% endif %}>Tasks</option>
+                    <option value="dashboard" {% if form.module_key.value=='dashboard' %}selected{% endif %}>Dashboard
+                    </option>
+                    <option value="reports" {% if form.module_key.value=='reports' %}selected{% endif %}>Reports
+                    </option>
+                    <option value="commissions" {% if form.module_key.value=='commissions' %}selected{% endif %}>
+                        Commissions</option>
+                </select>
+                <div class="help-text">Choose the module you want to customize</div>
+                {% if form.module_key.errors %}
+                <div class="text-danger">{{ form.module_key.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Label Customization -->
+        <div class="form-section">
+            <h3>Custom Labels</h3>
+
+            <!-- Custom Label (Singular) -->
+            <div class="form-group">
+                <label for="custom_label" class="required">Custom Label (Singular)</label>
+                <input type="text" name="custom_label" id="custom_label" class="form-control"
+                    placeholder="e.g., Prospect, Deal, Client" value="{{ form.custom_label.value|default:'' }}"
+                    required>
+                <div class="help-text">What you want to call a single item (e.g., "Prospect" instead of "Lead")</div>
+                <div class="example-box">
+                    Example: "New <span id="preview-singular">Lead</span> created"
+                </div>
+                {% if form.custom_label.errors %}
+                <div class="text-danger">{{ form.custom_label.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Custom Label (Plural) -->
+            <div class="form-group">
+                <label for="custom_label_plural">Custom Label (Plural)</label>
+                <input type="text" name="custom_label_plural" id="custom_label_plural" class="form-control"
+                    placeholder="e.g., Prospects, Deals, Clients"
+                    value="{{ form.custom_label_plural.value|default:'' }}">
+                <div class="help-text">What you want to call multiple items (optional, will add 's' if not provided)
+                </div>
+                <div class="example-box">
+                    Example: "You have 5 <span id="preview-plural">Leads</span>"
+                </div>
+                {% if form.custom_label_plural.errors %}
+                <div class="text-danger">{{ form.custom_label_plural.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="btn-group">
+            <button type="submit" class="btn btn-primary">
+                Save Module Label
+            </button>
+            <a href="{% url 'settings_app:module_label_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const customLabelInput = document.getElementById('custom_label');
+        const customLabelPluralInput = document.getElementById('custom_label_plural');
+        const previewSingular = document.getElementById('preview-singular');
+        const previewPlural = document.getElementById('preview-plural');
+
+        // Update singular preview
+        customLabelInput.addEventListener('input', function () {
+            previewSingular.textContent = this.value || 'Lead';
+        });
+
+        // Update plural preview
+        customLabelPluralInput.addEventListener('input', function () {
+            previewPlural.textContent = this.value || 'Leads';
+        });
+
+        // Auto-generate plural if not provided
+        customLabelInput.addEventListener('blur', function () {
+            if (!customLabelPluralInput.value && this.value) {
+                const singular = this.value;
+                let plural = singular;
+
+                // Simple pluralization rules
+                if (singular.endsWith('y') && !/[aeiou]y$/i.test(singular)) {
+                    plural = singular.slice(0, -1) + 'ies';
+                } else if (singular.endsWith('s') || singular.endsWith('x') ||
+                    singular.endsWith('ch') || singular.endsWith('sh')) {
+                    plural = singular + 'es';
+                } else {
+                    plural = singular + 's';
+                }
+
+                customLabelPluralInput.value = plural;
+                customLabelPluralInput.placeholder = plural;
+                previewPlural.textContent = plural;
+            }
+        });
+
+        // Initialize previews
+        if (customLabelInput.value) {
+            previewSingular.textContent = customLabelInput.value;
+        }
+        if (customLabelPluralInput.value) {
+            previewPlural.textContent = customLabelPluralInput.value;
+        }
+    });
+</script>
+{% endblock %}

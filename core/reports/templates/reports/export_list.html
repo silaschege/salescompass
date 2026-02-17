@@ -1,0 +1,78 @@
+{% extends "reports/base.html" %}
+
+{% block title %}Report Exports - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Report Exports</h1>
+        <p class="text-white text-center lead">View and manage generated exports</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="d-flex justify-content-between mb-4">
+        <a href="{% url 'reports:report_list' %}" class="btn btn-outline-secondary">Back to Reports</a>
+    </div>
+
+    {% if exports %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Report</th>
+                    <th>Format</th>
+                    <th>By</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for export in exports %}
+                <tr>
+                    <td>
+                        <a href="{% url 'reports:report_detail' export.report.pk %}">
+                            {{ export.report.report_name }}
+                        </a>
+                    </td>
+                    <td>
+                        <span
+                            class="badge bg-{{ export.export_format_ref.format_name|lower|slice:':1' }}{% if export.export_format_ref.format_name == 'csv' %}secondary{% elif export.export_format_ref.format_name == 'xlsx' %}success{% else %}danger{% endif %}">
+                            {{ export.export_format_ref.label }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if export.created_by %}
+                        {{ export.created_by.email }}
+                        {% else %}
+                        <span class="text-muted">System</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if export.status == 'completed' %}
+                        <span class="badge bg-success">Completed</span>
+                        {% elif export.status == 'failed' %}
+                        <span class="badge bg-danger">Failed</span>
+                        {% else %}
+                        <span class="badge bg-warning">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ export.export_created_at|date:"M d, Y H:i" }}</td>
+                    <td>
+                        {% if export.file and export.status == 'completed' %}
+                        <a href="{{ export.file.url }}" class="btn btn-sm btn-outline-primary">Download</a>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">No exports found.</div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "feature_flags/base.html" %}
+
+{% block title %}Canary Releases{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Canary Releases</h1>
+    <p>Flags with specific targeting (early access)</p>
+
+    <div class="card">
+        <div class="card-body">
+            {% for flag in flags %}
+            <div class="mb-3">
+                <h5>{{ flag.name }} <span class="badge bg-info">{{ flag.target_count }} targets</span></h5>
+                <a href="{% url 'feature_flags:targeting_rules_detail' flag.pk %}"
+                    class="btn btn-sm btn-outline-primary">Manage Targets</a>
+            </div>
+            {% empty %}
+            <p class="text-muted">No canary releases configured.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

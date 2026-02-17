@@ -1,0 +1,97 @@
+{% extends 'leads/base.html' %}
+
+{% block title %}Web-to-Lead Forms{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-2">Web-to-Lead Forms</h1>
+            <p class="mb-4">Manage web forms for lead capture.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Web-to-Lead Forms</h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                            <div class="dropdown-header">Actions:</div>
+                            <a class="dropdown-item" href="{% url 'leads:web_to_lead_builder' %}">Create New Form</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="webToLeadTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Form Name</th>
+                                    <th>Created Date</th>
+                                    <th>Leads Captured</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>Contact Us Form</td>
+                                    <td>2023-01-15</td>
+                                    <td>42</td>
+                                    <td><span class="badge badge-success">Active</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">View</a>
+                                        <a href="#" class="btn btn-sm btn-info">Edit</a>
+                                        <a href="#" class="btn btn-sm btn-danger">Delete</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>Newsletter Signup</td>
+                                    <td>2023-02-20</td>
+                                    <td>127</td>
+                                    <td><span class="badge badge-success">Active</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">View</a>
+                                        <a href="#" class="btn btn-sm btn-info">Edit</a>
+                                        <a href="#" class="btn btn-sm btn-danger">Delete</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>Free Trial Request</td>
+                                    <td>2023-03-10</td>
+                                    <td>28</td>
+                                    <td><span class="badge badge-warning">Inactive</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">View</a>
+                                        <a href="#" class="btn btn-sm btn-info">Edit</a>
+                                        <a href="#" class="btn btn-sm btn-danger">Delete</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize DataTables
+    $(document).ready(function() {
+        $('#webToLeadTable').DataTable({
+            "pageLength": 25,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "communication/base.html" %}
+
+{% block title %}LinkedIn InMail - Communication{% endblock %}
+
+{% block comm_title %}🟦 LinkedIn InMail Tracking{% endblock %}
+{% block comm_subtitle %}Log and track your professional outreach on LinkedIn{% endblock %}
+
+{% block comm_actions %}
+<a href="{% url 'communication:unified_inbox' %}" class="btn btn-light fw-bold px-4 shadow-sm">
+    <i class="bi bi-arrow-left me-1"></i> Back to Inbox
+</a>
+{% endblock %}
+
+{% block comm_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="comm-card p-4">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">LinkedIn URL / Handle</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-linkedin text-info"></i></span>
+                        <input type="text" class="form-control" name="linkedin_handle"
+                            placeholder="https://www.linkedin.com/in/username" value="{{ request.GET.url }}">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Subject</label>
+                    <input type="text" class="form-control" name="subject" placeholder="InMail Subject">
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Message Content</label>
+                    <textarea class="form-control" name="message" rows="6"
+                        placeholder="Enter the content of your InMail message..."></textarea>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small text-muted">Lead / Account</label>
+                        <select class="form-select border-0 bg-light" name="related_lead">
+                            <option value="">-- None --</option>
+                            {% for lead in related_leads %}
+                            <option value="{{ lead.id }}">{{ lead.first_name }} {{ lead.last_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="track-replies" checked>
+                            <label class="form-check-label ms-2 small fw-bold" for="track-replies">Track Replies</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-3 mt-4">
+                    <button type="submit" class="btn btn-comm px-5 shadow-sm">
+                        <i class="bi bi-check2-circle me-2"></i> Log InMail
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

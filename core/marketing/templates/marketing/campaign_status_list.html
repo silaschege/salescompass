@@ -1,0 +1,56 @@
+{% extends "marketing/base.html" %}
+
+{% block title %}Campaign Statuses - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Campaign Statuses</h1>
+        <p class="text-white text-center lead">Manage campaign lifecycle stages and statuses</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <a href="{% url 'marketing:campaign_status_create' %}" class="btn btn-primary">+ New Status</a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Label</th>
+                            <th>Display Order</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for status in campaign_statuses %}
+                        <tr>
+                            <td>{{ status.name }}</td>
+                            <td>{{ status.label }}</td>
+                            <td>{{ status.display_order }}</td>
+                            <td>
+                                <a href="{% url 'marketing:campaign_status_update' status.pk %}"
+                                    class="btn btn-sm btn-outline-secondary">Edit</a>
+                                <a href="{% url 'marketing:campaign_status_delete' status.pk %}"
+                                    class="btn btn-sm btn-outline-danger">Delete</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">No statuses found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

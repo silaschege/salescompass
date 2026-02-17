@@ -1,0 +1,47 @@
+<!-- templates/marketing/campaign_performance_list.html -->
+{% extends "marketing/base.html" %}
+{%  load auth_extras filters_extras %}
+{% block content %}
+<h1>Campaign Performance Records</h1>
+
+<!-- Filter Form -->
+<form method="get" class="mb-3">
+    {{ filter_form.as_p }}
+    <button type="submit" class="btn btn-primary">Filter</button>
+</form>
+
+<!-- Performance Table -->
+{% if performances %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Campaign</th>
+                    <th>Date</th>
+                    <th>Open Rate</th>
+                    <th>Click Rate</th>
+                    <th>Revenue</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for perf in performances %}
+                <tr>
+                    <td>{{ perf.campaign.name }}</td>
+                    <td>{{ perf.date }}</td>
+                    <td>{{ perf.open_rate }}%</td>
+                    <td>{{ perf.click_rate }}%</td>
+                    <td>${{ perf.revenue_generated|intcomma }}</td>
+                    <td>
+                        <a href="{% url 'marketing:performance_detail' perf.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                        <a href="{% url 'marketing:performance_update' perf.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <p>No performance records found.</p>
+{% endif %}
+{% endblock %}

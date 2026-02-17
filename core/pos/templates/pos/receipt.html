@@ -1,0 +1,175 @@
+{% extends "pos/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Receipt {{ object.receipt_number }}{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .receipt-container {
+        max-width: 400px;
+        margin: 0 auto;
+        font-family: 'Courier New', monospace;
+    }
+
+    .receipt {
+        background: white;
+        padding: 20px;
+        border: 1px solid #ddd;
+    }
+
+    .receipt-header {
+        text-align: center;
+        border-bottom: 1px dashed #333;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+    }
+
+    .receipt-line-item {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .receipt-total {
+        border-top: 1px dashed #333;
+        padding-top: 10px;
+        margin-top: 10px;
+    }
+
+    .receipt-footer {
+        text-align: center;
+        border-top: 1px dashed #333;
+        padding-top: 10px;
+        margin-top: 10px;
+    }
+
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+
+        body {
+            background: white;
+        }
+
+        .receipt {
+            border: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block pos_content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <div>
+            <a href="{% url 'pos:transaction_detail' transaction.pk %}" class="text-decoration-none">
+                <i class="feather icon-arrow-left me-2"></i>Back to Transaction
+            </a>
+        </div>
+        <div>
+            <a href="{% url 'pos:receipt_preview' transaction.pk %}" target="_blank"
+                class="btn btn-outline-secondary me-2">
+                <i class="feather icon-eye me-2"></i>Preview (ESC/POS)
+            </a>
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="feather icon-printer me-2"></i>Print Receipt
+            </button>
+        </div>
+    </div>
+
+    <div class="receipt-container">
+        <div class="receipt shadow-sm">
+            <!-- Header -->
+            <div class="receipt-header">
+                <h4 class="mb-1">{{ request.user.tenant.tenant_name }}</h4>
+                <small>{{ request.user.tenant.address|default:"" }}</small>
+                <br>
+                <small>Tel: {{ request.user.tenant.phone|default:"" }}</small>
+            </div>
+
+            <!-- Receipt Info -->
+            <div class="mb-3" style="font-size: 12px;">
+                <div class="receipt-line-item">
+                    <span>Receipt #:</span>
+                    <span>{{ object.receipt_number }}</span>
+                </div>
+                <div class="receipt-line-item">
+                    <span>Date:</span>
+                    <span>{{ object.created_at|date:"M d, Y H:i" }}</span>
+                </div>
+                <div class="receipt-line-item">
+                    <span>Cashier:</span>
+                    <span>{{ transaction.cashier.get_full_name|default:transaction.cashier.username }}</span>
+                </div>
+                {% if transaction.customer or transaction.customer_name %}
+                <div class="receipt-line-item">
+                    <span>Customer:</span>
+                    <span>{{ transaction.customer.account_name|default:transaction.customer_name }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Items -->
+            <div style="border-top: 1px dashed #333; padding-top: 10px; margin-top: 10px;">
+                {% for line in lines %}
+                <div class="mb-2">
+                    <div>{{ line.product_name }}</div>
+                    <div class="receipt-line-item" style="font-size: 12px;">
+                        <span>{{ line.quantity }} x {{ line.unit_price|floatformat:2 }}</span>
+                        <span>{{ line.line_total|floatformat:2 }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Totals -->
+            <div class="receipt-total">
+                <div class="receipt-line-item">
+                    <span>Subtotal:</span>
+                    <span>{{ transaction.subtotal|floatformat:2 }}</span>
+                </div>
+                {% if transaction.discount_amount > 0 %}
+                <div class="receipt-line-item">
+                    <span>Discount:</span>
+                    <span>-{{ transaction.discount_amount|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+                {% if transaction.tax_amount > 0 %}
+                <div class="receipt-line-item">
+                    <span>Tax:</span>
+                    <span>{{ transaction.tax_amount|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+                <div class="receipt-line-item fw-bold" style="font-size: 18px;">
+                    <span>TOTAL:</span>
+                    <span>{{ transaction.total_amount|floatformat:2 }}</span>
+                </div>
+            </div>
+
+            <!-- Payments -->
+            <div style="border-top: 1px dashed #333; padding-top: 10px; margin-top: 10px; font-size: 12px;">
+                {% for payment in payments %}
+                <div class="receipt-line-item">
+                    <span>{{ payment.get_payment_method_display }}:</span>
+                    <span>{{ payment.amount|floatformat:2 }}</span>
+                </div>
+                {% endfor %}
+                {% if transaction.change_due > 0 %}
+                <div class="receipt-line-item fw-bold">
+                    <span>Change:</span>
+                    <span>{{ transaction.change_due|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Footer -->
+            <div class="receipt-footer">
+                <p class="mb-1">Thank you for your purchase!</p>
+                <small class="text-muted">{{ object.receipt_number }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

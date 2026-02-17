@@ -1,0 +1,446 @@
+{% extends "quality_control/base.html" %}
+
+{% block page_content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row align-items-center mb-4">
+        <div class="col-auto">
+            <a href="{% url 'quality_control:rule_list' %}" class="btn btn-light rounded-circle shadow-sm p-2">
+                <i class="bi bi-arrow-left" style="font-size: 1.2rem;"></i>
+            </a>
+        </div>
+        <div class="col">
+            <h3 class="fw-bold mb-0">{% if form.instance.pk %}Edit{% else %}Create{% endif %} Inspection Rule</h3>
+            <p class="text-muted small mb-0">Define quality standards and sampling plans for your products.</p>
+        </div>
+    </div>
+
+    <form method="post" id="inspection-rule-form">
+        {% csrf_token %}
+        <div class="row">
+            <!-- Main Content: General Info & Checklist -->
+            <div class="col-lg-8">
+                <!-- Section: General Details -->
+                <div class="card shadow-sm border-0 rounded-3 mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="m-0 font-weight-bold text-primary"><i class="bi bi-info-circle me-2"></i>General
+                            Details</h6>
+                    </div>
+                    <div class="card-body">
+                        {{ form.non_field_errors }}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small">Rule Name</label>
+                                {{ form.name }}
+                                <div class="text-muted extra-small mt-1">Gives this rule a descriptive name (e.g.,
+                                    "Standard Electronics QC")</div>
+                                {{ form.name.errors }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small">Product / SKU</label>
+                                {{ form.product }}
+                                <div class="text-muted extra-small mt-1">Select the product this rule applies to.</div>
+                                {{ form.product.errors }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Checklist Builder -->
+                <div class="card shadow-sm border-0 rounded-3 mb-4">
+                    <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary"><i class="bi bi-list-check me-2"></i>Checklist
+                            Items</h6>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-start-pill px-3"
+                                onclick="openLibraryModal()">
+                                <i class="bi bi-journal-plus me-1"></i> Load from Library
+                            </button>
+                            <button type="button" class="btn btn-sm btn-primary rounded-end-pill px-3"
+                                onclick="addChecklistItem()">
+                                <i class="bi bi-plus-lg me-1"></i> Add Item
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body bg-light-soft rounded-bottom-3" id="checklist-builder-container">
+                        <div id="items-container">
+                            <!-- Items injected here via JS -->
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="empty-state" class="text-center py-5 d-none">
+                            <i class="bi bi-clipboard-pulse display-4 text-muted mb-3 d-block"></i>
+                            <p class="text-muted mb-0">No checklist items defined. Add items to build your inspection
+                                form.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar: Strategy & Actions -->
+            <div class="col-lg-4">
+                <!-- Section: Inspection Strategy -->
+                <div class="card shadow-sm border-0 rounded-3 mb-4 border-start border-4 border-info">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="m-0 font-weight-bold text-dark"><i class="bi bi-gear me-2"></i>Inspection Strategy
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <div class="form-check form-switch custom-switch py-2 px-4 bg-light rounded-pill">
+                                {{ form.is_required_on_receipt }}
+                                <label class="form-check-label fw-bold small ms-2"
+                                    for="id_is_required_on_receipt">Required on Receipt</label>
+                            </div>
+                            <div class="text-muted extra-small mt-2">Automatically trigger inspection when items are
+                                received at warehouse.</div>
+                        </div>
+
+                        <hr class="my-4 opacity-10">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Sampling Plan</label>
+                            {{ form.sampling_type }}
+                        </div>
+
+                        <div id="aql_settings" class="d-none bg-info-soft p-3 rounded-3 mt-3">
+                            <h6 class="fw-bold small mb-3 text-info">AQL Configuration</h6>
+                            <div class="mb-3">
+                                <label class="form-label small">AQL Level (%)</label>
+                                {{ form.aql_level }}
+                            </div>
+                            <div class="mb-0">
+                                <label class="form-label small">Inspection Level</label>
+                                {{ form.inspection_level }}
+                            </div>
+                            <div
+                                class="bg-white p-2 rounded small mt-3 border border-info border-opacity-25 opacity-75">
+                                <i class="bi bi-info-circle me-1"></i> Uses ISO 2859-1 standards for sample size
+                                calculation.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Save Actions -->
+                <div class="card shadow-sm border-0 rounded-3 bg-white">
+                    <div class="card-body d-grid gap-2 p-4">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold py-2 shadow-sm">
+                            <i class="bi bi-check2-circle me-1"></i> Save Rule
+                        </button>
+                        <a href="{% url 'quality_control:rule_list' %}"
+                            class="btn btn-outline-light text-dark rounded-pill py-2">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden input for JSON data -->
+        <div class="d-none">
+            {{ form.check_list }}
+        </div>
+    </form>
+</div>
+
+<!-- Quality Check Library Modal -->
+<div class="modal fade" id="libraryModal" tabindex="-1" aria-labelledby="libraryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="libraryModalLabel"><i
+                        class="bi bi-journal-text text-primary me-2"></i>Import from Library</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <div class="input-group input-group-sm bg-light rounded-pill px-2 border">
+                        <span class="input-group-text bg-transparent border-0"><i
+                                class="bi bi-search text-muted"></i></span>
+                        <input type="text" id="library-search"
+                            class="form-control bg-transparent border-0 shadow-none py-2"
+                            placeholder="Search standard checks..." onkeyup="searchLibrary()">
+                    </div>
+                </div>
+                <div id="library-items-list" class="overflow-auto px-1" style="max-height: 400px;">
+                    <!-- Library items will be loaded here -->
+                    <div class="text-center py-4 text-muted">Loading standard checks...</div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4" onclick="importSelectedItems()">
+                    Import Selected (<span id="selected-count">0</span>)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-light-soft {
+        background-color: #f8f9fc;
+    }
+
+    .extra-small {
+        font-size: 0.75rem;
+    }
+
+    .checklist-item-card {
+        border: 1px solid rgba(0, 0, 0, .05);
+        transition: all 0.2s ease;
+    }
+
+    .checklist-item-card:hover {
+        background-color: #fff !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        border-color: #6f42c133;
+    }
+
+    .handle {
+        cursor: grab;
+        color: #ccc;
+    }
+
+    .handle:active {
+        cursor: grabbing;
+    }
+
+    .library-item:hover {
+        background-color: #f8f9fc;
+        cursor: pointer;
+    }
+
+    .bg-info-soft {
+        background-color: rgba(13, 202, 240, 0.1);
+    }
+</style>
+
+<script>
+    let checklistItems = [];
+    let libraryItems = [];
+    let selectedLibraryItems = new Set();
+
+    const container = document.getElementById('items-container');
+    const emptyState = document.getElementById('empty-state');
+    const hiddenInput = document.getElementById('id_check_list');
+    const libraryModal = new bootstrap.Modal(document.getElementById('libraryModal'));
+
+    // Load initial data
+    try {
+        const initialData = hiddenInput.value;
+        if (initialData) {
+            checklistItems = JSON.parse(initialData);
+        }
+    } catch (e) {
+        console.error("Error parsing checklist JSON", e);
+    }
+
+    function updateHiddenInput() {
+        hiddenInput.value = JSON.stringify(checklistItems);
+    }
+
+    function renderItems() {
+        container.innerHTML = '';
+        if (checklistItems.length === 0) {
+            emptyState.classList.remove('d-none');
+        } else {
+            emptyState.classList.add('d-none');
+            checklistItems.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'card mb-3 p-3 bg-white border-0 shadow-none checklist-item-card rounded-3';
+                div.innerHTML = `
+                    <div class="row g-3 align-items-center">
+                        <div class="col-auto">
+                            <span class="handle btn btn-sm btn-light border-0"><i class="bi bi-grip-vertical"></i></span>
+                        </div>
+                        <div class="col">
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control form-control-sm border-0 bg-light px-3 py-2 fw-medium" 
+                                        placeholder="Enter question or check item..." 
+                                        value="${item.label}" onchange="updateItem(${index}, 'label', this.value)">
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select form-select-sm border-0 bg-light px-3 py-2" 
+                                        onchange="updateItem(${index}, 'type', this.value)">
+                                        <option value="bool" ${item.type === 'bool' ? 'selected' : ''}>Pass/Fail</option>
+                                        <option value="number" ${item.type === 'number' ? 'selected' : ''}>Value Range</option>
+                                        <option value="text" ${item.type === 'text' ? 'selected' : ''}>Observations</option>
+                                        <option value="photo" ${item.type === 'photo' ? 'selected' : ''}>Visual Evidence</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-center">
+                                    <div class="form-check form-switch small ms-2">
+                                        <input class="form-check-input" type="checkbox" id="req_${index}" 
+                                            ${item.required ? 'checked' : ''} 
+                                            onchange="updateItem(${index}, 'required', this.checked)">
+                                        <label class="form-check-label text-muted" for="req_${index}">Required</label>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger border-0 rounded-circle ms-auto" 
+                                        onclick="removeItem(${index})" title="Remove">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+    }
+
+    function toggleAQL() {
+        const typeField = document.querySelector('[name="sampling_type"]');
+        if (!typeField) return;
+
+        const type = typeField.value;
+        const settings = document.getElementById('aql_settings');
+        if (type === 'acceptance_sampling') {
+            settings.classList.remove('d-none');
+            settings.classList.add('animate__animated', 'animate__fadeIn');
+        } else {
+            settings.classList.add('d-none');
+        }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        const typeField = document.querySelector('[name="sampling_type"]');
+        if (typeField) {
+            typeField.addEventListener('change', toggleAQL);
+        }
+        renderItems();
+        toggleAQL();
+    });
+
+    function addChecklistItem() {
+        checklistItems.push({
+            id: 'item_' + Date.now(),
+            label: '',
+            type: 'bool',
+            required: true
+        });
+        renderItems();
+        updateHiddenInput();
+
+        // Focus new input
+        setTimeout(() => {
+            const inputs = container.querySelectorAll('input[type="text"]');
+            if (inputs.length > 0) {
+                inputs[inputs.length - 1].focus();
+            }
+        }, 10);
+    }
+
+    function updateItem(index, key, value) {
+        checklistItems[index][key] = value;
+        updateHiddenInput();
+    }
+
+    function removeItem(index) {
+        if (confirm('Are you sure you want to remove this checklist item?')) {
+            checklistItems.splice(index, 1);
+            renderItems();
+            updateHiddenInput();
+        }
+    }
+
+    // Modal & Library Logic
+    async function openLibraryModal() {
+        libraryModal.show();
+        const listContainer = document.getElementById('library-items-list');
+
+        try {
+            const response = await fetch('{% url "quality_control:library_list_api" %}');
+            const data = await response.json();
+            libraryItems = data.items;
+            renderLibraryItems();
+        } catch (e) {
+            listContainer.innerHTML = '<div class="text-danger p-3">Failed to load library.</div>';
+        }
+    }
+
+    function renderLibraryItems(filter = '') {
+        const listContainer = document.getElementById('library-items-list');
+        listContainer.innerHTML = '';
+
+        const filtered = libraryItems.filter(item =>
+            item.label.toLowerCase().includes(filter.toLowerCase()) ||
+            (item.category && item.category.toLowerCase().includes(filter.toLowerCase()))
+        );
+
+        if (filtered.length === 0) {
+            listContainer.innerHTML = '<div class="text-center py-4 text-muted">No items found matching your search.</div>';
+            return;
+        }
+
+        filtered.forEach(item => {
+            const isSelected = selectedLibraryItems.has(item.id);
+            const div = document.createElement('div');
+            div.className = `p-3 rounded-3 mb-2 library-item d-flex align-items-center shadow-sm border ${isSelected ? 'border-primary bg-primary bg-opacity-10' : 'border-light font-weight-bold'}`;
+            div.onclick = () => toggleLibrarySelection(item.id);
+
+            div.innerHTML = `
+                <div class="form-check me-3">
+                    <input class="form-check-input" type="checkbox" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleLibrarySelection(${item.id})">
+                </div>
+                <div class="flex-grow-1">
+                    <div class="fw-bold small">${item.label}</div>
+                    <div class="extra-small text-muted">${item.category || 'General'} • ${item.type}</div>
+                </div>
+            `;
+            listContainer.appendChild(div);
+        });
+    }
+
+    function toggleLibrarySelection(id) {
+        if (selectedLibraryItems.has(id)) {
+            selectedLibraryItems.delete(id);
+        } else {
+            selectedLibraryItems.add(id);
+        }
+        document.getElementById('selected-count').innerText = selectedLibraryItems.size;
+        renderLibraryItems(document.getElementById('library-search').value);
+    }
+
+    function searchLibrary() {
+        const val = document.getElementById('library-search').value;
+        renderLibraryItems(val);
+    }
+
+    function importSelectedItems() {
+        const selected = libraryItems.filter(item => selectedLibraryItems.has(item.id));
+        selected.forEach(item => {
+            checklistItems.push({
+                id: 'lib_' + item.id + '_' + Date.now(),
+                label: item.label,
+                type: item.type,
+                required: true
+            });
+        });
+
+        renderItems();
+        updateHiddenInput();
+        libraryModal.hide();
+        selectedLibraryItems.clear();
+        document.getElementById('selected-count').innerText = '0';
+
+        // Notify user
+        const toast = document.createElement('div');
+        toast.className = 'position-fixed bottom-0 end-0 p-3';
+        toast.style.zIndex = '1060';
+        toast.innerHTML = `
+            <div class="toast show align-items-center text-white bg-success border-0 rounded-pill px-3 py-1" role="alert">
+                <div class="d-flex small">
+                    <div class="toast-body"><i class="bi bi-check-lg me-2"></i> Imported ${selected.length} items from library.</div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+</script>
+{% endblock %}

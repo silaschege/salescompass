@@ -1,0 +1,33 @@
+{% extends "inventory/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 text-primary">
+                        <i class="bi bi-arrow-left-right me-2"></i>Transfer Stock
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-4">
+                        Move stock from one warehouse to another. Both locations will be updated immediately.
+                    </p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{% url 'inventory:stock_list' %}" class="btn btn-light">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Transfer Stock</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

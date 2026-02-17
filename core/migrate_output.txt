@@ -1,0 +1,42 @@
+
+-----
+
+WeasyPrint could not import some external libraries. Please carefully follow the installation steps before reporting an issue:
+https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#installation
+https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#troubleshooting 
+
+-----
+
+Operations to perform:
+  Unapply all migrations: invoicing
+Traceback (most recent call last):
+  File "C:\Users\User\Documents\GitHub\salescompass-main\core\manage.py", line 21, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\core\manage.py", line 17, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\core\management\base.py", line 420, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\core\management\base.py", line 464, in execute
+    output = self.handle(*args, **options)
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\core\management\base.py", line 111, in wrapper
+    res = handle_func(*args, **kwargs)
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\core\management\commands\migrate.py", line 300, in handle
+    pre_migrate_apps = pre_migrate_state.apps
+                       ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\utils\functional.py", line 47, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\db\migrations\state.py", line 591, in apps
+    return StateApps(self.real_apps, self.models)
+  File "C:\Users\User\Documents\GitHub\salescompass-main\env\Lib\site-packages\django\db\migrations\state.py", line 662, in __init__
+    raise ValueError("\n".join(error.msg for error in errors))
+ValueError: The field projects.ProjectMilestone.invoice was declared with a lazy reference to 'billing.invoice', but app 'billing' doesn't provide model 'invoice'.

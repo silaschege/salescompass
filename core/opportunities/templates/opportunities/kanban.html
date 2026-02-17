@@ -1,0 +1,104 @@
+{% extends "opportunities/base.html" %}
+{% load stage_filters number_filters %}
+
+{% block title %}Opportunity Kanban - SalesCompass{% endblock %}
+
+{% block content %}
+<h1 class="block-title fw-bold mb-0">Sales Pipeline Kanban</h1>
+<p class="text-muted">Drag opportunities between stages.</p>
+
+<div id="kanban-board" class="d-flex flex-wrap gap-3">
+    {% for stage_code, stage_name in stage_choices %}
+    <div class="kanban-column" data-stage="{{ stage_code }}">
+        <div class="card bg-light">
+            <div class="card-header bg-{{ stage_code|stage_color }}">
+                <h5>{{ stage_name }}</h5>
+            </div>
+            <div class="card-body p-2">
+                {% for opportunity in opportunities %}
+                {% if opportunity.stage == stage_code %}
+                <div class="kanban-card" data-opportunity-id="{{ opportunity.id }}">
+                    <strong>{{ opportunity.name }}</strong><br>
+                    Account: {{ opportunity.account.name }}<br>
+                    Amount: ${{ opportunity.amount|intcomma }}<br>
+                    Weighted: ${{ opportunity.weighted_value|intcomma }}
+                    {% if opportunity.esg_tagged %}
+                    <br><span class="badge bg-success">🌱 ESG</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .kanban-column {
+        min-width: 280px;
+        flex: 1;
+    }
+
+    .kanban-card {
+        cursor: move;
+        background: white;
+        border-left: 4px solid #0d6efd;
+    }
+
+    .kanban-card.dragging {
+        opacity: 0.5;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Drag-and-drop logic
+        const cards = document.querySelectorAll('.kanban-card');
+        cards.forEach(card => {
+            card.addEventListener('dragstart', e => {
+                card.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            card.addEventListener('dragend', () => {
+                card.classList.remove('dragging');
+            });
+        });
+
+        const columns = document.querySelectorAll('.kanban-column');
+        columns.forEach(col => {
+            col.addEventListener('dragover', e => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            });
+            col.addEventListener('drop', e => {
+                e.preventDefault();
+                const dragged = document.querySelector('.kanban-card.dragging');
+                if (dragged) {
+                    col.querySelector('.card-body').appendChild(dragged);
+                    const oppId = dragged.dataset.opportunityId;
+                    const stage = col.dataset.stage;
+                    updateOpportunityStage(oppId, stage);
+                }
+            });
+        });
+
+        function updateOpportunityStage(oppId, stage) {
+            const url = '{% url "opportunities:update_stage" 0 %}'.replace('0', oppId);
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ opportunity_id: oppId, stage: stage })
+            })
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success) alert('Update failed: ' + (data.error || 'Unknown error'));
+                })
+                .catch(err => alert('Network error: ' + err));
+        }
+    });
+</script>
+{% endblock %}

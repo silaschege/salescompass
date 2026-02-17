@@ -1,0 +1,52 @@
+{% extends "settings_app/base.html" %}
+
+{% block title %}API Keys - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">API Keys</h1>
+        <p class="text-white text-center lead">Manage API access keys</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Keys</h2>
+        <a href="{% url 'settings_app:apikey_create' %}" class="btn btn-primary">+ Generate Key</a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            {% if object_list %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Prefix</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for key in object_list %}
+                        <tr>
+                            <td>{{ key.name }}</td>
+                            <td>{{ key.prefix }}...</td>
+                            <td>{{ key.created_at|date }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-danger">Revoke</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No API keys found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

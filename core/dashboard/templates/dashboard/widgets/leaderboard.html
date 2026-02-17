@@ -1,0 +1,45 @@
+<div class="card h-100">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Sales Leaderboard</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Rep</th>
+                        <th class="text-end pe-4">Revenue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for leader in leaders %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                {% if leader.avatar %}
+                                <img src="{{ leader.avatar }}" class="rounded-circle me-2" width="32" height="32">
+                                {% else %}
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2"
+                                    style="width: 32px; height: 32px;">
+                                    {{ leader.name|first|upper }}
+                                </div>
+                                {% endif %}
+                                <span class="fw-medium">{{ leader.name }}</span>
+                            </div>
+                        </td>
+                        <td class="text-end pe-4 fw-bold text-success">
+                            ${{ leader.revenue|floatformat:0 }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-center text-muted py-4">
+                            No sales data found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

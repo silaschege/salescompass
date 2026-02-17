@@ -1,0 +1,81 @@
+{% extends "opportunities/base.html" %}
+{% load humanize %}
+
+{% block title %}Sales Forecast Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-0">Sales Forecast</h1>
+        <p class="text-muted">Expected revenue based on pipeline probability</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        {% include "components/_kpi_card.html" with title="Total Pipeline Value"
+        value="$"|add:forecast_data.total_pipeline|floatformat:0 icon="bi-briefcase" color="primary" %}
+    </div>
+    <div class="col-md-4">
+        {% include "components/_kpi_card.html" with title="Weighted Forecast"
+        value="$"|add:forecast_data.weighted_forecast|floatformat:0 icon="bi-bullseye" color="success" %}
+    </div>
+    <div class="col-md-4">
+        {% include "components/_kpi_card.html" with title="Forecast Accuracy"
+        value=forecast_accuracy|default:"0"|add:"%" icon="bi-check-circle" color="info" %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Pipeline by Stage</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Stage</th>
+                                <th class="text-end">Deals</th>
+                                <th class="text-end">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stage in stage_summary %}
+                            <tr>
+                                <td>{{ stage.name }} ({{ stage.probability }}%)</td>
+                                <td class="text-end">{{ stage.count }}</td>
+                                <td class="text-end">${{ stage.value|floatformat:0|intcomma }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Top Opportunities in Forecast</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for opp in top_deals %}
+                    <a href="{% url 'opportunities:opportunity_detail' opp.pk %}"
+                        class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1 text-dark">{{ opp.opportunity_name }}</h6>
+                            <span class="fw-bold">${{ opp.amount|floatformat:0|intcomma }}</span>
+                        </div>
+                        <small class="text-muted">{{ opp.account.account_name }} | {{ opp.stage.name }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

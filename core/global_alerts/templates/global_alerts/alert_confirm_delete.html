@@ -1,0 +1,24 @@
+{% extends "global_alerts/base.html" %}
+
+{% block title %}Delete Alert{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Delete Alert</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i>
+                Are you sure you want to delete the alert "<strong>{{ object.title }}</strong>"?
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                <a href="{% url 'global_alerts:alert_list' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'core/base_module.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    /* Premium Suppliers Theme */
+    :root {
+        --supplier-primary: #0d6efd;
+        --supplier-accent: #198754;
+        --supplier-bg: #f8fafc;
+    }
+
+    .nav-icon {
+        margin-right: 0.75rem;
+        font-size: 1.15rem;
+        width: 1.5rem;
+        text-align: center;
+        transition: transform 0.2s ease;
+    }
+
+    .nav-link:hover .nav-icon {
+        transform: scale(1.1);
+    }
+
+    .sidebar-section-title {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05rem;
+        color: #94a3b8;
+        padding: 1.5rem 1rem 0.5rem;
+        font-weight: 700;
+    }
+</style>
+{% endblock %}
+
+{% block module_nav %}
+<div class="sidebar-section-title">Suppliers</div>
+
+<a class="nav-link {% if request.resolver_match.url_name == 'supplier_list' %}active{% endif %}"
+    href="{% url 'suppliers:supplier_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-building nav-icon"></i>
+        <span>All Suppliers</span>
+    </div>
+</a>
+
+<a class="nav-link {% if request.resolver_match.url_name == 'supplier_create' %}active{% endif %}"
+    href="{% url 'suppliers:supplier_create' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-plus-circle nav-icon"></i>
+        <span>Add Supplier</span>
+    </div>
+</a>
+
+<div class="sidebar-section-title">Classification</div>
+
+<a class="nav-link {% if request.resolver_match.url_name == 'category_list' %}active{% endif %}"
+    href="{% url 'suppliers:category_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-tags nav-icon"></i>
+        <span>Categories</span>
+    </div>
+</a>
+
+<a class="nav-link {% if request.resolver_match.url_name == 'category_create' %}active{% endif %}"
+    href="{% url 'suppliers:category_create' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-plus-circle nav-icon"></i>
+        <span>Add Category</span>
+    </div>
+</a>
+
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    {% block module_content %}{% endblock %}
+</div>
+{% endblock %}

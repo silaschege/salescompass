@@ -1,0 +1,116 @@
+{% extends "inventory/base.html" %}
+
+{% block title %}Receive Transfer{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-1">
+                            <li class="breadcrumb-item"><a href="{% url 'inventory:transfer_list' %}"
+                                    class="text-decoration-none">Transfers</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'inventory:transfer_detail' transfer.pk %}"
+                                    class="text-decoration-none">{{ transfer.transfer_number }}</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Receive</li>
+                        </ol>
+                    </nav>
+                    <h1 class="h3 mb-0">Receive Stock</h1>
+                </div>
+                <a href="{% url 'inventory:transfer_detail' transfer.pk %}" class="btn btn-light border shadow-sm">
+                    <i class="bi bi-x-lg me-1"></i>Cancel
+                </a>
+            </div>
+
+            <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-4">
+                <i class="bi bi-info-circle-fill fs-4 me-3"></i>
+                <div>
+                    <strong>Verification Required:</strong> Please verify the physical quantities received before
+                    confirming.
+                    Stock will be added to <strong>{{ transfer.destination_warehouse.warehouse_name }}</strong>.
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h6 class="mb-0 fw-bold">Items to Receive</h6>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Product Details</th>
+                                    <th class="text-end">Shipped</th>
+                                    <th class="text-end" width="120">Received</th>
+                                    <th width="200">Dest. Location</th>
+                                    <th class="pe-4" width="250">Tracking (SNs)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for line in lines %}
+                                <tr>
+                                    <td class="ps-4 align-top py-3">
+                                        <div class="fw-bold text-dark">{{ line.product.product_name }}</div>
+                                        <div class="small text-muted">{{ line.product.sku }}</div>
+                                        {% if line.product.has_serial_numbers %}
+                                        <span class="badge bg-info-soft text-info mt-1">Serial Tracking</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end align-top py-3">
+                                        <span class="badge bg-light text-dark border px-3 rounded-pill">{{
+                                            line.quantity_shipped|floatformat:2 }}</span>
+                                    </td>
+                                    <td class="text-end align-top py-3 fst-italic">
+                                        <input type="number" step="0.01" name="qty_{{ line.id }}"
+                                            class="form-control form-control-sm text-end fw-bold border-primary shadow-sm"
+                                            value="{{ line.quantity_shipped }}" min="0">
+                                    </td>
+                                    <td class="align-top py-3">
+                                        <select name="location_{{ line.id }}"
+                                            class="form-select form-select-sm border-primary-soft shadow-sm fst-italic">
+                                            <option value="">-- Default --</option>
+                                            {% for loc in locations %}
+                                            <option value="{{ loc.id }}" {% if line.to_location_id==loc.id %}selected{%
+                                                endif %}>
+                                                {{ loc.location_code }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td class="pe-4 align-top py-3">
+                                        {% if line.product.has_serial_numbers %}
+                                        <textarea name="sns_{{ line.id }}"
+                                            class="form-control form-control-sm border-primary" rows="2"
+                                            placeholder="Confirm serial numbers">{{ line.serial_numbers }}</textarea>
+                                        {% else %}
+                                        <div class="small text-muted text-center py-2">N/A</div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer bg-light border-0 py-3 text-end">
+                        <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm">
+                            <i class="bi bi-check-lg me-2"></i>Confirm Receipt
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .breadcrumb-item+.breadcrumb-item::before {
+        content: "›";
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "marketing/base.html" %}
+{% load static %}
+
+{% block title %}Campaign ROI Calculator - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Campaign ROI Calculator</h4>
+                    <p class="card-category">Calculate potential return on investment for your marketing campaigns</p>
+                </div>
+                <div class="card-body">
+                    <form id="roi-calculator-form">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="campaign_cost">Campaign Cost ($)</label>
+                                    <input type="number" step="0.01" class="form-control" id="campaign_cost" name="campaign_cost" placeholder="Enter total campaign cost" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="expected_leads">Expected Number of Leads</label>
+                                    <input type="number" class="form-control" id="expected_leads" name="expected_leads" placeholder="Enter expected number of leads" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="conversion_rate">Conversion Rate (%)</label>
+                                    <input type="number" step="0.01" class="form-control" id="conversion_rate" name="conversion_rate" placeholder="Enter expected conversion rate" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="avg_deal_value">Average Deal Value ($)</label>
+                                    <input type="number" step="0.01" class="form-control" id="avg_deal_value" name="avg_deal_value" placeholder="Enter average deal value" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Calculate ROI</button>
+                    </form>
+                    
+                    <div id="results-section" class="mt-4" style="display: none;">
+                        <h5>Results</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Expected Revenue:</strong></td>
+                                        <td id="expected-revenue"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Expected Profit:</strong></td>
+                                        <td id="expected-profit"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>ROI:</strong></td>
+                                        <td id="roi-result"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('roi-calculator-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Get form data
+    const formData = new FormData(this);
+    
+    // Send AJAX request
+    fetch('{% url "marketing:roi_calculator_api" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('expected-revenue').textContent = '$' + data.expected_revenue.toFixed(2);
+            document.getElementById('expected-profit').textContent = '$' + data.expected_profit.toFixed(2);
+            document.getElementById('roi-result').textContent = data.roi.toFixed(2) + '%';
+            document.getElementById('results-section').style.display = 'block';
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while calculating ROI.');
+    });
+});
+</script>
+{% endblock %}

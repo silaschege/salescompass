@@ -1,0 +1,108 @@
+{% extends 'tenants/base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2 class="fw-bold"><i class="bi bi-gear-wide-connected me-2 text-primary"></i>Workflow Executions</h2>
+            <p class="text-muted">Track the progress of lifecycle workflows running across tenants.</p>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm glass-card">
+        <div class="card-body p-4">
+            {% if executions %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light border-0">
+                        <tr>
+                            <th class="border-0">Workflow</th>
+                            <th class="border-0">Tenant</th>
+                            <th class="border-0">Progress</th>
+                            <th class="border-0">Status</th>
+                            <th class="border-0">Started</th>
+                            <th class="border-0">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-0">
+                        {% for execution in executions %}
+                        <tr class="border-bottom">
+                            <td>
+                                <div class="fw-bold text-dark">{{ execution.workflow.name }}</div>
+                                <div class="text-xs text-muted">{{ execution.workflow.get_workflow_type_display }}</div>
+                            </td>
+                            <td>{{ execution.tenant.name }}</td>
+                            <td style="width: 200px;">
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1 shadow-none"
+                                        style="height: 6px; background-color: rgba(0,0,0,0.05);">
+                                        <div class="progress-bar bg-primary rounded-pill" role="progressbar"
+                                            style="width: {% if execution.total_steps %}{{ execution.current_step|add:execution.total_steps|div:execution.total_steps|mul:100 }}{% else %}0{% endif %}%">
+                                        </div>
+                                    </div>
+                                    <span class="ms-2 small text-muted">{{ execution.current_step }}/{{
+                                        execution.total_steps }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                {% if execution.status == 'completed' %}
+                                <span class="badge bg-success-soft text-success px-3 py-2 rounded-pill">Completed</span>
+                                {% elif execution.status == 'failed' %}
+                                <span class="badge bg-danger-soft text-danger px-3 py-2 rounded-pill">Failed</span>
+                                {% elif execution.status == 'in_progress' %}
+                                <span class="badge bg-primary-soft text-primary px-3 py-2 rounded-pill">In
+                                    Progress</span>
+                                {% else %}
+                                <span class="badge bg-light text-dark px-3 py-2 rounded-pill border">{{
+                                    execution.status|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="text-dark">{{ execution.started_at|date:"M d, Y" }}</div>
+                                <div class="text-muted small">{{ execution.started_at|time:"H:i" }}</div>
+                            </td>
+                            <td>
+                                <a href="{% url 'tenants:workflow_execution_detail' execution.id %}"
+                                    class="btn btn-sm btn-light border-0 rounded-pill px-3">
+                                    View Log
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="display-4 text-muted mb-3"><i class="bi bi-activity"></i></div>
+                <h5>No workflow executions found</h5>
+                <p class="text-muted">Lifecycle workflows will appear here once they are triggered.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-success-soft {
+        background-color: rgba(25, 135, 84, 0.1);
+    }
+
+    .bg-danger-soft {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+
+    .bg-primary-soft {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .text-xs {
+        font-size: 0.75rem;
+    }
+</style>
+{% endblock %}

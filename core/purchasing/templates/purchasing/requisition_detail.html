@@ -1,0 +1,209 @@
+{% extends "purchasing/base.html" %}
+{% load humanize %}
+
+{% block purchasing_content %}
+<div class="animate-fade-in p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item small"><a href="{% url 'purchasing:requisition_list' %}"
+                            class="text-decoration-none text-muted">Purchase Requisitions</a></li>
+                    <li class="breadcrumb-item active small text-primary fw-bold" aria-current="page">#{{ requisition.requisition_number }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3 fw-bold mb-0">Requisition Summary</h1>
+        </div>
+        <div class="d-flex gap-2">
+            {% if requisition.status == 'draft' %}
+            <a href="{% url 'purchasing:requisition_update' requisition.pk %}" class="btn btn-light px-4 border">
+                <i class="bi bi-pencil me-2"></i> Edit
+            </a>
+            <form action="{% url 'purchasing:requisition_detail' requisition.pk %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="submit">
+                <button type="submit" class="btn btn-primary px-4 shadow-sm border-0">
+                    <i class="bi bi-send me-2"></i> Submit for Approval
+                </button>
+            </form>
+            {% endif %}
+
+            {% if requisition.status == 'pending' %}
+            <form action="{% url 'purchasing:requisition_detail' requisition.pk %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="approve">
+                <button type="submit" class="btn btn-success px-4 shadow-sm border-0">
+                    <i class="bi bi-check-circle me-2"></i> Approve
+                </button>
+            </form>
+            <button type="button" class="btn btn-danger px-4 shadow-sm border-0" data-bs-toggle="modal"
+                data-bs-target="#rejectModal">
+                <i class="bi bi-x-circle me-2"></i> Reject
+            </button>
+            {% endif %}
+
+            {% if requisition.status == 'approved' %}
+            <a href="{% url 'purchasing:requisition_convert' requisition.pk %}"
+                class="btn btn-primary px-4 shadow-sm border-0">
+                <i class="bi bi-arrow-repeat me-2"></i> Convert to PO
+            </a>
+            {% endif %}
+
+            <button onclick="window.print();" class="btn btn-outline-secondary px-3">
+                <i class="bi bi-printer"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-lg-8">
+            <div class="premium-card p-0 overflow-hidden mb-4 border-0 shadow-sm">
+                <div class="bg-light p-3 d-flex justify-content-between align-items-center border-bottom">
+                    <h6 class="mb-0 fw-bold">Requested Items</h6>
+                    <span
+                        class="badge {% if requisition.status == 'approved' %}badge-soft-success{% elif requisition.status == 'pending' %}badge-soft-warning{% elif requisition.status == 'ordered' %}badge-soft-info{% else %}badge-soft-danger{% endif %} px-3 rounded-pill">{{ requisition.get_status_display }}</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="bg-light bg-opacity-50 small text-uppercase">
+                            <tr>
+                                <th class="ps-4">Product</th>
+                                <th class="text-center">Quantity</th>
+                                <th class="text-end">Est. Unit Price</th>
+                                <th class="pe-4 text-end">Line Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for line in requisition.lines.all %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">{{ line.product.product_name }}</div>
+                                    <div class="text-muted extra-small">SKU: {{ line.product.sku }}</div>
+                                </td>
+                                <td class="text-center">{{ line.quantity }}</td>
+                                <td class="text-end">${{ line.estimated_unit_price|floatformat:2 }}</td>
+                                <td class="pe-4 text-end fw-bold">${{ line.line_total|floatformat:2|intcomma }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="bg-light bg-opacity-50">
+                            <tr>
+                                <td colspan="3" class="ps-4 text-end fw-bold py-3">Total Estimated Amount:</td>
+                                <td class="pe-4 text-end h5 fw-bold text-primary py-3 mb-0">${{requisition.total_amount|floatformat:2|intcomma }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            {% if requisition.notes %}
+            <div class="premium-card p-4 border-0 shadow-sm">
+                <h6 class="fw-bold mb-3">Additional Notes</h6>
+                <p class="text-muted small mb-0">{{ requisition.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <div class="premium-card p-4 border-0 shadow-sm mb-4">
+                <h6 class="fw-bold mb-4">Request Information</h6>
+                <div class="mb-3">
+                    <div class="small text-muted mb-1">Requested By</div>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-person-circle me-2 text-primary"></i>
+                        <span class="small fw-semibold">{{ requisition.requested_by.get_full_name|default:requisition.requested_by.username }}</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="small text-muted mb-1">Department</div>
+                    <div class="small fw-semibold">{{ requisition.department.name|default:"Not Specified" }}</div>
+                </div>
+                <div class="border-top pt-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Date Requested</span>
+                        <span class="small fw-bold">{{ requisition.date_requested|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Date Required</span>
+                        <span class="small fw-bold">{{ requisition.date_required|date:"M d, Y"|default:"-" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Priority</span>
+                        <span
+                            class="badge {% if requisition.priority == 'urgent' %}bg-danger{% elif requisition.priority == 'high' %}bg-warning{% else %}bg-info{% endif %} px-2">{{ requisition.get_priority_display }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="premium-card p-4 border-0 shadow-sm">
+                <h6 class="fw-bold mb-3">Audit Trail</h6>
+                {% if requisition.approved_by %}
+                <div class="mb-3">
+                    <div class="small text-muted mb-1">Approved By</div>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-shield-check me-2 text-success"></i>
+                        <span class="small fw-semibold">{{ requisition.approved_by.get_full_name|default:requisition.approved_by.username }}</span>
+                    </div>
+                    <div class="extra-small text-muted ms-4">on {{ requisition.approval_date|date:"M d, Y H:i" }}</div>
+                </div>
+                {% endif %}
+                {% if requisition.rejection_reason %}
+                <div class="alert alert-danger border-0 shadow-sm small py-2 mb-0 mt-3">
+                    <div class="fw-bold mb-1">Rejection Reason:</div>
+                    {{ requisition.rejection_reason }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Reject Requisition</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{% url 'purchasing:requisition_detail' requisition.pk %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reject">
+                <div class="modal-body py-4">
+                    <label class="form-label small fw-bold text-muted">Reason for Rejection</label>
+                    <textarea name="rejection_reason" class="form-control" rows="3" required
+                        placeholder="Enter why this requisition is being rejected..."></textarea>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4"
+                        data-bs-modal="dismiss">Cancel</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4 shadow-sm">Reject Requisition</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .extra-small {
+        font-size: 0.725rem;
+    }
+
+    @media print {
+
+        .btn,
+        .breadcrumb,
+        .sidebar,
+        .sidebar-wrapper,
+        .modal {
+            display: none !important;
+        }
+
+        .purchasing-wrapper {
+            padding: 0 !important;
+            width: 100% !important;
+            margin: 0 !important;
+        }
+    }
+</style>
+{% endblock %}

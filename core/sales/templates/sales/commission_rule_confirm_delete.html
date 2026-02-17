@@ -1,0 +1,37 @@
+{% extends "sales/base.html" %}
+
+{% block sales_content %}
+<div class="row justify-content-center p-4">
+    <div class="col-lg-6">
+        <div class="premium-card p-5 border-0 shadow-sm text-center">
+            <div class="bg-danger-soft text-danger rounded-circle p-4 d-inline-block mb-4">
+                <i class="bi bi-exclamation-octagon h1 mb-0"></i>
+            </div>
+            <h2 class="h4 fw-bold mb-3">Retire Commission Rule?</h2>
+            <p class="text-muted mb-5">
+                You are about to delete <strong>{{ object.name }}</strong>.
+                This action will prevent future commissions from being calculated using this logic. Past commission
+                records will remain unaffected.
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex flex-column gap-3">
+                    <button type="submit" class="btn btn-danger py-2 shadow-sm border-0 rounded-pill">
+                        Confirm Deletion
+                    </button>
+                    <a href="{% url 'sales:rule_list' %}" class="btn btn-link text-muted text-decoration-none">
+                        Keep Rule
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-danger-soft {
+        background-color: rgba(220, 38, 38, 0.05);
+    }
+</style>
+{% endblock %}

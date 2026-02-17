@@ -1,0 +1,152 @@
+{% extends "quality_control/base.html" %}
+
+{% block page_content %}
+<div class="card">
+    <div class="card-header">
+        <h3>Update Non-Conformance Report</h3>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <strong>Source:</strong> {{ object.inspection_log.source_reference }}<br>
+            <strong>Issue:</strong> {{ object.issue_description }}
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <div class="mb-3">
+                <label class="form-label">Root Cause Analysis</label>
+                {{ form.root_cause }}
+                {{ form.root_cause.errors }}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Action Taken</label>
+                {{ form.action_taken }}
+                {{ form.action_taken.errors }}
+            </div>
+
+            <hr>
+            <h4>Root Cause Analysis (RCA)</h4>
+            <div class="mb-3">
+                <label class="form-label">RCA Method</label>
+                {{ form.rca_type }}
+                {{ form.rca_type.errors }}
+            </div>
+
+            <!-- 5 Whys UI -->
+            <div id="rca_5_whys" class="rca-section d-none border p-3 rounded mb-3 bg-light">
+                <h5>5 Whys Analysis</h5>
+                <p class="small text-muted">Identify the root cause by asking "Why?" repeatedly.</p>
+                <div id="whys_container">
+                    <div class="mb-2">
+                        <label class="small">1. Why did this happen?</label>
+                        <input type="text" class="form-control form-control-sm why-input" data-index="1">
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-info" onclick="addWhy()">+ Add "Why"</button>
+            </div>
+
+            <!-- Fishbone UI -->
+            <div id="rca_fishbone" class="rca-section d-none border p-3 rounded mb-3 bg-light">
+                <h5>Fishbone (Ishikawa) Diagram</h5>
+                <div class="row g-2">
+                    {% for cat in "Man,Method,Machine,Material,Measurement,Environment"|split:"," %}
+                    <div class="col-md-6 mb-2">
+                        <label class="small">{{ cat }}</label>
+                        <textarea class="form-control form-control-sm fishbone-input" data-category="{{ cat }}"
+                            rows="2"></textarea>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {{ form.rca_data }}
+
+            <div class="mb-3">
+                <label class="form-label">Resolved At</label>
+                {{ form.resolved_at }}
+                {{ form.resolved_at.errors }}
+                <small class="text-muted">Leave blank if still pending.</small>
+            </div>
+
+            <button type="submit" class="btn btn-primary" onclick="prepareRCAData()">Update NCR</button>
+            <a href="{% url 'quality_control:ncr_list' %}" class="btn btn-secondary">Back to List</a>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleRCAUI(method) {
+        document.querySelectorAll('.rca-section').forEach(el => el.classList.add('d-none'));
+        if (method === '5_whys') {
+            document.getElementById('rca_5_whys').classList.remove('d-none');
+        } else if (method === 'fishbone') {
+            document.getElementById('rca_fishbone').classList.remove('d-none');
+        }
+    }
+
+    function addWhy() {
+        const container = document.getElementById('whys_container');
+        const index = container.children.length + 1;
+        if (index > 5) return; // Limit to 5 whys
+        const div = document.createElement('div');
+        div.className = 'mb-2';
+        div.innerHTML = `<label class="small">${index}. Why did that happen?</label>
+                         <input type="text" class="form-control form-control-sm why-input" data-index="${index}">`;
+        container.appendChild(div);
+    }
+
+    function prepareRCAData() {
+        const method = document.querySelector('[name="rca_type"]').value;
+        let data = {};
+        if (method === '5_whys') {
+            data.whys = Array.from(document.querySelectorAll('#rca_5_whys .why-input')).map(i => i.value);
+        } else if (method === 'fishbone') {
+            data.categories = {};
+            document.querySelectorAll('#rca_fishbone .fishbone-input').forEach(i => {
+                data.categories[i.dataset.category] = i.value;
+            });
+        }
+        document.querySelector('[name="rca_data"]').value = JSON.stringify(data);
+    }
+
+    // Initialize on load
+    window.onload = function () {
+        const rcaTypeSelect = document.querySelector('[name="rca_type"]');
+        const currentMethod = rcaTypeSelect.value;
+        toggleRCAUI(currentMethod);
+
+        // Load existing data if any
+        const existingDataVal = document.querySelector('[name="rca_data"]').value;
+        if (existingDataVal) {
+            try {
+                const data = JSON.parse(existingDataVal);
+                if (currentMethod === '5_whys' && data.whys) {
+                    const container = document.getElementById('whys_container');
+                    container.innerHTML = ''; // Clear initial "Why"
+                    data.whys.forEach((val, i) => {
+                        const div = document.createElement('div');
+                        div.className = 'mb-2';
+                        div.innerHTML = `<label class="small">${i + 1}. Why?</label>
+                                         <input type="text" class="form-control form-control-sm why-input" value="${val}" data-index="${i + 1}">`;
+                        container.appendChild(div);
+                    });
+                } else if (currentMethod === 'fishbone' && data.categories) {
+                    document.querySelectorAll('#rca_fishbone .fishbone-input').forEach(i => {
+                        i.value = data.categories[i.dataset.category] || '';
+                    });
+                }
+            } catch (e) {
+                console.error("Error parsing existing RCA data:", e);
+            }
+        }
+
+        // Add event listener for RCA type change
+        rcaTypeSelect.addEventListener('change', function () {
+            toggleRCAUI(this.value);
+        });
+    }
+</script>
+{% endblock %}

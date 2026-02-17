@@ -1,0 +1,36 @@
+{% if is_dynamic %}
+<div class="card widget-dynamic h-100">
+    <div class="card-body d-flex flex-column justify-content-center align-items-center text-center">
+        <h6 class="text-muted mb-3">{{ dynamic_data.label }}</h6>
+        <h2 class="display-4 fw-bold text-primary mb-0">{{ dynamic_data.value }}</h2>
+        {% if dynamic_data.filters_applied > 0 %}
+        <small class="text-muted mt-2">
+            <i class="bi bi-funnel"></i> {{ dynamic_data.filters_applied }} filter{{
+            dynamic_data.filters_applied|pluralize }} applied
+        </small>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="card widget-marketing h-100">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-megaphone"></i> Marketing</h5>
+        <span class="badge bg-primary">{{ active_campaigns }} Active</span>
+    </div>
+    <div class="card-body">
+        <div class="row text-center mb-3">
+            <div class="col-6">
+                <h4 class="fw-bold">{{ total_emails_sent }}</h4>
+                <small class="text-muted">Emails Sent</small>
+            </div>
+            <div class="col-6">
+                <h4 class="fw-bold text-success">{{ open_rate }}%</h4>
+                <small class="text-muted">Open Rate</small>
+            </div>
+        </div>
+        <div class="d-grid">
+            <a href="/marketing/" class="btn btn-outline-primary btn-sm">Campaigns</a>
+        </div>
+    </div>
+</div>
+{% endif %}

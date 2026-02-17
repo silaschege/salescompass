@@ -1,0 +1,93 @@
+{% extends 'tenants/base.html' %}
+
+{% block title %}{{ title }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card shadow-lg border-0">
+        <div class="card-header bg-gradient text-white"
+          style="background: linear-gradient(135deg, #6f42c1 0%, #8e5ed9 100%);">
+          <h4 class="mb-0">{{ title }}</h4>
+          <small class="text-light opacity-75">{{ subtitle }}</small>
+        </div>
+        <div class="card-body">
+          <!-- Progress Bar -->
+          <div class="progress mb-3" style="height: 8px;">
+            <div class="progress-bar bg-success" role="progressbar" style="width: {{ progress }}%"
+              aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100">
+            </div>
+          </div>
+
+          <!-- Step Indicators -->
+          <div class="d-flex justify-content-between mb-4">
+            {% for i in "1234567" %}
+            <div class="text-center">
+              <div
+                class="rounded-circle d-inline-flex align-items-center justify-content-center 
+                   {% if forloop.counter < step %}bg-success text-white{% elif forloop.counter == step %}bg-primary text-white{% else %}bg-light text-muted{% endif %}"
+                style="width: 32px; height: 32px; font-size: 0.875rem; font-weight: 600;">
+                {% if forloop.counter < step %} <i class="bi bi-check"></i>
+                  {% else %}
+                  {{ forloop.counter }}
+                  {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="step-content">
+            {% block step_content %}
+            {% endblock %}
+          </div>
+        </div>
+        <div class="card-footer bg-light border-0">
+          <div class="d-flex justify-content-between">
+            {% if step > 1 %}
+            {% if step == 2 %}
+            <a href="{% url 'tenants:onboarding_welcome' %}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left me-1"></i> Back
+            </a>
+            {% elif step == 3 %}
+            <a href="{% url 'tenants:onboarding_admin_setup' %}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left me-1"></i> Back
+            </a>
+            {% elif step == 4 %}
+            <a href="{% url 'tenants:onboarding_tenant_info' %}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left me-1"></i> Back
+            </a>
+            {% elif step == 5 %}
+            <a href="{% url 'tenants:onboarding_plan_selection' %}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left me-1"></i> Back
+            </a>
+            {% elif step == 6 %}
+            <a href="{% url 'tenants:onboarding_subdomain' %}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left me-1"></i> Back
+            </a>
+            {% elif step == 7 %}
+            <a href="{% url 'tenants:onboarding_data_residency' %}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left me-1"></i> Back
+            </a>
+            {% endif %}
+            {% else %}
+            <div></div>
+            {% endif %}
+
+            {% block next_button %}
+            {% if step < total_steps %} <a href="{% url 'tenants:onboarding_tenant_info' %}" class="btn btn-primary">
+              Next <i class="bi bi-arrow-right ms-1"></i>
+              </a>
+              {% else %}
+              <a href="{% url 'tenants:onboarding_complete' %}" class="btn btn-success">
+                <i class="bi bi-check-circle me-1"></i> Finish Setup
+              </a>
+              {% endif %}
+              {% endblock %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

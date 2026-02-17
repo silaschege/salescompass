@@ -1,0 +1,212 @@
+{% extends "nps/base.html" %}
+
+{% block title %}Promoter Advocacy - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Promoter Advocacy</h1>
+        <p class="text-white text-center lead">Track and engage your promoters</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4>Promoter Summary</h4>
+                    <p>Total Promoters: <strong>{{ total_promoters }}</strong></p>
+                    <p>Referral Opportunities: <strong>{{ referral_opportunities_count }}</strong></p>
+                    <a href="{% url 'nps:promoter_referrals' %}" class="btn btn-primary">Manage Referrals</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex gap-2">
+                <a href="{% url 'nps:nps_dashboard' %}" class="btn btn-outline-primary">Dashboard</a>
+                <a href="{% url 'nps:nps_trend_charts' %}" class="btn btn-outline-primary">Trend Charts</a>
+                <a href="{% url 'nps:nps_responses' %}" class="btn btn-outline-primary">All Responses</a>
+                <a href="{% url 'nps:detractor_kanban' %}" class="btn btn-outline-danger">Detractor Alerts</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Segmentation Analysis -->
+    <div class="row mb-4">
+        <!-- By Role -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Promoters by Role</h5>
+                </div>
+                <div class="card-body">
+                    {% if role_segments %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Role</th>
+                                        <th>Count</th>
+                                        <th>% of Promoters</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for role, data in role_segments.items %}
+                                    <tr>
+                                        <td>{{ role }}</td>
+                                        <td>{{ data.count }}</td>
+                                        <td>{{ data.percentage }}%</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No role segmentation data available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- By Territory -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Promoters by Territory</h5>
+                </div>
+                <div class="card-body">
+                    {% if territory_segments %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Territory</th>
+                                        <th>Count</th>
+                                        <th>% of Promoters</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for territory, data in territory_segments.items %}
+                                    <tr>
+                                        <td>{{ territory }}</td>
+                                        <td>{{ data.count }}</td>
+                                        <td>{{ data.percentage }}%</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No territory segmentation data available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Referral Opportunities -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Top Referral Opportunities</h5>
+                </div>
+                <div class="card-body">
+                    {% if referral_opportunities %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Account</th>
+                                        <th>Score</th>
+                                        <th>Comment</th>
+                                        <th>Survey</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for opportunity in referral_opportunities %}
+                                    <tr class="table-success">
+                                        <td>{{ opportunity.account.email }}</td>
+                                        <td>
+                                            <span class="badge bg-success">{{ opportunity.score }}</span>
+                                        </td>
+                                        <td>{{ opportunity.comment|truncatewords:10 }}</td>
+                                        <td>{{ opportunity.survey.nps_survey_name }}</td>
+                                        <td>{{ opportunity.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <form method="post" action="{% url 'nps:create_promoter_referral' opportunity.pk %}" style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-primary">Request Referral</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No high-value referral opportunities identified.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Promoter List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>All Promoters</h5>
+                </div>
+                <div class="card-body">
+                    {% if promoters %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Account</th>
+                                        <th>Score</th>
+                                        <th>Comment</th>
+                                        <th>Survey</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for promoter in promoters %}
+                                    <tr class="table-success">
+                                        <td>{{ promoter.account.email }}</td>
+                                        <td>
+                                            <span class="badge bg-success">{{ promoter.score }}</span>
+                                        </td>
+                                        <td>{{ promoter.comment|truncatewords:10 }}</td>
+                                        <td>{{ promoter.survey.nps_survey_name }}</td>
+                                        <td>{{ promoter.created_at|date:"M d, Y" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No promoters found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "learn/base.html" %}
+{% load static %}
+
+{% block title %}Course Catalog - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container text-center">
+        <h1 class="block-title">Course Catalog</h1>
+        <p class="text-white lead">Level up your skills with our structured learning paths</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="btn-group" role="group">
+                <a href="{% url 'learn:course_list' %}"
+                    class="btn btn-outline-primary {% if not request.GET.category %}active{% endif %}">All</a>
+                {% for category in categories %}
+                <a href="?category={{ category.id }}"
+                    class="btn btn-outline-primary {% if request.GET.category == category.id|stringformat:'i' %}active{% endif %}">
+                    {{ category.category_name }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-md-4">
+            <form method="get" action="{% url 'learn:search' %}">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="Search courses...">
+                    <button class="btn btn-primary" type="submit">Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for course in courses %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 course-card">
+                {% if course.thumbnail %}
+                <img src="{{ course.thumbnail.url }}" class="card-img-top" alt="{{ course.title }}">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                    style="height: 160px;">
+                    <i class="fas fa-book fa-3x text-muted"></i>
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <div class="mb-2">
+                        <span class="badge bg-info text-dark">{{ course.category.category_name }}</span>
+                        {% if course.estimated_duration %}
+                        <small class="text-muted ms-2"><i class="far fa-clock"></i> {{ course.estimated_duration
+                            }}</small>
+                        {% endif %}
+                    </div>
+                    <h5 class="card-title">{{ course.title }}</h5>
+                    <p class="card-text text-muted">{{ course.description|truncatewords:20 }}</p>
+                </div>
+                <div class="card-footer bg-white border-top-0">
+                    <a href="{% url 'learn:course_detail' course.slug %}" class="btn btn-primary w-100">View Course</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <h3>No courses available yet.</h3>
+            <p class="text-muted">Check back later for new learning content.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <nav aria-label="Course pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link"
+                    href="?page={{ page_obj.previous_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">Previous</a>
+            </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link"
+                    href="?page={{ page_obj.next_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<style>
+    .course-card {
+        transition: transform 0.2s;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .course-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .header-bar {
+        background: linear-gradient(135deg, #6f42c1 0%, #007bff 100%);
+        padding: 60px 0;
+        color: white;
+    }
+</style>
+{% endblock %}

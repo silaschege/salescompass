@@ -1,0 +1,28 @@
+{% extends "global_alerts/base.html" %}
+
+{% block title %}Active Alerts{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Currently Active Alerts</h1>
+
+    <div class="card">
+        <div class="card-body">
+            {% for alert in alerts %}
+            <div class="alert {{ alert.css_class }} alert-dismissible">
+                <strong>{{ alert.get_severity_display }}: {{ alert.title }}</strong><br>
+                {{ alert.message }}<br>
+                <small class="text-muted">{{ alert.get_alert_type_display }} | {% if alert.is_global %}Global{% else
+                    %}Tenant-Specific{% endif %}</small>
+                <div class="mt-2">
+                    <a href="{% url 'global_alerts:alert_detail' alert.pk %}"
+                        class="btn btn-sm btn-outline-primary">View</a>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">No active alerts.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

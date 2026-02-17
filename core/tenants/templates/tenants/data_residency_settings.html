@@ -1,0 +1,197 @@
+
+{% extends 'tenants/base.html' %}
+
+{% block title %}Data Residency Settings{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h4 class="page-title">Data Residency Settings</h4>
+                <p class="text-muted font-14">
+                    Configure where your data is stored and processed to meet compliance requirements.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.primary_region.id_for_label }}" class="form-label">Primary Region</label>
+                                    {{ form.primary_region }}
+                                    <div class="form-text">{{ form.primary_region.help_text }}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.data_retention_period_months.id_for_label }}" class="form-label">Data Retention Period (months)</label>
+                                    {{ form.data_retention_period_months }}
+                                    <div class="form-text">{{ form.data_retention_period_months.help_text }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Allowed Regions</label>
+                            {{ form.allowed_regions }}
+                            <div class="form-text">{{ form.allowed_regions.help_text }}</div>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            {{ form.is_active }}
+                            <label for="{{ form.is_active.id_for_label }}" class="form-check-label">
+                                {{ form.is_active.label }}
+                            </label>
+                            <div class="form-text">{{ form.is_active.help_text }}</div>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            {{ form.encryption_enabled }}
+                            <label for="{{ form.encryption_enabled.id_for_label }}" class="form-check-label">
+                                {{ form.encryption_enabled.label }}
+                            </label>
+                            <div class="form-text">{{ form.encryption_enabled.help_text }}</div>
+                        </div>
+                        
+                        {% if form.encryption_enabled.value %}
+                        <div class="row" id="encryption-key-settings" style="display: {% if form.encryption_enabled.value %}block{% else %}none{% endif %};">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.encryption_key_location.id_for_label }}" class="form-label">Encryption Key Location</label>
+                                    {{ form.encryption_key_location }}
+                                    <div class="form-text">{{ form.encryption_key_location.help_text }}</div>
+                                </div>
+                            </div>
+                            
+                            {% if form.encryption_key_location.value == 'specific_region' %}
+                            <div class="col-md-6" id="encryption-key-region-field" style="display: block;">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.encryption_key_region.id_for_label }}" class="form-label">Encryption Key Region</label>
+                                    {{ form.encryption_key_region }}
+                                    <div class="form-text">{{ form.encryption_key_region.help_text }}</div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="col-md-6" id="encryption-key-region-field" style="display: {% if form.encryption_key_location.value == 'specific_region' %}block{% else %}none{% endif %};">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.encryption_key_region.id_for_label }}" class="form-label">Encryption Key Region</label>
+                                    {{ form.encryption_key_region }}
+                                    <div class="form-text">{{ form.encryption_key_region.help_text }}</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <div class="row" id="encryption-key-settings" style="display: none;">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.encryption_key_location.id_for_label }}" class="form-label">Encryption Key Location</label>
+                                    {{ form.encryption_key_location }}
+                                    <div class="form-text">{{ form.encryption_key_location.help_text }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6" id="encryption-key-region-field" style="display: {% if form.encryption_key_location.value == 'specific_region' %}block{% else %}none{% endif %};">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.encryption_key_region.id_for_label }}" class="form-label">Encryption Key Region</label>
+                                    {{ form.encryption_key_region }}
+                                    <div class="form-text">{{ form.encryption_key_region.help_text }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="form-check mb-3">
+                            {{ form.gdpr_compliant }}
+                            <label for="{{ form.gdpr_compliant.id_for_label }}" class="form-check-label">
+                                {{ form.gdpr_compliant.label }}
+                            </label>
+                            <div class="form-text">{{ form.gdpr_compliant.help_text }}</div>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            {{ form.hipaa_compliant }}
+                            <label for="{{ form.hipaa_compliant.id_for_label }}" class="form-check-label">
+                                {{ form.hipaa_compliant.label }}
+                            </label>
+                            <div class="form-text">{{ form.hipaa_compliant.help_text }}</div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Backup Regions</label>
+                            {{ form.backup_regions }}
+                            <div class="form-text">{{ form.backup_regions.help_text }}</div>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            {{ form.allow_cross_region_transfer }}
+                            <label for="{{ form.allow_cross_region_transfer.id_for_label }}" class="form-check-label">
+                                {{ form.allow_cross_region_transfer.label }}
+                            </label>
+                            <div class="form-text">{{ form.allow_cross_region_transfer.help_text }}</div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.export_format.id_for_label }}" class="form-label">Export Format</label>
+                                    {{ form.export_format }}
+                                    <div class="form-text">{{ form.export_format.help_text }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.legal_requirements.id_for_label }}" class="form-label">{{ form.legal_requirements.label }}</label>
+                            {{ form.legal_requirements }}
+                            <div class="form-text">{{ form.legal_requirements.help_text }}</div>
+                        </div>
+                        
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">Save Settings</button>
+                            <a href="{% url 'dashboard:cockpit' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Toggle encryption key settings based on encryption_enabled checkbox
+    document.addEventListener('DOMContentLoaded', function() {
+        const encryptionEnabled = document.getElementById('{{ form.encryption_enabled.id_for_label }}');
+        const encryptionKeySettings = document.getElementById('encryption-key-settings');
+        const encryptionKeyLocation = document.getElementById('{{ form.encryption_key_location.id_for_label }}');
+        const encryptionKeyRegionField = document.getElementById('encryption-key-region-field');
+        
+        // Show/hide encryption settings based on checkbox
+        encryptionEnabled.addEventListener('change', function() {
+            if (this.checked) {
+                encryptionKeySettings.style.display = 'block';
+            } else {
+                encryptionKeySettings.style.display = 'none';
+            }
+        });
+        
+        // Show/hide encryption key region field based on location selection
+        encryptionKeyLocation.addEventListener('change', function() {
+            if (this.value === 'specific_region') {
+                encryptionKeyRegionField.style.display = 'block';
+            } else {
+                encryptionKeyRegionField.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}

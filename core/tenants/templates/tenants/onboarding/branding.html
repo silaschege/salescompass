@@ -1,0 +1,74 @@
+{% extends 'tenants/onboarding/base.html' %}
+
+{% block step_content %}
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label for="logoUpload" class="form-label">Upload Logo</label>
+    <input type="file" class="form-control" id="logoUpload" name="logo" accept="image/*">
+    <div class="form-text">Upload your company logo (PNG, JPG, or SVG). Recommended size: 200x80px.</div>
+  </div>
+
+  <div class="mb-3">
+    <label for="primaryColor" class="form-label">Primary Brand Color</label>
+    <input type="color" class="form-control form-control-color" id="primaryColor" name="primary_color" value="#6f42c1">
+    <div class="form-text">Choose your primary brand color.</div>
+  </div>
+
+  <div class="mb-3">
+    <label for="secondaryColor" class="form-label">Secondary Brand Color</label>
+    <input type="color" class="form-control form-control-color" id="secondaryColor" name="secondary_color"
+      value="#007bff">
+    <div class="form-text">Choose your secondary brand color.</div>
+  </div>
+
+  <div class="mb-3">
+    <label for="timezone" class="form-label">Timezone</label>
+    <select class="form-select" id="timezone" name="timezone">
+      <option value="UTC">UTC</option>
+      <option value="US/Eastern">US/Eastern</option>
+      <option value="US/Central">US/Central</option>
+      <option value="US/Mountain">US/Mountain</option>
+      <option value="US/Pacific">US/Pacific</option>
+      <option value="Europe/London">Europe/London</option>
+      <option value="Europe/Paris">Europe/Paris</option>
+      <option value="Asia/Tokyo">Asia/Tokyo</option>
+      <option value="Asia/Shanghai">Asia/Shanghai</option>
+      <option value="Asia/Kolkata">Asia/Kolkata</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="dateFormat" class="form-label">Date Format</label>
+    <select class="form-select" id="dateFormat" name="date_format">
+      <option value="%Y-%m-%d">YYYY-MM-DD (ISO)</option>
+      <option value="%m/%d/%Y">MM/DD/YYYY (US)</option>
+      <option value="%d/%m/%Y">DD/MM/YYYY (EU)</option>
+      <option value="%m-%d-%Y">MM-DD-YYYY (US)</option>
+      <option value="%d-%m-%Y">DD-MM-YYYY (EU)</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="currency" class="form-label">Default Currency</label>
+    <select class="form-select" id="currency" name="currency">
+      <option value="USD">US Dollar (USD)</option>
+      <option value="EUR">Euro (EUR)</option>
+      <option value="GBP">British Pound (GBP)</option>
+      <option value="JPY">Japanese Yen (JPY)</option>
+      <option value="CAD">Canadian Dollar (CAD)</option>
+      <option value="AUD">Australian Dollar (AUD)</option>
+      <option value="CHF">Swiss Franc (CHF)</option>
+      <option value="CNY">Chinese Yuan (CNY)</option>
+      <option value="INR">Indian Rupee (INR)</option>
+      <option value="KES">Kenyan Shilling (KES)</option>
+    </select>
+  </div>
+  <div class="d-flex justify-content-between mt-4">
+    <a href="{% url 'tenants:onboarding_data_residency' %}" class="btn btn-outline-secondary">← Back</a>
+    <button type="submit" class="btn btn-primary">Next Step →</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block next_button %}{% endblock %}

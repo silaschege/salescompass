@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}SalesCompass - Intelligent CRM for California Sales Teams{% endblock %}</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Permanent+Marker&display=swap"
+    rel="stylesheet">
+  {% load static %}
+
+  <!-- SalesCompass Design System -->
+  <link href="{% static 'core/css/public-design-system.css' %}" rel="stylesheet">
+
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-enhanced sticky-top">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'core:home' %}">
+        <div class="app-icon app-icon-sm m-0">
+          <i class="bi bi-compass-fill"></i>
+        </div>
+        <span class="text-primary fw-extrabold" style="letter-spacing: -0.04em;">SalesCompass</span>
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto align-items-center gap-lg-4">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'core:product_public' %}">Products</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'core:solutions' %}">Solutions</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'core:pricing' %}">Pricing</a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Resources
+            </a>
+            <ul class="dropdown-menu border-0 shadow-xl rounded-4 mt-2 p-2 card-clean">
+              <li><a class="dropdown-item py-2 rounded-3" href="{% url 'core:customers' %}">Customers</a></li>
+              <li><a class="dropdown-item py-2 rounded-3" href="{% url 'core:company' %}">Company</a></li>
+              <li><a class="dropdown-item py-2 rounded-3" href="{% url 'core:support' %}">Support</a></li>
+              <li><a class="dropdown-item py-2 rounded-3" href="{% url 'core:integrations' %}">Integrations</a></li>
+              <li><a class="dropdown-item py-2 rounded-3" href="{% url 'core:api_docs' %}">API Docs</a></li>
+            </ul>
+          </li>
+          <li class="nav-item ms-lg-2">
+            <a class="nav-link fw-bold" href="{% url 'core:login' %}">Log In</a>
+          </li>
+          <li class="nav-item">
+            <a class="btn btn-primary btn-sm px-4" href="{% url 'core:try_free' %}">Start now - It's free</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="flex-grow-1">
+    {% if messages %}
+    <div class="container mt-4">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3 shadow-sm border-0" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer-dark">
+    <div class="container">
+      <div class="row gy-5">
+        <div class="col-lg-4">
+          <a href="{% url 'core:home' %}" class="d-flex align-items-center mb-4 text-decoration-none">
+            <div class="app-icon app-icon-sm m-0 me-2">
+              <i class="bi bi-compass-fill"></i>
+            </div>
+            <span class="fs-4 fw-extrabold text-white">SalesCompass</span>
+          </a>
+          <p class="mb-4 small" style="max-width: 320px; line-height: 1.8;">
+            The intelligent CRM platform that unifies your entire sales motion.
+            Automate, analyze, and accelerate your revenue with SalesCompass.
+          </p>
+          <div class="d-flex gap-3">
+            <a href="#" class="fs-5"><i class="bi bi-twitter"></i></a>
+            <a href="#" class="fs-5"><i class="bi bi-linkedin"></i></a>
+            <a href="#" class="fs-5"><i class="bi bi-github"></i></a>
+          </div>
+        </div>
+        <div class="col-6 col-md-3 col-lg-2">
+          <h6>Platform</h6>
+          <ul class="list-unstyled d-flex flex-column gap-2 mb-0 small">
+            <li><a href="{% url 'core:product_public' %}">Features</a></li>
+            <li><a href="{% url 'core:pricing' %}">Pricing</a></li>
+            <li><a href="{% url 'core:integrations' %}">Integrations</a></li>
+            <li><a href="{% url 'core:api_docs' %}">API Documentation</a></li>
+          </ul>
+        </div>
+        <div class="col-6 col-md-3 col-lg-2">
+          <h6>Company</h6>
+          <ul class="list-unstyled d-flex flex-column gap-2 mb-0 small">
+            <li><a href="{% url 'core:company' %}">About Us</a></li>
+            <li><a href="#">Careers</a></li>
+            <li><a href="#">Blog</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </div>
+        <div class="col-6 col-md-3 col-lg-2">
+          <h6>Support</h6>
+          <ul class="list-unstyled d-flex flex-column gap-2 mb-0 small">
+            <li><a href="{% url 'core:support' %}">Help Center</a></li>
+            <li><a href="{% url 'core:api_docs' %}">Developer Docs</a></li>
+            <li><a href="#">Community</a></li>
+            <li><a href="#">Status</a></li>
+          </ul>
+        </div>
+        <div class="col-6 col-md-3 col-lg-2">
+          <h6>Legal</h6>
+          <ul class="list-unstyled d-flex flex-column gap-2 mb-0 small">
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+            <li><a href="#">Security</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="row pt-5 mt-5 border-top border-secondary border-opacity-25">
+        <div class="col-md-6 text-center text-md-start small">
+          &copy; {% now "Y" %} SalesCompass Inc. Join 15 million happy users.
+        </div>
+        <div class="col-md-6 text-center text-md-end small">
+          Made in Kenya with <i class="bi bi-heart-fill text-danger mx-1"></i>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+
+</html>

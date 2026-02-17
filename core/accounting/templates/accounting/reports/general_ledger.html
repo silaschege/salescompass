@@ -1,0 +1,157 @@
+{% extends "accounting/base.html" %}
+
+{% block accounting_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">General Ledger</h6>
+        <div class="dropdown no-arrow">
+            <button class="btn btn-secondary btn-sm" onclick="window.print()">
+                <i class="fas fa-print fa-sm text-white-50"></i> Print
+            </button>
+            <button class="btn btn-success btn-sm" onclick="document.getElementById('export-form').submit()">
+                <i class="fas fa-download fa-sm text-white-50"></i> Export CSV
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Filter Form -->
+        <form class="row mb-4" method="get" id="filter-form">
+            <div class="col-md-3">
+                <label class="small">Fiscal Year</label>
+                <select name="fiscal_year" class="form-control form-control-sm" onchange="this.form.submit()">
+                    <option value="">Custom Period...</option>
+                    {% for fy in fiscal_years %}
+                    <option value="{{ fy.id }}" {% if selected_fiscal_year.id == fy.id %}selected{% endif %}>
+                        {{ fy.name }} ({{ fy.start_date|date:"Y" }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="small">Start Date</label>
+                <input type="date" name="start_date" class="form-control form-control-sm"
+                    value="{{ start_date|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-3">
+                <label class="small">End Date</label>
+                <input type="date" name="end_date" class="form-control form-control-sm"
+                    value="{{ end_date|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-3">
+                <label class="small">Account</label>
+                <select name="account_id" class="form-control form-control-sm">
+                    <option value="">All Accounts</option>
+                    {% for acc in accounts %}
+                    <option value="{{ acc.id }}" {% if selected_account_id == acc.id %}selected{% endif %}>
+                        {{ acc.account_code }} - {{ acc.account_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-12 mt-2 text-right">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-filter"></i> Generate Report
+                </button>
+            </div>
+        </form>
+
+        <!-- Hidden Form for Export to preserve filters -->
+        <form id="export-form" method="get" style="display: none;">
+            <input type="hidden" name="format" value="csv">
+            <input type="hidden" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
+            <input type="hidden" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
+            <input type="hidden" name="account_id" value="{{ selected_account_id|default:'' }}">
+            <input type="hidden" name="fiscal_year" value="{{ selected_fiscal_year.id|default:'' }}">
+        </form>
+
+        <hr>
+
+        <!-- Report Data -->
+        {% if report_data %}
+        {% for account_data in report_data %}
+        <div class="mb-5">
+            <h5 class="font-weight-bold text-gray-800 border-bottom pb-2">
+                {{ account_data.account.account_code }} - {{ account_data.account.account_name }}
+            </h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm table-hover">
+                    <thead class="bg-light">
+                        <tr>
+                            <th style="width: 15%;">Date</th>
+                            <th style="width: 15%;">Reference</th>
+                            <th>Description</th>
+                            <th class="text-right" style="width: 12%;">Debit</th>
+                            <th class="text-right" style="width: 12%;">Credit</th>
+                            <th class="text-right" style="width: 12%;">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-light font-weight-bold">
+                            <td colspan="5" class="text-right">Opening Balance</td>
+                            <td class="text-right">{{ account_data.opening_balance|floatformat:2 }}</td>
+                        </tr>
+                        {% for entry in account_data.entries %}
+                        <tr>
+                            <td>{{ entry.date|date:"Y-m-d" }}</td>
+                            <td>
+                                <a href="{% url 'accounting:journal_detail' entry.journal_id %}" target="_blank">
+                                    {{ entry.number }}
+                                </a>
+                            </td>
+                            <td>{{ entry.description }}</td>
+                            <td class="text-right">{% if entry.debit %}{{ entry.debit|floatformat:2 }}{% endif %}</td>
+                            <td class="text-right">{% if entry.credit %}{{ entry.credit|floatformat:2 }}{% endif %}</td>
+                            <td class="text-right">{{ entry.balance|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted font-italic">No transactions in this period.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        <tr class="bg-light font-weight-bold">
+                            <td colspan="5" class="text-right">Closing Balance</td>
+                            <td class="text-right">{{ account_data.closing_balance|floatformat:2 }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="text-center py-5">
+            <div class="mb-3">
+                <i class="fas fa-book fa-3x text-gray-300"></i>
+            </div>
+            <h5 class="text-gray-600">No data found</h5>
+            <p class="text-muted">Select filters and generate the report to see the General Ledger.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    @media print {
+
+        .sidebar,
+        .topbar,
+        .btn,
+        form {
+            display: none !important;
+        }
+
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .card-header {
+            display: none !important;
+        }
+
+        body {
+            background-color: white !important;
+        }
+    }
+</style>
+{% endblock %}

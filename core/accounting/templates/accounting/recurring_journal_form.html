@@ -1,0 +1,42 @@
+{% extends "accounting/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block accounting_content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">{% if form.instance.pk %}Edit{% else %}New{% endif %} Recurring Template</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">{{ form.name|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.frequency|as_crispy_field }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">{{ form.start_date|as_crispy_field }}</div>
+                        <div class="col-md-4">{{ form.end_date|as_crispy_field }}</div>
+                        <div class="col-md-4">{{ form.next_run_date|as_crispy_field }}</div>
+                    </div>
+                    {{ form.description|as_crispy_field }}
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Advanced Configuration:</strong> Manual lines data (JSON) goes here.
+                        In a full implementation, this would be an inline formset.
+                    </div>
+                    {{ form.lines_data|as_crispy_field }}
+                    {{ form.is_active|as_crispy_field }}
+
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <a href="{% url 'accounting:recurring_journal_list' %}" class="btn btn-light">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save Template</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

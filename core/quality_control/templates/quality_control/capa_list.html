@@ -1,0 +1,60 @@
+{% extends "quality_control/base.html" %}
+
+{% block page_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">Corrective and Preventive Actions (CAPA)</h6>
+        <a href="{% url 'quality_control:capa_create' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus"></i> New CAPA
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="bg-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Assigned To</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for capa in capas %}
+                    <tr>
+                        <td>CAPA-{{ capa.id|stringformat:"04d" }}</td>
+                        <td>
+                            <span
+                                class="badge {% if capa.capa_type == 'corrective' %}bg-info{% else %}bg-primary{% endif %}">
+                                {{ capa.get_capa_type_display }}
+                            </span>
+                        </td>
+                        <td>{{ capa.title }}</td>
+                        <td>
+                            <span
+                                class="badge {% if capa.status == 'proposed' %}bg-secondary{% elif capa.status == 'in_progress' %}bg-warning{% elif capa.status == 'verification' %}bg-info{% else %}bg-success{% endif %}">
+                                {{ capa.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ capa.assigned_to.get_full_name|default:capa.assigned_to.username|default:"Unassigned" }}
+                        </td>
+                        <td>
+                            <a href="{% url 'quality_control:capa_update' capa.pk %}"
+                                class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">No CAPA records found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

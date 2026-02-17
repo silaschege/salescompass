@@ -1,0 +1,90 @@
+<!-- Customer Selection Modal -->
+<div class="modal fade" id="customerModal" tabindex="-1" aria-labelledby="customerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0"
+                style="background: linear-gradient(135deg, var(--pos-dark) 0%, var(--pos-dark-accent) 100%); color: #fff;">
+                <h5 class="modal-title font-weight-bold" id="customerModalLabel">
+                    <i class="feather icon-user me-2 text-warning"></i>Select Customer
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Customer Search -->
+                <div class="mb-4">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="feather icon-search text-muted"></i>
+                        </span>
+                        <input type="text" id="customer-search" class="form-control border-start-0 ps-0"
+                            placeholder="Search by name, phone, or email...">
+                    </div>
+                </div>
+
+                <!-- Search Results -->
+                <div id="customer-search-results" class="customer-list" style="max-height: 300px; overflow-y: auto;">
+                    <div class="text-center text-muted py-4">
+                        <i class="feather icon-search fa-2x mb-2 opacity-50"></i>
+                        <p>Start typing to search customers</p>
+                    </div>
+                </div>
+
+                <hr class="my-3">
+
+                <!-- Walk-in Customer Quick Add -->
+                <div class="walk-in-section">
+                    <h6 class="mb-3">Or add walk-in customer details:</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="walkin-name" class="form-label">Name <small
+                                    class="text-muted">(optional)</small></label>
+                            <input type="text" class="form-control" id="walkin-name" placeholder="Customer name">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="walkin-phone" class="form-label">Phone <small
+                                    class="text-muted">(optional)</small></label>
+                            <input type="tel" class="form-control" id="walkin-phone" placeholder="+254...">
+                        </div>
+                        <div class="col-12">
+                            <label for="walkin-email" class="form-label">Email <small
+                                    class="text-muted">(optional)</small></label>
+                            <input type="email" class="form-control" id="walkin-email" placeholder="customer@email.com">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary btn-lg" id="skip-customer-btn"
+                    data-bs-dismiss="modal">
+                    <i class="bi bi-person-x me-1"></i>Skip
+                </button>
+                <button type="button" class="btn btn-primary btn-lg px-4 shadow-sm" id="save-customer-btn"
+                    style="background: var(--pos-primary) !important; border: none !important;">
+                    <i class="bi bi-check2-circle me-1"></i>Save & Continue
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Item Template (hidden, used by JS) -->
+<template id="customer-item-template">
+    <div class="customer-item p-3 border-bottom cursor-pointer" data-customer-id="">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <div class="fw-bold customer-name"></div>
+                <small class="text-muted">
+                    <span class="customer-phone"></span>
+                    {% if customer.email %}
+                    <span class="mx-1">•</span>
+                    <span class="customer-email"></span>
+                    {% endif %}
+                </small>
+            </div>
+            <div class="text-end">
+                <span class="badge bg-primary-subtle text-primary customer-type"></span>
+            </div>
+        </div>
+    </div>
+</template>

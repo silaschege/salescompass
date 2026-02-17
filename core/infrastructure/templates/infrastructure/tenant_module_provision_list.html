@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tenant Module Provisions{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>Tenant Module Provisions</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'infrastructure:infrastructure_dashboard' %}">Infrastructure</a></li>
+                    <li class="breadcrumb-item active">Tenant Module Provisions</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <a href="{% url 'infrastructure:infrastructure_dashboard' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+                <div>
+                    <a href="{% url 'infrastructure:tenant_module_provision_create' %}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Provision Module
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" name="search" placeholder="Search provisions..." value="{{ search_query }}">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="tenant_id" class="form-select">
+                                <option value="">All Tenants</option>
+                                {% for tenant in tenants %}
+                                <option value="{{ tenant.id }}" {% if selected_tenant == tenant.id|stringformat:"s" %}selected{% endif %}>{{ tenant.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select name="module_id" class="form-select">
+                                <option value="">All Modules</option>
+                                {% for module in modules %}
+                                <option value="{{ module.id }}" {% if selected_module == module.id|stringformat:"s" %}selected{% endif %}>{{ module.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select name="is_enabled" class="form-select">
+                                <option value="">All Statuses</option>
+                                <option value="enabled" {% if selected_enabled == 'enabled' %}selected{% endif %}>Enabled</option>
+                                <option value="disabled" {% if selected_enabled == 'disabled' %}selected{% endif %}>Disabled</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select name="installation_status" class="form-select">
+                                <option value="">All Statuses</option>
+                                {% for value, label in installation_statuses %}
+                                <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                            <a href="{% url 'infrastructure:tenant_module_provision_list' %}" class="btn btn-secondary">Clear</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Module Provisions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Tenant</th>
+                                    <th>Module</th>
+                                    <th>Version</th>
+                                    <th>Status</th>
+                                    <th>Enabled</th>
+                                    <th>Installed At</th>
+                                    <th>Installed By</th>
+                                    <th>Health Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for provision in provisions %}
+                                <tr>
+                                    <td>{{ provision.tenant.name }}</td>
+                                    <td>{{ provision.app_module.name }}</td>
+                                    <td>{{ provision.version_installed }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if provision.installation_status == 'not_installed' %}bg-secondary
+                                            {% elif provision.installation_status == 'installing' %}bg-info
+                                            {% elif provision.installation_status == 'installed' %}bg-primary
+                                            {% elif provision.installation_status == 'activating' %}bg-warning
+                                            {% elif provision.installation_status == 'active' %}bg-success
+                                            {% elif provision.installation_status == 'deactivating' %}bg-warning
+                                            {% elif provision.installation_status == 'deactivated' %}bg-secondary
+                                            {% elif provision.installation_status == 'uninstalling' %}bg-info
+                                            {% elif provision.installation_status == 'uninstalled' %}bg-secondary
+                                            {% elif provision.installation_status == 'failed' %}bg-danger
+                                            {% endif %}">
+                                            {{ provision.installation_status|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if provision.is_enabled %}bg-success{% else %}bg-danger{% endif %}">
+                                            {% if provision.is_enabled %}Enabled{% else %}Disabled{% endif %}
+                                        </span>
+                                    </td>
+                                    <td>{{ provision.installed_at|date:"M d, Y H:i"|default:"-" }}</td>
+                                    <td>{{ provision.installed_by.email|default:"-" }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if provision.health_status == 'healthy' %}bg-success
+                                            {% elif provision.health_status == 'warning' %}bg-warning
+                                            {% elif provision.health_status == 'error' %}bg-danger
+                                            {% elif provision.health_status == 'critical' %}bg-danger
+                                            {% endif %}">
+                                            {{ provision.health_status|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'infrastructure:tenant_module_provision_update' provision.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        <a href="{% url 'infrastructure:module_configuration' provision.id %}" class="btn btn-sm btn-outline-info">
+                                            <i class="fas fa-cog"></i> Configure
+                                        </a>
+                                        {% if provision.installation_status == 'active' %}
+                                            <a href="{% url 'infrastructure:tenant_module_provision_update' provision.id %}?action=deactivate" class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-power-off"></i> Deactivate
+                                            </a>
+                                        {% elif provision.installation_status == 'deactivated' %}
+                                            <a href="{% url 'infrastructure:tenant_module_provision_update' provision.id %}?action=activate" class="btn btn-sm btn-outline-success">
+                                                <i class="fas fa-play"></i> Activate
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="9">No module provisions found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if is_paginated %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_tenant %}&tenant_id={{ selected_tenant }}{% endif %}{% if selected_module %}&module_id={{ selected_module }}{% endif %}{% if selected_enabled %}&is_enabled={{ selected_enabled }}{% endif %}{% if selected_status %}&installation_status={{ selected_status }}{% endif %}">First</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_tenant %}&tenant_id={{ selected_tenant }}{% endif %}{% if selected_module %}&module_id={{ selected_module }}{% endif %}{% if selected_enabled %}&is_enabled={{ selected_enabled }}{% endif %}{% if selected_status %}&installation_status={{ selected_status }}{% endif %}">Previous</a>
+                                </li>
+                            {% endif %}
+
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_tenant %}&tenant_id={{ selected_tenant }}{% endif %}{% if selected_module %}&module_id={{ selected_module }}{% endif %}{% if selected_enabled %}&is_enabled={{ selected_enabled }}{% endif %}{% if selected_status %}&installation_status={{ selected_status }}{% endif %}">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_tenant %}&tenant_id={{ selected_tenant }}{% endif %}{% if selected_module %}&module_id={{ selected_module }}{% endif %}{% if selected_enabled %}&is_enabled={{ selected_enabled }}{% endif %}{% if selected_status %}&installation_status={{ selected_status }}{% endif %}">Last</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

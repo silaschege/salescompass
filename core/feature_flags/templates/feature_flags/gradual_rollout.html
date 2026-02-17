@@ -1,0 +1,22 @@
+{% extends "feature_flags/base.html" %}
+
+{% block title %}Gradual Rollout{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Gradual Rollout</h1>
+    <p>Manage gradual feature rollouts</p>
+
+    <div class="card">
+        <div class="card-body">
+            {% for flag in flags %}
+            <div class="mb-3 pb-3 border-bottom">
+                <h5>{{ flag.name }}</h5>
+                <p>Current: {{ flag.rollout_percentage }}% | <a
+                        href="{% url 'feature_flags:flag_update' flag.pk %}">Adjust</a></p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

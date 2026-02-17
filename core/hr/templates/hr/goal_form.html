@@ -1,0 +1,50 @@
+{% extends "hr/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block hr_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item small"><a href="{% url 'hr:goal_list' %}"
+                            class="text-decoration-none text-muted">Goals</a></li>
+                    <li class="breadcrumb-item active small text-primary fw-bold" aria-current="page">{% if object
+                        %}Edit{% else %}Set{% endif %} Goal</li>
+                </ol>
+            </nav>
+            <h1 class="h3 fw-bold mb-0">{% if object %}Edit{% else %}Set New{% endif %} Performance Goal</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="premium-card p-4 border-0 shadow-sm">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary px-4 shadow-sm border-0">
+                            Save Goal
+                        </button>
+                        <a href="{% url 'hr:goal_list' %}" class="btn btn-light px-4 border">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="premium-card p-4 border-0 shadow-sm bg-primary bg-opacity-10">
+                <h5 class="fw-bold text-primary mb-3">Goal Setting Tips</h5>
+                <ul class="small text-muted ps-3 mb-0">
+                    <li class="mb-2"><strong>Specific:</strong> Define exactly what needs to be achieved.</li>
+                    <li class="mb-2"><strong>Measurable:</strong> Use percentages or numbers where possible.</li>
+                    <li class="mb-2"><strong>Time-bound:</strong> Set a realistic target date.</li>
+                    <li><strong>Weighted:</strong> Assign higher weight to critical business objectives.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

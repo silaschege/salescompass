@@ -1,0 +1,58 @@
+{% extends 'core/base_module.html' %}
+
+{% block module_nav %}
+<!-- Status -->
+<a class="nav-link {% if request.resolver_match.url_name == 'status' %}active{% endif %}"
+    href="{% url 'wazo:status' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-activity nav-icon"></i>
+        <span>System Status</span>
+    </div>
+</a>
+
+<!-- Calls -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#callsMenu"
+    aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-telephone nav-icon"></i>
+        <span>Calls</span>
+    </div>
+</a>
+<div class="collapse" id="callsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'initiate_call' %}active{% endif %}"
+        href="{% url 'wazo:initiate_call' %}">
+        Dialer
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'call_history' %}active{% endif %}"
+        href="{% url 'wazo:call_history' %}">
+        Call History
+    </a>
+</div>
+
+<!-- SMS -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#smsMenu" aria-expanded="false">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-chat-dots nav-icon"></i>
+        <span>SMS</span>
+    </div>
+</a>
+<div class="collapse" id="smsMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'send_sms' %}active{% endif %}"
+        href="{% url 'wazo:send_sms' %}">
+        Send SMS
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'sms_history' %}active{% endif %}"
+        href="{% url 'wazo:sms_history' %}">
+        Message History
+    </a>
+</div>
+
+<!-- Webhooks -->
+<a class="nav-link {% if request.resolver_match.url_name == 'webhooks' %}active{% endif %}"
+    href="{% url 'wazo:webhooks' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-cloud-arrow-down nav-icon"></i>
+        <span>Webhooks</span>
+    </div>
+</a>
+{% endblock %}

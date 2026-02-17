@@ -1,0 +1,231 @@
+{% extends "purchasing/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block purchasing_content %}
+<div class="animate-fade-in p-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="d-flex align-items-center mb-4">
+                <a href="{% url 'purchasing:requisition_list' %}"
+                    class="btn btn-light btn-icon rounded-circle me-3 border-0 shadow-sm">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <h1 class="h3 fw-bold mb-0">{% if form.instance.pk %}Edit Requisition #{{
+                    form.instance.requisition_number }}{% else
+                    %}Draft New Purchase Requisition{% endif %}</h1>
+            </div>
+
+            <div class="premium-card p-4 border-0 shadow-sm">
+                <form method="post" class="needs-validation" id="requisition-form">
+                    {% csrf_token %}
+
+                    <div class="row g-4">
+                        <!-- Left Column: General Information -->
+                        <div class="col-lg-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-light border-0 py-3">
+                                    <h5 class="fw-bold mb-0 text-primary"><i class="bi bi-info-circle me-2"></i>General
+                                        Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        {{ form.department|as_crispy_field }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.date_required|as_crispy_field }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.priority|as_crispy_field }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.notes|as_crispy_field }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Requested Items -->
+                        <div class="col-lg-8">
+                            <div class="card border-0 shadow-sm h-100 bg-white">
+                                <div
+                                    class="card-header bg-white border-bottom-0 py-3 d-flex justify-content-between align-items-center">
+                                    <h5 class="fw-bold mb-0 text-primary"><i class="bi bi-cart3 me-2"></i>Requested
+                                        Items</h5>
+                                    <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm"
+                                        id="add-item-btn">
+                                        <i class="bi bi-plus-circle me-1"></i> Add Item
+                                    </button>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="table-responsive">
+                                        {{ lines.management_form }}
+                                        <table class="table table-borderless align-middle mb-0" id="items-table"
+                                            style="border-collapse: separate; border-spacing: 0 10px;">
+                                            <thead class="text-secondary small text-uppercase fw-bold">
+                                                <tr>
+                                                    <th style="width: 40%" class="ps-2">Product</th>
+                                                    <th style="width: 15%">Qty</th>
+                                                    <th style="width: 20%">Price</th>
+                                                    <th style="width: 20%" class="text-end">Total</th>
+                                                    <th style="width: 5%"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="formset-container">
+                                                {% for line_form in lines %}
+                                                <tr class="line-item-row shadow-sm rounded-3 bg-light">
+                                                    {% for hidden in line_form.hidden_fields %}
+                                                    {{ hidden }}
+                                                    {% endfor %}
+                                                    <td class="ps-2 py-3 rounded-start">
+                                                        <div class="input-group input-group-sm">
+                                                            <span
+                                                                class="input-group-text bg-white border-end-0 text-muted ps-3"><i
+                                                                    class="bi bi-box-seam"></i></span>
+                                                            {{ line_form.product }}
+                                                        </div>
+                                                        {% if line_form.product.errors %}
+                                                        <div class="text-danger small mt-1 ps-2">{{
+                                                            line_form.product.errors }}</div>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td class="py-3">
+                                                        <div class="input-group input-group-sm">
+                                                            <span
+                                                                class="input-group-text bg-white border-end-0 text-muted"><i
+                                                                    class="bi bi-hash"></i></span>
+                                                            {{ line_form.quantity }}
+                                                        </div>
+                                                    </td>
+                                                    <td class="py-3">
+                                                        <div class="input-group input-group-sm">
+                                                            <span
+                                                                class="input-group-text bg-white border-end-0 text-muted">@</span>
+                                                            {{ line_form.estimated_unit_price }}
+                                                        </div>
+                                                    </td>
+                                                    <td class="line-total-display fw-bold text-end pe-4 py-3 text-dark">
+                                                        0.00</td>
+                                                    <td class="py-3 rounded-end text-center">
+                                                        {% if lines.can_delete %}
+                                                        <div class="form-check p-0 d-none">
+                                                            {{ line_form.DELETE }}
+                                                        </div>
+                                                        <button type="button"
+                                                            class="btn btn-outline-danger btn-sm border-0 rounded-circle remove-item-btn p-1"
+                                                            title="Remove Item"
+                                                            style="width: 28px; height: 28px; line-height: 1;">
+                                                            <i class="bi bi-x-lg"></i>
+                                                        </button>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <td colspan="3" class="text-end fw-bold text-secondary pt-4">Grand
+                                                        Total:</td>
+                                                    <td id="grand-total-display"
+                                                        class="fw-bold text-end pe-4 pt-4 h4 text-primary m-0">0.00</td>
+                                                    <td></td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3">
+                        <a href="{% url 'purchasing:requisition_list' %}"
+                            class="btn btn-light px-4 border rounded-pill">Discard</a>
+                        <button type="submit" class="btn btn-primary px-5 shadow-sm border-0 rounded-pill">
+                            <i class="bi bi-check2-circle me-1"></i> {% if form.instance.pk %}Update Requisition{% else
+                            %}Create Draft{% endif %}
+                        </button>
+                    </div>
+                </form>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const formsetContainer = document.getElementById('formset-container');
+                        const addItemBtn = document.getElementById('add-item-btn');
+                        const totalForms = document.querySelector('[id$="-TOTAL_FORMS"]');
+                        const prefix = 'lines';
+
+                        function updateGrandTotal() {
+                            let grandTotal = 0;
+                            document.querySelectorAll('.line-item-row').forEach(row => {
+                                if (!row.classList.contains('d-none')) {
+                                    const totalText = row.querySelector('.line-total-display').innerText;
+                                    grandTotal += parseFloat(totalText) || 0;
+                                }
+                            });
+                            document.getElementById('grand-total-display').innerText = grandTotal.toFixed(2);
+                        }
+
+                        function calculateLineTotal(row) {
+                            const qty = parseFloat(row.querySelector('.quantity-input').value) || 0;
+                            const price = parseFloat(row.querySelector('.price-input').value) || 0;
+                            const total = qty * price;
+
+                            row.querySelector('.line-total-display').innerText = total.toFixed(2);
+                            updateGrandTotal();
+                        }
+
+                        function attachRowListeners(row) {
+                            const qtyInput = row.querySelector('.quantity-input');
+                            const priceInput = row.querySelector('.price-input');
+                            const removeBtn = row.querySelector('.remove-item-btn');
+
+                            [qtyInput, priceInput].forEach(input => {
+                                if (input) input.addEventListener('input', () => calculateLineTotal(row));
+                            });
+
+                            if (removeBtn) {
+                                removeBtn.addEventListener('click', function () {
+                                    const deleteCheck = row.querySelector('[name$="-DELETE"]');
+                                    if (deleteCheck) {
+                                        deleteCheck.checked = true;
+                                        row.classList.add('d-none');
+                                        updateGrandTotal();
+                                    } else {
+                                        row.remove();
+                                        const currentForms = parseInt(totalForms.value);
+                                        totalForms.value = currentForms - 1;
+                                        updateGrandTotal();
+                                    }
+                                });
+                            }
+
+                            calculateLineTotal(row);
+                        }
+
+                        addItemBtn.addEventListener('click', function () {
+                            const formCount = parseInt(totalForms.value);
+                            const rows = document.querySelectorAll('.line-item-row');
+                            const row = rows[0].cloneNode(true);
+
+                            row.classList.remove('d-none');
+                            row.innerHTML = row.innerHTML.replace(new RegExp(`${prefix}-\\d-`, 'g'), `${prefix}-${formCount}-`);
+
+                            row.querySelectorAll('input, select, textarea').forEach(input => {
+                                if (input.type !== 'hidden') input.value = '';
+                                if (input.type === 'checkbox') input.checked = false;
+                            });
+
+                            formsetContainer.appendChild(row);
+                            totalForms.value = formCount + 1;
+                            attachRowListeners(row);
+                        });
+
+                        document.querySelectorAll('.line-item-row').forEach(attachRowListeners);
+                        updateGrandTotal();
+                    });
+                </script>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

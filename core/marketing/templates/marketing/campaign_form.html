@@ -1,0 +1,361 @@
+{% extends "marketing/base.html" %}
+
+{% block title %}{% if object %}Edit {{ object.campaign_name }}{% else %}New Marketing Campaign{% endif %} -
+SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">{% if object %}Edit Campaign{% else %}Create New Campaign{% endif %}</h1>
+        <p class="text-white text-center lead">
+            {% if object %}Update your marketing campaign settings{% else %}Configure your new marketing campaign{%
+            endif %}
+        </p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <!-- Campaign Name -->
+                                <div class="mb-4">
+                                    <label for="{{ form.campaign_name.id_for_label }}"
+                                        class="form-label fw-bold text-primary">
+                                        Campaign Name <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.campaign_name }}
+                                    {% if form.campaign_name.errors %}
+                                    <div class="text-danger mt-1">{{ form.campaign_name.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text text-muted small">
+                                        Give your campaign a descriptive name (e.g., "Q4 Product Launch", "ESG Webinar
+                                        Follow-up")
+                                    </div>
+                                </div>
+
+                                <!-- Description -->
+                                <div class="mb-4">
+                                    <label for="{{ form.campaign_description.id_for_label }}"
+                                        class="form-label fw-bold text-primary">
+                                        Description
+                                    </label>
+                                    {{ form.campaign_description }}
+                                    <div class="form-text text-muted small">
+                                        Internal notes about this campaign's purpose and target audience
+                                    </div>
+                                    {% if form.campaign_description.errors %}
+                                    <div class="text-danger mt-1">{{ form.campaign_description.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Status -->
+                                <div class="mb-4">
+                                    <label for="{{ form.status_ref.id_for_label }}"
+                                        class="form-label fw-bold text-primary">
+                                        Status
+                                    </label>
+                                    {{ form.status_ref }}
+                                    <div class="form-text text-muted small">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <span class="badge bg-secondary">Draft</span> - Campaign not ready
+                                            </div>
+                                            <div class="col-6">
+                                                <span class="badge bg-info text-dark">Scheduled</span> - Future send
+                                            </div>
+                                            <div class="col-6">
+                                                <span class="badge bg-success">Sent</span> - Already sent
+                                            </div>
+                                            <div class="col-6">
+                                                <span class="badge bg-warning text-dark">Paused</span> - On hold
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% if form.status_ref.errors %}
+                                    <div class="text-danger mt-1">{{ form.status_ref.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Start Date -->
+                                <div class="mb-4">
+                                    <label for="{{ form.start_date.id_for_label }}"
+                                        class="form-label fw-bold text-primary">
+                                        Start Date & Time
+                                    </label>
+                                    {{ form.start_date }}
+                                    {% if form.start_date.errors %}
+                                    <div class="text-danger mt-1">{{ form.start_date.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- End Date -->
+                                <div class="mb-4">
+                                    <label for="{{ form.end_date.id_for_label }}"
+                                        class="form-label fw-bold text-primary">
+                                        End Date & Time
+                                    </label>
+                                    {{ form.end_date }}
+                                    {% if form.end_date.errors %}
+                                    <div class="text-danger mt-1">{{ form.end_date.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Budget -->
+                                <div class="mb-4">
+                                    <label for="{{ form.budget.id_for_label }}" class="form-label fw-bold text-primary">
+                                        Budget ($)
+                                    </label>
+                                    {{ form.budget }}
+                                    {% if form.budget.errors %}
+                                    <div class="text-danger mt-1">{{ form.budget.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <!-- Owner -->
+                                <div class="mb-4">
+                                    <label for="{{ form.owner.id_for_label }}" class="form-label fw-bold text-primary">
+                                        Owner
+                                    </label>
+                                    {{ form.owner }}
+                                    {% if form.owner.errors %}
+                                    <div class="text-danger mt-1">{{ form.owner.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Target Audience Size -->
+                                <div class="mb-4">
+                                    <label for="{{ form.target_audience_size.id_for_label }}"
+                                        class="form-label fw-bold text-primary">
+                                        Target Audience Size
+                                    </label>
+                                    {{ form.target_audience_size }}
+                                    {% if form.target_audience_size.errors %}
+                                    <div class="text-danger mt-1">{{ form.target_audience_size.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Campaign Type Selection -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold text-primary">Campaign Components</label>
+                                    <div class="d-grid gap-2">
+                                        <a href="{% url 'marketing:email_template_list' %}"
+                                            class="btn btn-outline-primary" target="_blank">
+                                            <i class="bi bi-envelope"></i> Email Template
+                                        </a>
+                                        <a href="{% url 'marketing:landing_page_block_list' %}"
+                                            class="btn btn-outline-success" target="_blank">
+                                            <i class="bi bi-window"></i> Landing Page
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Active Status -->
+                                <div class="mb-4">
+                                    <div class="form-check form-switch">
+                                        {{ form.campaign_is_active }}
+                                        <label class="form-check-label"
+                                            for="{{ form.campaign_is_active.id_for_label }}">
+                                            Campaign Active
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div
+                            class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <div>
+                                {% if object %}
+                                <a href="{% url 'marketing:campaign_update' object.pk %}"
+                                    class="btn btn-outline-primary">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                        class="bi bi-eye me-1" viewBox="0 0 16 16">
+                                        <path
+                                            d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.172-.195.254a14.33 14.33 0 0 0-.195-.254C13.12 9.332 11.361 10.5 8 10.5c-2.12 0-3.88-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z" />
+                                        <path
+                                            d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z" />
+                                    </svg>
+                                    View Campaign
+                                </a>
+                                {% endif %}
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'marketing:campaign_list' %}" class="btn btn-light">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                        class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd"
+                                            d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
+                                    </svg>
+                                    Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    {% if object %}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                        class="bi bi-check-circle me-1" viewBox="0 0 16 16">
+                                        <path
+                                            d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                        <path
+                                            d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z" />
+                                    </svg>
+                                    Update Campaign
+                                    {% else %}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                        class="bi bi-plus-circle me-1" viewBox="0 0 16 16">
+                                        <path
+                                            d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                        <path
+                                            d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+                                    </svg>
+                                    Create Campaign
+                                    {% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Sidebar -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 text-primary">Campaign Guidance</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Planning Your Campaign:</h6>
+                    <ul class="small text-muted">
+                        <li>Define clear, measurable goals (Open rate, CTR, Conversion).</li>
+                        <li>Segment your audience properly for higher engagement.</li>
+                        <li>Ensure your landing pages match the campaign's messaging.</li>
+                    </ul>
+
+                    <h6 class="mt-4">Timing & Schedule:</h6>
+                    <p class="small text-muted">A/B test different send times to find when your audience is most active.
+                        Most B2B emails perform best on Tuesday-Thursday mornings.</p>
+
+                    <h6 class="mt-4">Budgeting:</h6>
+                    <p class="small text-muted">Track your spend to calculate precise ROI and CAC (Customer Acquisition
+                        Cost) in the Performance Analytics section.</p>
+
+                    <div class="mt-4 p-3 bg-light rounded text-center">
+                        <p class="small mb-0">Need help? Check the <a href="#">Marketing Documentation</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}
+{% block extra_head %}
+<style>
+    /* Form-specific styling */
+    .form-label {
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control,
+    .form-select {
+        border: 1px solid #e3e6f3;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #6f42c1;
+        box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+    }
+
+    .form-control:focus-visible,
+    .form-select:focus-visible {
+        outline: none;
+    }
+
+    textarea.form-control {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    .text-danger {
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .form-text {
+        font-size: 0.8125rem;
+        margin-top: 0.25rem;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.3em 0.6em;
+    }
+
+    .btn {
+        padding: 0.5rem 1.25rem;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: #5a32a3;
+        border-color: #5a32a3;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
+    }
+
+    .btn-light:hover {
+        background-color: #f8f9fa;
+        border-color: #d1c5e6;
+        color: #5a32a3;
+    }
+
+    /* Card styling */
+    .card {
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .card {
+            margin: 0 -1rem;
+            border-radius: 0;
+        }
+
+        .header-bar {
+            border-radius: 0;
+        }
+
+        .footer-bar {
+            border-radius: 0;
+        }
+
+        .row>[class*="col-"] {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+{% endblock %}

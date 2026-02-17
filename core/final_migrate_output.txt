@@ -1,0 +1,13 @@
+
+-----
+
+WeasyPrint could not import some external libraries. Please carefully follow the installation steps before reporting an issue:
+https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#installation
+https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#troubleshooting 
+
+-----
+
+Operations to perform:
+  Apply all migrations: access_control, accounting, accounts, admin, assets, audit_logs, auth, authtoken, automation, billing, cases, commissions, communication, contenttypes, core, dashboard, developer, django_celery_beat, ecommerce, engagement, expenses, feature_flags, global_alerts, hr, infrastructure, inventory, invoicing, leads, learn, logistics, loyalty, manufacturing, marketing, nps, opportunities, pos, products, projects, proposals, purchasing, quality_control, reports, sales, sessions, settings_app, suppliers, tasks, tenants, wazo
+Running migrations:
+  Applying settings_app.0003_remove_settinggroup_tenant_and_more... OK

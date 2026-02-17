@@ -1,0 +1,51 @@
+{% extends "projects/base.html" %}
+{% load humanize %}
+
+{% block page_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">My Timesheets</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Week Starting</th>
+                        <th>Status</th>
+                        <th>Total Hours</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for timesheet in timesheets %}
+                    <tr>
+                        <td>{{ timesheet.start_date }}</td>
+                        <td>
+                            {% if timesheet.status == 'draft' %}
+                            <span class="badge badge-secondary">Draft</span>
+                            {% elif timesheet.status == 'submitted' %}
+                            <span class="badge badge-primary">Submitted</span>
+                            {% elif timesheet.status == 'approved' %}
+                            <span class="badge badge-success">Approved</span>
+                            {% elif timesheet.status == 'rejected' %}
+                            <span class="badge badge-danger">Rejected</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ timesheet.entries.all|length }} entries</td> {# Simplified for now #}
+                        <td>
+                            <a href="{% url 'projects:timesheet_detail' timesheet.pk %}"
+                                class="btn btn-sm btn-outline-info">View / Edit</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">No timesheets found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

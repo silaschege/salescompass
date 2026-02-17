@@ -1,0 +1,27 @@
+{% extends "suppliers/base.html" %}
+
+{% block title %}Delete Contact - {{ object.name }}{% endblock %}
+
+{% block module_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-exclamation-triangle"></i> Delete Contact</h5>
+            </div>
+            <div class="card-body">
+                <p>Are you sure you want to delete the contact <strong>{{ object.name }}</strong>
+                    from <strong>{{ supplier.supplier_name }}</strong>?</p>
+                <p class="text-muted mb-0">This action cannot be undone.</p>
+            </div>
+            <div class="card-footer d-flex justify-content-end gap-2">
+                <a href="{% url 'suppliers:supplier_detail' supplier.pk %}" class="btn btn-secondary">Cancel</a>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Contact</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

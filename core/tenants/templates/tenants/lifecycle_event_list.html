@@ -1,0 +1,99 @@
+{% extends 'tenants/base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="fw-bold"><i class="bi bi-clock-history me-2"></i>Lifecycle Events</h2>
+            <p class="text-muted">History of all tenant lifecycle transitions and activities.</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'tenants:lifecycle_event_create' %}" class="btn btn-primary shadow-sm hover-up">
+                <i class="bi bi-plus-lg me-2"></i>Log Event
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm glass-card">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="mb-0 fw-bold">Recent Events</h5>
+        </div>
+        <div class="card-body p-4">
+            {% if events %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light border-0">
+                        <tr>
+                            <th class="border-0">Type</th>
+                            <th class="border-0">Transition</th>
+                            <th class="border-0">Triggered By</th>
+                            <th class="border-0">Timestamp</th>
+                            <th class="border-0">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-0">
+                        {% for event in events %}
+                        <tr class="border-bottom">
+                            <td>
+                                <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill">
+                                    {{ event.get_event_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <span class="text-muted small">{{ event.old_value|default:"None" }}</span>
+                                    <i class="bi bi-arrow-right mx-2 text-primary"></i>
+                                    <span class="fw-medium text-dark">{{ event.new_value }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-person-circle me-2 text-secondary"></i>
+                                    <span>{{ event.triggered_by.get_full_name|default:event.triggered_by.email }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="text-dark">{{ event.timestamp|date:"M d, Y" }}</div>
+                                <div class="text-muted small">{{ event.timestamp|time:"H:i" }}</div>
+                            </td>
+                            <td>
+                                <a href="{% url 'tenants:lifecycle_event_detail' event.id %}"
+                                    class="btn btn-sm btn-light rounded-pill px-3 shadow-none border-0">
+                                    Details
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% include 'includes/pagination.html' %}
+
+            {% else %}
+            <div class="text-center py-5">
+                <div class="display-4 text-muted mb-3"><i class="bi bi-calendar-x"></i></div>
+                <h5>No events logged yet</h5>
+                <p class="text-muted">Lifecycle events will appear here as they occur.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .badge.bg-soft-primary {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .hover-up:hover {
+        transform: translateY(-2px);
+        transition: transform 0.2s ease;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "marketing/base.html" %}
+
+{% block title %}{% if object %}Edit {{ object.name }}{% else %}New Email Template{% endif %} - SalesCompass{% endblock
+%}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">{% if object %}Edit Email Template{% else %}Create New Email Template{% endif %}</h1>
+        <p class="text-white text-center lead">
+            Design your outreach with personalized templates
+        </p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label for="{{ form.name.id_for_label }}" class="form-label fw-bold text-primary">Template
+                                Name *</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="text-danger mt-1">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.subject_line.id_for_label }}"
+                                class="form-label fw-bold text-primary">Subject Line *</label>
+                            {{ form.subject_line }}
+                            {% if form.subject_line.errors %}
+                            <div class="text-danger mt-1">{{ form.subject_line.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.content.id_for_label }}" class="form-label fw-bold text-primary">Email
+                                Content (HTML)</label>
+                            {{ form.content }}
+                            {% if form.content.errors %}
+                            <div class="text-danger mt-1">{{ form.content.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <a href="{% url 'marketing:email_template_list' %}" class="btn btn-light">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if object %}Update Template{% else %}Create Template{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Sidebar -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 text-primary">Email Best Practices</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Dynamic Tags:</h6>
+                    <p class="small text-muted">Use tags like <code>{{ contact.first_name }}</code> or
+                        <code>{{ company_name }}</code> to personalize your emails.</p>
+
+                    <h6 class="mt-4">Subject Lines:</h6>
+                    <ul class="small text-muted">
+                        <li>Keep it under 60 characters.</li>
+                        <li>Avoid spam triggers like "FREE" or "URGENT".</li>
+                        <li>Ask a compelling question.</li>
+                    </ul>
+
+                    <h6 class="mt-4">Content Tips:</h6>
+                    <p class="small text-muted">Focus on one clear Call to Action (CTA). Use a professional tone but
+                        keep it conversational.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

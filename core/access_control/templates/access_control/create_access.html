@@ -1,0 +1,110 @@
+{% extends "access_control/base.html" %}
+
+{% block title %}{{ action|default:"Create Access Control" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">{{ action|default:"Create New Access Control" }}</h1>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Details</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <!-- Render generic simple form -->
+                        {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+
+                            {% if field.name == 'is_enabled' or field.name == 'default_enabled' %}
+                            <div class="form-check">
+                                {{ field }}
+                            </div>
+                            {% else %}
+                            {{ field }}
+                            {% endif %}
+
+                            {% if field.help_text %}
+                            <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+
+                            {% if field.errors %}
+                            <div class="text-danger">
+                                {% for error in field.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-success me-2">
+                                <i class="bi bi-save"></i> Save
+                            </button>
+                            <a href="{% url 'access_control:manage_access' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {% if existing_assignments %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Existing Assignments for {{ target_tenant.name }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Access Control</th>
+                                <th>Key</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assignment in existing_assignments %}
+                            <tr>
+                                <td>
+                                    <strong>{{ assignment.access_control.name }}</strong>
+                                    <small class="d-block text-muted">{{ assignment.access_control.description }}</small>
+                                </td>
+                                <td><code>{{ assignment.access_control.key }}</code></td>
+                                <td>
+                                    {% if assignment.access_control.access_type == 'permission' %}
+                                    <span class="badge bg-primary">Permission</span>
+                                    {% elif assignment.access_control.access_type == 'feature_flag' %}
+                                    <span class="badge bg-warning text-dark">Feature Flag</span>
+                                    {% else %}
+                                    <span class="badge bg-info">Entitlement</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if assignment.is_enabled %}
+                                    <span class="badge bg-success">Enabled</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Disabled</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+</div>
+{% endblock %}

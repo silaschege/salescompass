@@ -1,0 +1,27 @@
+<!-- task_status_confirm_delete.html -->
+{% extends "tasks/base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Confirm Deletion</h4>
+                </div>
+                <div class="card-body">
+                    <p>Are you sure you want to delete the status "<strong>{{ object.name }}</strong>"?</p>
+                    <p class="text-muted">This action cannot be undone.</p>
+                    <div class="d-flex justify-content-end mt-3">
+                        <a href="{% url 'tasks:status_list' %}" class="btn btn-secondary me-2">Cancel</a>
+                        <form method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Delete Status</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

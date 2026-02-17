@@ -1,0 +1,333 @@
+{% extends "products/base.html" %}
+{% load auth_extras number_filters %}
+
+{% block title %}Product Comparison - SalesCompass{% endblock %}
+
+{% block content %}
+<h1 class="block-title fw-bold mb-0">Product Comparison</h1>
+
+<!-- Product Selector -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5>Select Products to Compare</h5>
+        <form method="get" id="comparison-form">
+            <div class="row">
+                {% for i in '1234'|make_list %}
+                <div class="col-md-3 mb-2">
+                    <select name="product" class="form-select product-select" data-index="{{ i }}">
+                        <option value="">-- Select Product --</option>
+                        {% for product in all_products %}
+                            <option value="{{ product.id }}" 
+                                    {% if product.id in selected_product_ids %}selected{% endif %}>
+                                {{ product.name }} ({{ product.sku }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn btn-primary mt-2">Compare Selected</button>
+            <a href="{% url 'products:product_list' %}" class="btn btn-secondary mt-2">← Back to Catalog</a>
+        </form>
+    </div>
+</div>
+
+{% if products|length >= 2 %}
+<!-- Comparison Table -->
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Feature</th>
+                {% for product in products %}
+                    <th class="text-center">
+                        <div class="product-header">
+                            <strong>{{ product.name }}</strong><br>
+                            <small class="text-muted">{{ product.sku }}</small><br>
+                            <span class="badge bg-primary">${{ product.base_price|intcomma }}</span>
+                            {% if product.esg_certified %}
+                                <br><span class="badge bg-success">🌱 ESG</span>
+                            {% endif %}
+                        </div>
+                    </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Basic Info -->
+            <tr class="table-light">
+                <td><strong>Basic Information</strong></td>
+                {% for product in products %}
+                    <td></td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td>Description</td>
+                {% for product in products %}
+                    <td>{{ product.description|truncatewords:20 }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td>Category</td>
+                {% for product in products %}
+                    <td>{{ product.category|default:"—" }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td>Tags</td>
+                {% for product in products %}
+                    <td>
+                        {% for tag in product.get_tags_list %}
+                            <span class="badge bg-primary">{{ tag }}</span>
+                        {% endfor %}
+                    </td>
+                {% endfor %}
+            </tr>
+
+            <!-- Pricing -->
+            <tr class="table-light">
+                <td><strong>Pricing</strong></td>
+                {% for product in products %}
+                    <td></td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td>Pricing Model</td>
+                {% for product in products %}
+                    <td>{{ product.get_pricing_model_display }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td>Base Price</td>
+                {% for product in products %}
+                    <td>${{ product.base_price|intcomma }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td>1 Unit</td>
+                {% for product in products %}
+                    <td>${{ pricing_data|get:product.id|get:"1"|get:"total_price"|intcomma }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td>10 Units</td>
+                {% for product in products %}
+                    <td>${{ pricing_data|get:product.id|get:"10"|get:"total_price"|intcomma }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td>100 Units</td>
+                {% for product in products %}
+                    <td>${{ pricing_data|get:product.id|get:"100"|get:"total_price"|intcomma }}</td>
+                {% endfor %}
+            </tr>
+
+            <!-- ESG Metrics -->
+            <tr class="table-light">
+                <td><strong>ESG Metrics</strong></td>
+                {% for product in products %}
+                    <td></td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td>ESG Certified</td>
+                {% for product in products %}
+                    <td>
+                        {% if product.esg_certified %}
+                            <span class="badge bg-success">Yes</span>
+                        {% else %}
+                            <span class="badge bg-secondary">No</span>
+                        {% endif %}
+                    </td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td>Carbon Footprint</td>
+                {% for product in products %}
+                    <td>
+                        {% if product.carbon_footprint %}
+                            {{ product.carbon_footprint }} kg CO2e
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td>tCO2e Saved</td>
+                {% for product in products %}
+                    <td>
+                        {% if product.tco2e_saved > 0 %}
+                            {{ product.tco2e_saved }} tonnes
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td>Certifications</td>
+                {% for product in products %}
+                    <td>
+                        {% if product.esg_certifications %}
+                            {% for cert in product.get_certifications_list %}
+                                <span class="badge bg-info text-dark">{{ cert }}</span>
+                            {% endfor %}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                {% endfor %}
+            </tr>
+
+            <!-- Availability -->
+            <tr class="table-light">
+                <td><strong>Availability</strong></td>
+                {% for product in products %}
+                    <td></td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td>Status</td>
+                {% for product in products %}
+                    <td>
+                        {% if product.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inactive</span>
+                        {% endif %}
+                    </td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td>Available From</td>
+                {% for product in products %}
+                    <td>{{ product.available_from|default:"—" }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td>Available To</td>
+                {% for product in products %}
+                    <td>{{ product.available_to|default:"—" }}</td>
+                {% endfor %}
+            </tr>
+
+            <!-- Bundles -->
+            <tr class="table-light">
+                <td><strong>Bundles</strong></td>
+                {% for product in products %}
+                    <td>
+                        {% with bundles=product.productbundle_set.all %}
+                            {% if bundles %}
+                                <ul class="mb-0">
+                                    {% for bundle in bundles %}
+                                        <li>{{ bundle.name }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                —
+                            {% endif %}
+                        {% endwith %}
+                    </td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2 mt-3">
+    {% for product in products %}
+        <a href="{% url 'products:detail' product.id %}" class="btn btn-outline-primary">
+            View {{ product.name }}
+        </a>
+    {% endfor %}
+</div>
+
+<!-- Export Button -->
+<div class="mt-3">
+    <button id="export-btn" class="btn btn-success" onclick="exportComparison()">
+        📥 Export Comparison
+    </button>
+</div>
+{% else %}
+<div class="alert alert-warning">
+    <strong>Please select at least 2 products to compare.</strong><br>
+    Use the form above to select products from your catalog.
+</div>
+{% endif %}
+
+<script>
+// Handle product selection
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('comparison-form');
+    const selects = document.querySelectorAll('.product-select');
+    
+    // Prevent duplicate selections
+    selects.forEach(select => {
+        select.addEventListener('change', function() {
+            const selectedValue = this.value;
+            if (selectedValue) {
+                selects.forEach(otherSelect => {
+                    if (otherSelect !== this) {
+                        const option = otherSelect.querySelector(`option[value="${selectedValue}"]`);
+                        if (option) {
+                            option.disabled = true;
+                        }
+                    }
+                });
+            }
+        });
+    });
+});
+
+// Export comparison to CSV
+function exportComparison() {
+    const table = document.querySelector('table');
+    if (!table) return;
+    
+    let csv = [];
+    const rows = table.querySelectorAll('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+        const cols = rows[i].querySelectorAll('th, td');
+        const row = [];
+        for (let j = 0; j < cols.length; j++) {
+            // Clean up the text content
+            let text = cols[j].textContent.trim();
+            // Remove badges and extra formatting
+            text = text.replace(/[\u2713\u2717]/g, ''); // Remove checkmarks/crosses
+            text = text.replace(/\s+/g, ' '); // Clean up whitespace
+            row.push(`"${text.replace(/"/g, '""')}"`); // Escape quotes
+        }
+        csv.push(row.join(','));
+    }
+    
+    const csvString = csv.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'product_comparison.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+</script>
+
+<style>
+.product-header {
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.table-light th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+</style>
+{% endblock %}

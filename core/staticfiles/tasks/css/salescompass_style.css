@@ -1,0 +1,206 @@
+/* SalesCompass Tasks - Brand Style (Marketing-inspired) */
+
+:root {
+    --brand-primary: #6f42c1;
+    --brand-secondary: #e3e6f3;
+    --brand-gradient: linear-gradient(135deg, #f7f8fc 0%, #e3e6f3 100%);
+    --brand-shadow: 0 4px 24px rgba(111, 66, 193, 0.08);
+}
+
+.header-bar {
+    background: var(--brand-primary);
+    color: #fff;
+    padding: 2.5rem 0 1.5rem 0;
+    border-radius: 0 0 2rem 2rem;
+    box-shadow: var(--brand-shadow);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.block-title {
+    color: #fff;
+    font-size: 2.5rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.header-bar .lead {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 2px 16px rgba(111, 66, 193, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 20px rgba(111, 66, 193, 0.12);
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(111, 66, 193, 0.1);
+    padding: 1.25rem;
+}
+
+/* Tables */
+.table thead th {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid rgba(111, 66, 193, 0.1);
+    padding: 1rem;
+}
+
+.table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(111, 66, 193, 0.02);
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--brand-primary);
+    border-color: var(--brand-primary);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: #5a32a3;
+    border-color: #5a32a3;
+}
+
+.btn-outline-primary {
+    color: var(--brand-primary);
+    border-color: var(--brand-primary);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--brand-primary);
+    border-color: var(--brand-primary);
+    color: #fff;
+}
+
+/* Badges */
+.badge {
+    padding: 0.4em 0.8em;
+    font-weight: 500;
+    border-radius: 6px;
+}
+
+/* Kanban specific */
+.kanban-column {
+    background-color: rgba(111, 66, 193, 0.03);
+    border-radius: 1rem;
+    padding: 1rem;
+    min-height: 70vh;
+}
+
+.kanban-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid rgba(111, 66, 193, 0.1);
+}
+
+.kanban-card {
+    background: #fff;
+    margin-bottom: 1rem;
+    padding: 1rem;
+}
+
+/* Form Styling */
+.form-label {
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 0.5rem;
+}
+
+.form-control,
+.form-select {
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+    padding: 0.6rem 0.8rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.1);
+}
+
+/* Utilities */
+.bg-soft-primary {
+    background-color: rgba(111, 66, 193, 0.1);
+    color: var(--brand-primary) !important;
+}
+
+.bg-soft-success {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745 !important;
+}
+
+.bg-soft-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545 !important;
+}
+
+.bg-soft-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #856404 !important;
+}
+
+.bg-soft-info {
+    background-color: rgba(23, 162, 184, 0.1);
+    color: #17a2b8 !important;
+}
+
+.priority-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* Status stepper in Detail View */
+.status-stepper {
+    display: flex;
+    overflow-x: auto;
+    padding: 0.5rem;
+    gap: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 0.75rem;
+}
+
+.status-step {
+    white-space: nowrap;
+    border-radius: 2rem;
+    padding: 0.4rem 1.2rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+/* Chatter / Activity Feed */
+.chatter-card {
+    border-left: 4px solid var(--brand-primary);
+}
+
+.chatter-message {
+    border-bottom: 1px solid #f0f0f0;
+    padding: 1rem 0;
+}
+
+.chatter-message:last-child {
+    border-bottom: none;
+}

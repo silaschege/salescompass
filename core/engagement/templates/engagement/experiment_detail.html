@@ -1,0 +1,125 @@
+{% extends 'engagement/base.html' %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb bg-transparent p-0 mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'engagement:experiment_list' %}">Experiments</a></li>
+                    <li class="breadcrumb-item active">{{ experiment.name }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3 text-gray-800">{{ experiment.name }}</h1>
+        </div>
+        <div>
+            {% if experiment.status == 'draft' %}
+            <button class="btn btn-success"><i class="fas fa-play mr-1"></i> Start Experiment</button>
+            {% elif experiment.status == 'active' %}
+            <button class="btn btn-warning"><i class="fas fa-pause mr-1"></i> Pause</button>
+            {% endif %}
+            <a href="#" class="btn btn-outline-secondary ml-2"><i class="fas fa-cog"></i> Settings</a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Status</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ experiment.get_status_display }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-signal fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Confidence</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ experiment.confidence_level }}%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Participants</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ experiment.current_sample_size }} /
+                                {{ experiment.target_sample_size }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Variants Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Variants Performance</h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Variant</th>
+                            <th>Role</th>
+                            <th class="text-center">Participants</th>
+                            <th class="text-center">Conversions</th>
+                            <th class="text-center">Rate</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for variant in variants %}
+                        <tr {% if experiment.winner_variant==variant %}class="table-success" {% endif %}>
+                            <td class="font-weight-bold">
+                                {{ variant.name }}
+                                {% if experiment.winner_variant == variant %}
+                                <span class="badge badge-success ml-2"><i class="fas fa-trophy mr-1"></i> Winner</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if variant.is_control %}
+                                <span class="badge badge-secondary">Control</span>
+                                {% else %}
+                                <span class="badge badge-info">Treatment</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">{{ variant.participants_count }}</td>
+                            <td class="text-center">{{ variant.conversions_count }}</td>
+                            <td class="text-center font-weight-bold">{{ variant.conversion_rate }}%</td>
+                            <td class="text-right">
+                                <button class="btn btn-sm btn-link text-muted">View Details</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

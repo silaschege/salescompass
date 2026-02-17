@@ -1,0 +1,483 @@
+{% extends 'settings_app/base.html' %}
+{% load static %}
+
+{% block title %}{{ form_title|default:"Assignment Rule" }} - Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .form-section {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+
+    .form-section h3 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 20px 0;
+        color: #333;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 10px;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .page-header h1 {
+        font-size: 28px;
+        font-weight: 600;
+        margin: 0 0 8px 0;
+    }
+
+    .page-header .subtitle {
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: #374151;
+    }
+
+    .form-group label.required::after {
+        content: " *";
+        color: #ef4444;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .help-text {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+
+    .radio-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 12px;
+    }
+
+    .radio-option {
+        display: flex;
+        align-items: flex-start;
+        padding: 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .radio-option:hover {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+
+    .radio-option input[type="radio"] {
+        margin-right: 8px;
+        margin-top: 2px;
+    }
+
+    .radio-option-content {
+        flex: 1;
+    }
+
+    .radio-option-title {
+        font-weight: 500;
+        color: #111827;
+        margin-bottom: 4px;
+    }
+
+    .radio-option-desc {
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+    .checkbox-wrapper {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        background: #f9fafb;
+        border-radius: 6px;
+    }
+
+    .checkbox-wrapper input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 30px;
+    }
+
+    .btn {
+        padding: 10px 24px;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-primary {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #2563eb;
+    }
+
+    .btn-secondary {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .btn-secondary:hover {
+        background: #d1d5db;
+    }
+
+    .info-box {
+        background: #eff6ff;
+        border-left: 4px solid #3b82f6;
+        padding: 16px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+    }
+
+    .info-box h4 {
+        margin: 0 0 8px 0;
+        color: #1e40af;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .info-box p {
+        margin: 0;
+        color: #1e40af;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .json-editor {
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        min-height: 150px;
+        background: #1e293b;
+        color: #e2e8f0;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        padding: 12px;
+    }
+
+    .json-editor:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .json-help {
+        background: #f9fafb;
+        padding: 12px;
+        border-radius: 6px;
+        margin-top: 8px;
+        font-size: 12px;
+    }
+
+    .json-help code {
+        background: #e5e7eb;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: monospace;
+    }
+
+    select[multiple] {
+        min-height: 150px;
+    }
+
+    .assignee-list {
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .assignee-item {
+        padding: 10px 12px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+    }
+
+    .assignee-item:last-child {
+        border-bottom: none;
+    }
+
+    .assignee-item input[type="checkbox"] {
+        margin-right: 10px;
+    }
+
+    .priority-input {
+        width: 150px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1>{{ form_title|default:"Create Assignment Rule" }}</h1>
+        <p class="subtitle">Automate record assignment to your team members</p>
+    </div>
+
+    <!-- Info Box -->
+    <div class="info-box">
+        <h4>What are Assignment Rules?</h4>
+        <p>
+            Assignment rules automatically distribute leads, opportunities, or cases to team members
+            based on criteria you define. This ensures fair distribution and faster response times.
+        </p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- Basic Information -->
+        <div class="form-section">
+            <h3>Basic Information</h3>
+
+            <!-- Rule Name -->
+            <div class="form-group">
+                <label for="name" class="required">Rule Name</label>
+                <input type="text" name="name" id="name" class="form-control"
+                    placeholder="e.g., Assign US Leads to US Team" value="{{ form.name.value|default:'' }}" required>
+                <div class="help-text">A descriptive name for this assignment rule</div>
+                {% if form.name.errors %}
+                <div class="text-danger">{{ form.name.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Module -->
+            <div class="form-group">
+                <label for="module" class="required">Module</label>
+                <select name="module" id="module" class="form-control" required>
+                    <option value="">Select a module...</option>
+                    <option value="leads" {% if form.module.value=='leads' %}selected{% endif %}>Leads</option>
+                    <option value="cases" {% if form.module.value=='cases' %}selected{% endif %}>Cases</option>
+                    <option value="opportunities" {% if form.module.value=='opportunities' %}selected{% endif %}>
+                        Opportunities</option>
+                </select>
+                <div class="help-text">Which type of records should this rule apply to?</div>
+                {% if form.module.errors %}
+                <div class="text-danger">{{ form.module.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Priority -->
+            <div class="form-group">
+                <label for="priority">Priority</label>
+                <input type="number" name="priority" id="priority" class="form-control priority-input"
+                    value="{{ form.priority.value|default:0 }}" min="0" max="100">
+                <div class="help-text">Higher priority rules are evaluated first (0-100)</div>
+                {% if form.priority.errors %}
+                <div class="text-danger">{{ form.priority.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Rule Configuration -->
+        <div class="form-section">
+            <h3>Rule Configuration</h3>
+
+            <!-- Rule Type -->
+            <div class="form-group">
+                <label class="required">Rule Type</label>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" name="rule_type" id="type_round_robin" value="round_robin" {% if not
+                            form.rule_type.value or form.rule_type.value=='round_robin' %}checked{% endif %}>
+                        <div class="radio-option-content">
+                            <div class="radio-option-title">Round Robin</div>
+                            <div class="radio-option-desc">Distribute evenly in rotation</div>
+                        </div>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" name="rule_type" id="type_territory" value="territory" {% if
+                            form.rule_type.value=='territory' %}checked{% endif %}>
+                        <div class="radio-option-content">
+                            <div class="radio-option-title">Territory-Based</div>
+                            <div class="radio-option-desc">Assign by geographic territory</div>
+                        </div>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" name="rule_type" id="type_load_balanced" value="load_balanced" {% if
+                            form.rule_type.value=='load_balanced' %}checked{% endif %}>
+                        <div class="radio-option-content">
+                            <div class="radio-option-title">Load Balanced</div>
+                            <div class="radio-option-desc">Assign to least busy user</div>
+                        </div>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" name="rule_type" id="type_criteria" value="criteria" {% if
+                            form.rule_type.value=='criteria' %}checked{% endif %}>
+                        <div class="radio-option-content">
+                            <div class="radio-option-title">Criteria-Based</div>
+                            <div class="radio-option-desc">Match based on field values</div>
+                        </div>
+                    </div>
+                </div>
+                {% if form.rule_type.errors %}
+                <div class="text-danger">{{ form.rule_type.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Criteria JSON -->
+            <div class="form-group" id="criteriaGroup">
+                <label for="criteria">Matching Criteria (JSON)</label>
+                <textarea name="criteria" id="criteria" class="form-control json-editor" rows="8"
+                    placeholder='{"country": "US", "industry": "Technology"}'>{{ form.criteria.value|default:'{}' }}</textarea>
+                <div class="help-text">Define matching criteria as JSON. Leave empty to match all records.</div>
+                <div class="json-help">
+                    <strong>Examples:</strong><br>
+                    Match US leads: <code>{"country": "US"}</code><br>
+                    Match tech industry in CA: <code>{"industry": "Technology", "state": "CA"}</code><br>
+                    Multiple values: <code>{"status": ["new", "contacted"]}</code>
+                </div>
+                {% if form.criteria.errors %}
+                <div class="text-danger">{{ form.criteria.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Assignees -->
+        <div class="form-section">
+            <h3>Assignees</h3>
+
+            <div class="form-group">
+                <label class="required">Team Members</label>
+                <select name="assignees" id="assignees" class="form-control" multiple required>
+                    {% for user in available_users %}
+                    <option value="{{ user.id }}" {% if user.id in form.assignees.value %}selected{% endif %}>
+                        {{ user.get_full_name|default:user.email }}
+                        {% if user.role %}({{ user.role.name }}){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="help-text">Select team members to receive assigned records (Ctrl/Cmd + Click for multiple)
+                </div>
+                {% if form.assignees.errors %}
+                <div class="text-danger">{{ form.assignees.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Active Status -->
+            <div class="form-group">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" name="is_active" id="is_active" {% if form.is_active.value or not
+                        form.is_active.value %}checked{% endif %}>
+                    <label for="is_active">This rule is active</label>
+                </div>
+                <div class="help-text">Inactive rules are not evaluated</div>
+                {% if form.is_active.errors %}
+                <div class="text-danger">{{ form.is_active.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="btn-group">
+            <button type="submit" class="btn btn-primary">
+                Save Assignment Rule
+            </button>
+            <a href="{% url 'settings_app:assignment_rule_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ruleTypeInputs = document.querySelectorAll('input[name="rule_type"]');
+        const criteriaGroup = document.getElementById('criteriaGroup');
+        const criteriaTextarea = document.getElementById('criteria');
+
+        // Show/hide criteria based on rule type
+        function toggleCriteriaField() {
+            const selectedType = document.querySelector('input[name="rule_type"]:checked').value;
+            if (selectedType === 'criteria') {
+                criteriaGroup.style.display = 'block';
+            } else {
+                criteriaGroup.style.display = 'none';
+            }
+        }
+
+        // Validate JSON criteria
+        function validateJSON() {
+            try {
+                const value = criteriaTextarea.value.trim();
+                if (value) {
+                    JSON.parse(value);
+                    criteriaTextarea.style.borderColor = '#10b981';
+                }
+            } catch (e) {
+                criteriaTextarea.style.borderColor = '#ef4444';
+            }
+        }
+
+        // Add event listeners
+        ruleTypeInputs.forEach(input => {
+            input.addEventListener('change', toggleCriteriaField);
+        });
+
+        criteriaTextarea.addEventListener('blur', validateJSON);
+
+        // Initialize
+        toggleCriteriaField();
+
+        // Format JSON on load
+        try {
+            const value = criteriaTextarea.value.trim();
+            if (value && value !== '{}') {
+                const formatted = JSON.stringify(JSON.parse(value), null, 2);
+                criteriaTextarea.value = formatted;
+            }
+        } catch (e) {
+            // Invalid JSON, leave as is
+        }
+    });
+</script>
+{% endblock %}

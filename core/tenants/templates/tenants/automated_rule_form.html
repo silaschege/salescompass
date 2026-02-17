@@ -1,0 +1,7 @@
+{% extends 'tenants/tenant_model_form.html' %}
+{% block form_title %}
+{% if action == 'update' %}Update Rule{% else %}Create Automated Rule{% endif %}
+{% endblock %}
+{% block form_subtitle %}
+Define the logic and action for your automated lifecycle management.
+{% endblock %}

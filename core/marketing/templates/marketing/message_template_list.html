@@ -1,0 +1,56 @@
+{% extends "marketing/base.html" %}
+
+{% block title %}Message Templates - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Message Templates</h1>
+        <p class="text-white text-center lead">Manage templates for SMS, WhatsApp, and other messages</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <a href="{% url 'marketing:message_template_create' %}" class="btn btn-primary">+ New Template</a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for template in message_templates %}
+                        <tr>
+                            <td>{{ template.name }}</td>
+                            <td>{{ template.message_type_ref.label }}</td>
+                            <td>{{ template.category_ref.label }}</td>
+                            <td>
+                                <a href="{% url 'marketing:message_template_update' template.pk %}"
+                                    class="btn btn-sm btn-outline-secondary">Edit</a>
+                                <a href="{% url 'marketing:message_template_delete' template.pk %}"
+                                    class="btn btn-sm btn-outline-danger">Delete</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">No templates found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

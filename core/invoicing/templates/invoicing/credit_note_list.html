@@ -1,0 +1,48 @@
+{% extends "invoicing/base.html" %}
+
+{% block invoicing_content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1 fw-bold">Credit Notes</h2>
+            <p class="text-muted">Manage credits issued to customers</p>
+        </div>
+        <a href="{% url 'invoicing:credit_note_create' %}" class="btn btn-primary fw-bold">
+            <i class="bi bi-plus-circle me-2"></i>Create Credit Note
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Number</th>
+                            <th>Date</th>
+                            <th>Invoice</th>
+                            <th>Reason</th>
+                            <th class="text-end pe-4">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cn in credit_notes %}
+                        <tr>
+                            <td class="ps-4 fw-medium">{{ cn.note_number }}</td>
+                            <td>{{ cn.issue_date }}</td>
+                            <td>{{ cn.invoice.invoice_number }}</td>
+                            <td>{{ cn.reason|truncatechars:50 }}</td>
+                            <td class="text-end pe-4 fw-bold">${{ cn.amount|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">No credit notes found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

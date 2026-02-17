@@ -1,0 +1,41 @@
+{% extends "invoicing/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block invoicing_content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold">{% if 'credit' in request.path %}Create Credit Note{% else %}Create Debit
+                        Note{% endif %}</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.invoice|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.note_number|as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            {{ form.amount|as_crispy_field }}
+                        </div>
+                        <div class="mb-4">
+                            {{ form.reason|as_crispy_field }}
+                        </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% if 'credit' in request.path %}{% url 'invoicing:credit_note_list' %}{% else %}{% url 'invoicing:debit_note_list' %}{% endif %}"
+                                class="btn btn-light border px-4">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4 fw-bold">Save Note</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends "logged_in/base.html" %}
+{% load static %}
+
+{% block title %}Quality Control | SalesCompass{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<style>
+    /* Dashboard Specific: Cards */
+    .widget-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .widget-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s, box-shadow 0.2s;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border: none;
+    }
+
+    .widget-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(111, 66, 193, 0.12);
+    }
+
+    /* Soft Badge Colors */
+    .bg-success-soft {
+        background-color: rgba(25, 135, 84, 0.1) !important;
+        color: #198754 !important;
+    }
+
+    .bg-danger-soft {
+        background-color: rgba(220, 53, 69, 0.1) !important;
+        color: #dc3545 !important;
+    }
+
+    .bg-warning-soft {
+        background-color: rgba(255, 193, 7, 0.1) !important;
+        color: #997404 !important;
+    }
+
+    .bg-info-soft {
+        background-color: rgba(13, 110, 253, 0.1) !important;
+        color: #0d6efd !important;
+    }
+
+    /* Helper Classes */
+    .btn-primary {
+        background-color: #6f42c1;
+        border-color: #6f42c1;
+        box-shadow: 0 4px 6px rgba(111, 66, 193, 0.2);
+    }
+
+    .btn-primary:hover {
+        background-color: #5a34a0;
+        border-color: #5a34a0;
+    }
+</style>
+{% endblock %}
+
+{% block sidebar_nav %}
+<div class="sidebar" id="sidebar">
+    <a class="navbar-brand" href="{% url 'core:app_selection' %}">
+        <i class="bi bi-check2-all me-2"></i> Quality Control
+    </a>
+    <nav class="nav flex-column">
+        <div class="section-title">MODULE MENU</div>
+        {% include "quality_control/includes/module_nav.html" %}
+
+        <div class="section-title mt-4">SYSTEM</div>
+        <a class="nav-link" href="{% url 'core:app_selection' %}">
+            <i class="bi bi-grid nav-icon"></i> Control Plane
+        </a>
+        <div class="mt-auto pt-4 border-top">
+            <a class="nav-link text-danger" href="{% url 'core:logout' %}">
+                <i class="bi bi-box-arrow-right nav-icon"></i> Log Out
+            </a>
+        </div>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    {% block module_content %}
+    {% block page_content %}{% endblock %}
+    {% endblock %}
+</div>
+{% endblock %}

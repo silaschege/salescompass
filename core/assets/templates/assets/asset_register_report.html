@@ -1,0 +1,79 @@
+{% extends "assets/base.html" %}
+{% load humanize %}
+
+{% block asset_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h2 fw-bold mb-0">Fixed Asset Register</h1>
+            <p class="text-muted mb-0 text-uppercase extra-small fw-bold">As of {{ report_date }} | Full Capital
+                Portfolio</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button onclick="window.print()" class="btn btn-light border shadow-sm px-4">
+                <i class="bi bi-printer me-2"></i> Print Report
+            </button>
+            <button class="btn btn-white border shadow-sm px-4">
+                <i class="bi bi-download me-2"></i> Export CSV
+            </button>
+        </div>
+    </div>
+
+    <div class="premium-card border-0 shadow-sm overflow-hidden mb-5">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light bg-opacity-50">
+                    <tr class="text-muted small text-uppercase fw-bold">
+                        <th class="ps-4">Asset ID</th>
+                        <th>Asset Name</th>
+                        <th>Category</th>
+                        <th>Purchase Date</th>
+                        <th class="text-end">Original Cost</th>
+                        <th class="text-end">Accum. Dep.</th>
+                        <th class="text-end pe-4">Net Book Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for asset in assets %}
+                    <tr>
+                        <td class="ps-4 py-3 fw-bold text-indigo-600">{{ asset.asset_number }}</td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ asset.name }}</div>
+                            <div class="extra-small text-muted">{{ asset.location|default:"Central Facility" }}</div>
+                        </td>
+                        <td>
+                            <span class="badge badge-soft-primary px-3 rounded-pill text-uppercase small">{{
+                                asset.category.name }}</span>
+                        </td>
+                        <td class="small">{{ asset.purchase_date }}</td>
+                        <td class="text-end fw-bold text-dark">${{ asset.purchase_cost|intcomma }}</td>
+                        <td class="text-end text-danger small">${{
+                            asset.purchase_cost|add:"-asset.current_value"|intcomma }}</td>
+                        <td class="text-end pe-4 fw-bold text-dark">${{ asset.current_value|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">No assets found in the register.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-indigo-600 {
+        color: #4338ca;
+    }
+
+    @media print {
+
+        .btn,
+        nav,
+        .sidebar {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}

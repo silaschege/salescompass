@@ -1,0 +1,86 @@
+{% extends "expenses/base.html" %}
+{% load humanize %}
+
+{% block expenses_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h3 fw-bold mb-0">Approval Inbox</h1>
+            <p class="text-muted small mb-0">Reports requiring manager review for GL accrual</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-light px-3 border shadow-sm">
+                <i class="bi bi-filter"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="premium-card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light bg-opacity-50">
+                    <tr class="text-muted small text-uppercase fw-bold">
+                        <th class="ps-4">Timestamp</th>
+                        <th>User</th>
+                        <th>Report Details</th>
+                        <th class="text-center">Amount</th>
+                        <th class="pe-4 text-end">Governance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in pending_reports %}
+                    <tr>
+                        <td class="ps-4 py-3 small text-muted">
+                            {{ report.submitted_date|date:"M d, Y" }}<br>
+                            <span class="extra-small opacity-75">{{ report.submitted_date|date:"H:i" }}</span>
+                        </td>
+                        <td class="py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3"
+                                    style="width: 32px; height: 32px;">
+                                    {{ report.employee.get_full_name|slice:":1" }}
+                                </div>
+                                <div class="small fw-bold">{{ report.employee.get_full_name }}</div>
+                            </div>
+                        </td>
+                        <td class="py-3">
+                            <div class="fw-bold small"><a href="{% url 'expenses:report_detail' report.pk %}"
+                                    class="text-decoration-none text-primary">{{ report.title|truncatechars:40 }}</a>
+                            </div>
+                            <div class="extra-small text-muted">{{ report.report_number }}</div>
+                        </td>
+                        <td class="py-3 text-center fw-bold text-dark">
+                            ${{ report.total_amount|floatformat:2|intcomma }}
+                        </td>
+                        <td class="pe-4 py-3 text-end">
+                            <div class="btn-group shadow-sm rounded-pill overflow-hidden border">
+                                <form method="post" action="{% url 'expenses:report_approve' report.pk %}" class="m-0">
+                                    {% csrf_token %}
+                                    <button
+                                        class="btn btn-sm btn-white border-0 py-1 px-3 text-success small fw-bold">Approve</button>
+                                </form>
+                                <button
+                                    class="btn btn-sm btn-white border-0 py-1 px-3 text-danger small fw-bold border-start">Reject</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <i class="bi bi-mailbox text-muted mb-3 d-block" style="font-size: 3rem;"></i>
+                            <h5 class="text-muted fw-normal">Inbox is empty</h5>
+                            <p class="text-muted small mb-0">All submitted expense reports have been processed.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<style>
+    .extra-small {
+        font-size: 0.75rem;
+    }
+</style>
+{% endblock %}

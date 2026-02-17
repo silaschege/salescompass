@@ -1,0 +1,102 @@
+{% extends "cases/base.html" %}
+
+{% block title %}{{ case.subject }} - SalesCompass{% endblock %}
+
+{% block content %}
+<h1 class="block-title">{{ case.subject }}</h1>
+        <p class="text-small text-center lead">
+            We value your feedback! Please take a moment to complete our customer satisfaction survey.
+        </p>
+    <div class="container">
+        <div class="card">
+            <div class="card-header text-center  text-white">
+                <h3>How did we do?</h3>
+                <p class="mb-0">Your feedback helps us improve our support</p>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="case_id" value="{{ case.id }}">
+                    
+                    <div class="mb-4 text-center star-container">
+                        <p class="lead">Please rate your support experience:</p>
+                        <div class="star-rating" data-value="1">★</div>
+                        <div class="star-rating" data-value="2">★</div>
+                        <div class="star-rating" data-value="3">★</div>
+                        <div class="star-rating" data-value="4">★</div>
+                        <div class="star-rating" data-value="5">★</div>
+                        <input type="hidden" name="score" id="score-input" value="5">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Additional comments (optional):</label>
+                        <textarea name="comment" id="comment" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">Submit Feedback</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Star rating functionality
+        const stars = document.querySelectorAll('.star-rating');
+        const scoreInput = document.getElementById('score-input');
+        
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const value = parseInt(this.getAttribute('data-value'));
+                scoreInput.value = value;
+                
+                // Reset all stars
+                stars.forEach(s => s.classList.remove('selected'));
+                
+                // Select clicked star and all previous
+                for (let i = 0; i < value; i++) {
+                    stars[i].classList.add('selected');
+                }
+            });
+            
+            star.addEventListener('mouseenter', function() {
+                const value = parseInt(this.getAttribute('data-value'));
+                stars.forEach((s, i) => {
+                    if (i < value) {
+                        s.classList.add('selected');
+                    } else {
+                        s.classList.remove('selected');
+                    }
+                });
+            });
+            
+            star.addEventListener('mouseleave', function() {
+                const currentScore = parseInt(scoreInput.value);
+                stars.forEach((s, i) => {
+                    if (i < currentScore) {
+                        s.classList.add('selected');
+                    } else {
+                        s.classList.remove('selected');
+                    }
+                });
+            });
+        });
+    </script>
+
+    <style>
+        body { background: #f8f9fa; }
+        .survey-container { max-width: 600px; margin: 2rem auto; }
+        .star-rating { font-size: 2rem; cursor: pointer; }
+        .star-rating.selected { color: #6f42c1; }
+        .star-rating {
+            float: center;
+            /* Optional: Add spacing between stars */
+            margin-right: 5px;
+        }
+        .star-container::after { /* Clearfix for float */
+            content: "";
+            display: table;
+            clear: both;
+        }
+    </style>
+
+{% endblock %}

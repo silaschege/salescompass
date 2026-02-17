@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ proposal.title }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.4; }
+        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+        .logo { font-size: 24px; font-weight: bold; color: #2c3e50; }
+        .esg-box { background-color: #e8f5e9; border-left: 4px solid #4caf50; padding: 15px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">SalesCompass</div>
+        <p>123 Business Ave, Suite 100<br>
+        San Francisco, CA 94107<br>
+        www.salescompass.com | info@salescompass.com</p>
+    </div>
+
+    <h1class="block-title fw-bold mb-0">{{ proposal.title }}</h1>
+    
+    <div class="proposal-content">
+        {{ proposal.content|safe }}
+    </div>
+    
+    {% if proposal.esg_section_content %}
+    <div class="esg-box">
+        <h3>🌱 Sustainability & ESG Commitment</h3>
+        {{ proposal.esg_section_content|safe }}
+        {% if proposal.opportunity and proposal.opportunity.esg_tagged %}
+            <p><em>This solution is optimized to reduce your carbon footprint and support CSRD compliance.</em></p>
+        {% endif %}
+    </div>
+    {% endif %}
+</body>
+</html>

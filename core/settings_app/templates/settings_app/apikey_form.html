@@ -1,0 +1,27 @@
+{% extends "settings_app/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Generate API Key - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Generate API Key</h1>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card shadow">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">Generate</button>
+                    <a href="{% url 'settings_app:apikey_list' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

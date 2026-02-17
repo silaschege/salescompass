@@ -1,0 +1,54 @@
+{% extends "marketing/base.html" %}
+
+{% block title %}Confirm Clone - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Confirm Clone</h1>
+        <p class="text-white text-center lead">Are you sure you want to clone this campaign?</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 text-center">
+                    <div class="mb-4">
+                        <i class="bi bi-copy text-primary display-1"></i>
+                    </div>
+                    
+                    <h3 class="mb-3">Clone Campaign</h3>
+                    
+                    <div class="alert alert-info">
+                        <p><strong>This will create a copy of the campaign.</strong></p>
+                        <p>You are about to clone the campaign:</p>
+                        <p><strong>{{ campaign.campaign_name }}</strong></p>
+                        <p>The new campaign will be named: <strong>{{ campaign.campaign_name }} (Clone)</strong></p>
+                        <p>All settings, budget, dates and other properties will be copied to the new campaign. The status will be reset to "Draft".</p>
+                    </div>
+                    
+                    <div class="d-flex gap-2 justify-content-center">
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-copy me-1"></i> Yes, Clone Campaign
+                            </button>
+                        </form>
+                        <a href="{% url 'marketing:campaign_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}

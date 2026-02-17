@@ -1,0 +1,148 @@
+{% extends 'developer/base.html' %}
+
+{% block title %}Usage Analytics - Developer Portal{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Usage Analytics</h1>
+
+            <!-- API Key Usage -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">API Key Usage</h5>
+                </div>
+                <div class="card-body">
+                    {% if api_keys %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Key Prefix</th>
+                                    <th>Created</th>
+                                    <th>Last Used</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for key in api_keys %}
+                                <tr>
+                                    <td>{{ key.name }}</td>
+                                    <td><code>{{ key.key_prefix }}...</code></td>
+                                    <td>{{ key.created_at|date:"Y-m-d H:i" }}</td>
+                                    <td>
+                                        {% if key.last_used %}
+                                        {{ key.last_used|date:"Y-m-d H:i" }}
+                                        {% else %}
+                                        <span class="text-muted">Never</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if key.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No API keys found.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Webhook Statistics -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Webhook Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h3>{{ webhook_stats.total }}</h3>
+                                    <p class="text-muted mb-0">Total Webhooks</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h3 class="text-success">{{ webhook_stats.active }}</h3>
+                                    <p class="text-muted mb-0">Active</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h3 class="text-success">{{ webhook_stats.total_success }}</h3>
+                                    <p class="text-muted mb-0">Successful Deliveries</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h3 class="text-danger">{{ webhook_stats.total_failures }}</h3>
+                                    <p class="text-muted mb-0">Failed Deliveries</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if webhooks %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>URL</th>
+                                    <th>Success</th>
+                                    <th>Failures</th>
+                                    <th>Last Triggered</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for webhook in webhooks %}
+                                <tr>
+                                    <td>{{ webhook.name }}</td>
+                                    <td><code>{{ webhook.url|truncatechars:50 }}</code></td>
+                                    <td><span class="text-success">{{ webhook.success_count }}</span></td>
+                                    <td><span class="text-danger">{{ webhook.failure_count }}</span></td>
+                                    <td>
+                                        {% if webhook.last_triggered %}
+                                        {{ webhook.last_triggered|date:"Y-m-d H:i" }}
+                                        {% else %}
+                                        <span class="text-muted">Never</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if webhook.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No webhooks configured.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

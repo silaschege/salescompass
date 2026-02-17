@@ -1,0 +1,104 @@
+{% extends "assets/base.html" %}
+{% load humanize %}
+
+{% block asset_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item small"><a href="{% url 'assets:asset_list' %}"
+                            class="text-decoration-none text-muted">Registry</a></li>
+                    <li class="breadcrumb-item small"><a href="{% url 'assets:asset_detail' asset.pk %}"
+                            class="text-decoration-none text-muted">{{ asset.asset_number }}</a></li>
+                    <li class="breadcrumb-item active small text-primary fw-bold" aria-current="page">Valuation Timeline
+                    </li>
+                </ol>
+            </nav>
+            <h1 class="h3 fw-bold mb-0">Depreciation Schedule</h1>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-white border px-4 shadow-sm"><i class="bi bi-download me-2"></i> Export Data</button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Asset Context Summary -->
+        <div class="col-md-4">
+            <div class="premium-card p-4 border-0 shadow-sm mb-4">
+                <h6 class="fw-bold mb-4 small text-uppercase">Financial Context</h6>
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <div class="extra-small text-muted mb-1">Acquisition Cost</div>
+                        <div class="fw-bold h5 text-dark mb-0">${{ asset.purchase_cost|intcomma }}</div>
+                    </div>
+                    <div>
+                        <div class="extra-small text-muted mb-1">Method</div>
+                        <div class="fw-bold text-primary">{{ asset.category.get_depreciation_method_display }}</div>
+                    </div>
+                    <div>
+                        <div class="extra-small text-muted mb-1">Terminal Value</div>
+                        <div class="fw-bold text-dark">${{ asset.salvage_value|intcomma }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="premium-card p-4 border-0 shadow-sm bg-primary text-white overflow-hidden position-relative">
+                <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                    <i class="bi bi-graph-down" style="font-size: 5rem;"></i>
+                </div>
+                <h6 class="fw-bold mb-3 small text-uppercase">Net Book Value</h6>
+                <div class="h2 fw-bold mb-0">${{ asset.current_value|intcomma }}</div>
+                <p class="extra-small text-white-50 mt-2 mb-0">Next valuation run: 1st of next month</p>
+            </div>
+        </div>
+
+        <!-- Schedule Table -->
+        <div class="col-md-8">
+            <div class="premium-card shadow-sm border-0">
+                <div class="p-4 border-bottom">
+                    <h6 class="fw-bold mb-0">Valuation & Amortization History</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light bg-opacity-50 small text-uppercase fw-bold">
+                            <tr>
+                                <th class="ps-4">Period</th>
+                                <th>Event Type</th>
+                                <th class="text-center">Adjustment</th>
+                                <th class="pe-4 text-end">Carrying Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in schedule %}
+                            <tr>
+                                <td class="ps-4 py-3">
+                                    <div class="fw-bold text-dark">{{ item.date|date:"M Y" }}</div>
+                                    <div class="extra-small text-muted">{{ item.date|date:"M d, Y" }}</div>
+                                </td>
+                                <td>
+                                    <span
+                                        class="badge {% if item.type == 'Actual' %}badge-soft-success{% else %}badge-soft-warning{% endif %} px-3 rounded-pill text-uppercase extra-small">{{
+                                        item.type }}</span>
+                                </td>
+                                <td class="text-center text-danger small">
+                                    -${{ item.amount|intcomma }}
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <div class="fw-bold text-dark">${{ item.remaining|intcomma }}</div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">No valuation events recorded for
+                                    this asset.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "manufacturing/base.html" %}
+
+{% block page_content %}
+<div class="row">
+    <div class="col-xl-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Work Order #{{ order.id }}</h6>
+                <span
+                    class="badge {% if order.status == 'completed' %}badge-success{% elif order.status == 'in_progress' %}badge-info{% elif order.status == 'cancelled' %}badge-danger{% else %}badge-warning{% endif %}">
+                    {{ order.get_status_display }}
+                </span>
+            </div>
+            <div class="card-body">
+                <p><strong>Product:</strong> {{ order.product.product_name }}</p>
+                <p><strong>Quantity:</strong> {{ order.quantity }}</p>
+                <p><strong>BOM:</strong> <a href="{% url 'manufacturing:bom_detail' order.bom.id %}">{{ order.bom.name
+                        }}</a></p>
+                <p><strong>Production Line:</strong> {{ order.production_line.name|default:"Unassigned" }}</p>
+                <hr>
+                <p><strong>Planned Start:</strong> {{ order.planned_start_date|date:"Y-m-d" }}</p>
+                <p><strong>Planned End:</strong> {{ order.planned_end_date|date:"Y-m-d" }}</p>
+                <p><strong>Actual Start:</strong> {{ order.actual_start_date|date:"Y-m-d"|default:"Not started" }}</p>
+                <p><strong>Actual End:</strong> {{ order.actual_end_date|date:"Y-m-d"|default:"In progress" }}</p>
+                <hr>
+                <a href="{% url 'manufacturing:work_order_list' %}" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Components required</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Component</th>
+                                <th>Quantity Required</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.bom.items.all %}
+                            <tr>
+                                <td>{{ item.component.product_name }}</td>
+                                <td>{{ item.quantity|floatformat:2|multiply:order.quantity }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

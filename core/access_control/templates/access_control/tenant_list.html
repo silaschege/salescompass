@@ -1,0 +1,75 @@
+{% extends "access_control/base.html" %}
+
+{% block title %}Tenant Access List{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3">Tenant Access List</h1>
+                <a href="{% url 'access_control:manage_access' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back via Dashboard
+                </a>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 card-title">Tenants</h5>
+                        <form class="d-flex" role="search">
+                            <input class="form-control me-2" type="search" placeholder="Search tenants..."
+                                aria-label="Search">
+                            <button class="btn btn-outline-success" type="submit">Search</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tenant Name</th>
+                                    <th>Tenant ID</th>
+                                    <th>Assigned Controls</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tenant in tenants %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ tenant.name }}</strong>
+                                    </td>
+                                    <td><code>{{ tenant.tenant_id }}</code></td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ tenant.access_count }} Assigned</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{% url 'access_control:tenant_access_detail' tenant.pk %}"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View Assignments
+                                        </a>
+                                        <a href="{% url 'access_control:assign_tenant_access' %}?tenant={{ tenant.pk }}"
+                                            class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-plus-lg"></i> Assign
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">
+                                        No tenants found.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

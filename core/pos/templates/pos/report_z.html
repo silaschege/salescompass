@@ -1,0 +1,121 @@
+{% extends "pos/base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Z-Report (End of Day)</h1>
+        <div>
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print
+            </button>
+            {% if session.status == 'active' %}
+            <a href="{% url 'pos:session_close' session.id %}" class="btn btn-danger ms-2">
+                <i class="fas fa-lock"></i> Close Session
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if no_session %}
+    <div class="alert alert-info">
+        No active or recently closed session found to report on.
+    </div>
+    {% else %}
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow mb-4 border-left-primary">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Daily Reconciliation Report</h6>
+                    <small>Generated: {{ generated_at }}</small>
+                </div>
+                <div class="card-body">
+
+                    <div class="text-center mb-4">
+                        <h4>{{ session.terminal.terminal_name }}</h4>
+                        <p class="mb-0">Session: {{ session.session_number }}</p>
+                        {% if session.status == 'closed' %}
+                        <p class="text-muted">CLOSED by {{ session.cashier.get_full_name }} at {{ session.closed_at }}
+                        </p>
+                        {% else %}
+                        <p class="text-danger fw-bold">SESSION OPEN (PREVIEW)</p>
+                        {% endif %}
+                    </div>
+
+                    <hr>
+
+                    <!-- Financial Summary -->
+                    <div class="row">
+                        <div class="col-6">
+                            <p><strong>Gross Sales:</strong></p>
+                            <p>Returns:</p>
+                            <p>Tax Collected:</p>
+                            <h5 class="fw-bold mt-3">Net Sales:</h5>
+                        </div>
+                        <div class="col-6 text-end">
+                            <p>{{ gross_sales|floatformat:2 }}</p>
+                            <p class="text-danger">-{{ total_returns|floatformat:2 }}</p>
+                            <p>{{ tax_collected|floatformat:2 }}</p>
+                            <h5 class="fw-bold mt-3">{{ net_sales|floatformat:2 }}</h5>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Cash Reconciliation -->
+                    <h6 class="font-weight-bold">Cash Drawer Reconciliation</h6>
+                    <div class="row mt-2">
+                        <div class="col-6">
+                            <p>Opening Cash:</p>
+                            <p>Cash Sales:</p>
+                            <p>Pay Ins / Outs:</p> <!-- Simplified for now -->
+                            <p class="fw-bold">Expected In Drawer:</p>
+
+                            {% if session.status == 'closed' %}
+                            <p class="mt-2 text-primary">Actual Count:</p>
+                            <p>Variance:</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-6 text-end">
+                            <p>{{ session.opening_cash|floatformat:2 }}</p>
+                            <p>
+                                {% for pm in payment_methods %}
+                                {% if pm.payment_method == 'cash' %}{{ pm.total|floatformat:2 }}{% endif %}
+                                {% endfor %}
+                            </p>
+                            <p>0.00</p>
+                            <p class="fw-bold">
+                                {{ expected_cash|default:"---" }}
+                            </p>
+
+                            {% if session.status == 'closed' %}
+                            <p class="mt-2 text-primary">{{ actual_cash|floatformat:2 }}</p>
+                            <p class="{% if variance < 0 %}text-danger{% else %}text-success{% endif %}">
+                                {{ variance|floatformat:2 }}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="mt-5 mb-5">
+                        <div class="row">
+                            <div class="col-6 text-center">
+                                <div style="border-top: 1px solid #ccc; width: 80%; margin: 0 auto;"></div>
+                                <small class="text-muted">Cashier Signature</small>
+                            </div>
+                            <div class="col-6 text-center">
+                                <div style="border-top: 1px solid #ccc; width: 80%; margin: 0 auto;"></div>
+                                <small class="text-muted">Manager Signature</small>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

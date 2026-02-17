@@ -1,0 +1,47 @@
+{% extends "automation/base.html" %}
+
+{% block title %}Automation Action Form - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{% if object %}Edit Action{% else %}Create Action{% endif %}</h1>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="{{ form.action_type.id_for_label }}" class="form-label">Action Type</label>
+            {{ form.action_type }}
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.automation_action_name.id_for_label }}" class="form-label">Action Name</label>
+            {{ form.automation_action_name }}
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.automation_action_description.id_for_label }}" class="form-label">Description</label>
+            {{ form.automation_action_description }}
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.config.id_for_label }}" class="form-label">Configuration</label>
+            {{ form.config }}
+            <div class="form-text">JSON configuration for the action</div>
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.order.id_for_label }}" class="form-label">Order</label>
+            {{ form.order }}
+            <div class="form-text">Order in which actions are executed (lower numbers first)</div>
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.automation_action_is_active.id_for_label }}" class="form-label">Active</label>
+            {{ form.automation_action_is_active }}
+        </div>
+        
+        <button type="submit" class="btn btn-primary">{% if object %}Update{% else %}Create{% endif %} Action</button>
+        <a href="{% url 'automation:automation_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

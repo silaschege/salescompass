@@ -1,0 +1,30 @@
+{% extends "marketing/base.html" %}
+
+{% block title %}Remove Drip Step - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Remove Drip Step</h1>
+    </div>
+</div>
+
+<div class="container text-center">
+    <div class="card shadow-sm mx-auto" style="max-width: 500px;">
+        <div class="card-body py-5">
+            <i class="bi bi-exclamation-triangle display-1 text-danger mb-4"></i>
+            <h3>Are you sure?</h3>
+            <p class="text-muted mb-4">You are about to remove this step from the drip campaign. This action cannot be
+                undone.</p>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="javascript:history.back()" class="btn btn-outline-secondary px-4">Cancel</a>
+                    <button type="submit" class="btn btn-danger px-4">Remove Step</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

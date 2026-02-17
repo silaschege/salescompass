@@ -1,0 +1,109 @@
+{% extends 'products/base.html' %}
+
+{% block title %}
+{% if object %}
+    Edit {{ object.product_comparison_name }}
+{% else %}
+    Create Product Comparison
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">
+            {% if object %}
+                Edit {{ object.product_comparison_name }}
+            {% else %}
+                Create Product Comparison
+            {% endif %}
+        </h1>
+        <a href="{% url 'products:productcomparison_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.product_comparison_name.id_for_label }}" class="form-label">
+                                {{ form.product_comparison_name.label }}
+                            </label>
+                            {{ form.product_comparison_name }}
+                            {% if form.product_comparison_name.help_text %}
+                                <div class="form-text">{{ form.product_comparison_name.help_text }}</div>
+                            {% endif %}
+                            {% if form.product_comparison_name.errors %}
+                                <div class="text-danger">{{ form.product_comparison_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.products.id_for_label }}" class="form-label">
+                                {{ form.products.label }}
+                            </label>
+                            {{ form.products }}
+                            {% if form.products.help_text %}
+                                <div class="form-text">{{ form.products.help_text }}</div>
+                            {% endif %}
+                            {% if form.products.errors %}
+                                <div class="text-danger">{{ form.products.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.product_comparison_is_active.label }}</label>
+                            <div class="form-check">
+                                {{ form.product_comparison_is_active }}
+                                <label class="form-check-label" for="{{ form.product_comparison_is_active.id_for_label }}">
+                                    {{ form.product_comparison_is_active.label }}
+                                </label>
+                            </div>
+                            {% if form.product_comparison_is_active.help_text %}
+                                <div class="form-text">{{ form.product_comparison_is_active.help_text }}</div>
+                            {% endif %}
+                            {% if form.product_comparison_is_active.errors %}
+                                <div class="text-danger">{{ form.product_comparison_is_active.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'products:productcomparison_list' %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if object %}
+                                    Update Comparison
+                                {% else %}
+                                    Create Comparison
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Information</h5>
+                </div>
+                <div class="card-body">
+                    <p>Create predefined product comparisons for marketing materials and sales presentations.</p>
+                    <ul>
+                        <li>Enter a descriptive name for the comparison</li>
+                        <li>Select multiple products to include in the comparison</li>
+                        <li>Activate or deactivate the comparison as needed</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

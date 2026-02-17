@@ -1,0 +1,49 @@
+{% extends "hr/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block hr_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item small"><a href="{% url 'hr:goal_list' %}"
+                            class="text-decoration-none text-muted">Goals</a></li>
+                    <li class="breadcrumb-item active small text-primary fw-bold" aria-current="page">Conduct Review
+                    </li>
+                </ol>
+            </nav>
+            <h1 class="h3 fw-bold mb-0">Goal Review: {{ goal.title }}</h1>
+            <p class="text-muted small">Employee: {{ goal.employee.user.get_full_name }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="premium-card p-4 border-0 shadow-sm mb-4 bg-light bg-opacity-50">
+                <h6 class="fw-bold text-uppercase extra-small text-muted mb-3">Goal Details</h6>
+                <p class="mb-1">{{ goal.description }}</p>
+                <div class="small">
+                    <span class="text-muted">Target Date:</span> {{ goal.target_date }} |
+                    <span class="text-muted">Progress:</span> {{ goal.progress_percentage }}%
+                </div>
+            </div>
+
+            <div class="premium-card p-4 border-0 shadow-sm">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-warning px-4 shadow-sm border-0">
+                            Submit Review
+                        </button>
+                        <a href="{% url 'hr:goal_list' %}" class="btn btn-light px-4 border">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "tasks/base.html" %}
+{% load static %}
+{% block title %}Task Statuses - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container text-center">
+        <h1 class="block-title">Task Statuses</h1>
+        <p class="text-white lead">Define the stages of your task workflow</p>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="{% url 'tasks:dashboard' %}" class="btn btn-link text-decoration-none text-muted p-0">
+                <i class="bi bi-arrow-left"></i> Dashboard
+            </a>
+        </div>
+        <a href="{% url 'tasks:status_create' %}" class="btn btn-primary shadow-sm">
+            <i class="bi bi-plus-lg"></i> Create StatusStage
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            {% if object_list %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr class="small text-muted text-uppercase">
+                            <th class="ps-4">Status Name</th>
+                            <th>Color Code</th>
+                            <th>Display Order</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for status in object_list %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge px-3 py-2"
+                                        style="background-color: {{ status.color|default:'#6c757d' }}; color: white; min-width: 100px;">
+                                        {{ status.name }}
+                                    </span>
+                                    {% if status.is_default %}
+                                    <span class="ms-2 badge bg-soft-primary text-primary border small"
+                                        style="background-color: rgba(111, 66, 193, 0.05);">Default</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <code class="small text-muted">{{ status.color }}</code>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ status.order }}</span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'tasks:status_update' status.pk %}" class="btn btn-outline-primary"
+                                        title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'tasks:status_delete' status.pk %}" class="btn btn-outline-danger"
+                                        title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="display-1 text-muted opacity-25 mb-3"><i class="bi bi-activity"></i></div>
+                <h4 class="text-muted">No Statuses Defined</h4>
+                <p class="text-secondary">Start by defining the stages of your workflow.</p>
+                <a href="{% url 'tasks:status_create' %}" class="btn btn-primary mt-2">Add Status</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

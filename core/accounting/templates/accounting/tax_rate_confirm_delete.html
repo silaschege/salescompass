@@ -1,0 +1,21 @@
+{% extends "accounting/base.html" %}
+
+{% block accounting_content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Delete Tax Rate</h1>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="alert alert-danger">
+                Are you sure you want to delete the tax rate "{{ object.name }}"? This action cannot be undone.
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                <a href="{% url 'accounting:tax_rate_list' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

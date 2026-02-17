@@ -1,0 +1,136 @@
+<!-- templates/proposals/approval_template_form.html -->
+{% extends "proposals/base.html" %}
+{% load auth_extras %}
+
+{% block title %}
+  {% if form.instance.pk %}
+    Edit Approval Template - SalesCompass
+  {% else %}
+    Create Approval Template - SalesCompass
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="block-title fw-bold mb-0">
+      {% if form.instance.pk %}
+        Edit Approval Template
+      {% else %}
+        Create Approval Template
+      {% endif %}
+    </h1>
+    <a href="{% url 'proposals:approval_template_list' %}" class="btn btn-secondary">
+      <i class="bi bi-arrow-left"></i> Back to Templates
+    </a>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+              <label for="{{ form.name.id_for_label }}" class="form-label">Template Name *</label>
+              {{ form.name }}
+              {% if form.name.help_text %}
+                <div class="form-text">{{ form.name.help_text }}</div>
+              {% endif %}
+              {% if form.name.errors %}
+                <div class="text-danger">{{ form.name.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-3">
+              <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+              {{ form.description }}
+              {% if form.description.help_text %}
+                <div class="form-text">{{ form.description.help_text }}</div>
+              {% endif %}
+              {% if form.description.errors %}
+                <div class="text-danger">{{ form.description.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-3 form-check">
+              {{ form.is_active }}
+              <label for="{{ form.is_active.id_for_label }}" class="form-check-label">
+                Is Active
+              </label>
+              {% if form.is_active.help_text %}
+                <div class="form-text">{{ form.is_active.help_text }}</div>
+              {% endif %}
+              {% if form.is_active.errors %}
+                <div class="text-danger">{{ form.is_active.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <h5 class="mt-4 mb-3">Approval Steps</h5>
+            
+            <div id="steps-container" class="mb-3">
+              {% for step_form in formset.forms %}
+              <div class="step-form mb-3 p-3 border rounded bg-light">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="mb-2">
+                      <label for="{{ step_form.step.id_for_label }}" class="form-label">Step {{ forloop.counter }}</label>
+                      {{ step_form.step }}
+                      {% if step_form.step.help_text %}
+                        <div class="form-text">{{ step_form.step.help_text }}</div>
+                      {% endif %}
+                      {% if step_form.step.errors %}
+                        <div class="text-danger">{{ step_form.step.errors }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-3">
+                    <div class="mb-2">
+                      <label for="{{ step_form.order.id_for_label }}" class="form-label">Order</label>
+                      {{ step_form.order }}
+                      {% if step_form.order.help_text %}
+                        <div class="form-text">{{ step_form.order.help_text }}</div>
+                      {% endif %}
+                      {% if step_form.order.errors %}
+                        <div class="text-danger">{{ step_form.order.errors }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-3">
+                    <div class="mb-2 form-check mt-4 pt-1">
+                      {{ step_form.is_required }}
+                      <label for="{{ step_form.is_required.id_for_label }}" class="form-check-label">
+                        Required
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="mb-2">
+                  <label class="form-label">Approver</label>
+                  <input type="text" class="form-control" value="{{ step_form.approved_by }}">
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            
+            <div class="d-flex justify-content-between">
+              <a href="{% url 'proposals:approval_template_list' %}" class="btn btn-secondary">Cancel</a>
+              <button type="submit" class="btn btn-primary">
+                {% if form.instance.pk %}
+                  Update Template
+                {% else %}
+                  Create Template
+                {% endif %}
+              </button>
+            </div>
+          </form>
+        </div}
+      </div>
+    </div}
+  </div}
+</div>
+{% endblock %}

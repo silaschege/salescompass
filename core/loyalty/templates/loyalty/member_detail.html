@@ -1,0 +1,134 @@
+{% extends "loyalty/base.html" %}
+{% load humanize %}
+
+{% block loyalty_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item small"><a href="{% url 'loyalty:member_list' %}"
+                            class="text-decoration-none text-muted">Members</a></li>
+                    <li class="breadcrumb-item active small text-primary fw-bold" aria-current="page">{{
+                        member.customer.account_name }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3 fw-bold mb-0">Member Profile</h1>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'loyalty:points_adjust' member.pk %}" class="btn btn-warning px-4 shadow-sm border-0">
+                <i class="bi bi-pencil-square me-2"></i> Adjust Points
+            </a>
+            <button class="btn btn-outline-secondary px-3">
+                <i class="bi bi-printer"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Profile Sidebar -->
+        <div class="col-lg-4">
+            <div class="premium-card p-4 border-0 shadow-sm mb-4 text-center">
+                <div class="avatar-lg rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center mx-auto mb-3"
+                    style="width: 80px; height: 80px; font-size: 2.5rem;">
+                    {{ member.customer.account_name|slice:":1" }}
+                </div>
+                <h4 class="fw-bold mb-1">{{ member.customer.account_name }}</h4>
+                <div
+                    class="badge {% if member.current_tier == 'gold' or member.current_tier == 'platinum' %}badge-soft-warning{% elif member.current_tier == 'silver' %}badge-soft-primary{% else %}badge-soft-success{% endif %} px-4 py-2 rounded-pill text-uppercase mb-4">
+                    {{ member.get_current_tier_display }} Member
+                </div>
+
+                <div class="border-top pt-4 mt-2">
+                    <div class="row g-0">
+                        <div class="col-6 border-end">
+                            <div class="small text-muted text-uppercase fw-bold extra-small mb-1">Available</div>
+                            <div class="h4 fw-bold mb-0 text-primary">{{ member.points_balance|intcomma }}</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="small text-muted text-uppercase fw-bold extra-small mb-1">Lifetime</div>
+                            <div class="h4 fw-bold mb-0 text-dark">{{ member.total_points_earned|intcomma }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="premium-card p-4 border-0 shadow-sm">
+                <h6 class="fw-bold mb-3">Engagement Strategy</h6>
+                <div class="list-group list-group-flush small">
+                    <div
+                        class="list-group-item px-0 py-3 bg-transparent d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Retention Risk</span>
+                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">LOW</span>
+                    </div>
+                    <div
+                        class="list-group-item px-0 py-3 bg-transparent d-flex justify-content-between align-items-center border-0">
+                        <span class="text-muted">Marketing Opt-in</span>
+                        <span class="text-success"><i class="bi bi-check-circle-fill"></i> Enabled</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Ledger -->
+        <div class="col-lg-8">
+            <div class="premium-card h-100 border-0 shadow-sm">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Point History</h5>
+                    <span class="text-muted small">Last 20 transactions</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light bg-opacity-50 small text-uppercase">
+                            <tr>
+                                <th class="ps-4">Date</th>
+                                <th>Activity</th>
+                                <th class="text-center">Points</th>
+                                <th class="pe-4 text-end">Financials</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tx in member.transactions.all|slice:":20" %}
+                            <tr>
+                                <td class="ps-4 py-3">
+                                    <div class="small fw-semibold">{{ tx.created_at|date:"M d, Y" }}</div>
+                                    <div class="extra-small text-muted">{{ tx.created_at|date:"H:i" }}</div>
+                                </td>
+                                <td class="py-3">
+                                    <div class="fw-bold small">{{ tx.get_transaction_type_display }}</div>
+                                    <div class="extra-small text-muted">{{ tx.description }}</div>
+                                </td>
+                                <td
+                                    class="py-3 text-center fw-bold {% if tx.points > 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ tx.points|stringformat:"+d" }}
+                                </td>
+                                <td class="pe-4 py-3 text-end">
+                                    {% if tx.allocated_revenue > 0 %}
+                                    <span class="badge badge-soft-primary small">${{ tx.allocated_revenue }}
+                                        Deferred</span>
+                                    {% elif tx.transaction_type == 'redeem' %}
+                                    <span class="badge badge-soft-success small">Realized</span>
+                                    {% else %}
+                                    <span class="text-muted small">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">No point activity recorded for this
+                                    member.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .extra-small {
+        font-size: 0.7rem;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,195 @@
+{% extends "opportunities/base.html" %}
+{% load task_tags filters_extras math %}
+{% load auth_extras %}
+
+{% block title %}{{ opportunity.name }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h1>{{ opportunity.name }}</h1>
+        <span
+            class="badge bg-{% if opportunity.stage.opportunity_stage_name == 'closed_won' %}success{% elif opportunity.stage.opportunity_stage_name == 'closed_lost' %}danger{% elif opportunity.stage.opportunity_stage_name == 'negotiation' %}primary{% elif opportunity.stage.opportunity_stage_name == 'proposal' %}warning{% else %}secondary{% endif %}">
+            {{ opportunity.stage.opportunity_stage_name }}
+        </span>
+        {% if opportunity.esg_tagged %}
+        <span class="badge bg-success">🌱 ESG</span>
+        {% endif %}
+    </div>
+    <div>
+        {% if request.user.is_authenticated and request.user|has_perm:"opportunities:write" %}
+        <a href="{% url 'opportunities:opportunity_update' opportunity.pk %}" class="btn btn-outline-secondary">Edit</a>
+        <a href="{% url 'opportunities:opportunity_delete' opportunity.pk %}" class="btn btn-outline-danger">Delete</a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Pipeline Stepper - Fixed to pass stages from view -->
+{% include "includes/pipeline_stepper.html" with steps=stages current_step=opportunity.stage is_won=opportunity.stage.is_won is_lost=opportunity.stage.is_lost %}
+
+<div class="row">
+    <div class="col-md-8">
+        <h3>Opportunity Details</h3>
+        <table class="table table-borderless">
+            <tr>
+                <th>Account</th>
+                <td><a href="{% url 'accounts:account_detail' opportunity.account.pk %}">{{ opportunity.account.name }}</a></td>
+            </tr>
+            <tr>
+                <th>Amount</th>
+                <td>${{ opportunity.amount|intcomma }}</td>
+            </tr>
+            <tr>
+                <th>Weighted Value</th>
+                <td>${{ opportunity.weighted_value|intcomma }}</td>
+            </tr>
+            <tr>
+                <th>Close Date</th>
+                <td>{{ opportunity.close_date }}</td>
+            </tr>
+            <tr>
+                <th>Owner</th>
+                <td>{{ opportunity.owner.email|default:"Unassigned" }}</td>
+            </tr>
+            <tr>
+                <th>Probability</th>
+                <td>{{ opportunity.probability|mul:100|floatformat:0 }}%</td>
+            </tr>
+            <tr>
+                <th>Created</th>
+                <td>{{ opportunity.created_at|date:"M d, Y" }}</td>
+            </tr>
+            {% if opportunity.modified_at %}
+            <tr>
+                <th>Last Updated</th>
+                <td>{{ opportunity.modified_at|date:"M d, Y" }}</td>
+            </tr>
+            {% endif %}
+        </table>
+
+        {% if opportunity.esg_tagged %}
+        <h4>ESG Impact</h4>
+        <p>{{ opportunity.esg_impact_description }}</p>
+        {% endif %}
+
+        <h4>Products</h4>
+        {% if opportunity.opportunityproduct_set.exists %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for opp_product in opportunity.opportunityproduct_set.all %}
+                    <tr>
+                        <td>{{ opp_product.product.name }}</td>
+                        <td>{{ opp_product.quantity }}</td>
+                        <td>${{ opp_product.unit_price|intcomma }}</td>
+                        <td>${{ opp_product.quantity|mul:opp_product.unit_price|intcomma }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="table-secondary fw-bold">
+                        <td colspan="3" class="text-end">Grand Total</td>
+                        <td>${{ opportunity.amount|intcomma }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p>No products selected.</p>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <!-- Tasks Widget -->
+        <div class="mb-4">
+            {% render_object_tasks opportunity %}
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">Forecast Impact</div>
+            <div class="card-body">
+                <h5 class="card-title">${{ opportunity.weighted_value|intcomma }}</h5>
+                <p class="card-text">Weighted forecast value</p>
+                <div class="progress" style="height: 20px;">
+                    <div class="progress-bar bg-primary" style="width: {{ opportunity.probability|mul:100 }}%;">
+                        {{ opportunity.probability|mul:100|floatformat:0 }}% probability
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Next Steps Suggestions -->
+        <div class="card mb-3">
+            <div class="card-header">Next Actions</div>
+            <div class="card-body">
+                {% if opportunity.stage.is_won %}
+                    <p class="text-success">🎉 Opportunity Closed Won!</p>
+                {% elif opportunity.stage.is_lost %}
+                    <p class="text-danger">❌ Opportunity Closed Lost</p>
+                {% else %}
+                    <ul class="list-group list-group-flush">
+                        {% if opportunity.probability < 0.3 %}
+                            <li class="list-group-item py-2">
+                                <i class="bi bi-person-check me-2 text-info"></i>Qualify needs
+                            </li>
+                        {% elif opportunity.probability < 0.6 %}
+                            <li class="list-group-item py-2">
+                                <i class="bi bi-file-earmark-text me-2 text-info"></i>Send proposal
+                            </li>
+                        {% elif opportunity.probability < 0.8 %}
+                            <li class="list-group-item py-2">
+                                <i class="bi bi-currency-dollar me-2 text-info"></i>Negotiate terms
+                            </li>
+                        {% else %}
+                            <li class="list-group-item py-2">
+                                <i class="bi bi-check-circle me-2 text-info"></i>Close the deal
+                            </li>
+                        {% endif %}
+                        <li class="list-group-item py-2">
+                            <i class="bi bi-calendar-event me-2 text-info"></i>Schedule follow-up
+                        </li>
+                        <li class="list-group-item py-2">
+                            <i class="bi bi-telephone me-2 text-info"></i>Contact decision maker
+                        </li>
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if opportunity.stage.opportunity_stage_name == 'closed_won' or opportunity.stage.opportunity_stage_name == 'closed_lost' %}
+        <div class="card">
+            <div class="card-header">Win/Loss Analysis</div>
+            <div class="card-body">
+                {% with analysis=opportunity.winlossanalysis %}
+                {% if analysis %}
+                {% if analysis.is_won %}
+                <p class="text-success">✅ Won</p>
+                <p><strong>Reason:</strong> {{ analysis.win_reason }}</p>
+                {% else %}
+                <p class="text-danger">❌ Lost</p>
+                <p><strong>Reason:</strong> {{ analysis.loss_reason }}</p>
+                {% if analysis.competitor_name %}
+                <p><strong>Competitor:</strong> {{ analysis.competitor_name }}</p>
+                {% endif %}
+                {% endif %}
+                <p><strong>Sales Cycle:</strong> {{ analysis.sales_cycle_days }} days</p>
+                {% else %}
+                <p>No analysis recorded.</p>
+                {% if request.user.is_authenticated and request.user|has_perm:"opportunities:write" %}
+                <a href="#" class="btn btn-sm btn-primary">Add Analysis</a>
+                {% endif %}
+                {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

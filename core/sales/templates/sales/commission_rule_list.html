@@ -1,0 +1,88 @@
+{% extends "sales/base.html" %}
+
+{% block sales_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h3 fw-bold mb-0">Commission Governance</h1>
+            <p class="text-muted small mb-0">Define eligibility and payout structures for the sales force</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'sales:rule_create' %}" class="btn btn-primary px-4 shadow-sm border-0">
+                <i class="bi bi-plus-lg me-2"></i> Create New Rule
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for rule in rules %}
+        <div class="col-md-6 col-xl-4">
+            <div class="premium-card p-4 border-0 shadow-sm h-100 position-relative overflow-hidden">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-indigo-50 text-indigo-600 rounded p-2 me-3">
+                            <i class="bi bi-shield-check h5 mb-0"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-1">{{ rule.name }}</h5>
+                            <span
+                                class="badge {% if rule.is_active %}badge-soft-success{% else %}badge-soft-secondary{% endif %} extra-small text-uppercase">
+                                {% if rule.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="list-group list-group-flush small mb-4">
+                    <div class="list-group-item px-0 py-2 bg-transparent border-0 d-flex justify-content-between">
+                        <span class="text-muted">Percentage:</span>
+                        <span class="fw-bold text-dark">{{ rule.percentage }}%</span>
+                    </div>
+                    <div class="list-group-item px-0 py-2 bg-transparent border-0 d-flex justify-content-between">
+                        <span class="text-muted">Flat Amount:</span>
+                        <span class="fw-bold text-dark">${{ rule.flat_amount }}</span>
+                    </div>
+                    <div class="list-group-item px-0 py-2 bg-transparent border-0 d-flex justify-content-between">
+                        <span class="text-muted">Threshold:</span>
+                        <span class="text-dark fw-semibold small">${{ rule.min_sales_amount }}</span>
+                    </div>
+                    <div class="list-group-item px-0 py-2 bg-transparent border-0 d-flex justify-content-between">
+                        <span class="text-muted">Scope:</span>
+                        <span class="text-indigo-600 fw-bold small">
+                            {% if rule.specific_product %}{{ rule.specific_product.product_name }}{% elif
+                            rule.product_type %}{{ rule.product_type }}{% else %}Global{% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 pt-3 border-top justify-content-end">
+                    <a href="{% url 'sales:rule_update' rule.pk %}"
+                        class="btn btn-sm btn-light border extra-small">Configure</a>
+                    <a href="{% url 'sales:rule_delete' rule.pk %}"
+                        class="btn btn-sm btn-outline-danger border extra-small"><i class="bi bi-trash"></i></a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="premium-card p-5 border-0 shadow-sm">
+                <i class="bi bi-gear-wide text-muted mb-3 d-block" style="font-size: 3rem;"></i>
+                <h5 class="text-muted fw-normal">No commission rules defined</h5>
+                <a href="{% url 'sales:rule_create' %}" class="btn btn-primary px-4 shadow-sm border-0 mt-3">Create
+                    First Rule</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .bg-indigo-50 {
+        background-color: rgba(67, 56, 202, 0.05);
+    }
+
+    .text-indigo-600 {
+        color: #4338ca;
+    }
+</style>
+{% endblock %}

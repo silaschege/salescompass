@@ -1,0 +1,140 @@
+{% extends "projects/base.html" %}
+{% load humanize %}
+
+{% block page_content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- KPI Cards -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Projects</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_projects }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-stack fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Active Projects</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_projects }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-play-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Budget</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_budget|intcomma }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-currency-dollar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Actual Cost</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_cost|intcomma }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-credit-card fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts & Tables -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">All Projects</h6>
+                    <a href="{% url 'projects:project_create' %}" class="btn btn-sm btn-primary">New Project</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Customer</th>
+                                    <th>Status</th>
+                                    <th>Progress</th>
+                                    <th>Budget</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for project in projects.all|slice:":10" %}
+                                <tr>
+                                    <td><a href="{% url 'projects:project_detail' project.pk %}">{{ project.name }}</a>
+                                    </td>
+                                    <td>{{ project.customer.account_name|default:"Internal" }}</td>
+                                    <td><span class="badge badge-pill badge-primary">{{ project.get_status_display
+                                            }}</span></td>
+                                    <td>
+                                        <div class="progress progress-sm mr-2">
+                                            <div class="progress-bar bg-info" role="progressbar" style="width: 50%"
+                                                aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </td>
+                                    <td>${{ project.budget|intcomma }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">No projects found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Upcoming Milestones</h6>
+                </div>
+                <div class="card-body">
+                    {% for milestone in upcoming_milestones %}
+                    <div class="mb-3">
+                        <div class="small text-gray-500">{{ milestone.due_date }} - {{ milestone.project.name }}</div>
+                        <div class="font-weight-bold">{{ milestone.name }}</div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-4">No pending milestones.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "automation/base.html" %}
+
+{% block title %}Workflow Executions - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Workflow Executions</h1>
+    
+    {% if workflow_executions %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Workflow</th>
+                    <th>Status</th>
+                    <th>Error Message</th>
+                    <th>Executed At</th>
+                    <th>Completed At</th>
+                    <th>Execution Time (ms)</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for execution in workflow_executions %}
+                <tr>
+                    <td>{{ execution.id }}</td>
+                    <td>{{ execution.workflow.workflow_name }}</td>
+                    <td>
+                        {% if execution.workflow_execution_status == 'completed' %}
+                            <span class="badge bg-success">{{ execution.workflow_execution_status }}</span>
+                        {% elif execution.workflow_execution_status == 'failed' %}
+                            <span class="badge bg-danger">{{ execution.workflow_execution_status }}</span>
+                        {% elif execution.workflow_execution_status == 'running' %}
+                            <span class="badge bg-warning">{{ execution.workflow_execution_status }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ execution.workflow_execution_status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ execution.workflow_execution_error_message|truncatechars:50 }}</td>
+                    <td>{{ execution.workflow_execution_executed_at }}</td>
+                    <td>{{ execution.workflow_execution_completed_at }}</td>
+                    <td>{{ execution.workflow_execution_execution_time_ms }}</td>
+                    <td>
+                        <a href="{% url 'automation:workflow_execution_detail' execution.id %}" class="btn btn-sm btn-info">View</a>
+                        {% if perms.automation.write %}
+                        <a href="{% url 'automation:workflow_execution_update' execution.id %}" class="btn btn-sm btn-warning">Edit</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p>No workflow executions found.</p>
+    {% endif %}
+</div>
+{% endblock %}

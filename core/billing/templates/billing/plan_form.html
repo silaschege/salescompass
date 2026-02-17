@@ -1,0 +1,212 @@
+{% extends 'billing/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-list-ul me-2"></i>Create Subscription Plan</h2>
+            <p class="text-muted">Define a new subscription plan with pricing and features</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Plan Details</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">Plan Name</label>
+                            {{ form.name }}
+                            {% if form.name.help_text %}
+                                <div class="form-text">{{ form.name.help_text }}</div>
+                            {% endif %}
+                            {% if form.name.errors %}
+                                <div class="text-danger">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.help_text %}
+                                <div class="form-text">{{ form.description.help_text }}</div>
+                            {% endif %}
+                            {% if form.description.errors %}
+                                <div class="text-danger">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.price.id_for_label }}" class="form-label">Price ($)</label>
+                                    {{ form.price }}
+                                    {% if form.price.help_text %}
+                                        <div class="form-text">{{ form.price.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.price.errors %}
+                                        <div class="text-danger">{{ form.price.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.max_users.id_for_label }}" class="form-label">Maximum Users</label>
+                                    {{ form.max_users }}
+                                    {% if form.max_users.help_text %}
+                                        <div class="form-text">{{ form.max_users.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.max_users.errors %}
+                                        <div class="text-danger">{{ form.max_users.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.storage_limit.id_for_label }}" class="form-label">Storage Limit (GB)</label>
+                                    {{ form.storage_limit }}
+                                    {% if form.storage_limit.help_text %}
+                                        <div class="form-text">{{ form.storage_limit.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.storage_limit.errors %}
+                                        <div class="text-danger">{{ form.storage_limit.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.api_calls_limit.id_for_label }}" class="form-label">API Calls Limit</label>
+                                    {{ form.api_calls_limit }}
+                                    {% if form.api_calls_limit.help_text %}
+                                        <div class="form-text">{{ form.api_calls_limit.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.api_calls_limit.errors %}
+                                        <div class="text-danger">{{ form.api_calls_limit.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.has_reports }}
+                                    <label class="form-check-label" for="{{ form.has_reports.id_for_label }}">
+                                        Has Reports
+                                    </label>
+                                    {% if form.has_reports.help_text %}
+                                        <div class="form-text">{{ form.has_reports.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.has_reports.errors %}
+                                        <div class="text-danger">{{ form.has_reports.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.has_custom_fields }}
+                                    <label class="form-check-label" for="{{ form.has_custom_fields.id_for_label }}">
+                                        Has Custom Fields
+                                    </label>
+                                    {% if form.has_custom_fields.help_text %}
+                                        <div class="form-text">{{ form.has_custom_fields.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.has_custom_fields.errors %}
+                                        <div class="text-danger">{{ form.has_custom_fields.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.has_integrations }}
+                                    <label class="form-check-label" for="{{ form.has_integrations.id_for_label }}">
+                                        Has Integrations
+                                    </label>
+                                    {% if form.has_integrations.help_text %}
+                                        <div class="form-text">{{ form.has_integrations.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.has_integrations.errors %}
+                                        <div class="text-danger">{{ form.has_integrations.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                        Active Plan
+                                    </label>
+                                    {% if form.is_active.help_text %}
+                                        <div class="form-text">{{ form.is_active.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.is_active.errors %}
+                                        <div class="text-danger">{{ form.is_active.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    {{ form.is_featured }}
+                                    <label class="form-check-label" for="{{ form.is_featured.id_for_label }}">
+                                        Featured Plan
+                                    </label>
+                                    {% if form.is_featured.help_text %}
+                                        <div class="form-text">{{ form.is_featured.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.is_featured.errors %}
+                                        <div class="text-danger">{{ form.is_featured.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-2"></i>Create Plan
+                            </button>
+                            <a href="{% url 'billing:plan_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Plan Information</h5>
+                </div>
+                <div class="card-body">
+                    <p>Create a new subscription plan with the following attributes:</p>
+                    <ul>
+                        <li><strong>Name</strong>: A descriptive name for your plan</li>
+                        <li><strong>Description</strong>: Detailed description of the plan features</li>
+                        <li><strong>Price</strong>: Set the plan price</li>
+                        <li><strong>Limits</strong>: Define resource limits for this plan</li>
+                        <li><strong>Features</strong>: Select which features are included</li>
+                    </ul>
+                    <p class="mb-0">Once created, you can assign this plan to users and manage subscriptions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

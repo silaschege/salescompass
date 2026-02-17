@@ -1,0 +1,64 @@
+<!-- Dashboard -->
+<a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+    href="{% url 'projects:dashboard' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-speedometer2 nav-icon"></i>
+        <span>Dashboard</span>
+    </div>
+</a>
+
+<!-- Projects -->
+<a class="nav-link {% if request.resolver_match.url_name == 'project_list' or request.resolver_match.url_name == 'project_detail' %}active{% endif %}"
+    href="{% url 'projects:project_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-stack nav-icon"></i>
+        <span>Projects</span>
+    </div>
+</a>
+<a class="nav-link {% if request.resolver_match.url_name == 'project_gantt' %}active{% endif %}"
+    href="{% if project %}{% url 'projects:project_gantt' project.pk %}{% elif object %}{% url 'projects:project_gantt' object.pk %}{% else %}#{% endif %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-calendar3 nav-icon"></i>
+        <span>Gantt Chart</span>
+    </div>
+</a>
+
+<!-- Timesheets -->
+<div class="section-title mt-3">TIME TRACKING</div>
+<a class="nav-link {% if 'timesheets' in request.path %}active{% endif %}" href="{% url 'projects:timesheet_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-clock-history nav-icon"></i>
+        <span>My Timesheets</span>
+    </div>
+</a>
+<a class="nav-link {% if 'approvals' in request.path %}active{% endif %}"
+    href="{% url 'projects:timesheet_approval_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-check2-all nav-icon"></i>
+        <span>Approvals</span>
+    </div>
+</a>
+
+<!-- Reports -->
+<div class="section-title mt-3">REPORTS</div>
+<a class="nav-link {% if request.resolver_match.url_name == 'profitability_report' %}active{% endif %}"
+    href="{% url 'projects:profitability_report' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-graph-up nav-icon"></i>
+        <span>Profitability</span>
+    </div>
+</a>
+<a class="nav-link {% if request.resolver_match.url_name == 'resource_capacity' %}active{% endif %}"
+    href="{% url 'projects:resource_capacity' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-people nav-icon"></i>
+        <span>Capacity</span>
+    </div>
+</a>
+<a class="nav-link {% if request.resolver_match.url_name == 'revenue_recognition' %}active{% endif %}"
+    href="{% url 'projects:revenue_recognition' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-cash-stack nav-icon"></i>
+        <span>Revenue Rec.</span>
+    </div>
+</a>

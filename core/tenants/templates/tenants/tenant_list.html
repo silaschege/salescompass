@@ -1,0 +1,241 @@
+{% extends 'tenants/base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
+                            <i class="bi bi-building text-primary" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-0 fw-bold">{{ stats.total|default:tenants|length }}</h3>
+                            <small class="text-muted">Total Tenants</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
+                            <i class="bi bi-check-circle text-success" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-0 fw-bold text-success">{{ stats.active|default:"0" }}</h3>
+                            <small class="text-muted">Active</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3">
+                            <i class="bi bi-pause-circle text-warning" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-0 fw-bold text-warning">{{ stats.suspended|default:"0" }}</h3>
+                            <small class="text-muted">Suspended</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-info bg-opacity-10 p-3 me-3">
+                            <i class="bi bi-hourglass-split text-info" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-0 fw-bold text-info">{{ stats.trial|default:"0" }}</h3>
+                            <small class="text-muted">On Trial</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header and Actions -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h2 class="mb-0">All Tenants</h2>
+        </div>
+        <div class="col-md-6 text-end">
+            <div class="btn-group me-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle"
+                    data-bs-toggle="dropdown">
+                    <i class="bi bi-funnel me-1"></i>Filter
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="?status=active">Active</a></li>
+                    <li><a class="dropdown-item" href="?status=trialing">Trial</a></li>
+                    <li><a class="dropdown-item" href="?status=suspended">Suspended</a></li>
+                    <li><a class="dropdown-item" href="?status=archived">Archived</a></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li><a class="dropdown-item" href="?">All Tenants</a></li>
+                </ul>
+            </div>
+            <a href="{% url 'tenants:create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Create New Tenant
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            {% if tenants %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Name</th>
+                            <th>Slug</th>
+                            <th>Domain</th>
+                            <th>Admin User</th>
+                            <th>Plan</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tenant in tenants %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-2"
+                                        style="width: 36px; height: 36px;">
+                                        <span class="text-primary fw-bold">{{ tenant.name|slice:":1"|upper }}</span>
+                                    </div>
+                                    <strong>{{ tenant.name }}</strong>
+                                </div>
+                            </td>
+                            <td><code class="bg-light px-2 py-1 rounded">{{ tenant.slug }}</code></td>
+                            <td>{{ tenant.domain|default:"N/A" }}</td>
+                            <td>{{ tenant.tenant_admin.email|default:"-" }}</td>
+                            <td>
+                                {% if tenant.plan %}
+                                <span class="badge bg-primary bg-opacity-10 text-primary">{{ tenant.plan.name }}</span>
+                                {% else %}
+                                <span class="text-muted">No Plan</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if tenant.subscription_status == 'active' %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Active</span>
+                                {% elif tenant.subscription_status == 'trialing' %}
+                                <span class="badge bg-info"><i class="bi bi-hourglass me-1"></i>Trial</span>
+                                {% elif tenant.subscription_status == 'suspended' %}
+                                <span class="badge bg-warning text-dark"><i
+                                        class="bi bi-pause-circle me-1"></i>Suspended</span>
+                                {% elif tenant.subscription_status == 'archived' %}
+                                <span class="badge bg-secondary"><i class="bi bi-archive me-1"></i>Archived</span>
+                                {% elif tenant.subscription_status == 'deleted' %}
+                                <span class="badge bg-danger"><i class="bi bi-trash me-1"></i>Deleted</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ tenant.subscription_status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ tenant.created_at|date:"M d, Y" }}</td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                        data-bs-toggle="dropdown">
+                                        <i class="bi bi-gear"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        {% if tenant.is_suspended or tenant.is_archived %}
+                                        <li>
+                                            <a class="dropdown-item"
+                                                href="{% url 'tenants:reactivate' tenant_id=tenant.id %}">
+                                                <i class="bi bi-arrow-clockwise text-success me-2"></i>Reactivate
+                                            </a>
+                                        </li>
+                                        {% else %}
+                                        <li>
+                                            <a class="dropdown-item"
+                                                href="{% url 'tenants:suspend' tenant_id=tenant.id %}">
+                                                <i class="bi bi-pause-circle text-warning me-2"></i>Suspend
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item"
+                                                href="{% url 'tenants:archive' tenant_id=tenant.id %}">
+                                                <i class="bi bi-archive text-secondary me-2"></i>Archive
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                        <li>
+                                            <hr class="dropdown-divider">
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item text-danger"
+                                                href="{% url 'tenants:delete' tenant_id=tenant.id %}">
+                                                <i class="bi bi-trash me-2"></i>Delete
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="card-footer bg-white border-top">
+                <nav>
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1"><i class="bi bi-chevron-double-left"></i></a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}"><i
+                                    class="bi bi-chevron-left"></i></a>
+                        </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}"><i
+                                    class="bi bi-chevron-right"></i></a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}"><i
+                                    class="bi bi-chevron-double-right"></i></a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-building text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-3 mb-0">No tenants found.</p>
+                <a href="{% url 'tenants:create' %}" class="btn btn-primary mt-3">Create your first tenant</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

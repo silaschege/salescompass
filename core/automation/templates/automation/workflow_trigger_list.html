@@ -1,0 +1,56 @@
+{% extends "automation/base.html" %}
+
+{% block title %}Workflow Triggers - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Workflow Triggers</h1>
+    
+    {% if workflow_triggers %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Workflow</th>
+                    <th>Event</th>
+                    <th>Conditions</th>
+                    <th>Active</th>
+                    <th>Created</th>
+                    <th>Updated</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trigger in workflow_triggers %}
+                <tr>
+                    <td>{{ trigger.id }}</td>
+                    <td>{{ trigger.workflow.workflow_name }}</td>
+                    <td>{{ trigger.workflow_trigger_event }}</td>
+                    <td>{{ trigger.workflow_trigger_conditions|truncatechars:50 }}</td>
+                    <td>
+                        {% if trigger.workflow_trigger_is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ trigger.workflow_trigger_created_at }}</td>
+                    <td>{{ trigger.workflow_trigger_updated_at }}</td>
+                    <td>
+                        <a href="{% url 'automation:workflow_trigger_detail' trigger.id %}" class="btn btn-sm btn-info">View</a>
+                        {% if perms.automation.write %}
+                        <a href="{% url 'automation:workflow_trigger_update' trigger.id %}" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="{% url 'automation:workflow_trigger_delete' trigger.id %}" class="btn btn-sm btn-danger">Delete</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p>No workflow triggers found.</p>
+    {% endif %}
+</div>
+{% endblock %}

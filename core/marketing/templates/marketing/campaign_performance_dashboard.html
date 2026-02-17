@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Campaign Performance Dashboard</h1>
+
+<!-- Campaign Selector -->
+<form method="get" class="mb-3">
+    <div class="row">
+        <div class="col-md-6">
+            <select name="campaign_id" class="form-select" onchange="this.form.submit()">
+                <option value="">Select a Campaign</option>
+                {% for camp in user_campaigns %}
+                    <option value="{{ camp.id }}" {% if campaign.id == camp.id %}selected{% endif %}>
+                        {{ camp.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+</form>
+
+{% if campaign %}
+<!-- KPI Cards -->
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card text-white bg-primary">
+            <div class="card-body text-center">
+                <h6>Sent</h6>
+                <h3>{{ total_sent }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-white bg-success">
+            <div class="card-body text-center">
+                <h6>Opened</h6>
+                <h3>{{ total_opened }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-white bg-info">
+            <div class="card-body text-center">
+                <h6>Clicked</h6>
+                <h3>{{ total_clicked }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-white bg-warning">
+            <div class="card-body text-center">
+                <h6>Open Rate</h6>
+                <h3>{{ open_rate }}%</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-white bg-danger">
+            <div class="card-body text-center">
+                <h6>CTR</h6>
+                <h3>{{ ctr }}%</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-white bg-dark">
+            <div class="card-body text-center">
+                <h6>ROI</h6>
+                <h3>{{ roi }}%</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Trend Chart -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Performance Trend (Last 30 Days)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="performanceChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('performanceChart').getContext('2d');
+const data = {{ trend_data_json|safe }};
+new Chart(ctx, {
+    type: 'line',
+     {
+        labels: data.map(d => d.date),
+         data.map(d => d.open_rate),
+        borderColor: '#28a745',
+        tension: 0.3
+    },
+    {
+        label: 'Click Rate (%)',
+         data.map(d => d.click_rate),
+        borderColor: '#0d6efd',
+        tension: 0.3
+    }
+],
+    options: {
+        responsive: true,
+        scales: {
+            y: { beginAtZero: true }
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

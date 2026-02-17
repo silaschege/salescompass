@@ -1,0 +1,15 @@
+<th class="{{ class }}">
+    <a href="?sort={{ field }}{% if request.GET.sort == field %}-{% endif %}{% for key, value in request.GET.items %}{% if key != 'sort' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+        class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+        {{ label }}
+        <span>
+            {% if request.GET.sort == field %}
+            <i class="bi bi-caret-up-fill small"></i>
+            {% elif request.GET.sort == '-'|add:field %}
+            <i class="bi bi-caret-down-fill small"></i>
+            {% else %}
+            <i class="bi bi-caret-up-down text-muted small"></i>
+            {% endif %}
+        </span>
+    </a>
+</th>

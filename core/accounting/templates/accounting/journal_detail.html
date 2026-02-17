@@ -1,0 +1,78 @@
+{% extends "accounting/base.html" %}
+
+{% block accounting_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Journal Entry #{{ journal.entry_number }}</h1>
+        <div class="text-muted">
+            <span class="me-3"><i class="bi bi-calendar me-1"></i> {{ journal.entry_date }}</span>
+            <span class="badge {% if journal.status == 'posted' %}bg-success{% else %}bg-secondary{% endif %}">
+                {{ journal.get_status_display }}
+            </span>
+        </div>
+    </div>
+    <div>
+        {% if journal.status == 'draft' %}
+        {% if journal.is_balanced %}
+        <form action="{% url 'accounting:journal_post' journal.pk %}" method="post" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle me-1"></i> Post Entry
+            </button>
+        </form>
+        {% else %}
+        <button class="btn btn-warning" disabled title="Entry must be balanced">
+            Unbalanced
+        </button>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Line Items</h6>
+                <!-- Place to add "Add Line" button if needed/implemented -->
+            </div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Account Code</th>
+                            <th>Account Name</th>
+                            <th>Description</th>
+                            <th class="text-end">Debit</th>
+                            <th class="text-end">Credit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for line in journal.lines.all %}
+                        <tr>
+                            <td>{{ line.account.account_code }}</td>
+                            <td>{{ line.account.account_name }}</td>
+                            <td>{{ line.description }}</td>
+                            <td class="text-end text-danger">{{ line.debit|default:"-" }}</td>
+                            <td class="text-end text-success">{{ line.credit|default:"-" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">No line items in this entry yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="fw-bold bg-light">
+                        <tr>
+                            <td colspan="3" class="text-end">Totals:</td>
+                            <td class="text-end">{{ journal.total_debit|default:"0.00" }}</td>
+                            <!-- Need to calculate this in view/model -->
+                            <td class="text-end">{{ journal.total_credit|default:"0.00" }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

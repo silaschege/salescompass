@@ -1,0 +1,41 @@
+{% extends "global_alerts/base.html" %}
+
+{% block title %}Tenant-Specific Alerts{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Tenant-Specific Alerts</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Severity</th>
+                        <th>Target Tenants</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alert in alerts %}
+                    <tr>
+                        <td>{{ alert.title }}</td>
+                        <td>{{ alert.get_alert_type_display }}</td>
+                        <td><span class="badge bg-{{ alert.severity }}">{{ alert.get_severity_display }}</span></td>
+                        <td>{{ alert.target_tenant_ids|length }} tenant(s)</td>
+                        <td><a href="{% url 'global_alerts:alert_detail' alert.pk %}"
+                                class="btn btn-sm btn-outline-primary">View</a></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">No tenant-specific alerts.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

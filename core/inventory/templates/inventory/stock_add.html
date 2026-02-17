@@ -1,0 +1,118 @@
+{% extends "inventory/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 text-success">
+                        <i class="bi bi-plus-circle me-2"></i>Add Stock
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-4">
+                        Manually add stock to a warehouse. This is typically used for initial stock take or receiving
+                        goods without a purchase order.
+                    </p>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">Quick Scan / Barcode</label>
+                        <div class="input-group">
+                            <input type="text" id="barcode_input" class="form-control"
+                                placeholder="Scan or enter SKU/UPC...">
+                            <button type="button" id="lookup_barcode" class="btn btn-outline-primary">
+                                <i class="bi bi-search"></i> Lookup
+                            </button>
+                        </div>
+                        <div id="barcode_status" class="small mt-1"></div>
+                    </div>
+
+                    <form method="post" id="stock_add_form">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{% url 'inventory:stock_list' %}" class="btn btn-light">Cancel</a>
+                            <button type="submit" class="btn btn-success">Add Stock</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const barcodeInput = document.getElementById('barcode_input');
+        const lookupBtn = document.getElementById('lookup_barcode');
+        const statusDiv = document.getElementById('barcode_status');
+        const productSelect = document.querySelector('select[name="product"]');
+        const serialNumbersField = document.getElementById('div_id_serial_numbers');
+
+        // Hide serial numbers by default
+        if (serialNumbersField) serialNumbersField.style.display = 'none';
+
+        async function lookupBarcode() {
+            const barcode = barcodeInput.value.trim();
+            if (!barcode) return;
+
+            statusDiv.innerHTML = '<span class="text-primary">Looking up...</span>';
+
+            try {
+                const response = await fetch(`{% url "inventory:api_lookup_barcode" %}?barcode=${barcode}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusDiv.innerHTML = `<span class="text-success fw-bold"><i class="bi bi-check-circle"></i> Found: ${data.name}</span>`;
+
+                    const option = Array.from(productSelect.options).find(opt => opt.value == data.id);
+                    if (option) {
+                        productSelect.value = data.id;
+                        productSelect.dispatchEvent(new Event('change'));
+                    }
+                    barcodeInput.value = '';
+                } else {
+                    statusDiv.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle"></i> ${data.error}</span>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<span class="text-danger">Error fetching product</span>`;
+            }
+        }
+
+        lookupBtn.addEventListener('click', lookupBarcode);
+        barcodeInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                lookupBarcode();
+            }
+        });
+
+        productSelect.addEventListener('change', function () {
+            const productId = this.value;
+            if (!productId) {
+                if (serialNumbersField) serialNumbersField.style.display = 'none';
+                return;
+            }
+
+            const selectedText = this.options[this.selectedIndex].text;
+            const skuMatch = selectedText.match(/\(([^)]+)\)/);
+            const sku = skuMatch ? skuMatch[1] : null;
+
+            if (sku) {
+                fetch(`{% url "inventory:api_lookup_barcode" %}?barcode=${sku}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.has_serial_numbers) {
+                            if (serialNumbersField) serialNumbersField.style.display = 'block';
+                        } else {
+                            if (serialNumbersField) serialNumbersField.style.display = 'none';
+                        }
+                    });
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,204 @@
+{% extends "tasks/base.html" %}
+{% load static %}
+{% block title %}{% if object %}Edit {{ object.title }}{% else %}New Task{% endif %} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">{% if object %}Edit Task{% else %}Create New Task{% endif %}</h1>
+        <p class="text-white text-center lead">{% if object %}{{ object.title }}{% else %}Define your next action item{% endif %}</p>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold text-primary">
+                        <i class="bi bi-pencil-square me-2"></i>Task Information
+                    </h5>
+                    <div class="actions">
+                        <a href="{% url 'tasks:task_list' %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-x-lg me-1"></i> Discard
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data" id="task-form">
+                        {% csrf_token %}
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="form-floating mb-3">
+                                    {{ form.title }}
+                                    <label for="{{ form.title.id_for_label }}">Task Title</label>
+                                    {% if form.title.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.title.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small text-uppercase mb-2">Assigned To</label>
+                                    {{ form.assigned_to }}
+                                    {% if form.assigned_to.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.assigned_to.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small text-uppercase mb-2">Task Type</label>
+                                    {{ form.task_type_ref }}
+                                    {% if form.task_type_ref.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.task_type_ref.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small text-uppercase mb-2">Due Date</label>
+                                    {{ form.due_date }}
+                                    {% if form.due_date.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.due_date.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small text-uppercase mb-2">Priority</label>
+                                    {{ form.priority_ref }}
+                                    {% if form.priority_ref.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.priority_ref.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <ul class="nav nav-pills mb-3" id="formTabs" role="tablist">
+                                <li class="nav-item">
+                                    <button class="nav-link active" id="details-tab" data-bs-toggle="pill"
+                                        data-bs-target="#details" type="button">Details</button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="nav-link" id="relations-tab" data-bs-toggle="pill"
+                                        data-bs-target="#relations" type="button">Relations</button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="nav-link" id="recurrence-tab" data-bs-toggle="pill"
+                                        data-bs-target="#recurrence" type="button">Recurrence</button>
+                                </li>
+                            </ul>
+                            <div class="tab-content p-4 bg-light rounded-3 shadow-sm" id="formTabsContent">
+                                <div class="tab-pane fade show active" id="details">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold small text-uppercase mb-2">Task
+                                            Description</label>
+                                        {{ form.task_description }}
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small text-uppercase mb-2">Est.
+                                                Hours</label>
+                                            {{ form.estimated_hours }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small text-uppercase mb-2">Actual
+                                                Hours</label>
+                                            {{ form.actual_hours }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="relations">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small text-uppercase mb-2">Account</label>
+                                            {{ form.account }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label
+                                                class="form-label fw-bold small text-uppercase mb-2">Opportunity</label>
+                                            {{ form.opportunity }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small text-uppercase mb-2">Lead</label>
+                                            {{ form.lead }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small text-uppercase mb-2">Case</label>
+                                            {{ form.case }}
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-info mt-3 py-2 small">
+                                        <i class="bi bi-info-circle me-2"></i>Select at least one related entity.
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="recurrence">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold small text-uppercase mb-2">Pattern</label>
+                                        {{ form.recurrence_pattern_ref }}
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold small text-uppercase mb-2">End Date</label>
+                                        {{ form.recurrence_end_date }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 border-top pt-4 text-center">
+                            <button type="submit" class="btn btn-primary btn-lg shadow-sm px-5 py-3 rounded-pill">
+                                <i class="bi bi-check2-circle me-2"></i> {% if object %}Update Task{% else %}Create
+                                Task{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .nav-pills .nav-link {
+        font-weight: 600;
+        color: #6c757d;
+        border-radius: 0.5rem;
+        padding: 0.6rem 1.2rem;
+        margin-right: 0.5rem;
+    }
+
+    .nav-pills .nav-link.active {
+        background-color: var(--brand-primary);
+        color: white;
+    }
+
+    .form-floating>.form-control:focus~label,
+    .form-floating>.form-control:not(:placeholder-shown)~label {
+        color: var(--brand-primary);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const taskForm = document.getElementById('task-form');
+        if (taskForm) {
+            taskForm.addEventListener('submit', function (e) {
+                const account = document.getElementById('id_account')?.value;
+                const opportunity = document.getElementById('id_opportunity')?.value;
+                const lead = document.getElementById('id_lead')?.value;
+                const caseId = document.getElementById('id_case')?.value;
+
+                if (!account && !opportunity && !lead && !caseId) {
+                    e.preventDefault();
+                    alert('Please select at least one related object (Account, Opportunity, Lead, or Case).');
+                    return false;
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

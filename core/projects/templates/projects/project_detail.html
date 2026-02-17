@@ -1,0 +1,85 @@
+{% extends "projects/base.html" %}
+{% load humanize %}
+
+{% block page_content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Project Overview: {{ project.name }}</h6>
+                <a href="{% url 'projects:project_update' project.pk %}" class="btn btn-sm btn-info shadow-sm">Edit
+                    Details</a>
+            </div>
+            <div class="card-body">
+                <p><strong>Description:</strong> {{ project.description|linebreaks }}</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Customer:</strong> {{ project.customer.account_name|default:"Internal" }}</p>
+                        <p><strong>Status:</strong> <span class="badge badge-primary">{{ project.get_status_display
+                                }}</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Budget:</strong> ${{ project.budget|intcomma }}</p>
+                        <p><strong>Dates:</strong> {{ project.start_date|default:"-" }} to {{
+                            project.end_date|default:"-" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Milestones</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Due Date</th>
+                                <th>Billable</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ms in milestones %}
+                            <tr>
+                                <td>{{ ms.name }}</td>
+                                <td>{{ ms.due_date }}</td>
+                                <td>{% if ms.is_billable %}Yes (${{ ms.billing_amount|intcomma }}){% else %}No{% endif
+                                    %}</td>
+                                <td>{% if ms.is_completed %}<span class="text-success">Done</span>{% else %}<span
+                                        class="text-warning">Pending</span>{% endif %}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">No milestones defined.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Team Allocation</h6>
+            </div>
+            <div class="card-body">
+                {% for alloc in allocations %}
+                <div class="mb-3">
+                    <div class="font-weight-bold">{{ alloc.user.get_full_name }}</div>
+                    <div class="text-muted small">{{ alloc.role }} ({{ alloc.allocation_percentage }}%)</div>
+                </div>
+                {% empty %}
+                <div class="text-center text-muted py-4">No team members allocated.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

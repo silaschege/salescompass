@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Alert Instance Detail - {{ alert.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>Alert Instance: {{ alert.title }}</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'global_alerts:dashboard' %}">Global Alerts</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'global_alerts:alert_instance_list' %}">Alert Instances</a></li>
+                    <li class="breadcrumb-item active">{{ alert.title }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <a href="{% url 'global_alerts:alert_instance_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                </div>
+                <div>
+                    {% if alert.status == 'triggered' %}
+                        <a href="{% url 'global_alerts:acknowledge_alert' alert.id %}" class="btn btn-warning">
+                            <i class="fas fa-check"></i> Acknowledge
+                        </a>
+                    {% elif alert.status == 'acknowledged' %}
+                        <a href="{% url 'global_alerts:resolve_alert' alert.id %}" class="btn btn-success">
+                            <i class="fas fa-check-circle"></i> Resolve
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'global_alerts:alert_config_update' alert.alert_config.id %}" class="btn btn-outline-primary">
+                        <i class="fas fa-cog"></i> Configure
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Alert Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Title</label>
+                                <p class="form-control-plaintext">{{ alert.title }}</p>
+                            </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Status</label>
+                                <p class="form-control-plaintext">
+                                    <span class="badge 
+                                        {% if alert.status == 'triggered' %}bg-info
+                                        {% elif alert.status == 'acknowledged' %}bg-primary
+                                        {% elif alert.status == 'investigating' %}bg-warning
+                                        {% elif alert.status == 'resolved' %}bg-success
+                                        {% elif alert.status == 'closed' %}bg-secondary
+                                        {% elif alert.status == 'suppressed' %}bg-light
+                                        {% endif %}">
+                                        {{ alert.status|title }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Severity</label>
+                                <p class="form-control-plaintext">
+                                    <span class="badge 
+                                        {% if alert.severity == 'info' %}bg-info
+                                        {% elif alert.severity == 'warning' %}bg-warning
+                                        {% elif alert.severity == 'error' %}bg-danger
+                                        {% elif alert.severity == 'critical' %}bg-danger
+                                        {% endif %}">
+                                        {{ alert.severity|upper }}
+                                    </span>
+                                </p>
+                            </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Priority</label>
+                                <p class="form-control-plaintext">
+                                    <span class="badge 
+                                        {% if alert.priority == 'low' %}bg-secondary
+                                        {% elif alert.priority == 'medium' %}bg-info
+                                        {% elif alert.priority == 'high' %}bg-warning
+                                        {% elif alert.priority == 'urgent' %}bg-danger
+                                        {% elif alert.priority == 'critical' %}bg-danger
+                                        {% endif %}">
+                                        {{ alert.priority|title }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <p class="form-control-plaintext">{{ alert.description }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Alert Configuration</label>
+                        <p class="form-control-plaintext">{{ alert.alert_config.name }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Resource Type</label>
+                        <p class="form-control-plaintext">{{ alert.resource_type }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Resource ID</label>
+                        <p class="form-control-plaintext">{{ alert.resource_id }}</p>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Triggered At</label>
+                                <p class="form-control-plaintext">{{ alert.triggered_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Tenant</label>
+                                <p class="form-control-plaintext">{{ alert.tenant.name|default:"-" }}</p>
+                            </div>
+                        </div>
+                    {% if alert.acknowledged_at %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Acknowledged At</label>
+                                <p class="form-control-plaintext">{{ alert.acknowledged_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Acknowledged By</label>
+                                <p class="form-control-plaintext">{{ alert.acknowledged_by.email|default:"-" }}</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if alert.resolved_at %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Resolved At</label>
+                                <p class="form-control-plaintext">{{ alert.resolved_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Resolved By</label>
+                                <p class="form-control-plaintext">{{ alert.resolved_by.email|default:"-" }}</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Alert Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">View Related Alerts</h6>
+                                <small class="text-muted">Find similar alerts</small>
+                            </div>
+                            <p class="mb-1">Identify related alerts based on correlation rules</p>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Export Alert Data</h6>
+                                <small class="text-muted">For analysis</small>
+                            </div>
+                            <p class="mb-1">Export detailed alert information for further analysis</p>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Update Alert Configuration</h6>
+                                <small class="text-muted">Modify settings</small>
+                            </div>
+                            <p class="mb-1">Adjust the configuration that triggered this alert</p>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Escalate Alert</h6>
+                                <small class="text-muted">Notify higher priority</small>
+                            </div>
+                            <p class="mb-1">Escalate this alert to higher-level responders</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Alert Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Additional Details</label>
+                        <pre class="bg-light p-3 rounded">{{ alert.details|pprint }}</pre>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Resolution Notes</label>
+                        <textarea class="form-control" rows="5" readonly>{{ alert.resolution_notes|default:"No resolution notes available." }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Notifications</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Channel</th>
+                                    <th>Recipient</th>
+                                    <th>Status</th>
+                                    <th>Sent At</th>
+                                    <th>Response</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for notification in alert.notifications.all %}
+                                <tr>
+                                    <td>{{ notification.notification_type|title }}</td>
+                                    <td>{{ notification.recipient }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if notification.status == 'pending' %}bg-secondary
+                                            {% elif notification.status == 'sent' %}bg-info
+                                            {% elif notification.status == 'delivered' %}bg-success
+                                            {% elif notification.status == 'failed' %}bg-danger
+                                            {% elif notification.status == 'bounced' %}bg-warning
+                                            {% elif notification.status == 'opened' %}bg-primary
+                                            {% endif %}">
+                                            {{ notification.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ notification.sent_at|date:"M d, Y H:i"|default:"-" }}</td>
+                                    <td>{{ notification.response_message|truncatechars:50|default:"-" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5">No notifications sent for this alert.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

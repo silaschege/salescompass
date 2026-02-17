@@ -1,0 +1,49 @@
+{% extends "logged_in/base.html" %}
+
+{% block dashboard_content %}
+<div class="d-flex flex-nowrap overflow-auto py-3" style="min-height: 80vh;">
+    {% for stage in stages %}
+    <div class="kanban-column flex-shrink-0 mx-2" style="width: 300px;">
+        <div class="card bg-light shadow-sm">
+            <div class="card-header bg-white border-bottom-0 py-2 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-gray-800 text-uppercase small">{{ stage.name }}</h6>
+                <span class="badge badge-pill badge-secondary">{{ stage.opportunities.count }}</span>
+            </div>
+            <div class="card-body p-2 kanban-drag-area" data-stage-id="{{ stage.id }}">
+                {% for opp in stage.opportunities.all %}
+                <div class="card shadow-sm mb-2 kanban-item clickable" data-id="{{ opp.id }}">
+                    <div class="card-body p-2">
+                        <div class="small font-weight-bold mb-1">{{ opp.opportunity_name }}</div>
+                        <div class="text-muted smaller mb-1">{{ opp.account.account_name|default:"No Account" }}</div>
+                        <div class="d-flex justify-content-between align-items-center pt-1 border-top mt-1">
+                            <span class="text-success font-weight-bold small">${{ opp.expected_revenue|default:0
+                                }}</span>
+                            <span class="text-gray-500 smaller">{{ opp.close_date|date:"M d" }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-4 text-muted smaller italic">No opportunities</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .kanban-drag-area {
+        min-height: 200px;
+    }
+
+    .kanban-item:hover {
+        transform: translateY(-2px);
+        transition: all 0.2s;
+        border-left: 3px solid #4e73df;
+    }
+
+    .smaller {
+        font-size: 0.75rem;
+    }
+</style>
+{% endblock %}

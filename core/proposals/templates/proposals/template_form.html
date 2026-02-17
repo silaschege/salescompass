@@ -1,0 +1,115 @@
+{% extends "proposals/base.html" %}
+{% load auth_extras %}
+
+{% block title %}
+  {% if form.instance.pk %}
+    Edit Template - SalesCompass
+  {% else %}
+    Create Template - SalesCompass
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="block-title">
+      {% if form.instance.pk %}
+        Edit Template
+      {% else %}
+        Create Template
+      {% endif %}
+    </h1>
+    <a href="{% url 'proposals:template_list' %}" class="btn btn-secondary">
+      <i class="bi bi-arrow-left"></i> Back to Templates
+    </a>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+              <label for="{{ form.email_template_name.id_for_label }}" class="form-label">Template Name *</label>
+              {{ form.email_template_name }}
+              {% if form.email_template_name.help_text %}
+                <div class="form-text">{{ form.email_template_name.help_text }}</div>
+              {% endif %}
+              {% if form.email_template_name.errors %}
+                <div class="text-danger">{{ form.email_template_name.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-3">
+              <label for="{{ form.subject.id_for_label }}" class="form-label">Email Subject *</label>
+              {{ form.subject }}
+              {% if form.subject.help_text %}
+                <div class="form-text">{{ form.subject.help_text }}</div>
+              {% endif %}
+              {% if form.subject.errors %}
+                <div class="text-danger">{{ form.subject.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-3">
+              <label for="{{ form.html_content.id_for_label }}" class="form-label">HTML Content *</label>
+              {{ form.html_content }}
+              {% if form.html_content.help_text %}
+                <div class="form-text">{{ form.html_content.help_text }}</div>
+              {% endif %}
+              {% if form.html_content.errors %}
+                <div class="text-danger">{{ form.html_content.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-3 form-check">
+              {{ form.email_template_is_active }}
+              <label for="{{ form.email_template_is_active.id_for_label }}" class="form-check-label">
+                Is Active
+              </label>
+              {% if form.email_template_is_active.help_text %}
+                <div class="form-text">{{ form.email_template_is_active.help_text }}</div>
+              {% endif %}
+              {% if form.email_template_is_active.errors %}
+                <div class="text-danger">{{ form.email_template_is_active.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="d-flex justify-content-between">
+              <a href="{% url 'proposals:template_list' %}" class="btn btn-secondary">Cancel</a>
+              <button type="submit" class="btn btn-primary">
+                {% if form.instance.pk %}
+                  Update Template
+                {% else %}
+                  Create Template
+                {% endif %}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any JavaScript enhancements here if needed
+document.addEventListener('DOMContentLoaded', function() {
+  // Auto-resize textarea for HTML content
+  const htmlContent = document.getElementById('{{ form.html_content.id_for_label }}');
+  if (htmlContent) {
+    htmlContent.style.height = 'auto';
+    htmlContent.style.height = (htmlContent.scrollHeight) + 'px';
+    
+    htmlContent.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight) + 'px';
+    });
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,157 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}New Contact - SalesCompass{% endblock %}
+
+{% block content %}
+
+
+    <div class="card p-4 mb-4 shadow-lg border-0" style="border-radius: 1rem;">
+    <div class="block-title fw-bold mb-0" style="border-radius: 0.75rem;">
+    <h1 class="block-title fw-bold mb-0">{% if object %}Edit Contact{% else %}Create New Contact{% endif %}</h1>
+    </div>
+    <div class="card-body bg-white">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <!-- First Name -->
+                                <div class="mb-4">
+                                    <label for="{{ form.first_name.id_for_label }}" class="form-label fw-semibold">
+                                        First Name <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.first_name }}
+                                    {% if form.first_name.errors %}
+                                        <div class="text-danger mt-1">{{ form.first_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Email -->
+                                <div class="mb-4">
+                                    <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold">
+                                        Email <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.email }}
+                                    {% if form.email.errors %}
+                                        <div class="text-danger mt-1">{{ form.email.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Role -->
+                                <div class="mb-4">
+                                    <label for="{{ form.role.id_for_label }}" class="form-label fw-semibold">
+                                        Role
+                                    </label>
+                                    {{ form.role }}
+                                    {% if form.role.errors %}
+                                        <div class="text-danger mt-1">{{ form.role.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text text-muted small">
+                                        e.g., Decision Maker, Influencer, User
+                                    </div>
+                                </div>
+
+                                <!-- ESG Influence -->
+                                <div class="mb-4">
+                                    <label for="{{ form.esg_influence.id_for_label }}" class="form-label fw-semibold">
+                                        ESG Influence
+                                    </label>
+                                    {{ form.esg_influence }}
+                                    {% if form.esg_influence.errors %}
+                                        <div class="text-danger mt-1">{{ form.esg_influence.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text text-muted small">
+                                        Level of influence on ESG decisions
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <!-- Last Name -->
+                                <div class="mb-4">
+                                    <label for="{{ form.last_name.id_for_label }}" class="form-label fw-semibold">
+                                        Last Name <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.last_name }}
+                                    {% if form.last_name.errors %}
+                                        <div class="text-danger mt-1">{{ form.last_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Account -->
+                                <div class="mb-4">
+                                    <label for="{{ form.account.id_for_label }}" class="form-label fw-semibold">
+                                        Account <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.account }}
+                                    {% if form.account.errors %}
+                                        <div class="text-danger mt-1">{{ form.account.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Phone -->
+                                <div class="mb-4">
+                                    <label for="{{ form.phone.id_for_label }}" class="form-label fw-semibold">
+                                        Phone
+                                    </label>
+                                    {{ form.phone }}
+                                    {% if form.phone.errors %}
+                                        <div class="text-danger mt-1">{{ form.phone.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Communication Preference -->
+                                <div class="mb-4">
+                                    <label for="{{ form.communication_preference.id_for_label }}" class="form-label fw-semibold">
+                                        Communication Preference
+                                    </label>
+                                    {{ form.communication_preference }}
+                                    {% if form.communication_preference.errors %}
+                                        <div class="text-danger mt-1">{{ form.communication_preference.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Primary Contact -->
+                        <div class="mb-4">
+                            <label for="{{ form.is_primary.id_for_label }}" class="form-check">
+                                {{ form.is_primary }}
+                                <span class="form-check-label fw-semibold">Primary Contact</span>
+                            </label>
+                            <div class="form-text text-muted small">
+                                Primary contacts receive account-wide communications and are the main point of contact
+                            </div>
+                            {% if form.is_primary.errors %}
+                                <div class="text-danger mt-1">{{ form.is_primary.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <div>
+                                <a href="{% url 'accounts:contact_list' %}" class="btn btn-outline-primary">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                                    </svg>
+                                    Cancel
+                                </a>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle me-1" viewBox="0 0 16 16">
+                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                                    </svg>
+                                    Create Contact
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

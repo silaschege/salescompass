@@ -1,0 +1,45 @@
+{% extends "projects/base.html" %}
+
+{% block page_content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Gantt Chart: {{ project.name }}</h1>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <div id="gantt-container" style="overflow-x: auto;">
+            <svg id="gantt"></svg>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.6.1/frappe-gantt.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.6.1/frappe-gantt.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch("{% url 'projects:project_gantt_data' project.pk %}")
+            .then(response => response.json())
+            .then(tasks => {
+                if (tasks.length === 0) {
+                    document.getElementById('gantt-container').innerHTML = '<p class="text-center text-muted">No tasks found for this project.</p>';
+                    return;
+                }
+
+                const gantt = new Gantt("#gantt", tasks, {
+                    header_height: 50,
+                    column_width: 30,
+                    step: 24,
+                    view_modes: ['Day', 'Week', 'Month'],
+                    bar_height: 20,
+                    bar_corner_radius: 3,
+                    arrow_curve: 5,
+                    padding: 18,
+                    view_mode: 'Week',
+                    date_format: 'YYYY-MM-DD',
+                    language: 'en'
+                });
+            });
+    });
+</script>
+{% endblock %}

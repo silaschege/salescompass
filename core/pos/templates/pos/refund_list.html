@@ -1,0 +1,86 @@
+{% extends "pos/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Refunds{% endblock %}
+
+{% block pos_content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Refunds</h1>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Refund #</th>
+                            <th>Original Transaction</th>
+                            <th>Reason</th>
+                            <th class="text-end">Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for refund in refunds %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'pos:refund_detail' refund.pk %}" class="fw-bold">
+                                    {{ refund.refund_number }}
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{% url 'pos:transaction_detail' refund.original_transaction.pk %}">
+                                    {{ refund.original_transaction.transaction_number }}
+                                </a>
+                            </td>
+                            <td>{{ refund.reason|truncatewords:5 }}</td>
+                            <td class="text-end fw-bold text-danger">
+                                -{{ refund.refund_amount|floatformat:2|intcomma }}
+                            </td>
+                            <td>
+                                {% if refund.status == 'completed' %}
+                                <span class="badge bg-success">Completed</span>
+                                {% elif refund.status == 'pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                                {% elif refund.status == 'approved' %}
+                                <span class="badge bg-info">Approved</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ refund.status|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ refund.created_at|date:"M d, H:i" }}</td>
+                            <td class="text-end">
+                                <a href="{% url 'pos:refund_detail' refund.pk %}"
+                                    class="btn btn-sm btn-outline-primary">
+                                    <i class="feather icon-eye"></i>
+                                </a>
+                                {% if refund.status == 'pending' %}
+                                <form method="post" action="{% url 'pos:refund_approve' refund.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        <i class="feather icon-check"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="feather icon-rotate-ccw fa-3x mb-3 opacity-50"></i>
+                                <p class="mb-0">No refunds found</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

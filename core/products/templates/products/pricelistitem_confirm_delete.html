@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Remove Item from Price List</h1>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="alert alert-danger">
+                Are you sure you want to remove <strong>{{ object.product.product_name }}</strong> from <strong>{{
+                    object.price_list.name }}</strong>?
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Confirm Removal</button>
+                <a href="{% url 'products:pricelist_edit' object.price_list.id %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

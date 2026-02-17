@@ -1,0 +1,32 @@
+{% load static %}
+<div class="card kanban-card" id="alert-{{ alert.id }}" data-alert-id="{{ alert.id }}" draggable="true">
+    <div class="card-body">
+        <h6 class="card-title">
+            {{ alert.response.account.email }}
+            <span class="badge bg-danger float-end">{{ alert.response.score }}</span>
+        </h6>
+        <p class="card-text">{{ alert.response.comment|truncatewords:15 }}</p>
+        <p class="text-muted small mb-1">{{ alert.response.survey.nps_survey_name }}</p>
+        <p class="text-muted small">{{ alert.response.created_at|date:"M d, Y H:i" }}</p>
+        
+        <div class="d-flex justify-content-between align-items-center">
+            <select class="form-select form-select-sm" onchange="updateStatus({{ alert.id }}, this)" style="width: auto;">
+                {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if alert.status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            
+            {% if alert.assigned_to %}
+                <span class="badge bg-primary">{{ alert.assigned_to.user.email }}</span>
+            {% else %}
+                <span class="badge bg-secondary">Unassigned</span>
+            {% endif %}
+        </div>
+        
+        {% if alert.notes %}
+            <div class="mt-2 p-2 bg-light rounded">
+                <small class="text-muted">Notes: {{ alert.notes|truncatewords:10 }}</small>
+            </div>
+        {% endif %}
+    </div>
+</div>

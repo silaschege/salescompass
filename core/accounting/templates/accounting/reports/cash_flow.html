@@ -1,0 +1,89 @@
+{% extends "accounting/base.html" %}
+{% load humanize %}
+
+{% block accounting_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Cash Flow Statement</h1>
+        <p class="text-muted mb-0">Period: {{ start_date }} to {{ end_date }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <form class="d-flex gap-2 align-items-center">
+            <input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+            <input type="date" name="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+            <button type="submit" class="btn btn-secondary">Refresh</button>
+        </form>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 text-success">Cash Inflows</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <tbody>
+                        {% for flow in inflows %}
+                        <tr>
+                            <td>{{ flow.name }}</td>
+                            <td class="text-end fw-bold">{{ flow.amount|floatformat:2|intcomma }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-center py-4 text-muted small">No inflows recorded</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="bg-light">
+                        <tr class="fw-bold">
+                            <td>Total Inflows</td>
+                            <td class="text-end">{{ total_inflow|floatformat:2|intcomma }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 text-danger">Cash Outflows</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <tbody>
+                        {% for flow in outflows %}
+                        <tr>
+                            <td>{{ flow.name }}</td>
+                            <td class="text-end fw-bold">{{ flow.amount|floatformat:2|intcomma }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-center py-4 text-muted small">No outflows recorded</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="bg-light">
+                        <tr class="fw-bold">
+                            <td>Total Outflows</td>
+                            <td class="text-end">{{ total_outflow|floatformat:2|intcomma }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mt-4 {% if net_cash_flow > 0 %}border-start border-success{% else %}border-start border-danger{% endif %}"
+    style="border-left-width: 5px !important;">
+    <div class="card-body d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Net Cash Flow</h4>
+        <h3 class="mb-0 {% if net_cash_flow > 0 %}text-success{% else %}text-danger{% endif %}">
+            {{ net_cash_flow|floatformat:2|intcomma }}
+        </h3>
+    </div>
+</div>
+{% endblock %}

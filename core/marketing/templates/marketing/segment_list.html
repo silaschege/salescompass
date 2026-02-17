@@ -1,0 +1,83 @@
+{% extends "marketing/base.html" %}
+
+{% block title %}Audience Segments - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="block-title text-start">Audience Segments</h1>
+            <p class="text-white lead mb-0">Define and manage your target audience groups</p>
+        </div>
+        <div>
+            <a href="{% url 'marketing:segment_create' %}" class="btn btn-warning">Create Segment</a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Segments</h5>
+            <span class="badge bg-light text-primary">{{ segments.count }} Total</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Member Count</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for segment in segments %}
+                        <tr>
+                            <td>
+                                <strong>{{ segment.name }}</strong><br>
+                                <small class="text-muted">{{ segment.description|truncatechars:50 }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ segment.get_segment_type_display }}</span>
+                            </td>
+                            <td>{{ segment.member_count }}</td>
+                            <td>
+                                {% if segment.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'marketing:segment_update' segment.pk %}"
+                                        class="btn btn-sm btn-outline-primary">Edit</a>
+                                    <a href="{% url 'marketing:segment_delete' segment.pk %}"
+                                        class="btn btn-sm btn-outline-danger">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <p class="text-muted mb-0">No segments found. Create your first audience segment to get
+                                    started!</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container text-center">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}

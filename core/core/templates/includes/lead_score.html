@@ -1,0 +1,26 @@
+{# Intelligence Widget: Lead Score #}
+{# Usage: {% include "includes/lead_score.html" with score=lead.score %} #}
+
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body text-center">
+        <h6 class="card-subtitle mb-2 text-muted text-uppercase small fw-bold">Lead Score</h6>
+        <div class="position-relative d-inline-block">
+            {# Circular Progress Indicator (Simplified with CSS) #}
+            <div class="display-4 fw-bold 
+                {% if score >= 80 %}text-success
+                {% elif score >= 50 %}text-warning
+                {% else %}text-danger{% endif %}">
+                {{ score|default:0 }}
+            </div>
+        </div>
+        <p class="card-text small text-muted mt-2">
+            {% if score >= 80 %}
+            🔥 Hot Lead! Prioritize outreach.
+            {% elif score >= 50 %}
+            ⚠️ Warm. Needs nurturing.
+            {% else %}
+            ❄️ Cold. Low engagement.
+            {% endif %}
+        </p>
+    </div>
+</div>

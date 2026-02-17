@@ -1,0 +1,60 @@
+
+{% extends "access_control/base.html" %}
+
+{% block title %}Delete Access Control - {{ access_control.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Delete Access Control</h1>
+            
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">Confirm Deletion</h5>
+                </div>
+                <div class="card-body">
+                    <p>Are you sure you want to delete the following access control?</p>
+                    
+                    <div class="alert alert-warning">
+                        <h6><strong>{{ access_control.name }}</strong></h6>
+                        <p><strong>Key:</strong> {{ access_control.key }}</p>
+                        <p><strong>Type:</strong> {{ access_control.get_access_type_display }}</p>
+                        <p><strong>Scope:</strong> {{ access_control.get_scope_type_display }}</p>
+                        <p><strong>Status:</strong> 
+                            {% if access_control.is_enabled %}
+                                <span class="badge bg-success">Enabled</span>
+                            {% else %}
+                                <span class="badge bg-danger">Disabled</span>
+                            {% endif %}
+                        </p>
+                        {% if access_control.tenant %}
+                            <p><strong>Tenant:</strong> {{ access_control.tenant.name }}</p>
+                        {% endif %}
+                        {% if access_control.role %}
+                            <p><strong>Role:</strong> {{ access_control.role.name }}</p>
+                        {% endif %}
+                        {% if access_control.user %}
+                            <p><strong>User:</strong> {{ access_control.user.username }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-danger me-2">
+                                <i class="bi bi-trash"></i> Confirm Delete
+                            </button>
+                            <a href="{% url 'access_control:manage_access' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

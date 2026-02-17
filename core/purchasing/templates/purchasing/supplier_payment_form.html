@@ -1,0 +1,404 @@
+{% extends "purchasing/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block purchasing_content %}
+<div class="animate-fade-in p-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header Section -->
+            <div class="d-flex align-items-center mb-4">
+                <a href="{% url 'purchasing:payment_list' %}"
+                    class="btn btn-light btn-icon rounded-circle me-3 border-0 shadow-sm">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 class="h3 fw-bold mb-0">Record Outgoing Payment</h1>
+                    <p class="text-muted small mb-0">Settle supplier invoices and record bank/cash transactions</p>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Main Form Section -->
+                <div class="col-lg-8">
+                    <form method="post" id="payment-form">
+                        {% csrf_token %}
+
+                        <!-- Supplier Selection Card -->
+                        <div class="premium-card p-0 border-0 shadow-sm mb-4 overflow-hidden">
+                            <div class="p-3 bg-gradient-primary text-white">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-white bg-opacity-25 p-2 me-3">
+                                        <i class="bi bi-building h5 mb-0"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0">Vendor Details</h6>
+                                        <p class="small mb-0 opacity-75">Select the supplier receiving this payment</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <div class="mb-0">
+                                    {{ form.supplier|as_crispy_field }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payment Details Card -->
+                        <div class="premium-card p-0 border-0 shadow-sm mb-4 overflow-hidden">
+                            <div class="p-3 border-bottom bg-light bg-opacity-50">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-cash-coin text-success h5 mb-0 me-2"></i>
+                                    <h6 class="fw-bold mb-0">Payment Information</h6>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        {{ form.payment_date|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ form.amount|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ form.method|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ form.reference|as_crispy_field }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Invoice Selection Card -->
+                        <div class="premium-card p-0 border-0 shadow-sm mb-4 overflow-hidden">
+                            <div class="p-3 border-bottom bg-light bg-opacity-50">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-receipt text-primary h5 mb-0 me-2"></i>
+                                        <h6 class="fw-bold mb-0">Invoice Settlement</h6>
+                                    </div>
+                                    <span class="badge badge-soft-primary rounded-pill px-3">
+                                        <i class="bi bi-info-circle me-1"></i> Multi-select
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <div
+                                    class="mb-3 p-3 bg-warning bg-opacity-10 rounded border border-warning border-opacity-25">
+                                    <div class="d-flex">
+                                        <i class="bi bi-lightbulb text-warning me-2 mt-1"></i>
+                                        <div class="small text-muted">
+                                            <strong class="text-dark">Tip:</strong> Hold <kbd>Ctrl</kbd> (or
+                                            <kbd>Cmd</kbd> on Mac) to select multiple invoices for batch settlement.
+                                        </div>
+                                    </div>
+                                </div>
+                                {{ form.invoices|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <!-- Selected Invoice Details Card (Dynamic) -->
+                        <div id="selected-invoices-card"
+                            class="premium-card p-0 border-0 shadow-sm mb-4 overflow-hidden" style="display: none;">
+                            <div class="p-3 border-bottom bg-success bg-opacity-10">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-file-earmark-check text-success h5 mb-0 me-2"></i>
+                                        <h6 class="fw-bold mb-0 text-success">Selected Invoices</h6>
+                                    </div>
+                                    <span id="invoice-count-badge" class="badge bg-success rounded-pill px-3">0
+                                        selected</span>
+                                </div>
+                            </div>
+                            <div class="p-0" id="selected-invoices-container">
+                                <!-- Invoice details will be dynamically inserted here -->
+                            </div>
+                            <div class="p-4 bg-light border-top">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="text-muted small text-uppercase fw-bold">Total Outstanding</span>
+                                    </div>
+                                    <div class="text-end">
+                                        <span id="total-outstanding" class="h4 fw-bold text-success mb-0">$0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between align-items-center gap-2 pt-3">
+                            <a href="{% url 'purchasing:payment_list' %}" class="btn btn-light px-4 border">
+                                <i class="bi bi-x-lg me-1"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success px-5 py-2 shadow-sm border-0">
+                                <i class="bi bi-check2-circle me-2"></i> Confirm & Record Payment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <!-- Financial Impact Card -->
+                    <div class="premium-card p-4 border-0 shadow-sm mb-4">
+                        <h6 class="fw-bold mb-3 d-flex align-items-center">
+                            <i class="bi bi-shield-lock me-2 text-primary"></i> Financial Impact
+                        </h6>
+                        <div class="extra-small text-muted mb-4">
+                            This action will generate double-entry journal entries in compliance with IFRS standards.
+                        </div>
+
+                        <div class="list-group list-group-flush small">
+                            <div
+                                class="list-group-item px-0 py-3 bg-transparent border-0 d-flex justify-content-between align-items-center">
+                                <span class="text-muted">
+                                    <i class="bi bi-arrow-down-circle text-danger me-2"></i>
+                                    Bank/Cash Account
+                                </span>
+                                <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-2">CREDIT</span>
+                            </div>
+                            <div
+                                class="list-group-item px-0 py-3 bg-transparent border-0 d-flex justify-content-between align-items-center">
+                                <span class="text-muted">
+                                    <i class="bi bi-arrow-up-circle text-success me-2"></i>
+                                    Accounts Payable
+                                </span>
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2">DEBIT</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-top">
+                            <div class="d-flex align-items-center text-muted extra-small">
+                                <i class="bi bi-clock-history me-2"></i>
+                                Journal entries are auto-generated upon submission
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Methods Info -->
+                    <div class="premium-card p-4 border-0 shadow-sm mb-4">
+                        <h6 class="fw-bold mb-3 d-flex align-items-center">
+                            <i class="bi bi-wallet2 me-2 text-info"></i> Payment Methods
+                        </h6>
+                        <div class="list-group list-group-flush extra-small">
+                            <div class="list-group-item px-0 py-2 bg-transparent border-0">
+                                <div class="d-flex">
+                                    <i class="bi bi-bank text-muted me-2"></i>
+                                    <div>
+                                        <strong>Bank Transfer</strong>
+                                        <div class="text-muted">EFT, Wire, ACH payments</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="list-group-item px-0 py-2 bg-transparent border-0">
+                                <div class="d-flex">
+                                    <i class="bi bi-file-earmark-text text-muted me-2"></i>
+                                    <div>
+                                        <strong>Check</strong>
+                                        <div class="text-muted">Paper check payments</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="list-group-item px-0 py-2 bg-transparent border-0">
+                                <div class="d-flex">
+                                    <i class="bi bi-cash text-muted me-2"></i>
+                                    <div>
+                                        <strong>Cash</strong>
+                                        <div class="text-muted">Petty cash disbursements</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="list-group-item px-0 py-2 bg-transparent border-0">
+                                <div class="d-flex">
+                                    <i class="bi bi-credit-card text-muted me-2"></i>
+                                    <div>
+                                        <strong>Credit Card</strong>
+                                        <div class="text-muted">Corporate card payments</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Tips -->
+                    <div class="premium-card p-4 border-0 shadow-sm border-start border-4 border-info">
+                        <h6 class="fw-bold mb-3 text-info">
+                            <i class="bi bi-lightbulb me-2"></i> Quick Tips
+                        </h6>
+                        <ul class="list-unstyled mb-0 extra-small text-muted">
+                            <li class="mb-2">
+                                <i class="bi bi-check2 text-success me-2"></i>
+                                Always include a reference for traceability
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check2 text-success me-2"></i>
+                                Selected invoices will be marked as paid
+                            </li>
+                            <li class="mb-0">
+                                <i class="bi bi-check2 text-success me-2"></i>
+                                Partial payments require separate entries
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .extra-small {
+        font-size: 0.75rem;
+    }
+
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, var(--bs-primary) 0%, #6f42c1 100%);
+    }
+
+    kbd {
+        background-color: #212529;
+        border-radius: 3px;
+        padding: 2px 6px;
+        font-size: 0.75rem;
+    }
+
+    #id_invoices {
+        height: 180px;
+    }
+
+    .invoice-detail-row {
+        transition: all 0.2s ease;
+    }
+
+    .invoice-detail-row:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    .status-badge-draft {
+        background-color: #6c757d;
+    }
+
+    .status-badge-posted {
+        background-color: #0d6efd;
+    }
+
+    .status-badge-paid {
+        background-color: #198754;
+    }
+
+    .status-badge-overdue {
+        background-color: #dc3545;
+    }
+
+    .invoice-loading {
+        padding: 2rem;
+        text-align: center;
+        color: #6c757d;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const invoicesSelect = document.getElementById('id_invoices');
+        const selectedInvoicesCard = document.getElementById('selected-invoices-card');
+        const selectedInvoicesContainer = document.getElementById('selected-invoices-container');
+        const invoiceCountBadge = document.getElementById('invoice-count-badge');
+        const totalOutstandingEl = document.getElementById('total-outstanding');
+        const amountInput = document.getElementById('id_amount');
+
+        if (!invoicesSelect) return;
+
+        invoicesSelect.addEventListener('change', function () {
+            const selectedOptions = Array.from(this.selectedOptions);
+            const selectedIds = selectedOptions.map(opt => opt.value);
+
+            if (selectedIds.length === 0) {
+                selectedInvoicesCard.style.display = 'none';
+                return;
+            }
+
+            // Show loading state
+            selectedInvoicesCard.style.display = 'block';
+            selectedInvoicesContainer.innerHTML = '<div class="invoice-loading"><i class="bi bi-arrow-repeat spin me-2"></i>Loading invoice details...</div>';
+
+            // Fetch invoice details
+            const params = new URLSearchParams();
+            selectedIds.forEach(id => params.append('ids[]', id));
+
+            fetch('{% url "purchasing:api_invoice_details" %}?' + params.toString())
+                .then(response => response.json())
+                .then(data => {
+                    if (data.invoices.length === 0) {
+                        selectedInvoicesCard.style.display = 'none';
+                        return;
+                    }
+
+                    // Update badge
+                    invoiceCountBadge.textContent = `${data.count} selected`;
+
+                    // Build invoice details HTML
+                    let html = '<div class="table-responsive"><table class="table table-sm mb-0">';
+                    html += '<thead class="table-light"><tr>';
+                    html += '<th class="ps-4">Invoice #</th>';
+                    html += '<th>Date</th>';
+                    html += '<th>Due</th>';
+                    html += '<th>PO Ref</th>';
+                    html += '<th class="text-end">Total</th>';
+                    html += '<th class="text-end">Paid</th>';
+                    html += '<th class="text-end pe-4">Outstanding</th>';
+                    html += '</tr></thead><tbody>';
+
+                    data.invoices.forEach(invoice => {
+                        const isOverdue = new Date(invoice.due_date) < new Date() && invoice.outstanding > 0;
+                        html += `<tr class="invoice-detail-row">`;
+                        html += `<td class="ps-4"><span class="fw-semibold text-primary">${invoice.invoice_number}</span></td>`;
+                        html += `<td class="text-muted small">${invoice.invoice_date}</td>`;
+                        html += `<td class="${isOverdue ? 'text-danger fw-semibold' : 'text-muted small'}">${invoice.due_date}${isOverdue ? ' <i class="bi bi-exclamation-circle"></i>' : ''}</td>`;
+                        html += `<td>${invoice.po_number ? '<span class="badge bg-light text-dark border">' + invoice.po_number + '</span>' : '<span class="text-muted">-</span>'}</td>`;
+                        html += `<td class="text-end">$${invoice.total_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>`;
+                        html += `<td class="text-end text-muted">$${invoice.amount_paid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>`;
+                        html += `<td class="text-end pe-4 fw-bold ${invoice.outstanding > 0 ? 'text-danger' : 'text-success'}">$${invoice.outstanding.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>`;
+                        html += '</tr>';
+                    });
+
+                    html += '</tbody></table></div>';
+                    selectedInvoicesContainer.innerHTML = html;
+
+                    // Update total outstanding
+                    totalOutstandingEl.textContent = '$' + data.total_outstanding.toLocaleString('en-US', { minimumFractionDigits: 2 });
+
+                    // Auto-fill amount if empty
+                    if (amountInput && (!amountInput.value || amountInput.value === '0')) {
+                        amountInput.value = data.total_outstanding.toFixed(2);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching invoice details:', error);
+                    selectedInvoicesContainer.innerHTML = '<div class="p-4 text-center text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Error loading invoice details</div>';
+                });
+        });
+
+        // Trigger change event if there are pre-selected invoices
+        if (invoicesSelect.selectedOptions.length > 0) {
+            invoicesSelect.dispatchEvent(new Event('change'));
+        }
+    });
+</script>
+
+<style>
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .spin {
+        display: inline-block;
+        animation: spin 1s linear infinite;
+    }
+</style>
+{% endblock %}

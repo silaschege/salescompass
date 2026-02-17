@@ -1,0 +1,713 @@
+{% comment %}
+SalesCompass WebRTC Softphone Component
+Browser-based phone for making/receiving calls
+
+Usage in templates:
+{% include "wazo/components/softphone.html" %}
+{% endcomment %}
+{% load static %}
+
+<!-- Softphone Widget -->
+<div id="softphone-widget" class="softphone-widget" style="display: none;">
+    <div class="softphone-header">
+        <div class="softphone-header-left">
+            <span class="softphone-icon">📞</span>
+            <span class="softphone-title">Phone</span>
+        </div>
+        <div class="softphone-header-right">
+            <button type="button" class="softphone-btn-minimize" onclick="toggleSoftphoneWidget()"
+                title="Minimize">−</button>
+        </div>
+    </div>
+
+    <div class="softphone-body">
+        <!-- Status Indicator -->
+        <div id="softphone-status" class="softphone-status softphone-offline">Offline</div>
+
+        <!-- Call Info (shown during active call) -->
+        <div id="softphone-call-info" class="softphone-call-info" style="display: none;">
+            <div class="caller-name" id="caller-name"></div>
+            <div class="call-timer" id="call-timer">00:00</div>
+        </div>
+
+        <!-- Number Input -->
+        <div class="softphone-input-wrapper">
+            <input type="tel" id="softphone-number" class="softphone-number" placeholder="Enter number..."
+                autocomplete="off" onkeypress="if(event.key === 'Enter') makeCall()">
+            <button type="button" class="softphone-clear-btn" onclick="clearNumber()" title="Clear">×</button>
+        </div>
+
+        <!-- Dialpad -->
+        <div id="softphone-dialpad" class="softphone-dialpad">
+            <div class="dialpad-row">
+                <button type="button" class="dialpad-btn" onclick="dialDigit('1')">1</button>
+                <button type="button" class="dialpad-btn" onclick="dialDigit('2')">2<span>ABC</span></button>
+                <button type="button" class="dialpad-btn" onclick="dialDigit('3')">3<span>DEF</span></button>
+            </div>
+            <div class="dialpad-row">
+                <button type="button" class="dialpad-btn" onclick="dialDigit('4')">4<span>GHI</span></button>
+                <button type="button" class="dialpad-btn" onclick="dialDigit('5')">5<span>JKL</span></button>
+                <button type="button" class="dialpad-btn" onclick="dialDigit('6')">6<span>MNO</span></button>
+            </div>
+            <div class="dialpad-row">
+                <button type="button" class="dialpad-btn" onclick="dialDigit('7')">7<span>PQRS</span></button>
+                <button type="button" class="dialpad-btn" onclick="dialDigit('8')">8<span>TUV</span></button>
+                <button type="button" class="dialpad-btn" onclick="dialDigit('9')">9<span>WXYZ</span></button>
+            </div>
+            <div class="dialpad-row">
+                <button type="button" class="dialpad-btn" onclick="dialDigit('*')">*</button>
+                <button type="button" class="dialpad-btn" onclick="dialDigit('0')">0<span>+</span></button>
+                <button type="button" class="dialpad-btn" onclick="dialDigit('#')">#</button>
+            </div>
+        </div>
+
+        <!-- Call Button -->
+        <div class="softphone-controls">
+            <button type="button" id="btn-call" class="softphone-btn btn-call" onclick="makeCall()">
+                <span class="btn-icon">📞</span> Call
+            </button>
+            <button type="button" id="btn-hangup" class="softphone-btn btn-hangup" onclick="hangupCall()"
+                style="display: none;">
+                <span class="btn-icon">📵</span> End
+            </button>
+        </div>
+
+        <!-- In-Call Controls -->
+        <div id="incall-controls" class="incall-controls" style="display: none;">
+            <button type="button" class="control-btn" onclick="toggleMute()" id="btn-mute" title="Mute">
+                <span class="btn-icon">🔇</span>
+            </button>
+            <button type="button" class="control-btn" onclick="toggleDialpad()" id="btn-keypad" title="Keypad">
+                <span class="btn-icon">⌨️</span>
+            </button>
+            <button type="button" class="control-btn" onclick="showTransferDialog()" id="btn-transfer" title="Transfer">
+                <span class="btn-icon">↗️</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Hidden audio element for call audio -->
+    <audio id="softphone-audio" autoplay></audio>
+</div>
+
+<!-- Softphone Toggle Button (FAB) -->
+<button type="button" id="softphone-toggle" class="softphone-toggle" onclick="toggleSoftphoneWidget()" title="Phone">
+    📞
+    <span id="softphone-badge" class="softphone-badge" style="display: none;">!</span>
+</button>
+
+<!-- Incoming Call Modal -->
+<div id="incoming-call-modal" class="incoming-call-modal" style="display: none;">
+    <div class="incoming-call-content">
+        <div class="incoming-avatar">📞</div>
+        <div class="incoming-text">Incoming Call</div>
+        <div class="incoming-number" id="incoming-number">Unknown</div>
+        <div class="incoming-controls">
+            <button type="button" class="btn-decline" onclick="declineCall()">
+                <span>✗</span> Decline
+            </button>
+            <button type="button" class="btn-answer" onclick="answerCall()">
+                <span>✓</span> Answer
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Softphone Widget Styles */
+    .softphone-widget {
+        position: fixed;
+        bottom: 80px;
+        right: 20px;
+        width: 300px;
+        background: var(--bg-primary, #1a1a2e);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        z-index: 1000;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .softphone-header {
+        background: linear-gradient(135deg, var(--primary, #6366f1), var(--primary-dark, #4f46e5));
+        padding: 12px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+    }
+
+    .softphone-header-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .softphone-icon {
+        font-size: 18px;
+    }
+
+    .softphone-title {
+        font-weight: 600;
+    }
+
+    .softphone-btn-minimize {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 18px;
+        line-height: 1;
+        transition: background 0.2s;
+    }
+
+    .softphone-btn-minimize:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    .softphone-body {
+        padding: 16px;
+    }
+
+    .softphone-status {
+        text-align: center;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        transition: all 0.3s;
+    }
+
+    .softphone-offline {
+        background: rgba(239, 68, 68, 0.2);
+        color: #f87171;
+    }
+
+    .softphone-ready {
+        background: rgba(34, 197, 94, 0.2);
+        color: #4ade80;
+    }
+
+    .softphone-calling {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
+    }
+
+    .softphone-ringing {
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+        animation: pulse 1s infinite;
+    }
+
+    .softphone-connecting {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
+    }
+
+    .softphone-connected {
+        background: rgba(34, 197, 94, 0.2);
+        color: #4ade80;
+    }
+
+    .softphone-muted {
+        background: rgba(239, 68, 68, 0.2);
+        color: #f87171;
+    }
+
+    .softphone-error {
+        background: rgba(239, 68, 68, 0.2);
+        color: #f87171;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.6;
+        }
+    }
+
+    .softphone-call-info {
+        text-align: center;
+        padding: 16px 0;
+    }
+
+    .caller-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary, #fff);
+        margin-bottom: 4px;
+    }
+
+    .call-timer {
+        font-size: 24px;
+        font-weight: 300;
+        color: var(--text-secondary, #888);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .softphone-input-wrapper {
+        position: relative;
+        margin-bottom: 12px;
+    }
+
+    .softphone-number {
+        width: 100%;
+        padding: 14px 40px 14px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary, #fff);
+        font-size: 18px;
+        text-align: center;
+        letter-spacing: 1px;
+        transition: border-color 0.2s;
+    }
+
+    .softphone-number:focus {
+        outline: none;
+        border-color: var(--primary, #6366f1);
+    }
+
+    .softphone-clear-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--text-secondary, #888);
+        font-size: 20px;
+        cursor: pointer;
+        padding: 4px 8px;
+    }
+
+    .softphone-dialpad {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .dialpad-row {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+
+    .dialpad-btn {
+        width: 72px;
+        height: 56px;
+        border: none;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text-primary, #fff);
+        font-size: 22px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .dialpad-btn span {
+        font-size: 9px;
+        letter-spacing: 2px;
+        color: var(--text-secondary, #888);
+        margin-top: 2px;
+    }
+
+    .dialpad-btn:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: scale(1.02);
+    }
+
+    .dialpad-btn:active {
+        background: var(--primary, #6366f1);
+        transform: scale(0.98);
+    }
+
+    .softphone-controls {
+        display: flex;
+        gap: 8px;
+    }
+
+    .softphone-btn {
+        flex: 1;
+        padding: 14px;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-call {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: white;
+    }
+
+    .btn-call:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+    }
+
+    .btn-hangup {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+
+    .btn-hangup:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    }
+
+    .incall-controls {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+        justify-content: center;
+    }
+
+    .control-btn {
+        width: 56px;
+        height: 56px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary, #fff);
+        font-size: 20px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .control-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--primary, #6366f1);
+    }
+
+    .control-btn.active {
+        background: var(--primary, #6366f1);
+        border-color: var(--primary, #6366f1);
+    }
+
+    /* Toggle Button (FAB) */
+    .softphone-toggle {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary, #6366f1), var(--primary-dark, #4f46e5));
+        border: none;
+        color: white;
+        font-size: 28px;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(99, 102, 241, 0.5);
+        z-index: 999;
+        transition: all 0.3s;
+    }
+
+    .softphone-toggle:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 24px rgba(99, 102, 241, 0.6);
+    }
+
+    .softphone-badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        width: 20px;
+        height: 20px;
+        background: #ef4444;
+        border-radius: 50%;
+        font-size: 12px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: pulse 1s infinite;
+    }
+
+    /* Incoming Call Modal */
+    .incoming-call-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.85);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        backdrop-filter: blur(4px);
+    }
+
+    .incoming-call-content {
+        background: var(--bg-primary, #1a1a2e);
+        padding: 40px;
+        border-radius: 24px;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .incoming-avatar {
+        font-size: 64px;
+        margin-bottom: 16px;
+        animation: ring 1s infinite;
+    }
+
+    @keyframes ring {
+
+        0%,
+        100% {
+            transform: rotate(0);
+        }
+
+        25% {
+            transform: rotate(15deg);
+        }
+
+        75% {
+            transform: rotate(-15deg);
+        }
+    }
+
+    .incoming-text {
+        color: var(--text-secondary, #888);
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 8px;
+    }
+
+    .incoming-number {
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--text-primary, #fff);
+        margin-bottom: 32px;
+    }
+
+    .incoming-controls {
+        display: flex;
+        gap: 24px;
+        justify-content: center;
+    }
+
+    .btn-answer,
+    .btn-decline {
+        padding: 16px 32px;
+        border: none;
+        border-radius: 999px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+
+    .btn-answer {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: white;
+    }
+
+    .btn-decline {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+
+    .btn-answer:hover,
+    .btn-decline:hover {
+        transform: scale(1.05);
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/sip.js@0.21.2/lib/sip-0.21.2.min.js"></script>
+<script src="{% static 'wazo/js/softphone.js' %}"></script>
+<script>
+    // Softphone instance
+    let softphone = null;
+    let callTimer = null;
+    let callSeconds = 0;
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        {% if request.user.is_authenticated %}
+        const extension = '{{ request.user.wazo_extension.extension|default:"" }}';
+        const password = '{{ request.user.wazo_extension.wazo_user_uuid|default:"" }}';
+
+        if (extension && password) {
+            softphone = new SalesCompassSoftphone({
+                extension: extension,
+                password: password,
+                displayName: '{{ request.user.get_full_name|escapejs }}',
+                onIncomingCall: showIncomingCall,
+                onCallEnded: resetCallUI,
+                onRegistered: () => console.log('Softphone registered'),
+                onUnregistered: () => console.log('Softphone unregistered')
+            });
+
+            softphone.initialize();
+        } else {
+            console.log('Softphone: User extension not configured');
+        }
+        {% endif %}
+    });
+
+    function toggleSoftphoneWidget() {
+        const widget = document.getElementById('softphone-widget');
+        widget.style.display = widget.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function dialDigit(digit) {
+        const input = document.getElementById('softphone-number');
+        input.value += digit;
+
+        // Send DTMF if in call
+        if (softphone && softphone.currentSession) {
+            softphone.sendDTMF(digit);
+        }
+    }
+
+    function clearNumber() {
+        document.getElementById('softphone-number').value = '';
+    }
+
+    function makeCall() {
+        const number = document.getElementById('softphone-number').value.trim();
+        if (!number) return;
+
+        if (softphone && softphone.isRegistered) {
+            softphone.call(number);
+            showCallUI();
+        } else {
+            alert('Phone not connected. Please wait or refresh the page.');
+        }
+    }
+
+    function hangupCall() {
+        if (softphone) {
+            softphone.hangup();
+        }
+        resetCallUI();
+    }
+
+    function showIncomingCall(info) {
+        document.getElementById('incoming-number').textContent = info.displayName || info.from;
+        document.getElementById('incoming-call-modal').style.display = 'flex';
+        document.getElementById('softphone-badge').style.display = 'flex';
+
+        // Play ringtone (optional)
+        // You can add audio.play() here
+    }
+
+    function answerCall() {
+        if (softphone) {
+            softphone.answer();
+        }
+        document.getElementById('incoming-call-modal').style.display = 'none';
+        document.getElementById('softphone-badge').style.display = 'none';
+        showCallUI();
+    }
+
+    function declineCall() {
+        if (softphone) {
+            softphone.hangup();
+        }
+        document.getElementById('incoming-call-modal').style.display = 'none';
+        document.getElementById('softphone-badge').style.display = 'none';
+    }
+
+    function showCallUI() {
+        document.getElementById('btn-call').style.display = 'none';
+        document.getElementById('btn-hangup').style.display = 'flex';
+        document.getElementById('incall-controls').style.display = 'flex';
+        document.getElementById('softphone-call-info').style.display = 'block';
+        startCallTimer();
+    }
+
+    function resetCallUI() {
+        stopCallTimer();
+        document.getElementById('btn-call').style.display = 'flex';
+        document.getElementById('btn-hangup').style.display = 'none';
+        document.getElementById('incall-controls').style.display = 'none';
+        document.getElementById('softphone-call-info').style.display = 'none';
+        document.getElementById('incoming-call-modal').style.display = 'none';
+        document.getElementById('softphone-badge').style.display = 'none';
+    }
+
+    function startCallTimer() {
+        callSeconds = 0;
+        updateTimerDisplay();
+        callTimer = setInterval(() => {
+            callSeconds++;
+            updateTimerDisplay();
+        }, 1000);
+    }
+
+    function stopCallTimer() {
+        if (callTimer) {
+            clearInterval(callTimer);
+            callTimer = null;
+        }
+        callSeconds = 0;
+    }
+
+    function updateTimerDisplay() {
+        const mins = Math.floor(callSeconds / 60).toString().padStart(2, '0');
+        const secs = (callSeconds % 60).toString().padStart(2, '0');
+        document.getElementById('call-timer').textContent = `${mins}:${secs}`;
+    }
+
+    function toggleMute() {
+        if (softphone) {
+            softphone.toggleMute();
+            const btn = document.getElementById('btn-mute');
+            btn.classList.toggle('active', softphone.isMuted);
+        }
+    }
+
+    function toggleDialpad() {
+        const dialpad = document.getElementById('softphone-dialpad');
+        dialpad.style.display = dialpad.style.display === 'none' ? 'flex' : 'none';
+    }
+
+    function showTransferDialog() {
+        const destination = prompt('Enter extension or number to transfer to:');
+        if (destination && softphone) {
+            softphone.transfer(destination);
+        }
+    }
+</script>

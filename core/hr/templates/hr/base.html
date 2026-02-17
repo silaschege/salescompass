@@ -1,0 +1,154 @@
+{% extends 'core/base_module.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    /* Premium HR & People Theme */
+    :root {
+        --hr-primary: #4338ca;
+        /* Indigo 700 */
+        --hr-secondary: #0ea5e9;
+        /* Sky 500 */
+        --hr-bg: #f8fafc;
+    }
+
+    .nav-icon {
+        margin-right: 0.75rem;
+        font-size: 1.15rem;
+        width: 1.5rem;
+        text-align: center;
+        transition: transform 0.2s ease;
+    }
+
+    .nav-link:hover .nav-icon {
+        transform: scale(1.1);
+    }
+
+    .sidebar-section-title {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05rem;
+        color: #94a3b8;
+        padding: 1.5rem 1rem 0.5rem;
+        font-weight: 700;
+    }
+
+    /* Status Badges */
+    .badge-soft-success {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .badge-soft-warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: #b45309;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .badge-soft-primary {
+        background: rgba(67, 56, 202, 0.1);
+        color: #4338ca;
+        border: 1px solid rgba(67, 56, 202, 0.2);
+    }
+
+    .badge-soft-danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    /* Global Styles */
+    .premium-card {
+        background: white;
+        border-radius: 12px;
+    }
+
+    .extra-small {
+        font-size: 0.75rem;
+    }
+
+    .stat-value {
+        letter-spacing: -0.02em;
+    }
+</style>
+{% endblock %}
+
+{% block module_nav %}
+<div class="sidebar-section-title">Operations</div>
+<a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+    href="{% url 'hr:dashboard' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-grid-1x2 nav-icon"></i>
+        <span>HR Dashboard</span>
+    </div>
+</a>
+
+<a class="nav-link {% if '/goals/' in request.path %}active{% endif %}" href="{% url 'hr:goal_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-target nav-icon"></i>
+        <span>Performance</span>
+    </div>
+</a>
+
+<a class="nav-link {% if 'employee' in request.path %}active{% endif %}" href="{% url 'hr:employee_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-people-fill nav-icon"></i>
+        <span>Personnel Directory</span>
+    </div>
+</a>
+
+<div class="sidebar-section-title">Finance & Compensation</div>
+<a class="nav-link {% if 'payroll' in request.path %}active{% endif %}" href="{% url 'hr:payroll_dashboard' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-wallet2 nav-icon"></i>
+        <span>Payroll Management</span>
+    </div>
+</a>
+
+<div class="sidebar-section-title">Time & Attendance</div>
+<a class="nav-link {% if request.resolver_match.url_name == 'leave_list' or request.resolver_match.url_name == 'leave_create' or request.resolver_match.url_name == 'leave_approve' %}active{% endif %}"
+    href="{% url 'hr:leave_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-calendar-event nav-icon"></i>
+        <span>Leave Requests</span>
+    </div>
+</a>
+
+<a class="nav-link {% if request.resolver_match.url_name == 'leave_balance_list' %}active{% endif %}"
+    href="{% url 'hr:leave_balance_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-calendar-range nav-icon"></i>
+        <span>Leave Balances</span>
+    </div>
+</a>
+
+<a class="nav-link {% if request.resolver_match.url_name == 'attendance' %}active{% endif %}"
+    href="{% url 'hr:attendance' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-person-check nav-icon"></i>
+        <span>Self Attendance</span>
+    </div>
+</a>
+<a class="nav-link {% if request.resolver_match.url_name == 'attendance_history' %}active{% endif %}"
+    href="{% url 'hr:attendance_history' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-clock-history nav-icon"></i>
+        <span>Attendance Logs</span>
+    </div>
+</a>
+
+<div class="sidebar-section-title">Organization Structure</div>
+<a class="nav-link {% if 'department' in request.path %}active{% endif %}" href="{% url 'hr:department_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-diagram-3-fill nav-icon"></i>
+        <span>Departments & Units</span>
+    </div>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="hr-wrapper animate-fade-in">
+    {% block hr_content %}{% endblock %}
+</div>
+{% endblock %}

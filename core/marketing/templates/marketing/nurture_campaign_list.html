@@ -1,0 +1,77 @@
+{% extends "marketing/base.html" %}
+
+{% block title %}Nurture Campaigns - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="block-title text-start">Nurture Campaigns</h1>
+            <p class="text-white lead mb-0">Automate your lead follow-up sequences</p>
+        </div>
+        <div>
+            <a href="{% url 'marketing:nurture_campaign_create' %}" class="btn btn-warning">Create Nurture Campaign</a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Campaigns</h5>
+            <span class="badge bg-light text-primary">{{ nurture_campaigns.count }} Total</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Campaign Name</th>
+                            <th>Target Segment</th>
+                            <th>Trigger</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for campaign in nurture_campaigns %}
+                        <tr>
+                            <td>
+                                <strong>{{ campaign.name }}</strong><br>
+                                <small class="text-muted">{{ campaign.description|truncatechars:50 }}</small>
+                            </td>
+                            <td>{{ campaign.target_segment.name }}</td>
+                            <td><code>{{ campaign.trigger_event }}</code></td>
+                            <td>
+                                {% if campaign.is_active %}<span class="badge bg-success">Active</span>{% else %}<span
+                                    class="badge bg-secondary">Paused</span>{% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'marketing:nurture_campaign_update' campaign.pk %}"
+                                        class="btn btn-sm btn-outline-primary">Edit</a>
+                                    <a href="#" class="btn btn-sm btn-outline-info">Stats</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <p class="text-muted mb-0">No nurture campaigns found. Automate your first sequence
+                                    today!</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container text-center">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}

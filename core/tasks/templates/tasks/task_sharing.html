@@ -1,0 +1,180 @@
+{% extends "tasks/base.html" %}
+{% block title %}Manage Task Sharing - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Manage Task Sharing</h1>
+        <p class="text-white text-center lead">Share this task with other users or teams</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Share Task</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.shared_with_user.id_for_label }}" class="form-label fw-bold text-primary">
+                                Share with User
+                            </label>
+                            {{ form.shared_with_user }}
+                            {% if form.shared_with_user.errors %}
+                                <div class="text-danger mt-1">{{ form.shared_with_user.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.shared_with_team.id_for_label }}" class="form-label fw-bold text-primary">
+                                Share with Team
+                            </label>
+                            {{ form.shared_with_team }}
+                            {% if form.shared_with_team.errors %}
+                                <div class="text-danger mt-1">{{ form.shared_with_team.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.share_level.id_for_label }}" class="form-label fw-bold text-primary">
+                                Share Level
+                            </label>
+                            {{ form.share_level }}
+                            {% if form.share_level.errors %}
+                                <div class="text-danger mt-1">{{ form.share_level.errors }}</div>
+                            {% endif %}
+                            <div class="form-text text-muted small">
+                                Select permission level for the shared task
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.expires_at.id_for_label }}" class="form-label fw-bold text-primary">
+                                Expiration Date
+                            </label>
+                            {{ form.expires_at }}
+                            {% if form.expires_at.errors %}
+                                <div class="text-danger mt-1">{{ form.expires_at.errors }}</div>
+                            {% endif %}
+                            <div class="form-text text-muted small">
+                                Leave blank for no expiration
+                            </div>
+                        </div>
+
+                        <div class="mb-4 form-check">
+                            {{ form.can_reassign }}
+                            <label for="{{ form.can_reassign.id_for_label }}" class="form-check-label fw-bold text-primary">
+                                Allow Reassignment
+                            </label>
+                            {% if form.can_reassign.errors %}
+                                <div class="text-danger mt-1">{{ form.can_reassign.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-block">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-share me-1"></i> Share Task
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5>Current Shares</h5>
+                </div>
+                <div class="card-body">
+                    {% if shares %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Shared With</th>
+                                        <th>Share Level</th>
+                                        <th>Expires</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for share in shares %}
+                                    <tr>
+                                        <td>
+                                            {% if share.shared_with_user %}
+                                                {{ share.shared_with_user.email }}
+                                            {% elif share.shared_with_team %}
+                                                {{ share.shared_with_team.name }}
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ share.get_share_level_display }}</td>
+                                        <td>
+                                            {% if share.expires_at %}
+                                                {{ share.expires_at|date:"M d, Y" }}
+                                            {% else %}
+                                                <span class="text-muted">Never</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <form method="post" action="{% url 'tasks:unshare_task' task_id share.id %}" class="d-inline" onsubmit="return confirm('Unshare this task?')">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Unshare</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">This task is not shared with anyone.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Task Details</h5>
+                </div>
+                <div class="card-body">
+                    <h6>{{ task.title }}</h6>
+                    <p class="mt-2">{{ task.task_description|truncatewords:20 }}</p>
+                    <div class="mt-3">
+                        <p><strong>Related To:</strong> 
+                            {% if task.account %}
+                                {{ task.account.name }}
+                            {% elif task.opportunity %}
+                                {{ task.opportunity.name }}
+                            {% elif task.lead %}
+                                {{ task.lead.full_name }}
+                            {% elif task.case %}
+                                {{ task.case.subject }}
+                            {% endif %}
+                        </p>
+                        <p><strong>Assigned To:</strong> 
+                            {% if task.assigned_to %}
+                                {{ task.assigned_to.email }}
+                            {% else %}
+                                <span class="text-muted">Unassigned</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Due Date:</strong> {{ task.due_date|date:"M d, Y" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}

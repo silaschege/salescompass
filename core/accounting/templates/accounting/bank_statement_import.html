@@ -1,0 +1,74 @@
+{% extends "accounting/base.html" %}
+
+{% block accounting_content %}
+<div class="animate-fade-in">
+    <div class="mb-5">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'accounting:statement_list' %}"
+                        class="text-decoration-none">Bank Statements</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Import</li>
+            </ol>
+        </nav>
+        <h1 class="h2 fw-bold mb-0">Import Bank Statement</h1>
+        <p class="text-muted">Upload a CSV file to reconcile with your ledger</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="premium-card p-4">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Select Account</label>
+                        {{ form.account }}
+                        {% if form.account.errors %}
+                        <div class="text-danger small mt-1">{{ form.account.errors }}</div>
+                        {% endif %}
+                        <div class="form-text mt-2">{{ form.account.help_text }}</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Statement File (CSV)</label>
+                        {{ form.file }}
+                        {% if form.file.errors %}
+                        <div class="text-danger small mt-1">{{ form.file.errors }}</div>
+                        {% endif %}
+                        <div class="form-text mt-2">Format: Date (YYYY-MM-DD), Description, Amount, Reference</div>
+                    </div>
+
+                    <div class="d-grid mt-5">
+                        <button type="submit" class="btn btn-primary btn-lg shadow">
+                            <i class="bi bi-cloud-arrow-up me-2"></i> Upload and Parse
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-5 offset-lg-1">
+            <div class="premium-card p-4 bg-light border-0">
+                <h5 class="fw-bold mb-4">Parsing Rules</h5>
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-3 d-flex align-items-start">
+                        <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                        <span><strong>CSV Format:</strong> Ensure your file has headers:
+                            <code>Date, Description, Amount, Reference</code>.</span>
+                    </li>
+                    <li class="mb-3 d-flex align-items-start">
+                        <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                        <span><strong>Amount Signs:</strong> Positive values are deposits (Bank Debit), negative values
+                            are withdrawals (Bank Credit).</span>
+                    </li>
+                    <li class="mb-3 d-flex align-items-start">
+                        <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                        <span><strong>Date Formats:</strong> Supported formats include <code>YYYY-MM-DD</code> and
+                            <code>DD/MM/YYYY</code>.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

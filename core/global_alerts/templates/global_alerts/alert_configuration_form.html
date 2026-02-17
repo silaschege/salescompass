@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Edit Alert Configuration{% else %}Create Alert Configuration{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>{% if object %}Edit Alert Configuration{% else %}Create Alert Configuration{% endif %}</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'global_alerts:dashboard' %}">Global Alerts</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'global_alerts:alert_config_list' %}">Configurations</a></li>
+                    <li class="breadcrumb-item active">{% if object %}Edit{% else %}Create{% endif %}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">{% if object %}Edit Alert Configuration{% else %}Create New Alert Configuration{% endif %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label">Name</label>
+                                    {{ form.name }}
+                                    {% if form.name.errors %}
+                                        <div class="text-danger">{{ form.name.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">{{ form.name.help_text }}</div>
+                                </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.alert_type.id_for_label }}" class="form-label">Alert Type</label>
+                                    {{ form.alert_type }}
+                                    {% if form.alert_type.errors %}
+                                        <div class="text-danger">{{ form.alert_type.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">{{ form.alert_type.help_text }}</div>
+                                </div>
+                            </div>
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger">{{ form.description.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">{{ form.description.help_text }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.severity.id_for_label }}" class="form-label">Severity</label>
+                                    {{ form.severity }}
+                                    {% if form.severity.errors %}
+                                        <div class="text-danger">{{ form.severity.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">{{ form.severity.help_text }}</div>
+                                </div>
+                            <div class="col-md-6">
+                                <div class="mb-3 form-check">
+                                    {{ form.is_active }}
+                                    <label for="{{ form.is_active.id_for_label }}" class="form-check-label">Is Active</label>
+                                    <div class="form-text">{{ form.is_active.help_text }}</div>
+                                </div>
+                            </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.condition_type.id_for_label }}" class="form-label">Condition Type</label>
+                                    {{ form.condition_type }}
+                                    {% if form.condition_type.errors %}
+                                        <div class="text-danger">{{ form.condition_type.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">{{ form.condition_type.help_text }}</div>
+                                </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.evaluation_frequency.id_for_label }}" class="form-label">Evaluation Frequency</label>
+                                    {{ form.evaluation_frequency }}
+                                    {% if form.evaluation_frequency.errors %}
+                                        <div class="text-danger">{{ form.evaluation_frequency.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">{{ form.evaluation_frequency.help_text }}</div>
+                                </div>
+                            </div>
+                        <div class="mb-3">
+                            <label for="{{ form.condition_expression.id_for_label }}" class="form-label">Condition Expression</label>
+                            {{ form.condition_expression }}
+                            {% if form.condition_expression.errors %}
+                                <div class="text-danger">{{ form.condition_expression.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">{{ form.condition_expression.help_text }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.notification_channels.id_for_label }}" class="form-label">Notification Channels</label>
+                            {{ form.notification_channels }}
+                            {% if form.notification_channels.errors %}
+                                <div class="text-danger">{{ form.notification_channels.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">{{ form.notification_channels.help_text }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.alert_recipients.id_for_label }}" class="form-label">Alert Recipients</label>
+                            {{ form.alert_recipients }}
+                            {% if form.alert_recipients.errors %}
+                                <div class="text-danger">{{ form.alert_recipients.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">{{ form.alert_recipients.help_text }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.tags.id_for_label }}" class="form-label">Tags</label>
+                            {{ form.tags }}
+                            {% if form.tags.errors %}
+                                <div class="text-danger">{{ form.tags.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">{{ form.tags.help_text }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="text-danger">{{ form.notes.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">{{ form.notes.help_text }}</div>
+                        </div>
+                        <div class="d-grid gap-2 d-md-justify-content-md-end">
+                            <button type="submit" class="btn btn-primary">
+                                {% if object %}Update Configuration{% else %}Create Configuration{% endif %}
+                            </button>
+                            <a href="{% url 'global_alerts:alert_config_list' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Configuration Help</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Use this form to create or modify alert configurations. Alert configurations define the conditions that trigger alerts and how they are handled.</p>
+                    <p class="card-text">Each configuration has:</p>
+                    <ul class="card-text">
+                        <li>A unique name and description</li>
+                        <li>An alert type and severity level</li>
+                        <li>Activation status</li>
+                        <li>Condition logic that determines when to trigger</li>
+                        <li>Notification settings</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

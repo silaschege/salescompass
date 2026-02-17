@@ -1,0 +1,387 @@
+{% extends 'settings_app/base.html' %}
+{% load static %}
+
+{% block title %}Custom Fields - Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .page-header h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .page-header .subtitle {
+        color: #6b7280;
+        font-size: 14px;
+        margin-top: 4px;
+    }
+
+    .btn-primary {
+        background: #3b82f6;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background: #2563eb;
+        color: white;
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .table {
+        width: 100%;
+        margin: 0;
+    }
+
+    .table thead {
+        background: #f9fafb;
+    }
+
+    .table th {
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 12px;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .table td {
+        padding: 16px;
+        border-bottom: 1px solid #e5e7eb;
+        vertical-align: middle;
+    }
+
+    .table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    .table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .badge-text {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .badge-number {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .badge-date {
+        background: #e0e7ff;
+        color: #3730a3;
+    }
+
+    .badge-boolean {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .badge-select {
+        background: #fce7f3;
+        color: #9f1239;
+    }
+
+    .badge-textarea {
+        background: #f3e8ff;
+        color: #6b21a8;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .status-badge.active {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-badge.inactive {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .status-badge::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .model-label {
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .field-name {
+        font-family: monospace;
+        font-size: 13px;
+        color: #6b7280;
+        background: #f3f4f6;
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 13px;
+        border-radius: 4px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.2s;
+        border: 1px solid;
+    }
+
+    .btn-edit {
+        background: white;
+        color: #3b82f6;
+        border-color: #3b82f6;
+    }
+
+    .btn-edit:hover {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .btn-delete {
+        background: white;
+        color: #ef4444;
+        border-color: #ef4444;
+    }
+
+    .btn-delete:hover {
+        background: #ef4444;
+        color: white;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6b7280;
+    }
+
+    .empty-state svg {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 20px;
+        opacity: 0.3;
+    }
+
+    .empty-state h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #111827;
+        margin: 0 0 8px 0;
+    }
+
+    .empty-state p {
+        font-size: 14px;
+        margin: 0 0 20px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1>Custom Fields</h1>
+            <p class="subtitle">Extend your CRM with custom fields for different modules</p>
+        </div>
+        <a href="{% url 'settings_app:custom_field_create' %}" class="btn-primary">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path
+                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+            </svg>
+            Add Custom Field
+        </a>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+        {% if custom_fields %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Module</th>
+                    <th>Field Name</th>
+                    <th>Label</th>
+                    <th>Type</th>
+                    <th>Required</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for field in custom_fields %}
+                <tr>
+                    <td>
+                        <span class="model-label">{{ field.model_name }}</span>
+                    </td>
+                    <td>
+                        <span class="field-name">{{ field.field_name }}</span>
+                    </td>
+                    <td>
+                        {{ field.field_label }}
+                    </td>
+                    <td>
+                        {% if field.field_type == 'text' %}
+                        <span class="badge badge-text">Text</span>
+                        {% elif field.field_type == 'number' %}
+                        <span class="badge badge-number">Number</span>
+                        {% elif field.field_type == 'date' %}
+                        <span class="badge badge-date">Date</span>
+                        {% elif field.field_type == 'boolean' %}
+                        <span class="badge badge-boolean">Checkbox</span>
+                        {% elif field.field_type == 'select' %}
+                        <span class="badge badge-select">Dropdown</span>
+                        {% elif field.field_type == 'textarea' %}
+                        <span class="badge badge-textarea">Text Area</span>
+                        {% else %}
+                        <span class="badge badge-text">{{ field.get_field_type_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if field.is_required %}
+                        <svg width="16" height="16" fill="#10b981" viewBox="0 0 16 16">
+                            <path
+                                d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
+                        </svg>
+                        {% else %}
+                        <svg width="16" height="16" fill="#d1d5db" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                        </svg>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if field.is_active %}
+                        <span class="status-badge active">Active</span>
+                        {% else %}
+                        <span class="status-badge inactive">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{% url 'settings_app:custom_field_update' field.pk %}" class="btn-sm btn-edit">
+                                <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                    <path
+                                        d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+                                    <path fill-rule="evenodd"
+                                        d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z" />
+                                </svg>
+                                Edit
+                            </a>
+                            <button type="button" class="btn-sm btn-delete"
+                                onclick="confirmDelete({{ field.pk }}, '{{ field.field_label }}')">
+                                <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                    <path
+                                        d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                                    <path fill-rule="evenodd"
+                                        d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" />
+                                </svg>
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <svg fill="currentColor" viewBox="0 0 16 16">
+                <path
+                    d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z" />
+                <path
+                    d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319z" />
+            </svg>
+            <h3>No Custom Fields Yet</h3>
+            <p>Create your first custom field to extend your CRM modules</p>
+            <a href="{% url 'settings_app:custom_field_create' %}" class="btn-primary">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+                </svg>
+                Create Custom Field
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function confirmDelete(id, label) {
+        if (confirm(`Are you sure you want to delete the custom field "${label}"?\n\nThis action cannot be undone.`)) {
+            // Create and submit form for DELETE request
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/settings/custom-fields/${id}/delete/`;
+
+            // Add CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+</script>
+{% endblock %}

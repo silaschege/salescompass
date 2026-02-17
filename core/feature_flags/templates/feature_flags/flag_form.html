@@ -1,0 +1,55 @@
+{% extends "feature_flags/base.html" %}
+
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Feature Flag - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">{% if object %}Edit{% else %}Create{% endif %} Feature Flag</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label for="id_key" class="form-label">Flag Key *</label>
+                    <input type="text" class="form-control" id="id_key" name="key"
+                        value="{{ form.key.value|default:'' }}" {% if object %}readonly{% endif %} required>
+                    <div class="form-text">Unique identifier for this flag (e.g., 'new_dashboard', 'beta_feature')</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_name" class="form-label">Display Name *</label>
+                    <input type="text" class="form-control" id="id_name" name="name"
+                        value="{{ form.name.value|default:'' }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_description" class="form-label">Description</label>
+                    <textarea class="form-control" id="id_description" name="description"
+                        rows="3">{{ form.description.value|default:'' }}</textarea>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="id_is_active" name="is_active" {{
+                        form.is_active.value|yesno:"checked," }}>
+                    <label class="form-check-label" for="id_is_active">Active</label>
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_rollout_percentage" class="form-label">Rollout Percentage</label>
+                    <input type="range" class="form-range" id="id_rollout_percentage" name="rollout_percentage" min="0"
+                        max="100" value="{{ form.rollout_percentage.value|default:'0' }}"
+                        oninput="this.nextElementSibling.value = this.value + '%'">
+                    <output>{{ form.rollout_percentage.value|default:'0' }}%</output>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">Save Flag</button>
+                    <a href="{% url 'feature_flags:flag_list' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

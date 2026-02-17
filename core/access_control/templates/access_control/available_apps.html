@@ -1,0 +1,15 @@
+{% if available_resources %}
+<div class="row">
+    {% for resource in available_resources %}
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ resource.name }}</h5>
+                <p class="card-text">{{ resource.description }}</p>
+                <a href="#" class="btn btn-primary">Go to App</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}

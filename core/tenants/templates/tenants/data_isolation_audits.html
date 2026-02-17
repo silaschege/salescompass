@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col">
+      <h2><i class="bi bi-shield-lock me-2"></i>{{ title }}</h2>
+      <p class="text-muted">{{ subtitle }}</p>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="d-flex justify-content-between">
+        <a href="{% url 'tenants:data_isolation_audit_create' %}" class="btn btn-primary">
+          <i class="bi bi-plus-circle me-1"></i>Start New Audit
+        </a>
+        <a href="{% url 'tenants:run_data_isolation_audit' %}" class="btn btn-outline-success">
+          <i class="bi bi-play-circle me-1"></i>Run Audit Now
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Filter Audits</h5>
+        </div>
+        <div class="card-body">
+          <form method="get">
+            <div class="row">
+              <div class="col-md-3">
+                <label for="{{ filter_form.audit_type.id_for_label }}" class="form-label">Audit Type</label>
+                {{ filter_form.audit_type }}
+              </div>
+              <div class="col-md-3">
+                <label for="{{ filter_form.status.id_for_label }}" class="form-label">Status</label>
+                {{ filter_form.status }}
+              </div>
+              <div class="col-md-3">
+                <label for="{{ filter_form.date_from.id_for_label }}" class="form-label">Date From</label>
+                {{ filter_form.date_from }}
+              </div>
+              <div class="col-md-3">
+                <label for="{{ filter_form.date_to.id_for_label }}" class="form-label">Date To</label>
+                {{ filter_form.date_to }}
+              </div>
+            </div>
+            <div class="row mt-3">
+              <div class="col-md-12">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                <a href="{% url 'tenants:data_isolation_audits' %}" class="btn btn-secondary">Reset</a>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Data Isolation Audits</h5>
+        </div>
+        <div class="card-body">
+          {% if audits %}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Records Checked</th>
+                  <th>Violations</th>
+                  <th>Auditor</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for audit in audits %}
+                <tr>
+                  <td>{{ audit.audit_date|date:"M d, Y H:i" }}</td>
+                  <td>
+                    <span class="badge bg-{{ audit.audit_type }}">{{ audit.get_audit_type_display }}</span>
+                  </td>
+                  <td>
+                    {% if audit.status == 'passed' %}
+                    <span class="badge bg-success">{{ audit.get_status_display }}</span>
+                    {% elif audit.status == 'failed' %}
+                    <span class="badge bg-danger">{{ audit.get_status_display }}</span>
+                    {% elif audit.status == 'warning' %}
+                    <span class="badge bg-warning">{{ audit.get_status_display }}</span>
+                    {% else %}
+                    <span class="badge bg-info">{{ audit.get_status_display }}</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ audit.total_records_checked }}</td>
+                  <td>
+                    {% if audit.violations_found > 0 %}
+                    <span class="text-danger">{{ audit.violations_found }}</span>
+                    {% else %}
+                    <span class="text-success">{{ audit.violations_found }}</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ audit.auditor.get_full_name|default:audit.auditor.username }}</td>
+                  <td>
+                    <a href="{% url 'tenants:data_isolation_audit_detail' audit.pk %}" class="btn btn-sm btn-outline-primary">
+                      <i class="bi bi-eye"></i> View
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          
+          {% if is_paginated %}
+          <nav aria-label="Audits pagination">
+            <ul class="pagination justify-content-center">
+              {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+              </li>
+              {% endif %}
+
+              <li class="page-item disabled">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+              </li>
+
+              {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+              </li>
+              {% endif %}
+            </ul>
+          </nav>
+          {% endif %}
+          
+          {% else %}
+          <p class="text-muted">No data isolation audits found.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bulk User Operations{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>Bulk User Operations</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'accounts:admin_user_dashboard' %}">User Management</a></li>
+                    <li class="breadcrumb-item active">Bulk Operations</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Bulk User Operations</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="action" class="form-label">Action</label>
+                                    <select name="action" id="action" class="form-select">
+                                        <option value="activate">Activate Users</option>
+                                        <option value="deactivate">Deactivate Users</option>
+                                        <option value="delete">Delete Users</option>
+                                        <option value="change_tenant">Change Tenant</option>
+                                        <option value="change_role">Change Role</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4" id="tenant-select" style="display: none;">
+                                <div class="mb-3">
+                                    <label for="tenant_id" class="form-label">Select Tenant</label>
+                                    <select name="tenant_id" id="tenant_id" class="form-select">
+                                        <option value="">Select Tenant</option>
+                                        {% for tenant in tenants %}
+                                        <option value="{{ tenant.id }}">{{ tenant.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            <div class="col-md-4" id="role-select" style="display: none;">
+                                <div class="mb-3">
+                                    <label for="role_id" class="form-label">Select Role</label>
+                                    <select name="role_id" id="role_id" class="form-select">
+                                        <option value="">Select Role</option>
+                                        {% for role in roles %}
+                                        <option value="{{ role.id }}">{{ role.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        <div class="mb-3">
+                            <button type="submit" class="btn btn-primary" id="submit-btn">Perform Action</button>
+                            <a href="{% url 'accounts:admin_user_list' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Select Users</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="user-table">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="select-all"></th>
+                                    <th>Email</th>
+                                    <th>Name</th>
+                                    <th>Tenant</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td><input type="checkbox" name="user_ids" value="{{ user.id }}"></td>
+                                    <td>{{ user.email }}</td>
+                                    <td>{{ user.first_name }} {{ user.last_name }}</td>
+                                    <td>{{ user.tenant.name|default:"-" }}</td>
+                                    <td>{{ user.role.name|default:"-" }}</td>
+                                    <td>
+                                        <span class="badge {% if user.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                            {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6">No users found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const actionSelect = document.getElementById('action');
+    const tenantSelect = document.getElementById('tenant-select');
+    const roleSelect = document.getElementById('role-select');
+    
+    actionSelect.addEventListener('change', function() {
+        const action = this.value;
+        
+        if (action === 'change_tenant') {
+            tenantSelect.style.display = 'block';
+            roleSelect.style.display = 'none';
+        } else if (action === 'change_role') {
+            tenantSelect.style.display = 'none';
+            roleSelect.style.display = 'block';
+        } else {
+            tenantSelect.style.display = 'none';
+            roleSelect.style.display = 'none';
+        }
+    });
+    
+    const selectAll = document.getElementById('select-all');
+    const checkboxes = document.querySelectorAll('input[name="user_ids"]');
+    
+    selectAll.addEventListener('change', function() {
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+    });
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            selectAll.checked = [...checkboxes].every(cb => cb.checked);
+        });
+    });
+    
+    document.getElementById('submit-btn').addEventListener('click', function(e) {
+        const selectedUsers = document.querySelectorAll('input[name="user_ids"]:checked');
+        if (selectedUsers.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one user to perform bulk operations.');
+        } else {
+            // Create hidden input to pass selected user IDs
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'user_ids';
+            input.value = Array.from(selectedUsers).map(cb => cb.value).join(',');
+            document.querySelector('form').appendChild(input);
+        }
+    });
+});
+</script>
+{% endblock %}

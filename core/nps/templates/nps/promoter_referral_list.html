@@ -1,0 +1,96 @@
+{% extends "nps/base.html" %}
+
+{% block title %}Promoter Referrals - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Promoter Referrals</h1>
+        <p class="text-white text-center lead">Manage and track promoter referral requests</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex gap-2">
+                <a href="{% url 'nps:nps_dashboard' %}" class="btn btn-outline-primary">Dashboard</a>
+                <a href="{% url 'nps:promoter_advocacy' %}" class="btn btn-outline-primary">Promoter Advocacy</a>
+                <a href="{% url 'nps:detractor_kanban' %}" class="btn btn-outline-danger">Detractor Alerts</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Referral List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Referral Requests</h5>
+                </div>
+                <div class="card-body">
+                    {% if referrals %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Promoter</th>
+                                        <th>Score</th>
+                                        <th>Status</th>
+                                        <th>Assigned To</th>
+                                        <th>Deal Value</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for referral in referrals %}
+                                    <tr>
+                                        <td>{{ referral.promoter_response.account.email }}</td>
+                                        <td>
+                                            <span class="badge bg-success">{{ referral.promoter_response.score }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if referral.status == 'converted' %}success{% elif referral.status == 'not_interested' %}danger{% elif referral.status == 'closed' %}secondary{% else %}primary{% endif %}">
+                                                {{ referral.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if referral.assigned_to %}
+                                                {{ referral.assigned_to.get_full_name|default:referral.assigned_to.username }}
+                                            {% else %}
+                                                <span class="text-muted">Unassigned</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if referral.deal_value %}
+                                                ${{ referral.deal_value|floatformat:2 }}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ referral.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'nps:promoter_referral_update' referral.pk %}" class="btn btn-sm btn-primary">Edit</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No referral requests found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}

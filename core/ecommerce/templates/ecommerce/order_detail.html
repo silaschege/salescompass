@@ -1,0 +1,111 @@
+{% extends "ecommerce/base.html" %}
+{% load static %}
+
+{% block title %}Order {{ order.order_number }} | SalesCompass Store{% endblock %}
+
+{% block ecommerce_content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">Order Items</h5>
+                <span
+                    class="badge rounded-pill {% if order.status == 'delivered' %}bg-success{% elif order.status == 'cancelled' %}bg-danger{% else %}bg-primary{% endif %} px-3">
+                    {{ order.get_status_display }}
+                </span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="px-4 py-3">Product</th>
+                                <th class="py-3 text-center">Price</th>
+                                <th class="py-3 text-center">Qty</th>
+                                <th class="px-4 py-3 text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr>
+                                <td class="px-4">
+                                    <h6 class="mb-0 small fw-bold">{{ item.product_name }}</h6>
+                                </td>
+                                <td class="text-center">${{ item.unit_price }}</td>
+                                <td class="text-center">{{ item.quantity }}</td>
+                                <td class="px-4 text-end fw-bold">${{ item.line_total }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end px-4 py-3 fw-bold bg-light">Subtotal</td>
+                                <td class="px-4 py-3 text-end fw-bold bg-light">${{ order.total_amount }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end px-4 py-3 border-0">Shipping</td>
+                                <td class="px-4 py-3 text-end border-0">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end px-4 py-3 border-0 bg-light">
+                                    <h5 class="mb-0 fw-bold">Total</h5>
+                                </td>
+                                <td class="px-4 py-3 text-end border-0 bg-light">
+                                    <h5 class="mb-0 fw-bold text-primary">${{ order.total_amount }}</h5>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold">Order Info</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="fw-bold text-muted small text-uppercase">Order Number</h6>
+                    <p class="mb-0 fw-bold">{{ order.order_number }}</p>
+                </div>
+                <div class="mb-3">
+                    <h6 class="fw-bold text-muted small text-uppercase">Date Placed</h6>
+                    <p class="mb-0">{{ order.created_at|date:"F d, Y H:i" }}</p>
+                </div>
+                <div class="mb-3">
+                    <h6 class="fw-bold text-muted small text-uppercase">Payment Status</h6>
+                    <span
+                        class="badge rounded-pill {% if order.payment_status == 'paid' %}bg-success{% else %}bg-warning text-dark{% endif %} px-3">
+                        {{ order.get_payment_status_display }}
+                    </span>
+                </div>
+                <div class="mb-0">
+                    <h6 class="fw-bold text-muted small text-uppercase">Payment Method</h6>
+                    <p class="mb-0">{{ order.get_payment_method_display|default:order.payment_method }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold">Shipping Details</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">
+                    {{ order.shipping_address }}<br>
+                    {{ order.shipping_city }}<br>
+                    {{ order.shipping_country }} {{ order.shipping_zip }}
+                </p>
+                {% if order.notes %}
+                <hr>
+                <h6 class="fw-bold text-muted small text-uppercase">Delivery Notes</h6>
+                <p class="mb-0 small">{{ order.notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,151 @@
+{% extends 'billing/base.html' %}
+{% load billing_tags %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-x-octagon me-2"></i>Cancellation Management</h2>
+            <p class="text-muted">Manage subscription cancellations and scheduled cancellations</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Pending Cancellations</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Subscriptions scheduled to cancel at period end</p>
+                    {% if pending_cancellations %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Tenant ID</th>
+                                    <th>Plan</th>
+                                    <th>Ends On</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sub in pending_cancellations %}
+                                <tr>
+                                    <td><code>{{ sub.tenant_id }}</code></td>
+                                    <td>{{ sub.plan.name }}</td>
+                                    <td>{{ sub.current_period_end|date:"Y-m-d" }}</td>
+                                    <td>
+                                        <a href="{% url 'billing:subscription_detail' subscription_id=sub.id %}"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <strong>Revenue at Risk:</strong> ${{
+                            pending_cancellations|map_attr:'plan.price_monthly'|sum|floatformat:2 }}/month
+                        </small>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        No pending cancellations
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-x-circle me-2"></i>Canceled Subscriptions</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Recently canceled subscriptions</p>
+                    {% if canceled_subscriptions %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Tenant ID</th>
+                                    <th>Plan</th>
+                                    <th>Canceled On</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sub in canceled_subscriptions|slice:":10" %}
+                                <tr>
+                                    <td><code>{{ sub.tenant_id }}</code></td>
+                                    <td>{{ sub.plan.name }}</td>
+                                    <td>{{ sub.updated_at|date:"Y-m-d" }}</td>
+                                    <td>
+                                        <a href="{% url 'billing:subscription_detail' subscription_id=sub.id %}"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <strong>Lost Revenue:</strong> ${{
+                            canceled_subscriptions|slice:":10"|map_attr:'plan.price_monthly'|sum|floatformat:2 }}/month
+                        </small>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        No canceled subscriptions
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h6 class="mb-0">Cancellation Statistics</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h4>{{ pending_cancellations.count }}</h4>
+                        <small class="text-muted">Pending Cancellations</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h4>{{ canceled_subscriptions.count }}</h4>
+                        <small class="text-muted">Total Canceled</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h4>${{ pending_cancellations|map_attr:'plan.price_monthly'|sum|floatformat:0 }}</h4>
+                        <small class="text-muted">At Risk MRR</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h4>${{ canceled_subscriptions|map_attr:'plan.price_monthly'|sum|floatformat:0 }}</h4>
+                        <small class="text-muted">Lost MRR</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

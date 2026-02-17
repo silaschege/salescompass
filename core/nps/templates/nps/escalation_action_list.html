@@ -1,0 +1,88 @@
+{% extends "nps/base.html" %}
+
+{% block title %}Escalation Actions - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">NPS Escalation Actions</h1>
+        <p class="text-white text-center lead">Manage reusable escalation actions for NPS responses</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex gap-2">
+                <a href="{% url 'nps:nps_dashboard' %}" class="btn btn-outline-primary">Dashboard</a>
+                <a href="{% url 'nps:escalation_rules' %}" class="btn btn-outline-primary">Escalation Rules</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'nps:create_escalation_action' %}" class="btn btn-primary">Create New Action</a>
+        </div>
+    </div>
+
+    <!-- Actions List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Escalation Actions</h5>
+                </div>
+                <div class="card-body">
+                    {% if actions %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Description</th>
+                                        <th>Action Type</th>
+                                        <th>Order</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for action in actions %}
+                                    <tr>
+                                        <td>{{ action.name }}</td>
+                                        <td>{{ action.description|truncatewords:10 }}</td>
+                                        <td>{{ action.get_action_type_display }}</td>
+                                        <td>{{ action.order }}</td>
+                                        <td>
+                                            {% if action.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'nps:update_escalation_action' action.pk %}" class="btn btn-sm btn-primary">Edit</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No escalation actions found. <a href="{% url 'nps:create_escalation_action' %}">Create your first action</a>.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}

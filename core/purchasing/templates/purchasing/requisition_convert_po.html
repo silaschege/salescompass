@@ -1,0 +1,93 @@
+{% extends "purchasing/base.html" %}
+{% load crispy_forms_tags %}
+{% load humanize %}
+
+{% block purchasing_content %}
+<div class="animate-fade-in p-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex align-items-center mb-4">
+                <a href="{% url 'purchasing:requisition_detail' requisition.pk %}"
+                    class="btn btn-light btn-icon rounded-circle me-3 border-0 shadow-sm">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <h1 class="h3 fw-bold mb-0">Convert Requisition to PO</h1>
+            </div>
+
+            <div class="premium-card p-4 border-0 shadow-sm">
+                <div class="alert alert-primary border-0 shadow-none mb-4 d-flex align-items-center">
+                    <i class="bi bi-info-circle-fill me-3 h4 mb-0"></i>
+                    <div>
+                        Converting <strong>#{{ requisition.requisition_number }}</strong>. Please select a supplier and
+                        target warehouse to generate the Purchase Order.
+                    </div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Select Supplier</label>
+                            <select name="supplier" class="form-select select2" required>
+                                <option value="">Choose Supplier...</option>
+                                {% for supplier in suppliers %}
+                                <option value="{{ supplier.id }}">{{ supplier.supplier_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Target Warehouse</label>
+                            <select name="warehouse" class="form-select select2" required>
+                                <option value="">Choose Warehouse...</option>
+                                {% for wh in warehouses %}
+                                <option value="{{ wh.id }}">{{ wh.warehouse_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 border-top pt-4">
+                        <h6 class="fw-bold mb-3">Items to be Ordered</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead class="table-light extra-small text-uppercase">
+                                    <tr>
+                                        <th>Product</th>
+                                        <th class="text-center">Quantity</th>
+                                        <th class="text-end">Est. Price</th>
+                                        <th class="text-end">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for line in requisition.lines.all %}
+                                    <tr>
+                                        <td>{{ line.product.product_name }}</td>
+                                        <td class="text-center">{{ line.quantity }}</td>
+                                        <td class="text-end">${{ line.estimated_unit_price|floatformat:2 }}</td>
+                                        <td class="text-end fw-bold">${{ line.line_total|floatformat:2|intcomma }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" class="text-end fw-bold">Total:</td>
+                                        <td class="text-end fw-bold text-primary">${{ requisition.total_amount|floatformat:2|intcomma }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                        <a href="{% url 'purchasing:requisition_detail' requisition.pk %}"
+                            class="btn btn-light px-4 border rounded-pill">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-5 shadow-sm border-0 rounded-pill">
+                            <i class="bi bi-gear-wide-connected me-2"></i> Generate Purchase Order
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

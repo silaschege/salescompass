@@ -1,0 +1,245 @@
+{% extends "accounting/base.html" %}
+{% load math %}
+{% load static %}
+{% load humanize %}
+
+{% block accounting_content %}
+<div class="animate-fade-in">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Journal Entries</h1>
+            <p class="text-muted mb-0">Manage and audit all financial transactions</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-light border shadow-sm" type="button" data-bs-toggle="collapse"
+                data-bs-target="#filterPanel">
+                <i class="bi bi-funnel me-2"></i> Filters
+            </button>
+            <a href="{% url 'accounting:journal_create' %}" class="btn btn-primary shadow-sm px-4 border-0">
+                <i class="bi bi-plus-lg me-2"></i> New Entry
+            </a>
+        </div>
+    </div>
+
+    <!-- Collapsible Filter Panel -->
+    <div class="collapse {% if request.GET %}show{% endif %} mb-4" id="filterPanel">
+        <div class="premium-card p-4 border-0 shadow-sm">
+            <h6 class="fw-bold mb-3"><i class="bi bi-sliders me-2 text-primary"></i> Filter Entries</h6>
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label for="statusFilter"
+                        class="form-label extra-small text-uppercase fw-bold text-muted">Status</label>
+                    <select name="status" id="statusFilter" class="form-select form-select-sm">
+                        <option value="">All Statuses</option>
+                        <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>Draft</option>
+                        <option value="posted" {% if request.GET.status == 'posted' %}selected{% endif %}>Posted</option>
+                        <option value="reversed" {% if request.GET.status == 'reversed' %}selected{% endif %}>Reversed
+                        </option>
+                        <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelled
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="dateFrom" class="form-label extra-small text-uppercase fw-bold text-muted">From
+                        Date</label>
+                    <input type="date" name="date_from" id="dateFrom" class="form-control form-control-sm"
+                        value="{{ request.GET.date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="dateTo" class="form-label extra-small text-uppercase fw-bold text-muted">To Date</label>
+                    <input type="date" name="date_to" id="dateTo" class="form-control form-control-sm"
+                        value="{{ request.GET.date_to }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="search" class="form-label extra-small text-uppercase fw-bold text-muted">Search</label>
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="search" id="search" class="form-control"
+                            placeholder="Desc, Ref, or #..." value="{{ request.GET.search }}">
+                        <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+                    </div>
+                </div>
+                <div class="col-12 text-end mt-3">
+                    <a href="{% url 'accounting:journal_list' %}"
+                        class="btn btn-sm btn-link text-decoration-none text-muted me-2">Clear All</a>
+                    <button type="submit" class="btn btn-sm btn-primary px-4">Apply Filters</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Entries Table -->
+    <div class="premium-card shadow-sm border-0 overflow-hidden">
+        {% if journals %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light bg-opacity-50">
+                    <tr>
+                        <th class="ps-4 py-3 text-muted small text-uppercase fw-bold">Entry #</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold">Date</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold" style="width: 30%;">Description</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold">Reference</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold text-center">Status</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold text-end">Amount</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold">By</th>
+                        <th class="pe-4 py-3 text-muted small text-uppercase fw-bold text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for journal in journals %}
+                    <tr>
+                        <td class="ps-4 py-3">
+                            <a href="{% url 'accounting:journal_detail' journal.pk %}"
+                                class="fw-bold text-primary text-decoration-none font-monospace">
+                                {{ journal.entry_number }}
+                            </a>
+                        </td>
+                        <td class="py-3">
+                            <span class="small fw-semibold">{{ journal.entry_date|date:"M d, Y" }}</span>
+                        </td>
+                        <td class="py-3">
+                            <div class="text-truncate small text-dark" style="max-width: 250px;"
+                                title="{{ journal.description }}">
+                                {{ journal.description|default:"No description" }}
+                            </div>
+                        </td>
+                        <td class="py-3">
+                            {% if journal.reference %}
+                            <span class="badge bg-light text-secondary border fw-normal">{{ journal.reference }}</span>
+                            {% else %}
+                            <span class="text-muted small">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 text-center">
+                            {% if journal.status == 'posted' %}
+                            <span class="badge badge-soft-success rounded-pill px-3">Posted</span>
+                            {% elif journal.status == 'draft' %}
+                            <span class="badge badge-soft-warning rounded-pill px-3">Draft</span>
+                            {% elif journal.status == 'reversed' %}
+                            <span class="badge badge-soft-info rounded-pill px-3">Reversed</span>
+                            {% elif journal.status == 'cancelled' %}
+                            <span class="badge badge-soft-danger rounded-pill px-3">Cancelled</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 text-end fw-bold">
+                            {% with total_debit=journal.lines.all|sum:"debit" %}
+                            {{ total_debit|floatformat:2|intcomma }}
+                            <span class="extra-small text-muted fw-normal align-top ms-1">{{ journal.currency.code}}</span>
+                            {% endwith %}
+                        </td>
+                        <td class="py-3">
+                            <div class="d-flex align-items-center" title="{{ journal.created_by.get_full_name }}">
+                                <!-- <div class="avatar-circle xs bg-primary-subtle text-primary me-2 flex-shrink-0"
+                                    style="width: 24px; height: 24px; font-size: 10px;">
+                                    {{ journal.created_by.get_full_name|first|default:journal.created_by.username|first|upper}}
+                                </div> -->
+                                <span class="small text-muted text-truncate" style="max-width: 80px;">
+                                    {{ journal.created_by.username }}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="pe-4 py-3 text-end">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-icon btn-ghost-secondary rounded-circle" type="button"
+                                    data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                    <li>
+                                        <a class="dropdown-item small py-2"
+                                            href="{% url 'accounting:journal_detail' journal.pk %}">
+                                            <i class="bi bi-eye me-2 text-primary"></i> View Details
+                                        </a>
+                                    </li>
+                                    {% if journal.status == 'draft' %}
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item small py-2 text-success"
+                                            href="{% url 'accounting:journal_post' journal.pk %}">
+                                            <i class="bi bi-check-circle me-2"></i> Post Entry
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item small py-2" href="#">
+                                            <i class="bi bi-pencil me-2"></i> Edit
+                                        </a>
+                                    </li>
+                                    {% elif journal.status == 'posted' %}
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item small py-2 text-danger" href="#">
+                                            <i class="bi bi-arrow-counterclockwise me-2"></i> Reverse
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if is_paginated %}
+        <div class="card-footer bg-white border-top-0 py-4 px-4">
+            {% include "components/_pagination.html" %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="p-5 text-center">
+            <div class="mb-3">
+                <div class="avatar-circle lg bg-light text-muted mx-auto shadow-sm" style="width: 64px; height: 64px;">
+                    <i class="bi bi-journal-text h3 mb-0"></i>
+                </div>
+            </div>
+            <h5 class="fw-bold text-dark">No journal entries found</h5>
+            <p class="text-muted small mb-4">
+                {% if request.GET %}
+                Try adjusting your filters or search terms.
+                {% else %}
+                Start by creating your first journal entry to track financial transactions.
+                {% endif %}
+            </p>
+            <a href="{% url 'accounting:journal_create' %}" class="btn btn-primary px-4 shadow-sm border-0">
+                <i class="bi bi-plus-lg me-2"></i> Create New Entry
+            </a>
+            {% if request.GET %}
+            <div class="mt-3">
+                <a href="{% url 'accounting:journal_list' %}" class="small text-decoration-none">Clear Filters</a>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .extra-small {
+        font-size: 0.75rem;
+    }
+
+    .badge-soft-success {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .badge-soft-warning {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .badge-soft-danger {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .badge-soft-info {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+</style>
+{% endblock %}

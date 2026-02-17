@@ -1,0 +1,198 @@
+{% extends "invoicing/base.html" %}
+{% load static %}
+
+{% block invoicing_content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'invoicing:invoice_list' %}">Invoices</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        {% if object %}Edit Invoice {{ object.invoice_number }}{% else %}New Invoice{% endif %}
+                    </li>
+                </ol>
+            </nav>
+            <h2 class="mb-1">{% if object %}Edit Invoice{% else %}Create Invoice{% endif %}</h2>
+        </div>
+    </div>
+
+    <form method="post" id="invoiceForm">
+        {% csrf_token %}
+
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Main Invoice Info -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Invoice Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.customer.id_for_label }}" class="form-label">Customer</label>
+                                {{ form.customer }}
+                                {% if form.customer.errors %}
+                                <div class="text-danger small">{{ form.customer.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.invoice_number.id_for_label }}" class="form-label">Invoice
+                                    Number</label>
+                                {{ form.invoice_number }}
+                                {% if form.invoice_number.errors %}
+                                <div class="text-danger small">{{ form.invoice_number.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.issue_date.id_for_label }}" class="form-label">Issue Date</label>
+                                {{ form.issue_date }}
+                                {% if form.issue_date.errors %}
+                                <div class="text-danger small">{{ form.issue_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.due_date.id_for_label }}" class="form-label">Due Date</label>
+                                {{ form.due_date }}
+                                {% if form.due_date.errors %}
+                                <div class="text-danger small">{{ form.due_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Line Items -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Line Items</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        {{ inlines.management_form }}
+                        <div class="table-responsive">
+                            <table class="table table-bordered mb-0" id="linesTable">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th style="width: 30%">Product</th>
+                                        <th style="width: 30%">Description</th>
+                                        <th style="width: 10%">Qty</th>
+                                        <th style="width: 15%">Price</th>
+                                        <th style="width: 10%">Total</th>
+                                        <th style="width: 5%"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for form in inlines %}
+                                    <tr class="line-item-row">
+                                        {{ form.id }}
+                                        <td>
+                                            {{ form.product }}
+                                            {% if form.product.errors %}
+                                            <div class="text-danger small">{{ form.product.errors }}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ form.description }}
+                                            {% if form.description.errors %}
+                                            <div class="text-danger small">{{ form.description.errors }}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ form.quantity }}
+                                            {% if form.quantity.errors %}
+                                            <div class="text-danger small">{{ form.quantity.errors }}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ form.unit_price }}
+                                            {% if form.unit_price.errors %}
+                                            <div class="text-danger small">{{ form.unit_price.errors }}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control-plaintext text-end line-total"
+                                                readonly value="0.00">
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            {% if inlines.can_delete %}
+                                            {{ form.DELETE }}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white">
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="add-line">
+                            <i class="bi bi-plus-circle me-1"></i> Add Line
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Totals & Notes -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                                    {{ form.notes }}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.terms.id_for_label }}" class="form-label">Terms</label>
+                                    {{ form.terms }}
+                                </div>
+                            </div>
+                            <div class="col-md-5 ms-auto">
+                                <table class="table table-clear">
+                                    <tbody>
+                                        <tr>
+                                            <td class="left"><strong>Subtotal</strong></td>
+                                            <td class="text-end" id="subtotalDisplay">$0.00</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="left"><strong>Tax</strong></td>
+                                            <td class="text-end" id="taxDisplay">$0.00</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="left"><strong>Total</strong></td>
+                                            <td class="text-end fw-bold" id="totalDisplay">$0.00</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Save Invoice</button>
+                            <a href="{% url 'invoicing:invoice_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Simple JS to calculate totals dynamically would go here
+    // For now, relying on backend calculation on save
+
+    // Example: Update totals on input change
+    document.addEventListener('DOMContentLoaded', function () {
+        const calculateTotals = () => {
+            // Logic to iterate rows and sum up
+        };
+
+        // Bind events
+    });
+</script>
+{% endblock %}

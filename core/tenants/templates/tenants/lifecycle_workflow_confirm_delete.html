@@ -1,0 +1,26 @@
+{% extends 'tenants/base.html' %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow border-0">
+            <div class="card-body p-5 text-center">
+                <div class="mb-4">
+                    <i class="fas fa-trash-alt fa-4x text-danger"></i>
+                </div>
+                <h2 class="h3 mb-3">{{ title }}</h2>
+                <p class="text-muted mb-4">
+                    {{ subtitle }} This will remove the workflow definition. Existing executions of this workflow will
+                    not be affected.
+                </p>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="{% url 'tenants:lifecycle_workflows' %}" class="btn btn-light px-4">Cancel</a>
+                        <button type="submit" class="btn btn-danger px-4">Delete Workflow</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

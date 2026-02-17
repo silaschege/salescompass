@@ -1,0 +1,42 @@
+{% extends 'engagement/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        {% if form.instance.pk %}Edit Experiment{% else %}Create New Experiment{% endif %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <div class="mt-4 border-top pt-3 text-right">
+                            <a href="{% url 'engagement:experiment_list' %}"
+                                class="btn btn-link text-muted mr-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save Experiment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4 bg-light border-0">
+                <div class="card-body">
+                    <h6 class="font-weight-bold text-dark"><i class="fas fa-info-circle mr-2"></i>Testing Tips</h6>
+                    <ul class="small text-muted mt-3 pl-3 mb-0">
+                        <li class="mb-2">Test one variable at a time (e.g., subject line only) for clear results.</li>
+                        <li class="mb-2">Ensure your sample size is large enough for statistical significance.</li>
+                        <li>Run the test for at least one full business cycle (usually 7 days).</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

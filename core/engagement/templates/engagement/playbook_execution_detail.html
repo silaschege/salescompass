@@ -1,0 +1,166 @@
+{% extends "engagement/base.html" %}
+
+{% block title %}Playbook Execution - {{ execution.playbook.name }}{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Playbook Execution</h1>
+        <p class="text-white text-center lead">Details for "{{ execution.playbook.name }}" execution</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h2>{{ execution.playbook.name }}</h2>
+                            <p class="text-muted mb-2">{{ execution.playbook.description }}</p>
+                            <div class="d-flex gap-3">
+                                <div>
+                                    <small class="text-muted">Account</small>
+                                    <div class="fw-bold">{{ execution.account.name }}</div>
+                                </div>
+                                <div>
+                                    <small class="text-muted">Started by</small>
+                                    <div class="fw-bold">{{ execution.started_by.get_full_name|default:execution.started_by.email }}</div>
+                                </div>
+                                <div>
+                                    <small class="text-muted">Status</small>
+                                    <div>
+                                        {% if execution.status == 'completed' %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% elif execution.status == 'in_progress' %}
+                                            <span class="badge bg-primary">In Progress</span>
+                                        {% elif execution.status == 'abandoned' %}
+                                            <span class="badge bg-danger">Abandoned</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Not Started</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if execution.started_at %}
+                                <div>
+                                    <small class="text-muted">Started</small>
+                                    <div class="fw-bold">{{ execution.started_at|date:"M d, Y H:i" }}</div>
+                                </div>
+                                {% endif %}
+                                {% if execution.completed_at %}
+                                <div>
+                                    <small class="text-muted">Completed</small>
+                                    <div class="fw-bold">{{ execution.completed_at|date:"M d, Y H:i" }}</div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div>
+                            {% if execution.status != 'completed' %}
+                            <a href="{% url 'engagement:playbook_execution_complete' execution.pk %}" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Complete Execution
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Execution Steps</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if execution.step_executions.all %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 100px;">Timeline</th>
+                                    <th>Action</th>
+                                    <th>Instructions</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for step_execution in execution.step_executions.all %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex flex-column align-items-center bg-light rounded p-2 border">
+                                            <span class="small text-uppercase text-muted fw-bold">Day</span>
+                                            <span class="h4 mb-0 text-primary">{{ step_execution.step.day_offset }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info text-dark">{{ step_execution.step.get_action_type_display }}</span>
+                                    </td>
+                                    <td>{{ step_execution.step.description }}</td>
+                                    <td>
+                                        {% if step_execution.step.priority == 'critical' %}
+                                        <span class="badge bg-danger">Critical</span>
+                                        {% elif step_execution.step.priority == 'high' %}
+                                        <span class="badge bg-warning text-dark">High</span>
+                                        {% elif step_execution.step.priority == 'medium' %}
+                                        <span class="badge bg-info text-dark">Medium</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Low</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if step_execution.status == 'completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                        {% elif step_execution.status == 'in_progress' %}
+                                        <span class="badge bg-primary">In Progress</span>
+                                        {% elif step_execution.status == 'skipped' %}
+                                        <span class="badge bg-secondary">Skipped</span>
+                                        {% else %}
+                                        <span class="badge bg-light">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        {% if step_execution.status == 'pending' %}
+                                        <button class="btn btn-sm btn-success" disabled>
+                                            <i class="bi bi-check"></i> Mark Complete
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center p-5">
+                        <i class="bi bi-list-check display-4 text-muted mb-3"></i>
+                        <h5>No steps defined</h5>
+                        <p class="text-muted">This playbook execution doesn't have any steps.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if execution.notes %}
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Execution Notes</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ execution.notes|linebreaks }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "assets/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block asset_content %}
+<div class="row justify-content-center p-4">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center mb-4">
+            <a href="{% url 'assets:asset_detail' asset.pk %}"
+                class="btn btn-light btn-icon rounded-circle me-3 border-0 shadow-sm">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h1 class="h3 fw-bold mb-0">Record Impairment Loss</h1>
+        </div>
+
+        <div class="premium-card p-4 border-0 shadow-sm position-relative overflow-hidden">
+            <div class="position-absolute top-0 end-0 p-3 opacity-10 text-danger">
+                <i class="bi bi-graph-down-arrow" style="font-size: 5rem;"></i>
+            </div>
+
+            <div class="alert alert-soft-danger border-0 py-3 mb-5 shadow-none small d-flex align-items-center"
+                style="background: rgba(239, 68, 68, 0.05); border-left: 4px solid #ef4444 !important;">
+                <i class="bi bi-exclamation-triangle text-danger me-3 h4 mb-0"></i>
+                <div class="text-dark">
+                    <strong>IAS 36 Compliance:</strong> impairment losses must be recognized when the carrying amount
+                    exceeds the recoverable amount. This will immediately reduce the asset's book value and impact the
+                    P&L.
+                </div>
+            </div>
+
+            <div class="mb-4 pb-3 border-bottom">
+                <div class="extra-small text-muted fw-bold text-uppercase">Target Asset</div>
+                <div class="fw-bold text-dark h5">{{ asset.name }} ({{ asset.asset_number }})</div>
+                <div class="small text-muted">Current Book Value: ${{ asset.current_value }}</div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="row g-4">
+                    <div class="col-md-6">{{ form.date|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ form.impairment_loss|as_crispy_field }}</div>
+                    <div class="col-12">{{ form.reason|as_crispy_field }}</div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-3 mt-5 pt-4 border-top">
+                    <a href="{% url 'assets:asset_detail' asset.pk %}"
+                        class="btn btn-link text-muted text-decoration-none px-4 rounded-pill">Cancel</a>
+                    <button type="submit" class="btn btn-danger px-5 shadow-sm border-0 rounded-pill animate-hover">
+                        <i class="bi bi-shield-exclamation me-2"></i> Record Loss
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

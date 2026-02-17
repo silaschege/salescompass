@@ -1,0 +1,49 @@
+{% extends "marketing/base.html" %}
+
+{% block title %}Delete Campaign - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container text-center">
+        <h1 class="block-title">Delete Marketing Campaign</h1>
+        <p class="text-white lead mb-0">Confirmation required to delete campaign record</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Are you sure?</h5>
+                </div>
+                <div class="card-body text-center py-4">
+                    <p class="mb-3 text-muted">You are about to delete the campaign:</p>
+                    <h3 class="mb-4 text-primary">{{ object.campaign_name }}</h3>
+
+                    <div class="alert alert-warning mb-4">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Deleting this campaign will also remove associated performance data, A/B tests, and ROI
+                        calculations. This action is <strong>irreversible</strong>.
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                            <a href="{% url 'marketing:campaign_list' %}" class="btn btn-outline-secondary">Abort &
+                                Return to List</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container text-center">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}

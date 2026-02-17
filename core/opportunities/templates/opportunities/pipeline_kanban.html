@@ -1,0 +1,113 @@
+{% extends "opportunities/base.html" %}
+
+{% block title %}Pipeline Kanban{% endblock %}
+
+{% block extra_css %}
+<style>
+    .kanban-board {
+        display: flex;
+        overflow-x: auto;
+        gap: 1.5rem;
+        padding-bottom: 2rem;
+        min-height: calc(100vh - 200px);
+    }
+
+    .kanban-column {
+        min-width: 320px;
+        max-width: 320px;
+        background-color: #f1f5f9;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .kanban-header {
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .kanban-card {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        cursor: grab;
+        transition: transform 0.2s;
+    }
+
+    .kanban-card:hover {
+        transform: scale(1.02);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Pipeline Kanban</h1>
+        <a href="{% url 'opportunities:opportunity_create' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg"></i> New Deal
+        </a>
+    </div>
+
+    <div class="kanban-board">
+        {% for stage in stages %}
+        <div class="kanban-column">
+            <div class="kanban-header">
+                <h6 class="fw-bold mb-0 text-uppercase small text-muted">
+                    {{ stage.name }}
+                    <span class="badge bg-secondary text-white ms-2">{{ stage.opportunities.count }}</span>
+                </h6>
+                <div class="text-muted small">${{ stage.total_value|default:"0" }}</div>
+            </div>
+
+            <div class="kanban-cards">
+                {% for opp in stage.opportunities %}
+                <div class="kanban-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <a href="{% url 'opportunities:opportunity_detail' opp.id %}"
+                            class="fw-bold text-dark text-decoration-none small">
+                            {{ opp.name }}
+                        </a>
+                    </div>
+                    <div class="text-muted x-small mb-2">{{ opp.account.name }}</div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="fw-bold text-primary small">${{ opp.amount|floatformat:0 }}</div>
+                        {% if opp.owner %}
+                        <div class="avatar-circle-xs bg-light text-muted" title="{{ opp.owner.username }}">
+                            {{ opp.owner.username|slice:":1"|upper }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-4 text-muted small opacity-50">No deals</div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .avatar-circle-xs {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: bold;
+        border: 1px solid #dee2e6;
+    }
+
+    .x-small {
+        font-size: 0.75rem;
+    }
+</style>
+{% endblock %}

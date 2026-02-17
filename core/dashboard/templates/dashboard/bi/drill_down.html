@@ -1,0 +1,117 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Drill Down: {{ metric|title }} | SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:bi_dashboard' %}">BI Dashboard</a></li>
+                    <li class="breadcrumb-item active">{{ metric|title }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3 text-gray-800">Detailed Report: {{ metric|title }}</h1>
+        </div>
+        <button class="btn btn-outline-secondary" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print
+        </button>
+    </div>
+
+    <!-- Summary -->
+    <div class="card mb-4 border-left-primary shadow h-100 py-2">
+        <div class="card-body">
+            <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Records</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ summary.total }}</div>
+                </div>
+                {% if summary.value %}
+                <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Value</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">${{ summary.value|floatformat:2 }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Data Records</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            {% if metric == 'leads' %}
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                            {% elif metric == 'opportunities' %}
+                                <th>Name</th>
+                                <th>Stage</th>
+                                <th>Amount</th>
+                                <th>Created At</th>
+                            {% else %}
+                                <th>Data</th>
+                            {% endif %}
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in page_obj %}
+                        <tr>
+                            {% if metric == 'leads' %}
+                                <td>{{ item.first_name }} {{ item.last_name }}</td>
+                                <td><span class="badge bg-secondary">{{ item.status }}</span></td>
+                                <td>{{ item.lead_created_at|date:"Y-m-d" }}</td>
+                            {% elif metric == 'opportunities' %}
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.stage }}</td>
+                                <td>${{ item.amount|floatformat:2 }}</td>
+                                <td>{{ item.opportunity_created_at|date:"Y-m-d" }}</td>
+                            {% endif %}
+                            <td>
+                                <a href="#" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No records found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-3">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="page-item disabled">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

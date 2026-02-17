@@ -1,0 +1,208 @@
+{% extends 'developer/base.html' %}
+{% load static %}
+{% load math %} 
+
+{% block title %}Developer Dashboard - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Developer Dashboard</h1>
+            <p class="text-muted">Manage your API integration and monitor system performance.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'developer:portal' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-info-circle me-1"></i> Documentation
+            </a>
+            <a href="{% url 'developer:api_keys' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i> New API Key
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats Row -->
+    <div class="row mb-4">
+        <!-- API Keys Stat -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-primary border-4 shadow-sm h-100 py-2">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">API Keys</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.active_api_keys }} / {{ stats.total_api_keys }} Active</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-key text-gray-300 h2"></i>
+                        </div>
+                    </div>
+                    {% if stats.total_api_keys > 0 %}
+                    <div class="progress mt-3" style="height: 6px;">
+                        <div class="progress-bar bg-primary" role="progressbar" 
+                             style="width: {{ stats.active_api_keys|div:stats.total_api_keys|mul:100 }}%"></div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Webhooks Stat -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-success border-4 shadow-sm h-100 py-2">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Webhook Health</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.successful_webhooks_pct }}% Success</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-broadcast text-gray-300 h2"></i>
+                        </div>
+                    </div>
+                    <div class="progress mt-3" style="height: 6px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: 92%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Usage Stat -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-info border-4 shadow-sm h-100 py-2">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Requests (24h)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.total_api_calls|default:"0" }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-graph-up-arrow text-gray-300 h2"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted">Rate limit: 85% available</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Status Stat -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-warning border-4 shadow-sm h-100 py-2">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">API Uptime</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">99.98%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-shield-check text-gray-300 h2"></i>
+                        </div>
+                    </div>
+                    <small class="text-success"><i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i> All systems operational</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Actions & Links -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Integration Hub</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded">
+                                <h6><i class="bi bi-journal-code text-primary me-2"></i>API Documentation</h6>
+                                <p class="small text-muted">View Swagger and Redoc technical specifications.</p>
+                                <div class="btn-group w-100">
+                                    <a href="{% url 'swagger-ui' %}"  class="btn btn-sm btn-outline-primary">Swagger</a>
+                                    <a href="{% url 'redoc' %}"  class="btn btn-sm btn-outline-primary">Redoc</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded">
+                                <h6><i class="bi bi-hdd-network text-success me-2"></i>Webhooks</h6>
+                                <p class="small text-muted">Configure endpoints for real-time event data.</p>
+                                <a href="{% url 'developer:webhooks' %}" class="btn btn-sm btn-outline-success w-100">Manage Endpoints</a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded">
+                                <h6><i class="bi bi-shield-lock text-warning me-2"></i>Authentication</h6>
+                                <p class="small text-muted">Manage Bearer tokens and security settings.</p>
+                                <a href="{% url 'developer:api_keys' %}" class="btn btn-sm btn-outline-warning w-100">API Keys</a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded">
+                                <h6><i class="bi bi-bar-chart text-info me-2"></i>Usage Analytics</h6>
+                                <p class="small text-muted">Detailed breakdown of endpoint performance.</p>
+                                <a href="{% url 'developer:analytics' %}" class="btn btn-sm btn-outline-info w-100">View Reports</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Getting Started Quick Snippet -->
+            <div class="card shadow-sm">
+                <div class="card-body bg-light">
+                    <h6 class="card-title">Quick Start Request</h6>
+                    <pre class="bg-dark text-white p-3 rounded mb-0"><code>curl -H "Authorization: Bearer YOUR_API_KEY" \
+{{ request.scheme }}://{{ request.get_host }}/api/leads/</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring Sidebar -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Live Monitoring</h6>
+                    <span class="badge bg-success">Live</span>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>Avg. Latency</span>
+                            <span class="text-success">128ms</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" style="width: 20%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>Error Rate (5xx)</span>
+                            <span class="text-danger">0.02%</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-danger" style="width: 5%"></div>
+                        </div>
+                    </div>
+                    <hr>
+                    <h6 class="small font-weight-bold">Recent Events</h6>
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item d-flex justify-content-between px-0">
+                            <span>lead.created webhook</span>
+                            <span class="text-muted">2 mins ago</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0">
+                            <span>API Key "Prod_Key_01" used</span>
+                            <span class="text-muted">15 mins ago</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0 text-danger">
+                            <span>Webhook delivery failed (404)</span>
+                            <span class="text-muted">1 hour ago</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

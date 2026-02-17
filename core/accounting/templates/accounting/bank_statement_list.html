@@ -1,0 +1,76 @@
+{% extends "accounting/base.html" %}
+{% load humanize %}
+
+{% block accounting_content %}
+<div class="animate-fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h2 fw-bold mb-0">Bank Statements</h1>
+            <p class="text-muted">Manage and reconcile your imported bank statement feeds</p>
+        </div>
+        <a href="{% url 'accounting:statement_import' %}" class="btn btn-primary d-flex align-items-center px-4 shadow">
+            <i class="bi bi-file-earmark-arrow-up me-2"></i> Import Statement
+        </a>
+    </div>
+
+    <div class="premium-card p-4">
+        <div class="table-responsive">
+            <table class="table table-borderless align-middle">
+                <thead>
+                    <tr class="text-muted small text-uppercase">
+                        <th>Import Date</th>
+                        <th>Account</th>
+                        <th>File Name</th>
+                        <th>Period</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for statement in statements %}
+                    <tr class="recent-activity-row">
+                        <td>{{ statement.import_date|date:"M d, Y" }}</td>
+                        <td class="fw-bold">{{ statement.account.account_name }}</td>
+                        <td>{{ statement.file_name }}</td>
+                        <td>{{ statement.start_date|date:"M d" }} - {{ statement.end_date|date:"M d, Y" }}</td>
+                        <td>
+                            {% with unreconciled=statement.get_unreconciled_count %}
+                            {% if unreconciled == 0 %}
+                            <span class="badge bg-success-subtle text-success px-3">Completed</span>
+                            {% else %}
+                            <span class="badge bg-warning-subtle text-warning px-3">{{ unreconciled }}
+                                Unreconciled</span>
+                            {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'accounting:statement_detail' statement.pk %}"
+                                class="btn btn-sm btn-light rounded-pill px-3 shadow-sm">Reconcile</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted fst-italic">
+                            <div class="mb-3">
+                                <i class="bi bi-cloud-upload opacity-25" style="font-size: 3rem;"></i>
+                            </div>
+                            No bank statements imported yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-success-subtle {
+        background-color: rgba(25, 135, 84, 0.1);
+    }
+
+    .bg-warning-subtle {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+</style>
+{% endblock %}

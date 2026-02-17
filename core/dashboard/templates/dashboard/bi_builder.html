@@ -1,0 +1,1140 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}BI Dashboard Builder - SalesCompass{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --glass-bg: rgba(255, 255, 255, 0.85);
+        --glass-border: rgba(255, 255, 255, 0.18);
+        --shadow-primary: 0 8px 32px rgba(102, 126, 234, 0.25);
+        --shadow-hover: 0 12px 40px rgba(102, 126, 234, 0.35);
+    }
+
+    .builder-container {
+        display: flex;
+        height: calc(100vh - 100px);
+        overflow: hidden;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+        border-radius: 16px;
+        margin: 0 -15px;
+    }
+
+    /* Glassmorphism Sidebar */
+    .builder-sidebar {
+        width: 320px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-right: 1px solid var(--glass-border);
+        display: flex;
+        flex-direction: column;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.06);
+    }
+
+    .sidebar-header {
+        padding: 20px;
+        background: var(--primary-gradient);
+        color: white;
+        border-radius: 0;
+    }
+
+    .sidebar-header h6 {
+        margin: 0;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.75rem;
+        opacity: 0.9;
+    }
+
+    .sidebar-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+    }
+
+    /* Widget Toolbox */
+    .widget-section-title {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #6c757d;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .widget-section-title::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, #dee2e6 0%, transparent 100%);
+    }
+
+    .widget-toolbox-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .widget-toolbox-item {
+        background: white;
+        border-radius: 12px;
+        padding: 16px 12px;
+        text-align: center;
+        cursor: grab;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .widget-toolbox-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--primary-gradient);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+
+    .widget-toolbox-item:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-primary);
+        border-color: rgba(102, 126, 234, 0.2);
+    }
+
+    .widget-toolbox-item:hover::before {
+        transform: scaleX(1);
+    }
+
+    .widget-toolbox-item i {
+        font-size: 1.5rem;
+        margin-bottom: 8px;
+        display: block;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .widget-toolbox-item span {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #495057;
+    }
+
+    /* Model List */
+    .model-search {
+        position: relative;
+        margin-bottom: 12px;
+    }
+
+    .model-search input {
+        width: 100%;
+        padding: 10px 16px 10px 40px;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .model-search input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    .model-search i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #adb5bd;
+    }
+
+    .model-list {
+        max-height: 280px;
+        overflow-y: auto;
+        border-radius: 12px;
+        background: white;
+        border: 1px solid #e9ecef;
+    }
+
+    .model-item {
+        padding: 12px 16px;
+        border: none;
+        background: transparent;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-bottom: 1px solid #f1f3f4;
+    }
+
+    .model-item:last-child {
+        border-bottom: none;
+    }
+
+    .model-item:hover {
+        background: linear-gradient(90deg, rgba(102, 126, 234, 0.08) 0%, transparent 100%);
+    }
+
+    .model-item.active {
+        background: linear-gradient(90deg, rgba(102, 126, 234, 0.15) 0%, rgba(102, 126, 234, 0.05) 100%);
+        border-left: 3px solid #667eea;
+    }
+
+    .model-item i {
+        color: #667eea;
+        margin-right: 10px;
+    }
+
+    .model-item .model-name {
+        font-weight: 500;
+        color: #212529;
+    }
+
+    .model-item small {
+        color: #6c757d;
+        font-size: 0.7rem;
+    }
+
+    .highlight {
+        background: linear-gradient(90deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+        padding: 0 2px;
+        border-radius: 2px;
+        font-weight: 600;
+    }
+
+    /* Canvas */
+    .builder-canvas {
+        flex: 1;
+        padding: 24px;
+        overflow-y: auto;
+        background:
+            radial-gradient(circle at 1px 1px, rgba(102, 126, 234, 0.1) 1px, transparent 0);
+        background-size: 24px 24px;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 20px;
+        min-height: 500px;
+    }
+
+    .grid-item {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        padding: 20px;
+        min-height: 220px;
+        position: relative;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .grid-item:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-primary);
+    }
+
+    .grid-item.selected {
+        border-color: #667eea;
+        box-shadow: var(--shadow-hover), 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    .grid-item h6 {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #6c757d;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #f1f3f4;
+    }
+
+    .grid-item:hover .item-actions {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .item-actions {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        opacity: 0;
+        transform: translateY(-5px);
+        transition: all 0.3s ease;
+        display: flex;
+        gap: 6px;
+    }
+
+    .item-actions button {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        border: none;
+        background: #f8f9fa;
+        color: #6c757d;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .item-actions button:hover {
+        background: #667eea;
+        color: white;
+    }
+
+    /* Empty State */
+    #emptyState {
+        grid-column: span 12;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px;
+        background: white;
+        border-radius: 16px;
+        border: 2px dashed #dee2e6;
+    }
+
+    #emptyState i {
+        font-size: 4rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 20px;
+    }
+
+    #emptyState p {
+        color: #6c757d;
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    /* Chart Container */
+    .chart-container {
+        position: relative;
+        height: 100%;
+        width: 100%;
+    }
+
+    .chart-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 12px;
+        border: 2px dashed #dee2e6;
+    }
+
+    .chart-placeholder i {
+        font-size: 2rem;
+        color: #adb5bd;
+        margin-bottom: 12px;
+    }
+
+    .chart-placeholder span {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+
+    /* Config Panel */
+    .builder-config {
+        width: 380px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-left: 1px solid var(--glass-border);
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        box-shadow: -4px 0 24px rgba(0, 0, 0, 0.06);
+    }
+
+    .config-header {
+        padding: 20px;
+        background: var(--primary-gradient);
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .config-header h6 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .config-header .btn-close {
+        filter: brightness(0) invert(1);
+        opacity: 0.8;
+    }
+
+    .config-body {
+        padding: 24px;
+        flex: 1;
+    }
+
+    .config-body .form-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+        margin-bottom: 8px;
+    }
+
+    .config-body .form-control,
+    .config-body .form-select {
+        border-radius: 10px;
+        border: 2px solid #e9ecef;
+        padding: 10px 14px;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+    }
+
+    .config-body .form-control:focus,
+    .config-body .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    .config-footer {
+        padding: 20px;
+        border-top: 1px solid #e9ecef;
+    }
+
+    /* Filter badges */
+    .filter-item {
+        display: inline-flex;
+        align-items: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        margin: 4px;
+    }
+
+    .filter-item .remove-filter {
+        margin-left: 8px;
+        cursor: pointer;
+        opacity: 0.8;
+    }
+
+    .filter-item .remove-filter:hover {
+        opacity: 1;
+    }
+
+    /* Buttons */
+    .btn-gradient-primary {
+        background: var(--primary-gradient);
+        border: none;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-gradient-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .btn-gradient-danger {
+        background: var(--secondary-gradient);
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-gradient-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(245, 87, 108, 0.4);
+        color: white;
+    }
+
+    /* Top Bar */
+    .builder-topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 24px;
+        background: white;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .builder-topbar h4 {
+        margin: 0;
+        font-weight: 700;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .dashboard-name-input {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        width: 250px;
+        transition: all 0.3s ease;
+    }
+
+    .dashboard-name-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    /* Loading Spinner */
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        z-index: 10;
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Number Widget Display */
+    .number-display {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+    }
+
+    .number-display .value {
+        font-size: 3rem;
+        font-weight: 800;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .number-display .label {
+        font-size: 0.8rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 8px;
+    }
+
+    /* Toast Notifications */
+    .toast-container {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 9999;
+    }
+
+    .toast {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        padding: 16px 20px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .toast.success {
+        border-left: 4px solid #38ef7d;
+    }
+
+    .toast.error {
+        border-left: 4px solid #f5576c;
+    }
+
+    .toast.info {
+        border-left: 4px solid #4facfe;
+    }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Top Bar -->
+<div class="builder-topbar">
+    <div>
+        <h4><i class="bi bi-grid-1x2-fill me-2"></i>Dashboard Builder</h4>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+        <input type="text" id="dashboardName" class="dashboard-name-input" placeholder="Dashboard Name"
+            value="New Dashboard">
+        <button class="btn-gradient-primary" onclick="saveDashboard()">
+            <i class="bi bi-save me-2"></i>Save Dashboard
+        </button>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden;">
+    <div class="card-body p-0">
+        <div class="builder-container">
+            <!-- Sidebar: Toolbox -->
+            <div class="builder-sidebar">
+                <div class="sidebar-header">
+                    <h6><i class="bi bi-puzzle me-2"></i>Widget Toolbox</h6>
+                </div>
+                <div class="sidebar-content">
+                    <!-- Widget Types -->
+                    <div class="widget-section-title">Chart Types</div>
+                    <div class="widget-toolbox-grid">
+                        {% for widget in widget_types %}
+                        <div class="widget-toolbox-item" onclick="addWidget('{{ widget.type }}', '{{ widget.label }}')">
+                            <i class="{{ widget.icon }}"></i>
+                            <span>{{ widget.label }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Data Sources -->
+                    <div class="widget-section-title">Available Data</div>
+                    <div class="model-search">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="modelSearch" placeholder="Search models..." onkeyup="filterModels()">
+                    </div>
+                    <div class="model-list" id="modelList">
+                        {% for model in available_models %}
+                        <button class="model-item" onclick="selectModel('{{ model.id }}', '{{ model.name }}')"
+                            data-model-name="{{ model.name }}" data-model-id="{{ model.id }}">
+                            <i class="bi bi-database"></i>
+                            <span class="model-name">{{ model.name }}</span>
+                            <small class="d-block text-muted ms-4" style="font-size: 10px;">{{ model.app_label}}</small>
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Canvas -->
+            <div class="builder-canvas">
+                <div id="dashboardGrid" class="dashboard-grid">
+                    <!-- Widgets will be rendered here -->
+                    <div id="emptyState">
+                        <i class="bi bi-grid-1x2"></i>
+                        <p>Click widgets from the sidebar to add them to your dashboard</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Config Panel -->
+            <div class="builder-config" id="configPanel" style="display: none;">
+                <div class="config-header">
+                    <h6><i class="bi bi-gear me-2"></i>Configuration</h6>
+                    <button class="btn btn-sm btn-close" onclick="closeConfig()"></button>
+                </div>
+
+                <div class="config-body">
+                    <form id="widgetConfigForm">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label class="form-label">Widget Title</label>
+                            <input type="text" class="form-control" id="cfgTitle" onchange="updateWidgetConfig()"
+                                placeholder="Enter widget title">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Data Source (Model)</label>
+                            <select class="form-select" id="cfgModel" onchange="loadModelFields(this.value)">
+                                <option value="">Select a model...</option>
+                                {% for model in available_models %}
+                                <option value="{{ model.id }}">{{ model.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div id="fieldConfigSection" style="display: none;">
+                            <div class="mb-4">
+                                <label class="form-label">Aggregation (Y-Axis)</label>
+                                <div class="row g-2">
+                                    <div class="col-5">
+                                        <select class="form-select" id="cfgAggFunc" onchange="updateWidgetConfig()">
+                                            {% for agg in aggregations %}
+                                            <option value="{{ agg.value }}">{{ agg.label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-7">
+                                        <select class="form-select" id="cfgAggField" onchange="updateWidgetConfig()">
+                                            <!-- Populated dynamically -->
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4" id="groupConfig">
+                                <label class="form-label">Group By (X-Axis)</label>
+                                <select class="form-select" id="cfgGroupBy" onchange="updateWidgetConfig()">
+                                    <!-- Populated dynamically -->
+                                </select>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <div class="mb-4">
+                                <label class="form-label">Filters</label>
+                                <div id="activeFilters"></div>
+                                <button type="button" class="btn btn-outline-secondary btn-sm w-100 mt-2"
+                                    onclick="addFilter()">
+                                    <i class="bi bi-plus"></i> Add Filter
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="config-footer">
+                    <button class="btn-gradient-danger w-100" onclick="removeSelectedWidget()">
+                        <i class="bi bi-trash me-2"></i>Remove Widget
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // State
+    let widgets = [];
+    let selectedWidgetIndex = null;
+    let modelFieldsCache = {};
+    let selectedModel = null;
+    let chartInstances = {};
+
+    // Toast Notification
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `
+            <i class="bi bi-${type === 'success' ? 'check-circle-fill' : type === 'error' ? 'x-circle-fill' : 'info-circle-fill'}"></i>
+            <span>${message}</span>
+        `;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
+
+    // --- Model Selection and Search ---
+    function filterModels() {
+        const searchTerm = document.getElementById('modelSearch').value.toLowerCase();
+        const modelItems = document.querySelectorAll('.model-item');
+
+        modelItems.forEach(item => {
+            const modelName = item.getAttribute('data-model-name').toLowerCase();
+            const modelNameElement = item.querySelector('.model-name');
+            const originalText = item.getAttribute('data-model-name');
+
+            if (searchTerm === '' || modelName.includes(searchTerm)) {
+                item.style.display = 'block';
+
+                if (searchTerm !== '') {
+                    const regex = new RegExp(`(${searchTerm})`, 'gi');
+                    const newText = originalText.replace(regex, '<span class="highlight">$1</span>');
+                    modelNameElement.innerHTML = newText;
+                } else {
+                    modelNameElement.textContent = originalText;
+                }
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    function selectModel(modelId, modelName) {
+        selectedModel = { id: modelId, name: modelName };
+
+        // Highlight selected model
+        document.querySelectorAll('.model-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        event.currentTarget.classList.add('active');
+
+        showModelWorkflow(modelId, modelName);
+    }
+
+    function showModelWorkflow(modelId, modelName) {
+        if (selectedWidgetIndex === null) {
+            addWidget('table', modelName + ' Data');
+            const widget = widgets[widgets.length - 1];
+            widget.config.model = modelId;
+            selectWidget(widgets.length - 1);
+        } else {
+            const widget = widgets[selectedWidgetIndex];
+            widget.config.model = modelId;
+            document.getElementById('cfgModel').value = modelId;
+            loadModelFields(modelId);
+        }
+
+        if (document.getElementById('configPanel').style.display === 'none') {
+            openConfig(widgets[selectedWidgetIndex]);
+        }
+    }
+
+    // --- Widget Management ---
+    function addWidget(type, label) {
+        document.getElementById('emptyState').style.display = 'none';
+
+        const widget = {
+            id: Date.now(),
+            type: type,
+            title: label,
+            colSpan: type === 'number' ? 3 : 6,
+            config: {
+                model: selectedModel ? selectedModel.id : '',
+                aggregation: 'count',
+                agg_field: '',
+                group_by: '',
+                filters: []
+            },
+            data: null
+        };
+
+        widgets.push(widget);
+        renderGrid();
+        selectWidget(widgets.length - 1);
+        showToast(`${label} widget added`, 'success');
+    }
+
+    function removeSelectedWidget() {
+        if (selectedWidgetIndex !== null) {
+            const widgetId = widgets[selectedWidgetIndex].id;
+            if (chartInstances[widgetId]) {
+                chartInstances[widgetId].destroy();
+                delete chartInstances[widgetId];
+            }
+            widgets.splice(selectedWidgetIndex, 1);
+            selectedWidgetIndex = null;
+            closeConfig();
+            renderGrid();
+
+            if (widgets.length === 0) {
+                document.getElementById('emptyState').style.display = 'flex';
+            }
+            showToast('Widget removed', 'info');
+        }
+    }
+
+    function selectWidget(index) {
+        selectedWidgetIndex = index;
+        renderGrid();
+        const widget = widgets[index];
+        openConfig(widget);
+    }
+
+    function renderGrid() {
+        const grid = document.getElementById('dashboardGrid');
+        Array.from(grid.children).forEach(child => {
+            if (child.id !== 'emptyState') child.remove();
+        });
+
+        widgets.forEach((widget, index) => {
+            const el = document.createElement('div');
+            el.className = `grid-item ${index === selectedWidgetIndex ? 'selected' : ''}`;
+            el.style.gridColumn = `span ${widget.colSpan}`;
+            el.onclick = (e) => {
+                e.stopPropagation();
+                selectWidget(index);
+            };
+
+            // Header
+            const header = document.createElement('h6');
+            header.innerText = widget.title;
+            el.appendChild(header);
+
+            // Actions
+            const actions = document.createElement('div');
+            actions.className = 'item-actions';
+            actions.innerHTML = `
+                <button onclick="event.stopPropagation(); selectWidget(${index});"><i class="bi bi-gear"></i></button>
+                <button onclick="event.stopPropagation(); selectedWidgetIndex=${index}; removeSelectedWidget();"><i class="bi bi-trash"></i></button>
+            `;
+            el.appendChild(actions);
+
+            // Content
+            const content = document.createElement('div');
+            content.className = 'chart-container';
+            content.style.height = '180px';
+            content.id = `chart-${widget.id}`;
+
+            if (widget.data) {
+                if (widget.type === 'number') {
+                    content.innerHTML = `
+                        <div class="number-display">
+                            <span class="value">${widget.data.value.toLocaleString()}</span>
+                            <span class="label">${widget.data.label}</span>
+                        </div>
+                    `;
+                } else {
+                    const canvas = document.createElement('canvas');
+                    content.appendChild(canvas);
+                    el.appendChild(content);
+                    grid.appendChild(el);
+
+                    // Destroy previous chart instance if exists
+                    if (chartInstances[widget.id]) {
+                        chartInstances[widget.id].destroy();
+                    }
+
+                    chartInstances[widget.id] = new Chart(canvas, {
+                        type: widget.type === 'table' ? 'bar' : widget.type,
+                        data: widget.data,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: widget.type === 'pie' || widget.type === 'doughnut'
+                                }
+                            },
+                            scales: widget.type === 'pie' || widget.type === 'doughnut' ? {} : {
+                                y: { beginAtZero: true }
+                            }
+                        }
+                    });
+                    return;
+                }
+            } else {
+                content.innerHTML = `
+                    <div class="chart-placeholder">
+                        <i class="bi bi-bar-chart"></i>
+                        <span>Configure to see data</span>
+                    </div>
+                `;
+            }
+
+            el.appendChild(content);
+            grid.appendChild(el);
+        });
+    }
+
+    // --- Configuration Logic ---
+    function openConfig(widget) {
+        const panel = document.getElementById('configPanel');
+        panel.style.display = 'flex';
+        panel.style.flexDirection = 'column';
+
+        document.getElementById('cfgTitle').value = widget.title;
+        document.getElementById('cfgModel').value = widget.config.model;
+
+        if (widget.config.model) {
+            loadModelFields(widget.config.model);
+        } else {
+            document.getElementById('fieldConfigSection').style.display = 'none';
+        }
+    }
+
+    function closeConfig() {
+        document.getElementById('configPanel').style.display = 'none';
+        selectedWidgetIndex = null;
+        renderGrid();
+    }
+
+    function updateWidgetConfig() {
+        if (selectedWidgetIndex === null) return;
+
+        const widget = widgets[selectedWidgetIndex];
+        widget.title = document.getElementById('cfgTitle').value;
+        widget.config.model = document.getElementById('cfgModel').value;
+        widget.config.aggregation = document.getElementById('cfgAggFunc').value;
+        widget.config.agg_field = document.getElementById('cfgAggField').value;
+        widget.config.group_by = document.getElementById('cfgGroupBy').value;
+
+        fetchPreviewData(widget);
+    }
+
+    async function loadModelFields(modelId) {
+        if (!modelId) return;
+
+        document.getElementById('fieldConfigSection').style.display = 'block';
+
+        let fields = [];
+        if (modelFieldsCache[modelId]) {
+            fields = modelFieldsCache[modelId];
+        } else {
+            try {
+                const res = await fetch(`{% url 'dashboard:model_fields_api' %}?model=${modelId}`);
+                const data = await res.json();
+                fields = data.fields;
+                modelFieldsCache[modelId] = fields;
+            } catch (e) {
+                showToast('Failed to load model fields', 'error');
+                return;
+            }
+        }
+
+        const aggSelect = document.getElementById('cfgAggField');
+        const groupSelect = document.getElementById('cfgGroupBy');
+
+        aggSelect.innerHTML = '<option value="">(Records)</option>';
+        groupSelect.innerHTML = '<option value="">Select Field...</option>';
+
+        fields.forEach(f => {
+            if (f.aggregatable) {
+                aggSelect.add(new Option(f.verbose_name, f.name));
+            }
+            if (f.filterable) {
+                groupSelect.add(new Option(f.verbose_name, f.name));
+            }
+        });
+
+        const widget = widgets[selectedWidgetIndex];
+        if (widget) {
+            aggSelect.value = widget.config.agg_field;
+            groupSelect.value = widget.config.group_by;
+        }
+    }
+
+    // --- Live Preview ---
+    async function fetchPreviewData(widget) {
+        if (!widget.config.model || (!widget.config.group_by && widget.type !== 'number')) return;
+
+        try {
+            const res = await fetch('{% url "dashboard:dashboard_preview_api" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    type: widget.type,
+                    ...widget.config
+                })
+            });
+
+            const result = await res.json();
+            if (result.success) {
+                widget.data = result.data;
+                renderGrid();
+            } else {
+                showToast(result.error || 'Preview failed', 'error');
+            }
+        } catch (e) {
+            showToast('Preview request failed', 'error');
+        }
+    }
+
+    // --- Save ---
+    async function saveDashboard() {
+        const name = document.getElementById('dashboardName').value;
+
+        if (!name.trim()) {
+            showToast('Please enter a dashboard name', 'error');
+            return;
+        }
+
+        const payload = {
+            name: name,
+            widgets: widgets,
+            layout: {}
+        };
+
+        try {
+            const res = await fetch('{% url "dashboard:dashboard_save_api" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await res.json();
+            if (result.success) {
+                showToast('Dashboard saved successfully!', 'success');
+                setTimeout(() => {
+                    window.location.href = "{% url 'dashboard:cockpit' %}";
+                }, 1500);
+            } else {
+                showToast('Error saving: ' + result.error, 'error');
+            }
+        } catch (e) {
+            showToast('Save failed. Please try again.', 'error');
+        }
+    }
+
+    // Filter placeholder
+    function addFilter() {
+        showToast('Filter configuration coming soon', 'info');
+    }
+</script>
+{% endblock %}

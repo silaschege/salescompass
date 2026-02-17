@@ -1,0 +1,24 @@
+{% extends 'logged_in/base.html' %}
+
+{% block title %}{{ block.super }} - Dynamic Choices{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Dynamic Choices</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Dynamic Choices Management</h1>
+            <hr class="my-4">
+        </div>
+    </div>
+
+    {% block dynamic_choices_content %}
+    {% endblock %}
+</div>
+{% endblock %}

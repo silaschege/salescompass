@@ -1,0 +1,160 @@
+{% extends "quality_control/base.html" %}
+{% load humanize %}
+
+{% block page_content %}
+<div class="container-fluid py-4">
+    <!-- Quick Stats Row -->
+    <div class="row mb-4">
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-0 shadow-sm rounded-3 h-100 py-2 border-start border-danger border-4">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Active NCRs</div>
+                    <div class="h4 mb-0 font-weight-bold text-gray-800">{{ active_ncrs }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-0 shadow-sm rounded-3 h-100 py-2 border-start border-info border-4">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Pending</div>
+                    <div class="h4 mb-0 font-weight-bold text-gray-800">{{ pending_inspections }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-4 mb-4">
+            <div class="card border-0 shadow-sm rounded-3 h-100 py-2 border-start border-success border-4">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">First-Pass Yield (FPY)</div>
+                    <div class="d-flex align-items-center">
+                        <div class="h4 mb-0 font-weight-bold text-gray-800 me-3">{{ fpy|floatformat:1 }}%</div>
+                        <div class="progress flex-grow-1" style="height: 6px;">
+                            <div class="progress-bar bg-success" style="width: {{ fpy }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow-sm rounded-3 h-100 py-2 border-start border-warning border-4">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Defect Rate</div>
+                    <div class="d-flex align-items-center">
+                        <div class="h4 mb-0 font-weight-bold text-gray-800 me-3">{{ defect_rate|floatformat:1 }}%</div>
+                        <div class="progress flex-grow-1" style="height: 6px;">
+                            <div class="progress-bar bg-warning" style="width: {{ defect_rate }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-6 mb-4">
+            <div class="card border-0 shadow-sm rounded-3 h-100 py-2 border-start border-primary border-4">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Inspections</div>
+                    <div class="h4 mb-0 font-weight-bold text-gray-800">{{ total_inspections }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <!-- Recent Inspections Table -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm border-0 rounded-3 h-100">
+                <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Inspections</h6>
+                    <a href="{% url 'quality_control:log_list' %}"
+                        class="btn btn-sm btn-outline-primary rounded-pill">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Date</th>
+                                    <th>Rule / Checklist</th>
+                                    <th>Reference</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="pe-4"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in recent_logs %}
+                                <tr>
+                                    <td class="ps-4 small text-muted">{{ log.created_at|date:"M d, H:i" }}</td>
+                                    <td>
+                                        <div class="fw-bold text-dark">{{ log.rule.name }}</div>
+                                        <div class="small text-muted">{{ log.rule.get_sampling_type_display }}</div>
+                                    </td>
+                                    <td><code class="text-muted">{{ log.source_reference|default:"--" }}</code></td>
+                                    <td class="text-center">
+                                        <span
+                                            class="badge rounded-pill {% if log.status == 'pass' %}bg-success-soft text-success{% elif log.status == 'fail' %}bg-danger-soft text-danger{% else %}bg-warning-soft text-warning{% endif %} px-3">
+                                            {{ log.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td class="pe-4 text-end">
+                                        <a href="#" class="btn btn-sm btn-light rounded-circle shadow-none"><i
+                                                class="bi bi-eye"></i></a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-5">
+                                        <i class="bi bi-clipboard-x display-4 text-muted d-block mb-3"></i>
+                                        <span class="text-muted">No recent inspection logs found.</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics & Quick Links -->
+        <div class="col-lg-4 mb-4">
+            <!-- Analytics Card -->
+            <div class="card shadow-sm border-0 rounded-3 mb-4 text-white overflow-hidden"
+                style="background: linear-gradient(135deg, #6f42c1 0%, #4e73df 100%);">
+                <div class="card-body py-5 text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-graph-up-arrow" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Analytics & Trends</h5>
+                    <p class="small opacity-75 mb-4 px-4">Monitor first-pass yield, defect density, and process
+                        capability charts.</p>
+                    <a href="{% url 'quality_control:control_charts' %}"
+                        class="btn btn-light btn-sm fw-bold rounded-pill px-4 shadow-sm">
+                        Go to Control Charts <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 font-weight-bold text-dark">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'quality_control:log_create' %}"
+                            class="btn btn-primary rounded-pill text-start ps-4">
+                            <i class="bi bi-plus-circle me-2"></i> New Inspection Log
+                        </a>
+                        <a href="{% url 'quality_control:rule_create' %}"
+                            class="btn btn-outline-primary rounded-pill text-start ps-4">
+                            <i class="bi bi-gear me-2"></i> Configure Rules
+                        </a>
+                        <a href="{% url 'quality_control:capa_create' %}"
+                            class="btn btn-outline-dark rounded-pill text-start ps-4">
+                            <i class="bi bi-shield-check me-2"></i> Log CAPA Action
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}

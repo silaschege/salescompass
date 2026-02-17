@@ -1,0 +1,179 @@
+
+{% extends "access_control/base.html" %}
+
+{% block title %}Edit Access Control - {{ access_control.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Edit Access Control: {{ access_control.name }}</h1>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Access Control Details</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">Name</label>
+                            {{ form.name }}
+                            <div class="form-text">Display name for the access control</div>
+                            {% if form.name.errors %}
+                                <div class="text-danger">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.key.id_for_label }}" class="form-label">Key</label>
+                            {{ form.key }}
+                            <div class="form-text">Unique identifier for the access control (e.g., 'dashboard.view')</div>
+                            {% if form.key.errors %}
+                                <div class="text-danger">{{ form.key.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.access_type.id_for_label }}" class="form-label">Access Type</label>
+                                    {{ form.access_type }}
+                                    {% if form.access_type.errors %}
+                                        <div class="text-danger">{{ form.access_type.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.scope_type.id_for_label }}" class="form-label">Scope Type</label>
+                                    {{ form.scope_type }}
+                                    {% if form.scope_type.errors %}
+                                        <div class="text-danger">{{ form.scope_type.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.user.id_for_label }}" class="form-label">User</label>
+                                {{ form.user }}
+                                <div class="form-text">Select user if scope is 'User Specific'</div>
+                                {% if form.user.errors %}
+                                    <div class="text-danger">{{ form.user.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.role.id_for_label }}" class="form-label">Role</label>
+                                {{ form.role }}
+                                <div class="form-text">Select role if scope is 'Role Based'</div>
+                                {% if form.role.errors %}
+                                    <div class="text-danger">{{ form.role.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.tenant.id_for_label }}" class="form-label">Tenant</label>
+                                {{ form.tenant }}
+                                <div class="form-text">Select tenant if scope is 'Tenant Wide'</div>
+                                {% if form.tenant.errors %}
+                                    <div class="text-danger">{{ form.tenant.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3 form-check">
+                                    {{ form.is_enabled }}
+                                    <label for="{{ form.is_enabled.id_for_label }}" class="form-check-label">Is Enabled</label>
+                                    {% if form.is_enabled.errors %}
+                                        <div class="text-danger">{{ form.is_enabled.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.rollout_percentage.id_for_label }}" class="form-label">Rollout Percentage</label>
+                                    {{ form.rollout_percentage }}
+                                    <div class="form-text">For feature flags (0-100%)</div>
+                                    {% if form.rollout_percentage.errors %}
+                                        <div class="text-danger">{{ form.rollout_percentage.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.config_data.id_for_label }}" class="form-label">Configuration Data (JSON)</label>
+                            {{ form.config_data }}
+                            <div class="form-text">Additional configuration options in JSON format</div>
+                            {% if form.config_data.errors %}
+                                <div class="text-danger">{{ form.config_data.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-success me-2">
+                                <i class="bi bi-save"></i> Update Access Control
+                            </button>
+                            <a href="{% url 'access_control:manage_access' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const scopeTypeSelect = document.getElementById('{{ form.scope_type.id_for_label }}');
+    
+    function updateFieldVisibility() {
+        const scopeType = scopeTypeSelect.value;
+        const userField = document.querySelector('[for="{{ form.user.id_for_label }}"]').closest('.col-md-4');
+        const roleField = document.querySelector('[for="{{ form.role.id_for_label }}"]').closest('.col-md-4');
+        const tenantField = document.querySelector('[for="{{ form.tenant.id_for_label }}"]').closest('.col-md-4');
+        
+        // Hide all target fields initially
+        userField.style.display = 'none';
+        roleField.style.display = 'none';
+        tenantField.style.display = 'none';
+        
+        // Show appropriate field based on scope type
+        if (scopeType === 'user') {
+            userField.style.display = 'block';
+        } else if (scopeType === 'role') {
+            roleField.style.display = 'block';
+            tenantField.style.display = 'block';
+        } else if (scopeType === 'tenant') {
+            tenantField.style.display = 'block';
+        } else if (scopeType === 'system') {
+            // System scope doesn't need any target fields
+        }
+    }
+    
+    // Initialize visibility
+    updateFieldVisibility();
+    
+    // Update visibility when scope type changes
+    scopeTypeSelect.addEventListener('change', updateFieldVisibility);
+});
+</script>
+{% endblock %}

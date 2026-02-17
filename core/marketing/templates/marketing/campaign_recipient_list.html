@@ -1,0 +1,54 @@
+{% extends "marketing/base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 text-gray-800">Campaign Recipients</h1>
+        <a href="{% url 'marketing:campaign_list' %}" class="btn btn-secondary btn-sm">Back to Campaigns</a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Recipients List</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Opened</th>
+                            <th>Clicked</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for recipient in recipients %}
+                        <tr>
+                            <td>{{ recipient.email }}</td>
+                            <td>{{ recipient.name }}</td>
+                            <td>
+                                {% if recipient.status == 'sent' %}
+                                <span class="badge bg-success">Sent</span>
+                                {% elif recipient.status == 'failed' %}
+                                <span class="badge bg-danger">Failed</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ recipient.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{% if recipient.opened %}<i class="fas fa-check text-success"></i>{% endif %}</td>
+                            <td>{% if recipient.clicked %}<i class="fas fa-check text-success"></i>{% endif %}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No recipients found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

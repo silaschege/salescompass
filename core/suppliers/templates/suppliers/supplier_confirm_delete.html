@@ -1,0 +1,28 @@
+{% extends "suppliers/base.html" %}
+
+{% block title %}Delete Supplier{% endblock %}
+
+{% block module_content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">Confirm Delete</h5>
+            </div>
+            <div class="card-body">
+                <p>Are you sure you want to delete the supplier <strong>{{ object.supplier_name }}</strong>?</p>
+                <p class="text-muted small">This action cannot be undone. Any purchase orders linked to this
+                    supplier will lose their reference.</p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'suppliers:supplier_detail' object.pk %}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-danger">Delete Supplier</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

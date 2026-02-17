@@ -1,0 +1,85 @@
+{% extends "core/base_module.html" %}
+{% load static %}
+
+{% block module_title %}Invoicing - SalesCompass{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Invoicing Module Theme */
+    .nav-icon {
+        margin-right: 0.75rem;
+        font-size: 1.15rem;
+        width: 1.5rem;
+        text-align: center;
+        transition: transform 0.2s ease;
+    }
+
+    .nav-link:hover .nav-icon {
+        transform: scale(1.1);
+    }
+
+    .sidebar-section-title {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05rem;
+        color: #94a3b8;
+        padding: 1.5rem 1rem 0.5rem;
+        font-weight: 700;
+    }
+</style>
+{% endblock %}
+
+{% block module_nav %}
+<div class="sidebar-section-title">Overview</div>
+<a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+    href="{% url 'invoicing:dashboard' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-speedometer2 nav-icon"></i>
+        <span>Dashboard</span>
+    </div>
+</a>
+
+<div class="sidebar-section-title">Sales</div>
+<a class="nav-link {% if 'invoices' in request.path %}active{% endif %}" href="{% url 'invoicing:invoice_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-file-earmark-text nav-icon"></i>
+        <span>Invoices</span>
+    </div>
+</a>
+<a class="nav-link {% if 'credit-notes' in request.path %}active{% endif %}"
+    href="{% url 'invoicing:credit_note_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-file-earmark-minus nav-icon"></i>
+        <span>Credit Notes</span>
+    </div>
+</a>
+<a class="nav-link {% if 'debit-notes' in request.path %}active{% endif %}"
+    href="{% url 'invoicing:debit_note_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-file-earmark-plus nav-icon"></i>
+        <span>Debit Notes</span>
+    </div>
+</a>
+
+<div class="sidebar-section-title">Payments</div>
+<a class="nav-link {% if 'payments' in request.path %}active{% endif %}" href="{% url 'invoicing:payment_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-credit-card nav-icon"></i>
+        <span>Payments</span>
+    </div>
+</a>
+
+<div class="sidebar-section-title">Configuration</div>
+<a class="nav-link {% if 'items' in request.path %}active{% endif %}" href="#">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-box-seam nav-icon"></i>
+        <span>Items & Products</span>
+    </div>
+</a>
+{% endblock %}
+
+{% block module_content %}
+<div class="invoicing-wrapper">
+    {% block invoicing_content %}{% endblock %}
+</div>
+{% endblock %}

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SalesCompass ML Internal{% endblock %}</title>
+    <!-- Modern Typography -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Inter:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --secondary: #a855f7;
+            --accent: #f59e0b;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.1) 0px, transparent 50%);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        .outfit {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        nav {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--text-main);
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        .sidebar {
+            width: 260px;
+            height: calc(100vh - 65px);
+            background: var(--glass-bg);
+            border-right: 1px solid var(--glass-border);
+            padding: 2rem 1.5rem;
+            position: fixed;
+            left: 0;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 2rem 3rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            box-shadow: 0 4px 15px var(--primary-glow);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+
+        .badge {
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: rgba(34, 197, 94, 0.1);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .badge-info {
+            background: rgba(59, 130, 246, 0.1);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <nav>
+        <a href="/" class="logo">
+            <i class="fas fa-brain-circuit"></i> SalesCompass ML
+        </a>
+        <div class="nav-links">
+            <a href="/" class="{% if request.url.path == '/' %}active{% endif %}">Overview</a>
+            <a href="/monitoring" class="{% if request.url.path == '/monitoring' %}active{% endif %}">Monitoring</a>
+            <a href="/insights" class="{% if request.url.path == '/insights' %}active{% endif %}">Insights</a>
+        </div>
+        <div>
+            <span class="badge badge-success"><i class="fas fa-circle-check"></i> System Stable</span>
+        </div>
+    </nav>
+
+    <div class="sidebar">
+        <div style="margin-bottom: 2rem;">
+            <p
+                style="text-transform: uppercase; font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.05em; font-weight: 700;">
+                Models Engine</p>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <a href="/" class="btn"
+                    style="color: var(--text-main); justify-content: flex-start; background: rgba(255,255,255,0.05);"><i
+                        class="fas fa-microchip"></i> Model Registry</a>
+                <a href="#" class="btn" style="color: var(--text-muted); justify-content: flex-start;"><i
+                        class="fas fa-vial"></i> AutoML Pipeline</a>
+            </div>
+        </div>
+        <div style="margin-bottom: 2rem;">
+            <p
+                style="text-transform: uppercase; font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.05em; font-weight: 700;">
+                Autonomous Agents</p>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <a href="/policies" class="btn" style="color: var(--text-muted); justify-content: flex-start;"><i
+                        class="fas fa-robot"></i> Agent
+                    Policies</a>
+                <a href="#" class="btn" style="color: var(--text-muted); justify-content: flex-start;"><i
+                        class="fas fa-compass"></i> NBA Strategy</a>
+            </div>
+        </div>
+        <div>
+            <p
+                style="text-transform: uppercase; font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.05em; font-weight: 700;">
+                Enablement</p>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <a href="/user-guide" class="btn" style="color: var(--text-muted); justify-content: flex-start;"><i
+                        class="fas fa-book"></i> User
+                    Guide</a>
+                <a href="#" class="btn" style="color: var(--text-muted); justify-content: flex-start;"><i
+                        class="fas fa-graduation-cap"></i> Trainer</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        {% block content %}{% endblock %}
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

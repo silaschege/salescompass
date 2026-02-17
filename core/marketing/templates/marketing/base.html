@@ -1,0 +1,82 @@
+{% extends 'core/base_module.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .header-bar {
+        background: #6f42c1;
+        color: #fff;
+        padding: 2rem 0 1rem 1rem;
+        border-radius: 0 0 2rem 2rem;
+        box-shadow: 0 4px 24px rgba(111, 66, 193, 0.08);
+        margin-bottom: 2rem;
+    }
+
+    .footer-bar {
+        background: #6f42c1;
+        color: #fff;
+        padding: 1rem 0;
+        border-radius: 2rem 2rem 0 0;
+        box-shadow: 0 -4px 24px rgba(111, 66, 193, 0.08);
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    .block-title {
+        color: #6f42c1;
+        font-size: 2rem;
+        letter-spacing: 0.5px;
+        margin-bottom: 0;
+        text-align: center;
+    }
+
+    .card {
+        border-radius: 1rem;
+        box-shadow: 0 2px 16px rgba(111, 66, 193, 0.08);
+    }
+
+    .card-header {
+        border-radius: 1rem 1rem 0 0;
+        background: #6f42c1;
+        color: #fff;
+    }
+
+    .btn-warning {
+        background-color: #ffd600;
+        border-color: #ffd600;
+        color: #212529;
+    }
+
+    .table thead {
+        background: #6f42c1;
+        color: #fff;
+    }
+</style>
+{% block extra_marketing_css %}{% endblock %}
+{% endblock %}
+
+{% block module_nav %}
+{% include "marketing/includes/module_nav.html" %}
+{% endblock %}
+
+{% block content %}
+<!-- Sub-templates will override this block -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if we're on an analytics page and expand the analytics menu
+    if (window.location.pathname.indexOf('/marketing/analytics/') !== -1) {
+        var analyticsMenu = document.getElementById('analyticsMenu');
+        var analyticsToggle = document.querySelector('[data-bs-target="#analyticsMenu"]');
+        
+        if (analyticsMenu && analyticsToggle) {
+            analyticsMenu.classList.add('show');
+            analyticsToggle.setAttribute('aria-expanded', 'true');
+            analyticsToggle.classList.add('show');
+        }
+    }
+});
+</script>
+{% endblock %}

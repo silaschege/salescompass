@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Preview: {{ template.subject }}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: sans-serif;
+        }
+
+        .preview-header {
+            background: #f8f9fa;
+            padding: 10px;
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="preview-header">
+        <strong>Subject:</strong> {{ template.subject }}
+    </div>
+    <div class="content">
+        {{ template.html_content|safe }}
+    </div>
+</body>
+
+</html>

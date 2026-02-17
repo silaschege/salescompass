@@ -1,0 +1,85 @@
+{% extends "cases/base.html" %}
+
+{% block title %}Case Comments - SalesCompass{% endblock %}
+
+{% block content %}
+   <h1 class="block-title">Case Comments</h1>
+    <p class="text-muted text-center lead">View and manage case comments</p>
+
+<div class="container">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Case Comments</h2>
+        <a href="{% url 'cases:case_comment_create' %}" class="btn btn-primary">+ New Comment</a>
+    </div>
+
+    {% if comments %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Case</th>
+                        <th>Author</th>
+                        <th>Content</th>
+                        <th>Type</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for comment in comments %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'cases:case_detail' comment.case.pk %}">{{ comment.case.subject }}</a>
+                        </td>
+                        <td>{{ comment.author.email }}</td>
+                        <td>{{ comment.content|truncatewords:15 }}</td>
+                        <td>
+                            <span class="badge bg-{% if comment.is_internal %}secondary{% else %}success{% endif %}">
+                                {% if comment.is_internal %}Internal{% else %}Public{% endif %}
+                            </span>
+                        </td>
+                        <td>{{ comment.created_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <a href="{% url 'cases:case_comment_update' comment.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a href="{% url 'cases:case_comment_delete' comment.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+            <nav aria-label="Case Comments pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ 1 }}">&laquo; First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item disabled">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <p class="text-muted">No case comments found.</p>
+        <a href="{% url 'cases:case_comment_create' %}" class="btn btn-primary">Create your first comment</a>
+    {% endif %}
+</div>
+{% endblock %}

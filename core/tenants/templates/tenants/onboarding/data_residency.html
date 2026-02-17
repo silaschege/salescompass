@@ -1,0 +1,38 @@
+{% extends 'tenants/onboarding/base.html' %}
+
+{% block step_content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <form method="post">
+            {% csrf_token %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <label for="primary_region" class="form-label h5">Data Residency Region</label>
+                        <p class="text-muted">Select the primary geographic region where your data will be stored. This
+                            ensures compliance with local data protection regulations.</p>
+
+                        <select name="primary_region" id="primary_region" class="form-select form-select-lg">
+                            {% for code, label in data_regions %}
+                            <option value="{{ code }}" {% if code == 'GLOBAL' %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text mt-2">
+                            Unless specific compliance is required, 'Global' is recommended for best performance.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{% url 'tenants:onboarding_subdomain' %}" class="btn btn-outline-secondary px-4">
+                    <i class="bi bi-arrow-left me-2"></i>Back
+                </a>
+                <button type="submit" class="btn btn-primary px-4">
+                    Next Step<i class="bi bi-arrow-right ms-2"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

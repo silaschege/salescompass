@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col">
+      <h2><i class="bi bi-exclamation-triangle me-2"></i>{{ title }}</h2>
+      <p class="text-muted">{{ subtitle }}</p>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="d-flex justify-content-between">
+        <a href="{% url 'tenants:alert_thresholds' %}" class="btn btn-outline-primary">
+          <i class="bi bi-bar-chart me-1"></i>Manage Thresholds
+        </a>
+        <a href="{% url 'tenants:notifications' %}" class="btn btn-outline-secondary">
+          <i class="bi bi-bell me-1"></i>View Notifications
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Overage Alerts</h5>
+        </div>
+        <div class="card-body">
+          {% if overage_alerts %}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Metric Type</th>
+                  <th>Current Value</th>
+                  <th>Threshold</th>
+                  <th>Level</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for alert in overage_alerts %}
+                <tr>
+                  <td>
+                    <span class="badge bg-secondary">{{ alert.get_metric_type_display }}</span>
+                  </td>
+                  <td>{{ alert.current_value }}</td>
+                  <td>{{ alert.threshold_percentage }}% ({{ alert.threshold_value }})</td>
+                  <td>
+                    {% if alert.alert_level == 'warning' %}
+                    <span class="badge bg-warning">Warning</span>
+                    {% elif alert.alert_level == 'critical' %}
+                    <span class="badge bg-danger">Critical</span>
+                    {% else %}
+                    <span class="badge bg-info">Limit Reached</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if alert.is_resolved %}
+                    <span class="badge bg-success">Resolved</span>
+                    {% else %}
+                    <span class="badge bg-warning">Active</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ alert.created_at|date:"M d, Y H:i" }}</td>
+                  <td>
+                    {% if not alert.is_resolved %}
+                    <form method="post" action="{% url 'tenants:resolve_alert' alert.id %}" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-outline-success" title="Resolve Alert">
+                        <i class="bi bi-check-circle"></i>
+                      </button>
+                    </form>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          
+          {% if is_paginated %}
+          <nav aria-label="Overage alerts pagination">
+            <ul class="pagination justify-content-center">
+              {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+              </li>
+              {% endif %}
+
+              <li class="page-item disabled">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+              </li>
+
+              {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+              </li>
+              {% endif %}
+            </ul>
+          </nav>
+          {% endif %}
+          
+          {% else %}
+          <p class="text-muted">No overage alerts found.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

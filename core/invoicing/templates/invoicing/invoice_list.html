@@ -1,0 +1,203 @@
+{% extends "invoicing/base.html" %}
+
+{% block invoicing_content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">Invoices</h2>
+                    <p class="text-muted">Manage your customer invoices</p>
+                </div>
+                <a href="{% url 'invoicing:invoice_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Create Invoice
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" class="form-control" id="search" name="search"
+                                placeholder="Invoice # or Customer" value="{{ request.GET.search }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">All Statuses</option>
+                                {% for status_code, status_label in status_choices %}
+                                <option value="{{ status_code }}" {% if request.GET.status == status_code %}selected{% endif %}>
+                                    {{ status_label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="date_from" class="form-label">Date From</label>
+                            <input type="date" class="form-control" id="date_from" name="date_from"
+                                value="{{ request.GET.date_from }}">
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-secondary">Filter</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Invoice #</th>
+                                    <th>Customer</th>
+                                    <th>Issue Date</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Amount</th>
+                                    <th class="text-end">Balance Due</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for invoice in invoices %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'invoicing:invoice_detail' invoice.id %}"
+                                            class="fw-bold text-decoration-none">
+                                            {{ invoice.invoice_number }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {% if invoice.customer %}
+                                        {{ invoice.customer.account_name }}
+                                        {% else %}
+                                        <span class="text-muted">Unknown</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ invoice.issue_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if invoice.due_date < today and invoice.balance_due > 0 %}
+                                            <span class="text-danger">{{ invoice.due_date|date:"M d, Y" }}</span>
+                                            {% else %}
+                                            {{ invoice.due_date|date:"M d, Y" }}
+                                            {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if invoice.status == 'draft' %}
+                                        <span class="badge bg-secondary">Draft</span>
+                                        {% elif invoice.status == 'sent' %}
+                                        <span class="badge bg-info">Sent</span>
+                                        {% elif invoice.status == 'paid' %}
+                                        <span class="badge bg-success">Paid</span>
+                                        {% elif invoice.status == 'overdue' %}
+                                        <span class="badge bg-danger">Overdue</span>
+                                        {% else %}
+                                        <span class="badge bg-light text-dark">{{ invoice.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">${{ invoice.total_amount|floatformat:2 }}</td>
+                                    <td class="text-end">
+                                        {% if invoice.balance_due > 0 %}
+                                        <strong>${{ invoice.balance_due|floatformat:2 }}</strong>
+                                        {% else %}
+                                        <span class="text-success">$0.00</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group">
+                                            <a href="{% url 'invoicing:invoice_detail' invoice.id %}"
+                                                class="btn btn-sm btn-outline-secondary" title="View">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{% url 'invoicing:invoice_update' invoice.id %}"
+                                                class="btn btn-sm btn-outline-primary" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a href="{% url 'invoicing:invoice_delete' invoice.id %}"
+                                                class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <i class="bi bi-file-earmark-text display-4 mb-3"></i>
+                                            <p class="h5">No invoices found</p>
+                                            <p>Get started by creating your first invoice.</p>
+                                            <a href="{% url 'invoicing:invoice_create' %}" class="btn btn-primary mt-2">
+                                                Create Invoice
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+                    <span class="text-muted small">
+                        Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }}
+                        results
+                    </span>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination pagination-sm mb-0">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                    href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Previous</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                            {% endif %}
+
+                            {% for i in page_obj.paginator.page_range %}
+                            {% if page_obj.number == i %}
+                            <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                            {% else %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                    href="?page={{ i }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{
+                                    i }}</a>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                    href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Next</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled"><span class="page-link">Next</span></li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends "public/base.html" %}
+{% load static %}
+
+{% block title %}Support - How can we help? | SalesCompass{% endblock %}
+
+{% block content %}
+<!-- Support Hero -->
+<section class="section-large text-center position-relative overflow-hidden">
+  <div class="container position-relative z-1">
+    <h1 class="display-3 fw-extrabold mb-4">How can we <br><span class="highlight-handwritten">help you win?</span></h1>
+    <p class="lead text-muted mb-6 mx-auto" style="max-width: 600px;">
+      Search our knowledge base or browse help topics below.
+    </p>
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="position-relative">
+          <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-4 text-muted fs-5"></i>
+          <input type="text" class="form-control py-4 ps-5 border-0 shadow-lg rounded-pill"
+            placeholder="Search for articles, guides, and more...">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Support Categories -->
+<section class="section bg-light border-top border-light pt-0">
+  <div class="container">
+    <div class="row g-4" style="margin-top: -3rem;">
+      <div class="col-md-6 col-lg-4">
+        <div class="card-clean p-5 h-100 bg-white">
+          <div class="app-icon app-automation app-icon-sm mb-4"><i class="bi bi-rocket-takeoff-fill"></i></div>
+          <h5 class="fw-bold mb-3">Getting Started</h5>
+          <p class="small text-muted mb-4 text-balanced">New to SalesCompass? Learn the basics of account setup and team
+            onboarding.</p>
+          <a href="#" class="text-primary fw-bold small text-decoration-none">Quickstart Guide &rarr;</a>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="card-clean p-5 h-100 bg-white">
+          <div class="app-icon app-crm app-icon-sm mb-4"><i class="bi bi-person-lines-fill"></i></div>
+          <h5 class="fw-bold mb-3">Account & Billing</h5>
+          <p class="small text-muted mb-4 text-balanced">Manage your subscription, users, and billing details in one
+            central place.</p>
+          <a href="#" class="text-primary fw-bold small text-decoration-none">Manage Billing &rarr;</a>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="card-clean p-5 h-100 bg-white">
+          <div class="app-icon app-ml app-icon-sm mb-4"><i class="bi bi-cpu-fill"></i></div>
+          <h5 class="fw-bold mb-3">AI & Intelligence</h5>
+          <p class="small text-muted mb-4 text-balanced">Learn how to configure ML models and interpret predictive lead
+            scores.</p>
+          <a href="#" class="text-primary fw-bold small text-decoration-none">AI Documentation &rarr;</a>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="card-clean p-5 h-100 bg-white">
+          <div class="app-icon app-reports app-icon-sm mb-4"><i class="bi bi-grid-3x3-gap-fill"></i></div>
+          <h5 class="fw-bold mb-3">Reporting & BI</h5>
+          <p class="small text-muted mb-4 text-balanced">Create custom dashboards and automate your weekly revenue
+            reporting.</p>
+          <a href="#" class="text-primary fw-bold small text-decoration-none">View Templates &rarr;</a>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="card-clean p-5 h-100 bg-white">
+          <div class="app-icon app-marketing app-icon-sm mb-4"><i class="bi bi-bullseye"></i></div>
+          <h5 class="fw-bold mb-3">Marketing Automations</h5>
+          <p class="small text-muted mb-4 text-balanced">Set up email campaigns and next-best-action (NBA)
+            orchestration.</p>
+          <a href="#" class="text-primary fw-bold small text-decoration-none">Automation Docs &rarr;</a>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="card-clean p-5 h-100 bg-white">
+          <div class="app-icon app-sales app-icon-sm mb-4"><i class="bi bi-code-slash"></i></div>
+          <h5 class="fw-bold mb-3">API & Integrations</h5>
+          <p class="small text-muted mb-4 text-balanced">Developer guides for connecting your stack via SalesCompass
+            API.</p>
+          <a href="{% url 'core:api_docs' %}" class="text-primary fw-bold small text-decoration-none">Read API Docs
+            &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Contact Support -->
+<section class="section bg-white border-top border-light">
+  <div class="container">
+    <div class="text-center mb-12">
+      <h2 class="fw-extrabold mb-3">Still stuck?</h2>
+      <p class="text-muted">Our support team is available 24/7 for you.</p>
+    </div>
+    <div class="row g-4 justify-content-center">
+      <div class="col-md-5">
+        <div class="card-clean p-5 text-center">
+          <h4 class="fw-bold mb-3">Technical Support</h4>
+          <p class="small text-muted mb-5">For existing customers with implementation or technical issues.</p>
+          <a href="mailto:support@salescompass.ai" class="btn btn-primary px-5 rounded-pill">Open Ticket</a>
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="card-clean p-5 text-center">
+          <h4 class="fw-bold mb-3">Sales Inquiries</h4>
+          <p class="small text-muted mb-5">Questions about plans, pricing, or custom enterprise solutions.</p>
+          <a href="mailto:sales@salescompass.ai" class="btn btn-outline-primary px-5 rounded-pill">Contact Sales</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Community Section -->
+<section class="section bg-gray-900 text-white">
+  <div class="container text-center">
+    <h2 class="fw-extrabold mb-4 text-white">Join the Community</h2>
+    <p class="text-white-50 mb-6 mx-auto" style="max-width: 500px;">
+      Share tips, tricks, and best practices with thousands of other revenue specialists.
+    </p>
+    <a href="#" class="btn btn-outline-light px-5 rounded-pill">Join Discord Forum</a>
+  </div>
+</section>
+{% endblock %}

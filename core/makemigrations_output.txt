@@ -1,0 +1,20 @@
+
+-----
+
+WeasyPrint could not import some external libraries. Please carefully follow the installation steps before reporting an issue:
+https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#installation
+https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#troubleshooting 
+
+-----
+
+Migrations for 'settings_app':
+  settings_app\migrations\0003_remove_settinggroup_tenant_and_more.py
+    - Remove field tenant from settinggroup
+    ~ Alter unique_together for settingtype (0 constraint(s))
+    - Remove field tenant from settingtype
+    - Delete model Setting
+    - Delete model SettingGroup
+    - Delete model SettingType
+Migrations for 'projects':
+  projects\migrations\0003_alter_projectmilestone_invoice.py
+    ~ Alter field invoice on projectmilestone

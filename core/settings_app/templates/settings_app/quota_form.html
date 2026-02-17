@@ -1,0 +1,68 @@
+{% extends "settings_app/base.html" %}
+
+{% block title %}Quota Management - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Quota Management</h1>
+        <p class="text-white text-center lead">Set and adjust sales quotas for team members</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Quota Settings for {{ team_member.user.email }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Quota Amount</label>
+                                    {{ form.quota_amount }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Quota Period</label>
+                                    {{ form.quota_period }}
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Quota</button>
+                        <a href="{% url 'settings_app:team_list' %}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Current Performance</h5>
+                </div>
+                <div class="card-body">
+                    {% if current_quota %}
+                    <div class="text-center">
+                        <h2 class="display-4">${{ current_quota.actual_amount|intcomma }}</h2>
+                        <p class="text-muted">of ${{ current_quota.amount|intcomma }} target</p>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar bg-{% if current_quota.achieved_percent >= 100 %}success{% elif current_quota.achieved_percent >= 80 %}warning{% else %}danger{% endif %}"
+                                style="width: {{ current_quota.achieved_percent|default:0 }}%;">
+                                {{ current_quota.achieved_percent|floatformat:0 }}%
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No quota data available yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

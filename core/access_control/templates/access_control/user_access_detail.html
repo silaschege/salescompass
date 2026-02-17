@@ -1,0 +1,95 @@
+{% extends "access_control/base.html" %}
+
+{% block title %}User Access Details: {{ user_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3">Access Control for User: {{ user_name }}</h1>
+                    <p class="text-muted">Direct permission assignments</p>
+                </div>
+                <div>
+                    <a href="{% url 'access_control:manage_access' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Manage Access
+                    </a>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 card-title">Directly Assigned Permissions</h5>
+                        <!-- Placeholder for explicit user assignment feature -->
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Control Name</th>
+                                    <th>Key</th>
+                                    <th>Type</th>
+                                    <th>Config</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for assignment in assignments %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ assignment.access_control.name }}</strong>
+                                        <small class="d-block text-muted">{{ assignment.access_control.description
+                                            }}</small>
+                                    </td>
+                                    <td><code>{{ assignment.access_control.key }}</code></td>
+                                    <td>
+                                        <span class="badge bg-primary">Permission</span>
+                                    </td>
+                                    <td>
+                                        {% if assignment.config_data %}
+                                        <button type="button" class="btn btn-sm btn-outline-info"
+                                            data-bs-toggle="tooltip" data-bs-placement="top"
+                                            title="{{ assignment.config_data }}">
+                                            <i class="bi bi-gear-fill"></i> Config
+                                        </button>
+                                        {% else %}
+                                        <span class="text-muted small">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if assignment.is_enabled %}
+                                        <span class="badge bg-success">Enabled</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Disabled</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-secondary" disabled
+                                            title="Edit Assignment Not Implemented">
+                                            <i class="bi bi-three-dots"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        <i class="bi bi-person-lock display-4 d-block mb-2"></i>
+                                        No direct permissions assigned to this user.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

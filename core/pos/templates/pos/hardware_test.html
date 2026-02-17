@@ -1,0 +1,127 @@
+{% extends "pos/base.html" %}
+
+{% block title %}Hardware Diagnostic - {{ terminal.terminal_name }}{% endblock %}
+
+{% block pos_content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Hardware Diagnostic</h1>
+        <a href="{% url 'pos:terminal_list' %}" class="btn btn-secondary">Back to Terminals</a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-light">
+                    <h6 class="m-0 font-weight-bold">Terminal Info</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> {{ terminal.terminal_name }}</p>
+                    <p><strong>Code:</strong> {{ terminal.terminal_code }}</p>
+                    <hr>
+                    <p><strong>Printer:</strong> {{ terminal.get_printer_type_display }}</p>
+                    {% if terminal.printer_type == 'network' %}
+                    <p><strong>IP:</strong> {{ terminal.printer_ip }}</p>
+                    {% else %}
+                    <p><strong>Port:</strong> {{ terminal.printer_port|default:"N/A" }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="row">
+                <!-- Printer Test -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 shadow border-left-primary">
+                        <div class="card-body">
+                            <h5 class="fw-bold"><i class="feather icon-printer me-2"></i>Receipt Printer</h5>
+                            <p class="text-muted small">Send a test print to verify alignment and cutting.</p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" onclick="runHardwareTest('print_test')">Test
+                                    Print</button>
+                                <button class="btn btn-outline-primary" onclick="runHardwareTest('cut_paper')">Test
+                                    Cut</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Drawer Test -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 shadow border-left-warning">
+                        <div class="card-body">
+                            <h5 class="fw-bold"><i class="feather icon-package me-2"></i>Cash Drawer</h5>
+                            <p class="text-muted small">Trigger the electronic drawer kick pulse.</p>
+                            <div class="d-grid mt-4">
+                                <button class="btn btn-warning" onclick="runHardwareTest('kick_drawer')">Open
+                                    Drawer</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Display Test -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 shadow border-left-info">
+                        <div class="card-body">
+                            <h5 class="fw-bold"><i class="feather icon-tv me-2"></i>Customer Display</h5>
+                            <p class="text-muted small">Update the pole display message.</p>
+                            <div class="input-group mb-2">
+                                <input type="text" id="displayMsg" class="form-control" placeholder="Hello World"
+                                    maxlength="20">
+                                <button class="btn btn-info" onclick="runHardwareTest('display_test')">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Log Output -->
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold">Hardware Output Log</h6>
+                    <button class="btn btn-sm btn-outline-secondary"
+                        onclick="document.getElementById('hwLog').innerHTML = ''">Clear</button>
+                </div>
+                <div class="card-body bg-dark text-success p-3">
+                    <pre id="hwLog" style="min-height: 100px; margin-bottom: 0;">Ready...</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function runHardwareTest(action) {
+        const termId = "{{ terminal.id }}";
+        const log = document.getElementById('hwLog');
+        const msg = document.getElementById('displayMsg').value;
+
+        log.innerHTML += `\n[${new Date().toLocaleTimeString()}] Executing: ${action}...`;
+
+        fetch(`/pos/api/hardware/test/${termId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ action: action, message: msg })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    log.innerHTML += `\nSUCCESS: ${data.message}`;
+                } else {
+                    log.innerHTML += `\nERROR: ${data.error}`;
+                    log.classList.remove('text-success');
+                    log.classList.add('text-danger');
+                    setTimeout(() => { log.classList.remove('text-danger'); log.classList.add('text-success'); }, 3000);
+                }
+            })
+            .catch(error => {
+                log.innerHTML += `\nCRITICAL ERROR: ${error}`;
+            });
+    }
+</script>
+{% endblock %}

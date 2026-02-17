@@ -1,0 +1,47 @@
+{% extends "infrastructure/base.html" %}
+
+{% block title %}Throttled Tenants - Infrastructure{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Throttled Tenants</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Tenant ID</th>
+                            <th>Reason</th>
+                            <th>Custom API Limit</th>
+                            <th>Custom Storage Limit</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for limit in resource_limits %}
+                        <tr>
+                            <td>{{ limit.tenant_id }}</td>
+                            <td>{{ limit.throttle_reason }}</td>
+                            <td>{{ limit.custom_api_limit|default:"Default" }}</td>
+                            <td>{{ limit.custom_storage_limit_gb|default:"Default" }} GB</td>
+                            <td>
+                                <a href="{% url 'infrastructure:resource_limit_update' limit.pk %}"
+                                    class="btn btn-sm btn-primary">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No tenants are currently throttled.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

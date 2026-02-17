@@ -1,0 +1,80 @@
+{% extends "assets/base.html" %}
+
+{% block asset_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h3 fw-bold mb-0">Asset Classification</h1>
+            <p class="text-muted small mb-0">Governance rules and GL mappings for capital groups</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary px-4 shadow-sm border-0">
+                <i class="bi bi-plus-lg me-2"></i> New Category
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for category in categories %}
+        <div class="col-md-6">
+            <div class="premium-card p-4 border-0 shadow-sm h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-indigo-50 text-indigo-600 rounded p-2 me-3">
+                            <i class="bi bi-tags-fill h5 mb-0"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-1">{{ category.name }}</h5>
+                            <span class="badge badge-soft-primary extra-small text-uppercase">{{
+                                category.get_depreciation_method_display }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="list-group list-group-flush small mb-4">
+                    <div class="list-group-item px-0 py-2 bg-transparent border-0 d-flex justify-content-between">
+                        <span class="text-muted">Useful Life:</span>
+                        <span class="fw-bold text-dark">{{ category.useful_life_years }} Years</span>
+                    </div>
+                    <div class="list-group-item px-0 py-2 bg-transparent border-0 d-flex justify-content-between">
+                        <span class="text-muted">GL Asset Acct:</span>
+                        <span class="text-dark fw-semibold small">{{ category.asset_account.account_code|default:"Not
+                            Mapped" }}</span>
+                    </div>
+                    <div class="list-group-item px-0 py-2 bg-transparent border-0 d-flex justify-content-between">
+                        <span class="text-muted">Impairment Support:</span>
+                        <span
+                            class="{% if category.impairment_account %}text-success{% else %}text-muted{% endif %} fw-bold small">
+                            {% if category.impairment_account %}Configured{% else %}Optional{% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 pt-3 border-top justify-content-end">
+                    <button class="btn btn-sm btn-white border extra-small">Edit Rules</button>
+                    <button class="btn btn-sm btn-light extra-small">Audit Assets</button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="premium-card p-5 border-0 shadow-sm">
+                <i class="bi bi-tags text-muted mb-3 d-block" style="font-size: 3rem;"></i>
+                <h5 class="text-muted fw-normal">No asset categories defined</h5>
+                <button class="btn btn-primary px-4 shadow-sm border-0 mt-3">Create First Category</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .bg-indigo-50 {
+        background-color: rgba(67, 56, 202, 0.05);
+    }
+
+    .text-indigo-600 {
+        color: #4338ca;
+    }
+</style>
+{% endblock %}

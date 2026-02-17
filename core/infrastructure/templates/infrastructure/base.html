@@ -1,0 +1,71 @@
+{% extends 'core/base_module.html' %}
+
+{% block module_nav %}
+<!-- Resource Monitoring -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#resourceMenu">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-speedometer2 nav-icon"></i>
+        <span>Resource Monitoring</span>
+    </div>
+</a>
+<div class="collapse" id="resourceMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+        href="{% url 'infrastructure:dashboard' %}">Overview</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'tenant_usage' %}active{% endif %}"
+        href="{% url 'infrastructure:tenant_usage' %}">Tenant Usage</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'api_calls' %}active{% endif %}"
+        href="{% url 'infrastructure:api_calls' %}">API Calls</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'storage_usage' %}active{% endif %}"
+        href="{% url 'infrastructure:storage_usage' %}">Storage Usage</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'db_connections' %}active{% endif %}"
+        href="{% url 'infrastructure:db_connections' %}">DB Connections</a>
+</div>
+
+<!-- Throttling & Limits -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#throttleMenu">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-shield-exclamation nav-icon"></i>
+        <span>Throttling & Limits</span>
+    </div>
+</a>
+<div class="collapse" id="throttleMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'throttled_tenants' %}active{% endif %}"
+        href="{% url 'infrastructure:throttled_tenants' %}">Throttled Tenants</a>
+    <!-- <a class="nav-link ms-3" href="#set-limits">Set Custom Limits</a> -->
+    <!-- <a class="nav-link ms-3" href="#abuse-detection">Abuse Detection</a> -->
+</div>
+
+<!-- Health Monitoring -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#healthMenu">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-heart-pulse nav-icon"></i>
+        <span>Health Monitoring</span>
+    </div>
+</a>
+<div class="collapse" id="healthMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'system_health' %}active{% endif %}"
+        href="{% url 'infrastructure:system_health' %}">System Health</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'performance_metrics' %}active{% endif %}"
+        href="{% url 'infrastructure:performance_metrics' %}">Performance Metrics</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'resource_alerts' %}active{% endif %}"
+        href="{% url 'infrastructure:resource_alerts' %}">Resource Alerts</a>
+</div>
+
+<!-- Module Management -->
+<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#moduleMenu">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-boxes nav-icon"></i>
+        <span>Module Management</span>
+    </div>
+</a>
+<div class="collapse" id="moduleMenu">
+    <a class="nav-link {% if request.resolver_match.url_name == 'app_module_list' %}active{% endif %}"
+        href="{% url 'infrastructure:app_module_list' %}">App Modules</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'module_dependency_list' %}active{% endif %}"
+        href="{% url 'infrastructure:module_dependency_list' %}">Dependencies</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'tenant_module_provision_list' %}active{% endif %}"
+        href="{% url 'infrastructure:tenant_module_provision_list' %}">Tenant Provisions</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'alert_configuration' %}active{% endif %}"
+        href="{% url 'infrastructure:alert_configuration' %}">Alert Config</a>
+</div>
+{% endblock %}

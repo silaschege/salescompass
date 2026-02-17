@@ -1,0 +1,52 @@
+{% extends 'tenants/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-rocket-takeoff me-2"></i>Provision Tenant</h2>
+            <p class="text-muted">Provision new tenants in trial status</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Tenants in Trial</h5>
+        </div>
+        <div class="card-body">
+            {% if tenants %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Domain</th>
+                            <th>Created At</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tenant in tenants %}
+                        <tr>
+                            <td>{{ tenant.name }}</td>
+                            <td>{{ tenant.domain|default:"N/A" }}</td>
+                            <td>{{ tenant.created_at|date:"Y-m-d H:i" }}</td>
+                            <td><span class="badge bg-warning">{{ tenant.subscription_status }}</span></td>
+                            <td>
+                                <a href="{% url 'tenants:plan_selection' %}" class="btn btn-sm btn-primary">
+                                    Provision
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No tenants in trial status</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

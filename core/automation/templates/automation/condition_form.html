@@ -1,0 +1,43 @@
+{% extends "automation/base.html" %}
+
+{% block title %}Automation Condition Form - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{% if object %}Edit Condition{% else %}Create Condition{% endif %}</h1>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="{{ form.field_path.id_for_label }}" class="form-label">Field Path</label>
+            {{ form.field_path }}
+            <div class="form-text">Dot notation path to the field to check (e.g., 'account.industry', 'opportunity.amount')</div>
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.operator.id_for_label }}" class="form-label">Operator</label>
+            {{ form.operator }}
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.value.id_for_label }}" class="form-label">Value</label>
+            {{ form.value }}
+            <div class="form-text">The expected value for comparison</div>
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.order.id_for_label }}" class="form-label">Order</label>
+            {{ form.order }}
+            <div class="form-text">Order in which conditions are evaluated (lower numbers first)</div>
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.automation_condition_is_active.id_for_label }}" class="form-label">Active</label>
+            {{ form.automation_condition_is_active }}
+        </div>
+        
+        <button type="submit" class="btn btn-primary">{% if object %}Update{% else %}Create{% endif %} Condition</button>
+        <a href="{% url 'automation:automation_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

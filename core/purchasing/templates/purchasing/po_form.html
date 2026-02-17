@@ -1,0 +1,250 @@
+{% extends "purchasing/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block purchasing_content %}
+<div class="animate-fade-in p-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="d-flex align-items-center mb-4">
+                <a href="{% url 'purchasing:po_list' %}"
+                    class="btn btn-light btn-icon rounded-circle me-3 border-0 shadow-sm">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <h1 class="h3 fw-bold mb-0">{% if form.instance.pk %}Edit Order #{{ form.instance.po_number }}{% else
+                    %}Draft New Purchase Order{% endif %}</h1>
+            </div>
+
+            <div class="premium-card p-4 border-0 shadow-sm">
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="alert alert-light border-0 py-3 shadow-none small mb-0 d-flex align-items-center"
+                            style="background: rgba(13, 110, 253, 0.03);">
+                            <i class="bi bi-info-circle-fill text-primary me-2 h5 mb-0"></i>
+                            <div>
+                                Quality entries ensure accurate inventory valuation. Ensure unit costs match your
+                                supplier's current pricing.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="post" class="needs-validation" id="po-form">
+                    {% csrf_token %}
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ form.supplier|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.warehouse|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.order_date|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.expected_date|as_crispy_field }}
+                        </div>
+                        <div class="col-12">
+                            {{ form.notes|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <div class="mt-5">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="fw-bold mb-0"><i class="bi bi-list-check me-2 text-primary"></i>Order Items</h4>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                id="add-item-btn">
+                                <i class="bi bi-plus-circle me-1"></i> Add Product
+                            </button>
+                        </div>
+
+                        <div class="table-responsive">
+                            {{ lines.management_form }}
+                            <table class="table table-hover align-middle" id="items-table">
+                                <thead class="table-light small text-uppercase fw-bold">
+                                    <tr>
+                                        <th style="width: 40%">Product</th>
+                                        <th style="width: 15%">Qty</th>
+                                        <th style="width: 15%">Unit Cost</th>
+                                        <th style="width: 10%">Tax %</th>
+                                        <th style="width: 15%">Total</th>
+                                        <th style="width: 5%"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="formset-container">
+                                    {% for line_form in lines %}
+                                    <tr class="line-item-row">
+                                        {% for hidden in line_form.hidden_fields %}
+                                        {{ hidden }}
+                                        {% endfor %}
+                                        <td>
+                                            {{ line_form.product }}
+                                            {% if line_form.product.errors %}
+                                            <div class="text-danger small">{{ line_form.product.errors }}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ line_form.quantity_ordered }}</td>
+                                        <td>{{ line_form.unit_cost }}</td>
+                                        <td>{{ line_form.tax_rate_percent }}</td>
+                                        <td class="line-total-display fw-bold text-end pe-3">0.00</td>
+                                        <td>
+                                            {% if lines.can_delete %}
+                                            <div class="form-check p-0 d-none">
+                                                {{ line_form.DELETE }}
+                                            </div>
+                                            <button type="button" class="btn btn-link text-danger p-0 remove-item-btn">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-light">
+                                        <td colspan="4" class="text-end fw-bold">Grand Total:</td>
+                                        <td id="grand-total-display" class="fw-bold text-end pe-3">0.00</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-5 pt-3 border-top">
+                        <a href="{% url 'purchasing:po_list' %}"
+                            class="btn btn-light px-4 border rounded-pill">Discard</a>
+                        <button type="submit" class="btn btn-primary px-5 shadow-sm border-0 rounded-pill">
+                            <i class="bi bi-check2-circle me-1"></i> {% if form.instance.pk %}Update Order{% else
+                            %}Create Draft{% endif %}
+                        </button>
+                    </div>
+                </form>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const formsetContainer = document.getElementById('formset-container');
+                        const addItemBtn = document.getElementById('add-item-btn');
+                        const totalForms = document.querySelector('[id$="-TOTAL_FORMS"]');
+                        const prefix = 'lines';
+
+                        function updateGrandTotal() {
+                            let grandTotal = 0;
+                            document.querySelectorAll('.line-item-row').forEach(row => {
+                                if (!row.classList.contains('d-none')) {
+                                    const totalText = row.querySelector('.line-total-display').innerText;
+                                    grandTotal += parseFloat(totalText) || 0;
+                                }
+                            });
+                            document.getElementById('grand-total-display').innerText = grandTotal.toFixed(2);
+                        }
+
+                        function calculateLineTotal(row) {
+                            const qty = parseFloat(row.querySelector('.quantity-input').value) || 0;
+                            const cost = parseFloat(row.querySelector('.cost-input').value) || 0;
+                            const taxPercent = parseFloat(row.querySelector('.tax-input').value) || 0;
+
+                            const subtotal = qty * cost;
+                            const total = subtotal + (subtotal * taxPercent / 100);
+
+                            row.querySelector('.line-total-display').innerText = total.toFixed(2);
+                            updateGrandTotal();
+                        }
+
+                        function attachRowListeners(row) {
+                            const productSelect = row.querySelector('.product-select');
+                            const qtyInput = row.querySelector('.quantity-input');
+                            const costInput = row.querySelector('.cost-input');
+                            const taxInput = row.querySelector('.tax-input');
+                            const removeBtn = row.querySelector('.remove-item-btn');
+
+                            productSelect.addEventListener('change', function () {
+                                const productId = this.value;
+                                if (!productId) {
+                                    costInput.value = '';
+                                    calculateLineTotal(row);
+                                    return;
+                                }
+
+                                // Reuse POS API for product details
+                                fetch(`/pos/api/products/barcode/${productId}/`) // Note: PK might work if search endpoint handles it or we use a separate PK endpoint
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        if (data.price) {
+                                            costInput.value = data.price;
+                                            calculateLineTotal(row);
+                                        }
+                                    })
+                                    .catch(() => {
+                                        // Fallback: search by PK if barcode lookup fails (some models use barcode as identifier)
+                                        // This project seems to use barcode lookup for POS, but for PO we might need a direct PK lookup
+                                        // Let's try searching if barcode fails
+                                        fetch(`/pos/api/products/search/?q=${this.options[this.selectedIndex].text.split('(')[0].trim()}`)
+                                            .then(res => res.json())
+                                            .then(data => {
+                                                if (data.products && data.products.length > 0) {
+                                                    const match = data.products.find(p => p.id == productId);
+                                                    if (match) {
+                                                        costInput.value = match.price;
+                                                        calculateLineTotal(row);
+                                                    }
+                                                }
+                                            });
+                                    });
+                            });
+
+                            [qtyInput, costInput, taxInput].forEach(input => {
+                                input.addEventListener('input', () => calculateLineTotal(row));
+                            });
+
+                            removeBtn.addEventListener('click', function () {
+                                const deleteCheck = row.querySelector('[name$="-DELETE"]');
+                                if (deleteCheck) {
+                                    deleteCheck.checked = true;
+                                    row.classList.add('d-none');
+                                    updateGrandTotal();
+                                } else {
+                                    row.remove();
+                                    const currentForms = parseInt(totalForms.value);
+                                    totalForms.value = currentForms - 1;
+                                    updateGrandTotal();
+                                }
+                            });
+
+                            calculateLineTotal(row);
+                        }
+
+                        addItemBtn.addEventListener('click', function () {
+                            const formCount = parseInt(totalForms.value);
+                            const rows = document.querySelectorAll('.line-item-row');
+                            const row = rows[0].cloneNode(true);
+
+                            row.classList.remove('d-none');
+
+                            // Update indices
+                            row.innerHTML = row.innerHTML.replace(new RegExp(`${prefix}-\\d-`, 'g'), `${prefix}-${formCount}-`);
+
+                            // Clear inputs
+                            row.querySelectorAll('input, select').forEach(input => {
+                                if (input.type !== 'hidden') input.value = '';
+                                if (input.type === 'checkbox') input.checked = false;
+                            });
+
+                            // Re-show remove button if it was hidden
+                            row.querySelector('.remove-item-btn').classList.remove('d-none');
+
+                            formsetContainer.appendChild(row);
+                            totalForms.value = formCount + 1;
+
+                            attachRowListeners(row);
+                        });
+
+                        document.querySelectorAll('.line-item-row').forEach(attachRowListeners);
+                        updateGrandTotal();
+                    });
+                </script>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

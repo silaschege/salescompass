@@ -1,0 +1,61 @@
+{% extends "manufacturing/base.html" %}
+
+{% block title %}Production Floor - SalesCompass{% endblock %}
+
+{% block page_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 text-gray-800"><i class="bi bi-factory me-2"></i>Production Floor Console</h1>
+    <a href="{% url 'manufacturing:work_order_create' %}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+        <i class="bi bi-plus-lg me-1"></i> New Work Order
+    </a>
+</div>
+
+<div class="row g-4">
+    {% for status in floor_status %}
+    <div class="col-md-6 col-lg-4 col-xl-3">
+        <div class="card h-100 border-0 shadow-sm" style="border-radius: 1rem;">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0 fw-bold">{{ status.line.name }}</h5>
+                {% if status.is_busy %}
+                <span class="badge bg-warning text-dark rounded-pill">Active: {{ status.order_count }}</span>
+                {% else %}
+                <span class="badge bg-success rounded-pill px-3">Idle</span>
+                {% endif %}
+            </div>
+            <div class="card-body p-3 bg-light"
+                style="min-height: 200px; border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
+                {% if status.active_orders %}
+                {% for order in status.active_orders %}
+                <div class="card mb-3 border-0 shadow-sm"
+                    style="border-left: 4px solid {% if order.status == 'in_progress' %}#0d6efd{% else %}#ffc107{% endif %}; border-radius: 0.5rem;">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="fw-bold mb-0 text-truncate" style="max-width: 150px;">{{
+                                order.product.product_name }}</h6>
+                            <small class="text-muted">#{{ order.order_number|slice:"-4:" }}</small>
+                        </div>
+                        <div class="progress mb-2" style="height: 6px;">
+                            <div class="progress-bar {% if order.status == 'in_progress' %}bg-primary progress-bar-animated progress-bar-striped{% else %}bg-warning{% endif %}"
+                                role="progressbar"
+                                style="width: {% if order.status == 'in_progress' %}65{% else %}10{% endif %}%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <span class="small fw-semibold">{{ order.quantity|floatformat:0 }} units</span>
+                            <a href="{% url 'manufacturing:work_order_detail' order.pk %}"
+                                class="btn btn-link btn-sm p-0">View</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-calendar-check display-6 text-muted mb-2"></i>
+                    <p class="text-muted small">No active orders</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

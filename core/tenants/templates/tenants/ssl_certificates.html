@@ -1,0 +1,65 @@
+{% extends 'tenants/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-shield-check me-2"></i>SSL Certificates</h2>
+            <p class="text-muted">Manage SSL certificates for custom domains</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Tenants with Custom Domains</h5>
+        </div>
+        <div class="card-body">
+            {% if tenants %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Tenant</th>
+                            <th>Custom Domain</th>
+                            <th>SSL Status</th>
+                            <th>Expiry Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tenant in tenants %}
+                        <tr>
+                            <td>{{ tenant.name }}</td>
+                            <td><code>{{ tenant.domain }}</code></td>
+                            <td><span class="badge bg-success">Active</span></td>
+                            <td>-</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" disabled>Renew</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No tenants with custom domains configured</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card mt-3">
+        <div class="card-header">
+            <h6 class="mb-0">SSL Certificate Information</h6>
+        </div>
+        <div class="card-body">
+            <p>SSL certificates are automatically provisioned using Let's Encrypt when a custom domain is configured.
+            </p>
+            <ul>
+                <li>Automatic renewal 30 days before expiry</li>
+                <li>256-bit encryption</li>
+                <li>Wildcard support available</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

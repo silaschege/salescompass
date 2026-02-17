@@ -1,0 +1,25 @@
+<div class="card h-100">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Recent Activity</h5>
+    </div>
+    <div class="list-group list-group-flush overflow-auto" style="max-height: 300px;">
+        {% for activity in activities %}
+        <div class="list-group-item">
+            <div class="d-flex w-100 justify-content-between">
+                <div class="d-flex align-items-center">
+                    <div class="avatar avatar-xs me-2 bg-light text-primary rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 32px; height: 32px;">
+                        <i class="bi bi-{{ activity.icon|default:'circle' }}"></i>
+                    </div>
+                    <span class="mb-1">{{ activity.text }}</span>
+                </div>
+                <small class="text-muted text-nowrap ms-2">{{ activity.time|timesince }} ago</small>
+            </div>
+        </div>
+        {% empty %}
+        <div class="list-group-item text-center text-muted py-4">
+            No recent activity
+        </div>
+        {% endfor %}
+    </div>
+</div>

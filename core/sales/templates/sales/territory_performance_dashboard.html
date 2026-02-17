@@ -1,0 +1,140 @@
+{% extends 'sales/base.html' %}
+
+{% block title %}Territory Performance Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-2">Territory Performance Dashboard</h1>
+            <p class="mb-4">Track and analyze performance metrics across your sales territories.</p>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Revenue</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_revenue|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Total Deals</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_deals }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-briefcase fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Avg. Conversion Rate</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ avg_conversion_rate|floatformat:2 }}%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-percentage fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Territories</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ territory_data|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-map-marked-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Territory Performance Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Territory Performance Metrics</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="territoryTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Territory</th>
+                                    <th>Revenue</th>
+                                    <th>Deals</th>
+                                    <th>Avg. Deal Size</th>
+                                    <th>Conversion Rate</th>
+                                    <th>Win Rate</th>
+                                    <th>Team Size</th>
+                                    <th>Quota Attainment</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for td in territory_data %}
+                                <tr>
+                                    <td>{{ td.territory.label }}</td>
+                                    <td>${% if td.performance %}{{ td.performance.total_revenue|floatformat:2 }}{% else %}0.00{% endif %}</td>
+                                    <td>{% if td.performance %}{{ td.performance.total_deals }}{% else %}0{% endif %}</td>
+                                    <td>${% if td.performance %}{{ td.performance.average_deal_size|floatformat:2 }}{% else %}0.00{% endif %}</td>
+                                    <td>{% if td.performance %}{{ td.performance.conversion_rate|floatformat:2 }}%{% else %}0.00%{% endif %}</td>
+                                    <td>{% if td.performance %}{{ td.performance.opportunity_win_rate|floatformat:2 }}%{% else %}0.00%{% endif %}</td>
+                                    <td>{% if td.performance %}{{ td.performance.team_member_count }}{% else %}0{% endif %}</td>
+                                    <td>{% if td.performance %}{{ td.performance.quota_attainment|floatformat:2 }}%{% else %}0.00%{% endif %}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js for visualizations -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Initialize DataTables
+    $(document).ready(function() {
+        $('#territoryTable').DataTable({
+            "pageLength": 25,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
+        });
+    });
+</script>
+{% endblock %}

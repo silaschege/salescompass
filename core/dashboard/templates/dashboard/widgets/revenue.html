@@ -1,0 +1,27 @@
+{% load humanize %}
+{% comment %}
+Revenue Widget Template
+Shows total revenue, deal count, and average deal size
+{% endcomment %}
+<div class="card widget-revenue">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-currency-dollar"></i> {{ widget_type|title }}</h5>
+        <small class="text-muted">{{ date_range|title }}</small>
+    </div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col-md-4">
+                <h6 class="text-muted">Total Revenue</h6>
+                <h3 class="text-success">${{ total_revenue|floatformat:0|intcomma }}</h3>
+            </div>
+            <div class="col-md-4">
+                <h6 class="text-muted">Deals Won</h6>
+                <h3>{{ opportunity_count }}</h3>
+            </div>
+            <div class="col-md-4">
+                <h6 class="text-muted">Avg Deal Size</h6>
+                <h3 class="text-primary">${{ average_deal_size|floatformat:0|intcomma }}</h3>
+            </div>
+        </div>
+    </div>
+</div>

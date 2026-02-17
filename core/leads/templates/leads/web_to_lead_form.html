@@ -1,0 +1,57 @@
+{% extends 'leads/base.html' %}
+
+{% block title %}Web-to-Lead Form{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-xl-6 col-lg-6 col-md-8">
+            <div class="card o-hidden border-0 shadow-lg my-5">
+                <div class="card-body p-0">
+                    <!-- Nested Row within Card Body -->
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="p-5">
+                                <div class="text-center">
+                                    <h1 class="h4 text-gray-900 mb-4">Contact Us</h1>
+                                    <p>Fill out the form below and our team will get back to you shortly.</p>
+                                </div>
+                                <form class="user" method="POST">
+                                    {% csrf_token %}
+                                    <div class="form-group row">
+                                        <div class="col-sm-6 mb-3 mb-sm-0">
+                                            <input type="text" class="form-control form-control-user" id="firstName" name="first_name" placeholder="First Name" required>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <input type="text" class="form-control form-control-user" id="lastName" name="last_name" placeholder="Last Name" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="email" class="form-control form-control-user" id="email" name="email" placeholder="Email Address" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="text" class="form-control form-control-user" id="company" name="company" placeholder="Company">
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="tel" class="form-control form-control-user" id="phone" name="phone" placeholder="Phone Number">
+                                    </div>
+                                    <div class="form-group">
+                                        <textarea class="form-control" id="message" name="message" rows="4" placeholder="Message"></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-user btn-block">
+                                        Submit
+                                    </button>
+                                </form>
+                                <hr>
+                                <div class="text-center">
+                                    <a class="small" href="{% url 'leads:lead_list' %}">View all leads</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,497 @@
+{% extends 'settings_app/base.html' %}
+{% load static %}
+
+{% block title %}Tenant Settings - Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .form-section {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+
+    .form-section h3 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 20px 0;
+        color: #333;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 10px;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .page-header h1 {
+        font-size: 28px;
+        font-weight: 600;
+        margin: 0 0 8px 0;
+    }
+
+    .page-header .subtitle {
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: #374151;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .help-text {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+
+    .color-picker-group {
+        display: flex;
+        gap: 20px;
+        align-items: flex-end;
+    }
+
+    .color-picker-wrapper {
+        flex: 1;
+    }
+
+    .color-input-container {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .color-input-container input[type="color"] {
+        width: 60px;
+        height: 42px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .color-input-container input[type="text"] {
+        flex: 1;
+    }
+
+    .logo-upload-area {
+        border: 2px dashed #d1d5db;
+        border-radius: 6px;
+        padding: 30px;
+        text-align: center;
+        transition: all 0.2s;
+    }
+
+    .logo-upload-area:hover {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+
+    .logo-upload-area input[type="file"] {
+        display: none;
+    }
+
+    .logo-upload-label {
+        cursor: pointer;
+        color: #3b82f6;
+        font-weight: 500;
+    }
+
+    .logo-preview {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .logo-preview img {
+        max-width: 200px;
+        max-height: 100px;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .json-editor {
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        min-height: 200px;
+        background: #1e293b;
+        color: #e2e8f0;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        padding: 12px;
+    }
+
+    .json-editor:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .json-help {
+        background: #f9fafb;
+        padding: 12px;
+        border-radius: 6px;
+        margin-top: 8px;
+        font-size: 12px;
+    }
+
+    .json-help code {
+        background: #e5e7eb;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: monospace;
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 30px;
+    }
+
+    .btn {
+        padding: 10px 24px;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-primary {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #2563eb;
+    }
+
+    .btn-secondary {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .btn-secondary:hover {
+        background: #d1d5db;
+    }
+
+    .info-box {
+        background: #eff6ff;
+        border-left: 4px solid #3b82f6;
+        padding: 16px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+    }
+
+    .info-box p {
+        margin: 0;
+        color: #1e40af;
+        font-size: 13px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1>Tenant Settings</h1>
+        <p class="subtitle">Customize your CRM branding and regional settings</p>
+    </div>
+
+    <!-- Info Box -->
+    <div class="info-box">
+        <p>
+            <strong>Customize Your CRM:</strong> Upload your logo, set brand colors, and configure regional settings for
+            your organization.
+        </p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Branding -->
+        <div class="form-section">
+            <h3>Branding</h3>
+
+            <!-- Logo Upload -->
+            <div class="form-group">
+                <label for="logo">Company Logo</label>
+                <div class="logo-upload-area" id="logoUploadArea">
+                    <input type="file" name="logo" id="logo" accept="image/*">
+                    <label for="logo" class="logo-upload-label">
+                        <svg width="48" height="48" fill="currentColor" viewBox="0 0 16 16"
+                            style="margin-bottom: 12px;">
+                            <path
+                                d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
+                            <path
+                                d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z" />
+                        </svg>
+                        <div>Click to upload or drag and drop</div>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">PNG, JPG up to 2MB</div>
+                    </label>
+                </div>
+                <div class="help-text">Your logo will appear in the navigation bar and login page</div>
+                {% if tenant.logo %}
+                <div class="logo-preview">
+                    <p style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">Current Logo:</p>
+                    <img src="{{ tenant.logo.url }}" alt="Current Logo">
+                </div>
+                {% endif %}
+                {% if form.logo.errors %}
+                <div class="text-danger">{{ form.logo.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Color Pickers -->
+            <div class="form-group">
+                <label>Brand Colors</label>
+                <div class="color-picker-group">
+                    <div class="color-picker-wrapper">
+                        <label for="primary_color" style="font-size: 13px;">Primary Color</label>
+                        <div class="color-input-container">
+                            <input type="color" id="primary_color_picker"
+                                value="{{ form.primary_color.value|default:'#3b82f6' }}">
+                            <input type="text" name="primary_color" id="primary_color" class="form-control"
+                                value="{{ form.primary_color.value|default:'#3b82f6' }}" pattern="^#[0-9A-Fa-f]{6}$"
+                                placeholder="#3b82f6">
+                        </div>
+                    </div>
+                    <div class="color-picker-wrapper">
+                        <label for="secondary_color" style="font-size: 13px;">Secondary Color</label>
+                        <div class="color-input-container">
+                            <input type="color" id="secondary_color_picker"
+                                value="{{ form.secondary_color.value|default:'#8b5cf6' }}">
+                            <input type="text" name="secondary_color" id="secondary_color" class="form-control"
+                                value="{{ form.secondary_color.value|default:'#8b5cf6' }}" pattern="^#[0-9A-Fa-f]{6}$"
+                                placeholder="#8b5cf6">
+                        </div>
+                    </div>
+                </div>
+                <div class="help-text">Used for buttons, links, and accents throughout the CRM</div>
+                {% if form.primary_color.errors %}
+                <div class="text-danger">{{ form.primary_color.errors }}</div>
+                {% endif %}
+                {% if form.secondary_color.errors %}
+                <div class="text-danger">{{ form.secondary_color.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Regional Settings -->
+        <div class="form-section">
+            <h3>Regional Settings</h3>
+
+            <!-- Currency -->
+            <div class="form-group">
+                <label for="currency">Currency</label>
+                <select name="currency" id="currency" class="form-control">
+                    <option value="USD" {% if form.currency.value=='USD' %}selected{% endif %}>USD - US Dollar ($)
+                    </option>
+                    <option value="EUR" {% if form.currency.value=='EUR' %}selected{% endif %}>EUR - Euro (€)</option>
+                    <option value="GBP" {% if form.currency.value=='GBP' %}selected{% endif %}>GBP - British Pound (£)
+                    </option>
+                    <option value="JPY" {% if form.currency.value=='JPY' %}selected{% endif %}>JPY - Japanese Yen (¥)
+                    </option>
+                    <option value="CNY" {% if form.currency.value=='CNY' %}selected{% endif %}>CNY - Chinese Yuan (¥)
+                    </option>
+                    <option value="INR" {% if form.currency.value=='INR' %}selected{% endif %}>INR - Indian Rupee (₹)
+                    </option>
+                    <option value="CAD" {% if form.currency.value=='CAD' %}selected{% endif %}>CAD - Canadian Dollar ($)
+                    </option>
+                    <option value="AUD" {% if form.currency.value=='AUD' %}selected{% endif %}>AUD - Australian Dollar
+                        ($)</option>
+                    <option value="CHF" {% if form.currency.value=='CHF' %}selected{% endif %}>CHF - Swiss Franc (Fr)
+                    </option>
+                    <option value="SEK" {% if form.currency.value=='SEK' %}selected{% endif %}>SEK - Swedish Krona (kr)
+                    </option>
+                </select>
+                <div class="help-text">Default currency for revenue and pricing</div>
+                {% if form.currency.errors %}
+                <div class="text-danger">{{ form.currency.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Timezone -->
+            <div class="form-group">
+                <label for="timezone">Timezone</label>
+                <select name="timezone" id="timezone" class="form-control">
+                    <option value="UTC" {% if form.timezone.value=='UTC' %}selected{% endif %}>UTC</option>
+                    <option value="America/New_York" {% if form.timezone.value=='America/New_York' %}selected{% endif
+                        %}>Eastern Time (US & Canada)</option>
+                    <option value="America/Chicago" {% if form.timezone.value=='America/Chicago' %}selected{% endif %}>
+                        Central Time (US & Canada)</option>
+                    <option value="America/Denver" {% if form.timezone.value=='America/Denver' %}selected{% endif %}>
+                        Mountain Time (US & Canada)</option>
+                    <option value="America/Los_Angeles" {% if form.timezone.value=='America/Los_Angeles' %}selected{%
+                        endif %}>Pacific Time (US & Canada)</option>
+                    <option value="Europe/London" {% if form.timezone.value=='Europe/London' %}selected{% endif %}>
+                        London</option>
+                    <option value="Europe/Paris" {% if form.timezone.value=='Europe/Paris' %}selected{% endif %}>Paris
+                    </option>
+                    <option value="Europe/Berlin" {% if form.timezone.value=='Europe/Berlin' %}selected{% endif %}>
+                        Berlin</option>
+                    <option value="Asia/Tokyo" {% if form.timezone.value=='Asia/Tokyo' %}selected{% endif %}>Tokyo
+                    </option>
+                    <option value="Asia/Shanghai" {% if form.timezone.value=='Asia/Shanghai' %}selected{% endif %}>
+                        Shanghai</option>
+                    <option value="Asia/Dubai" {% if form.timezone.value=='Asia/Dubai' %}selected{% endif %}>Dubai
+                    </option>
+                    <option value="Asia/Kolkata" {% if form.timezone.value=='Asia/Kolkata' %}selected{% endif %}>Mumbai
+                    </option>
+                    <option value="Australia/Sydney" {% if form.timezone.value=='Australia/Sydney' %}selected{% endif
+                        %}>Sydney</option>
+                </select>
+                <div class="help-text">Used for timestamps and scheduling</div>
+                {% if form.timezone.errors %}
+                <div class="text-danger">{{ form.timezone.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Business Hours -->
+            <div class="form-group">
+                <label for="business_hours">Business Hours (JSON)</label>
+                <textarea name="business_hours" id="business_hours" class="form-control json-editor"
+                    rows="10">{{ form.business_hours.value|default:'{}' }}</textarea>
+                <div class="help-text">Define your operating hours for each day of the week</div>
+                <div class="json-help">
+                    <strong>Example Format:</strong><br>
+                    <code>{
+  "monday": {"open": "09:00", "close": "17:00"},
+  "tuesday": {"open": "09:00", "close": "17:00"},
+  "wednesday": {"open": "09:00", "close": "17:00"},
+  "thursday": {"open": "09:00", "close": "17:00"},
+  "friday": {"open": "09:00", "close": "17:00"},
+  "saturday": "closed",
+  "sunday": "closed"
+}</code>
+                </div>
+                {% if form.business_hours.errors %}
+                <div class="text-danger">{{ form.business_hours.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="btn-group">
+            <button type="submit" class="btn btn-primary">
+                Save Settings
+            </button>
+            <a href="{% url 'settings_app:dashboard' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Color picker sync
+        const primaryColorPicker = document.getElementById('primary_color_picker');
+        const primaryColorInput = document.getElementById('primary_color');
+        const secondaryColorPicker = document.getElementById('secondary_color_picker');
+        const secondaryColorInput = document.getElementById('secondary_color');
+
+        primaryColorPicker.addEventListener('input', function () {
+            primaryColorInput.value = this.value;
+        });
+
+        primaryColorInput.addEventListener('input', function () {
+            if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+                primaryColorPicker.value = this.value;
+            }
+        });
+
+        secondaryColorPicker.addEventListener('input', function () {
+            secondaryColorInput.value = this.value;
+        });
+
+        secondaryColorInput.addEventListener('input', function () {
+            if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+                secondaryColorPicker.value = this.value;
+            }
+        });
+
+        // Logo upload preview
+        const logoInput = document.getElementById('logo');
+        const logoUploadArea = document.getElementById('logoUploadArea');
+
+        logoInput.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const preview = document.querySelector('.logo-preview');
+                    if (!preview) {
+                        const newPreview = document.createElement('div');
+                        newPreview.className = 'logo-preview';
+                        newPreview.innerHTML = `
+                            <p style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">New Logo Preview:</p>
+                            <img src="${e.target.result}" alt="Logo Preview">
+                        `;
+                        logoUploadArea.after(newPreview);
+                    } else {
+                        preview.querySelector('img').src = e.target.result;
+                        preview.querySelector('p').textContent = 'New Logo Preview:';
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Format JSON on load
+        const businessHoursTextarea = document.getElementById('business_hours');
+        try {
+            const value = businessHoursTextarea.value.trim();
+            if (value && value !== '{}') {
+                const formatted = JSON.stringify(JSON.parse(value), null, 2);
+                businessHoursTextarea.value = formatted;
+            }
+        } catch (e) {
+            // Invalid JSON, leave as is
+        }
+
+        // Validate JSON on blur
+        businessHoursTextarea.addEventListener('blur', function () {
+            try {
+                const value = this.value.trim();
+                if (value) {
+                    JSON.parse(value);
+                    this.style.borderColor = '#10b981';
+                }
+            } catch (e) {
+                this.style.borderColor = '#ef4444';
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,8 @@
+docker build -t  salescompass .
+docker-compose up --build
+docker run --name salescompass -v .:/app -p 8001:8000 salescompass
+
+add app
+docker run --rm -v ${PWD}:/app salescompass python manage.py startapp communication
+docker run --rm -v %CD%:/app salescompass python manage.py startapp communication
+

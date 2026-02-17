@@ -1,0 +1,17 @@
+
+-----
+
+WeasyPrint could not import some external libraries. Please carefully follow the installation steps before reporting an issue:
+https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#installation
+https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#troubleshooting 
+
+-----
+
+Created Definition: Invoicing Entitlement
+Created Definition: Invoicing Feature
+Created Definition: Invoicing Access
+Created Definition: Suppliers Entitlement
+Created Definition: Suppliers Feature
+Created Definition: Suppliers Access
+
+Access control seeding completed.

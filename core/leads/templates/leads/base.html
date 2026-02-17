@@ -1,0 +1,47 @@
+{% extends "core/base_module.html" %}
+{% load static %}
+
+{% block module_title %}Leads | SalesCompass{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Leads module specific styling */
+    .widget-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .widget-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 2px 16px rgba(111, 66, 193, 0.08);
+        transition: transform 0.2s, box-shadow 0.2s;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border: none;
+    }
+
+    .widget-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(111, 66, 193, 0.15);
+    }
+
+    .nav-icon {
+        margin-right: 0.75rem;
+        font-size: 1.1rem;
+        width: 20px;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block module_nav %}
+{% include "leads/includes/module_nav.html" %}
+{% endblock %}
+
+{% block module_content %}
+{% block page_content %}{% endblock %}
+{% endblock %}

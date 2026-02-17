@@ -1,0 +1,63 @@
+{% extends "logged_in/base.html" %}
+{% load static %}
+
+{% block title %}{% block module_title %}SalesCompass{% endblock %}{% endblock %}
+
+{% block extra_head %}
+{% block extra_css %}{% endblock %}
+<style>
+    /* Module specific styling */
+    .sidebar {
+        background: #fff;
+    }
+
+    .nav-link.active {
+        color: #6f42c1;
+        background-color: #f0e6ff;
+    }
+
+        {
+        % block module_css %
+    }
+
+        {
+        % endblock %
+    }
+</style>
+{% endblock %}
+
+{% block sidebar_nav %}
+<div class="sidebar" id="sidebar">
+    <a class="navbar-brand" href="{% url 'core:app_selection' %}">
+        <i class="bi bi-compass me-2"></i> SalesCompass
+    </a>
+    <nav class="nav flex-column">
+        <div class="section-title">MODULE MENU</div>
+        {% block module_nav %}
+        <!-- Module Links Injected Here -->
+        {% endblock %}
+
+        <div class="section-title mt-4">SYSTEM</div>
+        <a class="nav-link" href="{% url 'core:app_selection' %}">
+            <i class="bi bi-grid nav-icon"></i> Control Plane
+        </a>
+        <div class="mt-auto pt-4 border-top">
+            <a class="nav-link text-danger" href="{% url 'core:logout' %}">
+                <i class="bi bi-box-arrow-right nav-icon"></i> Log Out
+            </a>
+        </div>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    {% block module_content %}
+    {% block page_content %}{% endblock %}
+    {% endblock %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% block module_js %}{% endblock %}
+{% endblock %}

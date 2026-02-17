@@ -1,0 +1,39 @@
+{% extends "nps/base.html" %}
+
+{% block title %}Embed NPS Widget Example - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header-bar mb-4">
+        <div class="container">
+            <h1 class="block-title">Embed NPS Widget Example</h1>
+            <p class="text-white text-center lead">Example of embedding the NPS widget in another page</p>
+        </div>
+    </div>
+ 
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Main Content Area</h5>
+                </div>
+                <div class="card-body">
+                    <p>This page demonstrates how to embed the NPS widget.</p>
+                    <p>The widget will appear in the bottom right corner of the screen.</p>
+                    
+                    <!-- Example of how to embed the widget -->
+                    <h6>To embed the widget in your template, include:</h6>
+                    <pre><code>
+&lt;!-- Load the widget via AJAX or include it directly --&gt;
+{% include "nps/in_app_survey_widget.html" %}
+                    </code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include the NPS widget -->
+{% include "nps/in_app_survey_widget.html" %}
+
+{% endblock %}

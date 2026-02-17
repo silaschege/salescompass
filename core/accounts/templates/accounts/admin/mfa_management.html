@@ -1,0 +1,263 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+
+{% block title %}MFA Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>MFA Management</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'accounts:admin_user_dashboard' %}">User Management</a></li>
+                    <li class="breadcrumb-item active">MFA Management</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">MFA Configuration</h5>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="mfaToggle" checked>
+                            <label class="form-check-label" for="mfaToggle">MFA Enforcement</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Users</h5>
+                    <p class="card-text display-4">{{ users.count }}</p>
+                </div>
+            </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">MFA Enabled</h5>
+                    <p class="card-text display-4">{{ users|length }}</p>
+                </div>
+            </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">MFA Disabled</h5>
+                    <p class="card-text display-4">{{ total_users|add:users.count|mul:"-1"|add:total_users }}</p>
+                </div>
+            </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Compliance Rate</h5>
+                    <p class="card-text display-4">{{ users.count|div:total_users|mul:100|floatformat:1 }}%</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h5 class="card-title mb-0">User MFA Status</h5>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-end">
+                                <select class="form-select w-auto" id="mfaFilter">
+                                    <option value="all" {% if mfa_status == 'all' %}selected{% endif %}>All Users</option>
+                                    <option value="enabled" {% if mfa_status == 'enabled' %}selected{% endif %}>MFA Enabled</option>
+                                    <option value="disabled" {% if mfa_status == 'disabled' %}selected{% endif %}>MFA Disabled</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th>Name</th>
+                                    <th>Tenant</th>
+                                    <th>Role</th>
+                                    <th>MFA Status</th>
+                                    <th>Last MFA Use</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>{{ user.email }}</td>
+                                    <td>{{ user.first_name }} {{ user.last_name }}</td>
+                                    <td>{{ user.tenant.name|default:"-" }}</td>
+                                    <td>{{ user.role.name|default:"-" }}</td>
+                                    <td>
+                                        {% if user.mfa_enabled %}
+                                            <span class="badge bg-success">Enabled</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Disabled</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.last_mfa_login %}
+                                            {{ user.last_mfa_login|date:"M d, Y H:i" }}
+                                        {% else %}
+                                            Never
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.mfa_enabled %}
+                                            <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#disableMFAModal{{ user.id }}">
+                                                <i class="fas fa-lock-open"></i> Disable
+                                            </button>
+                                        {% else %}
+                                            <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#enableMFAModal{{ user.id }}">
+                                                <i class="fas fa-lock"></i> Enable
+                                            </button>
+                                        {% endif %}
+                                        <a href="{% url 'accounts:admin_user_update' user_id=user.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Enable MFA Modal -->
+                                <div class="modal fade" id="enableMFAModal{{ user.id }}" tabindex="-1" aria-labelledby="enableMFAModalLabel{{ user.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="enableMFAModalLabel{{ user.id }}">Enable MFA for {{ user.email }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Enabling MFA for {{ user.email }} will require them to use two-factor authentication on their next login.</p>
+                                                <p>They will receive instructions via email on how to set up their MFA device.</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="button" class="btn btn-success">Enable MFA</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                
+                                <!-- Disable MFA Modal -->
+                                <div class="modal fade" id="disableMFAModal{{ user.id }}" tabindex="-1" aria-labelledby="disableMFAModalLabel{{ user.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="disableMFAModalLabel{{ user.id }}">Disable MFA for {{ user.email }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Disabling MFA for {{ user.email }} will allow them to login with just their username and password.</p>
+                                                <p>This reduces security for their account. Are you sure you want to proceed?</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="button" class="btn btn-warning">Disable MFA</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7">No users found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if is_paginated %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1&mfa_status={{ mfa_status }}">First</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&mfa_status={{ mfa_status }}">Previous</a>
+                                </li>
+                            {% endif %}
+
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&mfa_status={{ mfa_status }}">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&mfa_status={{ mfa_status }}">Last</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">MFA Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <form>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="mfaMethod" class="form-label">MFA Method</label>
+                                    <select class="form-select" id="mfaMethod">
+                                        <option value="totp" selected>Time-based One-Time Password (TOTP)</option>
+                                        <option value="sms">SMS</option>
+                                        <option value="email">Email</option>
+                                        <option value="hardware">Hardware Token</option>
+                                    </select>
+                                    <div class="form-text">Select the primary MFA method for users</div>
+                                </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="mfaEnforcement" class="form-label">Enforcement Policy</label>
+                                    <select class="form-select" id="mfaEnforcement">
+                                        <option value="all" selected>Enforce for all users</option>
+                                        <option value="admin">Enforce for admin users only</option>
+                                        <option value="custom">Custom policy</option>
+                                    </select>
+                                    <div class="form-text">Define which users must use MFA</div>
+                                </div>
+                            </div>
+                        <div class="mb-3">
+                            <label for="mfaGracePeriod" class="form-label">Grace Period (Days)</label>
+                            <input type="number" class="form-control" id="mfaGracePeriod" value="7">
+                            <div class="form-text">Number of days to allow users to set up MFA before enforcement</div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Save Configuration</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

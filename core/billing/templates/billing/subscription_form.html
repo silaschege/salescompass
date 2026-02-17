@@ -1,0 +1,201 @@
+{% extends "billing/base.html" %}
+
+{% block title %}
+    {% if form.instance.pk %}
+        Edit Subscription - SalesCompass
+    {% else %}
+        Create Subscription - SalesCompass
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>
+                {% if form.instance.pk %}
+                    <i class="bi bi-pencil me-2"></i>Edit Subscription
+                {% else %}
+                    <i class="bi bi-plus-circle me-2"></i>Create Subscription
+                {% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if form.instance.pk %}
+                    Modify subscription details
+                {% else %}
+                    Set up a new subscription for a user
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'billing:subscription_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Subscriptions
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        {% if form.instance.pk %}
+                            Edit Subscription Details
+                        {% else %}
+                            Subscription Information
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.subscription_plan.id_for_label }}" class="form-label">Subscription Plan</label>
+                            {{ form.subscription_plan }}
+                            {% if form.subscription_plan.help_text %}
+                                <div class="form-text">{{ form.subscription_plan.help_text }}</div>
+                            {% endif %}
+                            {% if form.subscription_plan.errors %}
+                                <div class="text-danger">{{ form.subscription_plan.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.user.id_for_label }}" class="form-label">User</label>
+                            {{ form.user }}
+                            {% if form.user.help_text %}
+                                <div class="form-text">{{ form.user.help_text }}</div>
+                            {% endif %}
+                            {% if form.user.errors %}
+                                <div class="text-danger">{{ form.user.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                            {{ form.status }}
+                            {% if form.status.help_text %}
+                                <div class="form-text">{{ form.status.help_text }}</div>
+                            {% endif %}
+                            {% if form.status.errors %}
+                                <div class="text-danger">{{ form.status.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.status_ref.id_for_label }}" class="form-label">Status Reference</label>
+                            {{ form.status_ref }}
+                            {% if form.status_ref.help_text %}
+                                <div class="form-text">{{ form.status_ref.help_text }}</div>
+                            {% endif %}
+                            {% if form.status_ref.errors %}
+                                <div class="text-danger">{{ form.status_ref.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.end_date.id_for_label }}" class="form-label">End Date</label>
+                            {{ form.end_date }}
+                            {% if form.end_date.help_text %}
+                                <div class="form-text">{{ form.end_date.help_text }}</div>
+                            {% endif %}
+                            {% if form.end_date.errors %}
+                                <div class="text-danger">{{ form.end_date.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.subscription_trial_end_date.id_for_label }}" class="form-label">Subscription Trial End Date</label>
+                            {{ form.subscription_trial_end_date }}
+                            {% if form.subscription_trial_end_date.help_text %}
+                                <div class="form-text">{{ form.subscription_trial_end_date.help_text }}</div>
+                            {% endif %}
+                            {% if form.subscription_trial_end_date.errors %}
+                                <div class="text-danger">{{ form.subscription_trial_end_date.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.stripe_subscription_id.id_for_label }}" class="form-label">Stripe Subscription ID</label>
+                            {{ form.stripe_subscription_id }}
+                            {% if form.stripe_subscription_id.help_text %}
+                                <div class="form-text">{{ form.stripe_subscription_id.help_text }}</div>
+                            {% endif %}
+                            {% if form.stripe_subscription_id.errors %}
+                                <div class="text-danger">{{ form.stripe_subscription_id.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.stripe_customer_id.id_for_label }}" class="form-label">Stripe Customer ID</label>
+                            {{ form.stripe_customer_id }}
+                            {% if form.stripe_customer_id.help_text %}
+                                <div class="form-text">{{ form.stripe_customer_id.help_text }}</div>
+                            {% endif %}
+                            {% if form.stripe_customer_id.errors %}
+                                <div class="text-danger">{{ form.stripe_customer_id.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            {{ form.subscription_is_active }}
+                            <label class="form-check-label" for="{{ form.subscription_is_active.id_for_label }}">
+                                Active Subscription
+                            </label>
+                            {% if form.subscription_is_active.help_text %}
+                                <div class="form-text">{{ form.subscription_is_active.help_text }}</div>
+                            {% endif %}
+                            {% if form.subscription_is_active.errors %}
+                                <div class="text-danger">{{ form.subscription_is_active.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">
+                                {% if form.instance.pk %}
+                                    <i class="bi bi-save me-2"></i>Update Subscription
+                                {% else %}
+                                    <i class="bi bi-plus-circle me-2"></i>Create Subscription
+                                {% endif %}
+                            </button>
+                            
+                            {% if form.instance.pk %}
+                            <a href="{% url 'billing:subscription_delete' pk=form.instance.pk %}" 
+                               class="btn btn-danger">
+                                <i class="bi bi-trash me-2"></i>Delete Subscription
+                            </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Subscription Information</h5>
+                </div>
+                <div class="card-body">
+                    <p>Subscriptions represent a user's recurring billing relationship with your service.</p>
+                    
+                    <h6>Key Fields:</h6>
+                    <ul>
+                        <li><strong>Subscription Plan:</strong> The pricing plan they've selected</li>
+                        <li><strong>User:</strong> The user subscribed to the service</li>
+                        <li><strong>Status:</strong> Current state of the subscription</li>
+                        <li><strong>Status Reference:</strong> Dynamic status reference</li>
+                        <li><strong>End Date:</strong> When the subscription ends</li>
+                        <li><strong>Subscription Trial End Date:</strong> When the trial period ends</li>
+                        <li><strong>Stripe IDs:</strong> For payment processing</li>
+                        <li><strong>Active Status:</strong> Whether the subscription is currently active</li>
+                    </ul>
+                    
+                    <p class="mb-0">Ensure all information is accurate before saving.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

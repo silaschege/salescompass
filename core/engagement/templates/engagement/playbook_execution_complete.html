@@ -1,0 +1,99 @@
+{% extends "engagement/base.html" %}
+
+{% block title %}Complete Playbook Execution - {{ execution.playbook.name }}{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Complete Playbook Execution</h1>
+        <p class="text-white text-center lead">Finish executing "{{ execution.playbook.name }}" for {{ execution.account.name }}</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h2 class="mb-0">Complete Execution</h2>
+                    <p class="text-muted">Provide completion details for "{{ execution.playbook.name }}"</p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.completion_rate.id_for_label }}" class="form-label fw-bold">
+                                        Completion Rate (%)
+                                    </label>
+                                    {{ form.completion_rate }}
+                                    <div class="form-text">Percentage of steps completed.</div>
+                                    {% if form.completion_rate.errors %}
+                                        <div class="text-danger mt-1">{{ form.completion_rate.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.effectiveness_score.id_for_label }}" class="form-label fw-bold">
+                                        Effectiveness Score (0-100)
+                                    </label>
+                                    {{ form.effectiveness_score }}
+                                    <div class="form-text">How effective was this execution?</div>
+                                    {% if form.effectiveness_score.errors %}
+                                        <div class="text-danger mt-1">{{ form.effectiveness_score.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label fw-bold">
+                                Notes
+                            </label>
+                            {{ form.notes }}
+                            <div class="form-text">Additional notes about this playbook execution.</div>
+                            {% if form.notes.errors %}
+                                <div class="text-danger mt-1">{{ form.notes.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'engagement:playbook_execution_detail' execution.pk %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Complete Execution
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .form-control, .form-select {
+        border: 1px solid #e3e6f3;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #6f42c1;
+        box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+    }
+    
+    textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+    }
+</style>
+{% endblock %}

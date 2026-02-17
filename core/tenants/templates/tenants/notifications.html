@@ -1,0 +1,110 @@
+{% extends 'tenants/base.html' %}
+
+{% block title %}{{ title }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col">
+      <h2><i class="bi bi-bell me-2"></i>{{ title }} 
+        {% if unread_count > 0 %}
+        <span class="badge bg-danger">{{ unread_count }}</span>
+        {% endif %}
+      </h2>
+      <p class="text-muted">{{ subtitle }}</p>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="d-flex justify-content-between">
+        <div>
+          {% if unread_count > 0 %}
+          <form method="post" action="{% url 'tenants:notification_mark_all_read' %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-primary">
+              <i class="bi bi-check-all me-1"></i>Mark All as Read
+            </button>
+          </form>
+          {% endif %}
+        </div>
+        <a href="{% url 'tenants:overage_alerts' %}" class="btn btn-outline-secondary">
+          <i class="bi bi-exclamation-triangle me-1"></i>View Alerts
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Notifications</h5>
+        </div>
+        <div class="card-body">
+          {% if notifications %}
+          <div class="list-group">
+            {% for notification in notifications %}
+            <div class="list-group-item {% if not notification.is_read %}list-group-item-primary{% endif %}">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">
+                  {{ notification.title }}
+                  {% if not notification.is_read %}
+                  <span class="badge bg-danger">New</span>
+                  {% endif %}
+                </h5>
+                <small>{{ notification.created_at|date:"M d, Y H:i" }}</small>
+              </div>
+              <p class="mb-1">{{ notification.message }}</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <span class="badge bg-{{ notification.get_notification_type_display|lower }}">{{ notification.get_notification_type_display }}</span>
+                  <span class="badge bg-{{ notification.get_severity_display|lower }}">{{ notification.get_severity_display }}</span>
+                </div>
+                <div>
+                  {% if not notification.is_read %}
+                  <form method="post" action="{% url 'tenants:notification_mark_read' notification.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-success">Mark Read</button>
+                  </form>
+                  {% endif %}
+                  {% if notification.related_object_type and notification.related_object_id %}
+                  <a href="#" class="btn btn-sm btn-outline-primary">View Details</a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          
+          {% if is_paginated %}
+          <nav aria-label="Notifications pagination">
+            <ul class="pagination justify-content-center mt-3">
+              {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+              </li>
+              {% endif %}
+
+              <li class="page-item disabled">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+              </li>
+
+              {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+              </li>
+              {% endif %}
+            </ul>
+          </nav>
+          {% endif %}
+          
+          {% else %}
+          <p class="text-muted">No notifications found.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

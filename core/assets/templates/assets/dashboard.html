@@ -1,0 +1,181 @@
+{% extends "assets/base.html" %}
+{% load humanize %}
+
+{% block asset_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h2 fw-bold mb-0">Fixed Asset Strategy</h1>
+            <p class="text-muted">IAS 16, 36 & IFRS 16 compliant capital management</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'assets:asset_create' %}" class="btn btn-primary px-4 shadow-sm border-0">
+                <i class="bi bi-plus-lg me-2"></i> Acquire Asset
+            </a>
+            <button class="btn btn-light px-4 border shadow-sm">
+                <i class="bi bi-calculator me-2"></i> Run Depreciation
+            </button>
+        </div>
+    </div>
+
+    <!-- KPI Section -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100 border-0 shadow-sm border-start border-primary border-4">
+                <div class="stat-label text-muted small text-uppercase fw-bold mb-1">Total Book Value</div>
+                <div class="stat-value h2 fw-bold text-dark">${{ total_value|floatformat:0|intcomma }}</div>
+                <div class="text-muted extra-small mt-2 d-flex align-items-center">
+                    <i class="bi bi-graph-up text-success me-1"></i> +4.2% Acquisition Velocity
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100 border-0 shadow-sm border-start border-warning border-4">
+                <div class="stat-label text-muted small text-uppercase fw-bold mb-1">Accum. Depreciation</div>
+                <div class="stat-value h2 fw-bold text-dark">$124.5K</div>
+                <div class="text-warning extra-small mt-2">Provisioned for FY 2025</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100 border-0 shadow-sm border-start border-danger border-4">
+                <div class="stat-label text-muted small text-uppercase fw-bold mb-1">Impairment Risk</div>
+                <div class="stat-value h2 fw-bold text-dark">02</div>
+                <div class="text-danger extra-small mt-2">Assets require IAS 36 testing</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="premium-card p-4 h-100 border-0 shadow-sm border-start border-success border-4">
+                <div class="stat-label text-muted small text-uppercase fw-bold mb-1">Active Portfolio</div>
+                <div class="stat-value h2 fw-bold text-dark">{{ total_assets }}</div>
+                <div class="text-success extra-small mt-2 d-flex align-items-center">
+                    <i class="bi bi-check-circle me-1"></i> 100% Operational
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Asset List Preview -->
+        <div class="col-lg-8">
+            <div class="premium-card h-100 border-0 shadow-sm overflow-hidden">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">High-Value Registry</h5>
+                    <a href="{% url 'assets:asset_list' %}" class="btn btn-sm btn-light border small text-primary">Full
+                        Inventory</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light bg-opacity-50">
+                            <tr class="text-muted small text-uppercase fw-bold">
+                                <th class="ps-4">Asset Name</th>
+                                <th>Category</th>
+                                <th class="text-center">Book Value</th>
+                                <th class="pe-4 text-end">Compliance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for asset in recent_assets %}
+                            <tr>
+                                <td class="ps-4 py-3">
+                                    <div class="fw-bold text-dark">{{ asset.name }}</div>
+                                    <div class="extra-small text-muted">ID: {{ asset.asset_number }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-soft-primary px-3 rounded-pill text-uppercase">{{
+                                        asset.category.name }}</span>
+                                </td>
+                                <td class="text-center fw-bold text-dark">
+                                    ${{ asset.current_value|intcomma }}
+                                </td>
+                                <td class="pe-4 text-end">
+                                    {% if asset.revaluation_surplus > 0 %}
+                                    <i class="bi bi-shield-check text-success ms-1" title="Revalued (IAS 16)"></i>
+                                    {% endif %}
+                                    <a href="{% url 'assets:asset_detail' asset.pk %}"
+                                        class="btn btn-sm btn-white border shadow-none btn-icon ms-2">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">No capital assets recorded.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compliance & Reports -->
+        <div class="col-lg-4">
+            <div class="premium-card p-4 mb-4 border-0 shadow-sm bg-dark text-white overflow-hidden position-relative">
+                <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                    <i class="bi bi-safe" style="font-size: 5rem;"></i>
+                </div>
+                <h6 class="fw-bold mb-3 d-flex align-items-center">
+                    <i class="bi bi-patch-check-fill me-2 text-primary"></i> IFRS 16 Readiness
+                </h6>
+                <p class="extra-small text-white-50 mb-4">Total ROU Assets: $0.00. Next lease disclosure required in 14
+                    days.</p>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-light btn-sm text-start py-2 border-opacity-25">
+                        <i class="bi bi-journal-text me-2"></i> Lease Obligations Report
+                    </button>
+                </div>
+            </div>
+
+            <div class="premium-card p-4 border-0 shadow-sm h-100">
+                <h6 class="fw-bold mb-4 d-flex align-items-center"><i
+                        class="bi bi-pie-chart-fill text-primary me-2"></i> Portfolio Mix</h6>
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <div class="d-flex justify-content-between extra-small fw-bold text-muted mb-1">
+                            <span>PLANT & EQUIPMENT</span>
+                            <span>62%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" style="width: 62%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between extra-small fw-bold text-muted mb-1">
+                            <span>VEHICLES</span>
+                            <span>24%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-success" style="width: 24%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between extra-small fw-bold text-muted mb-1">
+                            <span>INTANGIBLES (IAS 38)</span>
+                            <span>14%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-warning" style="width: 14%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .extra-small {
+        font-size: 0.7rem;
+    }
+
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}

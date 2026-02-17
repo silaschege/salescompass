@@ -1,0 +1,130 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Edit User{% else %}Create User{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>{% if object %}Edit User{% else %}Create User{% endif %}</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'accounts:admin_user_dashboard' %}">User Management</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'accounts:admin_user_list' %}">Users</a></li>
+                    <li class="breadcrumb-item active">{% if object %}Edit{% else %}Create{% endif %}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">{% if object %}Edit User{% else %}Create New User{% endif %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name</label>
+                                    {{ form.first_name }}
+                                    {% if form.first_name.errors %}
+                                        <div class="text-danger">{{ form.first_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name</label>
+                                    {{ form.last_name }}
+                                    {% if form.last_name.errors %}
+                                        <div class="text-danger">{{ form.last_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger">{{ form.email.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.tenant.id_for_label }}" class="form-label">Tenant</label>
+                            {{ form.tenant }}
+                            <div class="form-text">{{ form.tenant.help_text }}</div>
+                            {% if form.tenant.errors %}
+                                <div class="text-danger">{{ form.tenant.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.role.id_for_label }}" class="form-label">Role</label>
+                            {{ form.role }}
+                            <div class="form-text">{{ form.role.help_text }}</div>
+                            {% if form.role.errors %}
+                                <div class="text-danger">{{ form.role.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3 form-check">
+                                    {{ form.is_active }}
+                                    <label for="{{ form.is_active.id_for_label }}" class="form-check-label">Active</label>
+                                    <div class="form-text">{{ form.is_active.help_text }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3 form-check">
+                                    {{ form.is_staff }}
+                                    <label for="{{ form.is_staff.id_for_label }}" class="form-check-label">Staff</label>
+                                    <div class="form-text">{{ form.is_staff.help_text }}</div>
+                                </div>
+                            <div class="col-md-4">
+                                <div class="mb-3 form-check">
+                                    {{ form.is_superuser }}
+                                    <label for="{{ form.is_superuser.id_for_label }}" class="form-check-label">Superuser</label>
+                                    <div class="form-text">{{ form.is_superuser.help_text }}</div>
+                                </div>
+                            </div>
+                        <div class="mb-3">
+                            <label for="{{ form.password1.id_for_label }}" class="form-label">Password</label>
+                            {{ form.password1 }}
+                            {% if form.password1.errors %}
+                                <div class="text-danger">{{ form.password1.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm Password</label>
+                            {{ form.password2 }}
+                            {% if form.password2.errors %}
+                                <div class="text-danger">{{ form.password2.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            {% if object %}Update User{% else %}Create User{% endif %}
+                        </button>
+                        <a href="{% url 'accounts:admin_user_list' %}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">User Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Use this form to create or edit user accounts. Make sure to assign the appropriate tenant and role to the user.</p>
+                    <p class="card-text">For new users, they will receive an email notification with their account details if email is configured.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends "hr/base.html" %}
+{% load humanize %}
+
+{% block hr_content %}
+<div class="p-4 no-print-section">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="javascript:history.back()" class="btn btn-sm btn-light border">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+        <button onclick="window.print()" class="btn btn-primary shadow-sm">
+            <i class="bi bi-printer me-2"></i> Print Payslip
+        </button>
+    </div>
+</div>
+
+<div class="container py-2" id="printable-payslip">
+    <div class="premium-card p-5 border shadow-sm bg-white mx-auto" style="max-width: 800px; min-height: 1000px;">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-start mb-5 border-bottom pb-4">
+            <div>
+                <h2 class="fw-bold text-dark mb-1">{{ request.user.tenant.name }}</h2>
+                <p class="text-muted small mb-0">Employment & Payroll Services</p>
+                <p class="text-muted extra-small">Official Payslip Document</p>
+            </div>
+            <div class="text-end">
+                <div class="h4 fw-bold text-primary mb-0">PAYSLIP</div>
+                <div class="text-muted small">Period: {{ run.period_name }}</div>
+                <div class="extra-small text-muted mt-2">Generated on: {{ "now"|date:"M d, Y" }}</div>
+            </div>
+        </div>
+
+        <!-- Employee Info -->
+        <div class="row mb-5">
+            <div class="col-6">
+                <div class="extra-small text-muted text-uppercase fw-bold mb-2">Employee Information</div>
+                <div class="h5 fw-bold mb-1">{{ line.employee.user.get_full_name }}</div>
+                <div class="small text-muted">ID: {{ line.employee.employee_id }}</div>
+                <div class="small text-muted">Position: {{ line.employee.position }}</div>
+                <div class="small text-muted">Department: {{ line.employee.department.name }}</div>
+            </div>
+            <div class="col-6 text-end">
+                <div class="extra-small text-muted text-uppercase fw-bold mb-2">Payment Details</div>
+                <div class="small text-muted">Bank Name: {{ line.employee.bank_account|default:"N/A" }}</div>
+                <div class="small text-muted">Tax ID: {{ line.employee.tax_id|default:"N/A" }}</div>
+                <div class="small text-muted">Payment Date: {{ run.payment_date|date:"M d, Y"|default:"Pending" }}</div>
+            </div>
+        </div>
+
+        <!-- Earnings & Deductions Table -->
+        <div class="row g-4 mb-5">
+            <!-- Earnings -->
+            <div class="col-6">
+                <div class="premium-card border p-3 bg-light bg-opacity-25">
+                    <div class="extra-small text-muted text-uppercase fw-bold border-bottom pb-2 mb-3">Earnings</div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="small">Base Salary</span>
+                        <span class="small fw-bold">${{ line.gross_salary|intcomma }}</span>
+                    </div>
+                    {% if line.commission_amount > 0 %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="small">Commissions</span>
+                        <span class="small fw-bold text-success">+ ${{ line.commission_amount|intcomma }}</span>
+                    </div>
+                    {% endif %}
+                    {% if line.reimbursements > 0 %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="small">Reimbursements</span>
+                        <span class="small fw-bold text-info">+ ${{ line.reimbursements|intcomma }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="border-top mt-3 pt-2 d-flex justify-content-between">
+                        <span class="small fw-bold">Total Earnings</span>
+                        <span class="small fw-bold text-dark">${{ line.net_salary|add:line.deductions|intcomma }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deductions -->
+            <div class="col-6">
+                <div class="premium-card border p-3 bg-light bg-opacity-25">
+                    <div class="extra-small text-muted text-uppercase fw-bold border-bottom pb-2 mb-3">Deductions</div>
+                    {% if line.tax_withheld > 0 %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="small">Tax Withheld</span>
+                        <span class="small fw-bold text-danger">- ${{ line.tax_withheld|intcomma }}</span>
+                    </div>
+                    {% endif %}
+                    {% if line.pension_contribution > 0 %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="small">Pension Scheme</span>
+                        <span class="small fw-bold text-danger">- ${{ line.pension_contribution|intcomma }}</span>
+                    </div>
+                    {% endif %}
+                    {% if line.deductions > line.tax_withheld|add:line.pension_contribution %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="small">Other Deductions</span>
+                        <span class="small fw-bold text-danger">- ${{ line.deductions|intcomma }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="border-top mt-3 pt-2 d-flex justify-content-between">
+                        <span class="small fw-bold">Total Deductions</span>
+                        <span class="small fw-bold text-dark">${{ line.deductions|intcomma }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Net Pay Summary -->
+        <div
+            class="premium-card p-4 border bg-primary bg-opacity-10 mb-5 d-flex justify-content-between align-items-center">
+            <div>
+                <div class="text-primary fw-bold text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.1em;">
+                    Final Settlement</div>
+                <div class="h2 fw-bold text-primary mt-1 mb-0">NET PAY</div>
+            </div>
+            <div class="text-end">
+                <div class="h1 fw-bold text-primary mb-0">${{ line.net_salary|intcomma }}</div>
+                <div class="extra-small text-muted">Distributed via {{ line.employee.salary_type|title }} Bank Transfer
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-auto pt-5">
+            <div class="row">
+                <div class="col-4 border-top pt-2">
+                    <div class="extra-small text-muted text-center text-uppercase fw-bold">Employer Signature</div>
+                </div>
+                <div class="col-4"></div>
+                <div class="col-4 border-top pt-2">
+                    <div class="extra-small text-muted text-center text-uppercase fw-bold">Employee Signature</div>
+                </div>
+            </div>
+            <div class="mt-5 text-center text-muted border-top pt-3 extra-small">
+                This is a computer-generated document and is valid for official purposes.
+                <br>
+                {{ request.user.tenant.name }} | Tax Compliant & IAS 19 Ready
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+
+        .no-print-section,
+        .navbar,
+        .sidebar,
+        .sidebar-wrapper,
+        .header {
+            display: none !important;
+        }
+
+        body,
+        .hr-wrapper,
+        .hr-content {
+            background-color: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .container {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .premium-card {
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+        }
+
+        #printable-payslip {
+            padding: 0 !important;
+        }
+    }
+
+    .extra-small {
+        font-size: 0.7rem;
+    }
+</style>
+{% endblock %}

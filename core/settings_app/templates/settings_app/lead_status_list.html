@@ -1,0 +1,71 @@
+{% extends "settings_app/base.html" %}
+
+{% block title %}Lead Statuses - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Lead Statuses</h1>
+        <p class="text-white text-center lead">Manage the stages of your lead qualification process</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Status Options</h2>
+        <a href="{% url 'settings_app:lead_status_create' %}" class="btn btn-primary">+ New Status</a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Order</th>
+                            <th>Label</th>
+                            <th>Name (Key)</th>
+                            <th>Color</th>
+                            <th>Flags</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for status in statuses %}
+                        <tr>
+                            <td>{{ status.order }}</td>
+                            <td>{{ status.label }}</td>
+                            <td><code>{{ status.name }}</code></td>
+                            <td>
+                                <span class="badge" style="background-color: {{ status.color }};">{{ status.color
+                                    }}</span>
+                            </td>
+                            <td>
+                                {% if status.is_qualified %}<span class="badge bg-success">Qualified</span>{% endif %}
+                                {% if status.is_closed %}<span class="badge bg-dark">Closed</span>{% endif %}
+                            </td>
+                            <td>
+                                {% if status.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'settings_app:lead_status_update' status.pk %}"
+                                    class="btn btn-sm btn-outline-primary">Edit</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">No statuses defined.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

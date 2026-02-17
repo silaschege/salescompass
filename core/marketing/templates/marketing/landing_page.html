@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ subject }}</title>
+</head>
+<body>
+    <h1>{{ subject }}</h1>
+    <p>{{ content|safe }}</p>
+    
+    <!-- Email open tracking pixel (handled by Marketing module) -->
+    <img src="{{ request.build_absolute_uri }}{% url 'marketing:track_email_open' recipient_id %}" 
+         alt="" width="1" height="1" style="display:none;">
+    
+    <!-- Trackable links (handled by Marketing module) -->
+    <p>
+        <a href="{{ request.build_absolute_uri }}{% url 'marketing:track_link_click' recipient_id %}?url={{ landing_page_url|urlencode }}">Visit our website</a>
+    </p>
+    
+    <!-- Unsubscribe link -->
+    <p>
+        <a href="{{ request.build_absolute_uri }}{% url 'marketing:unsubscribe' recipient_id %}">Unsubscribe</a>
+    </p>
+</body>
+</html>

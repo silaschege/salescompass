@@ -1,0 +1,138 @@
+{% extends "engagement/base.html" %}
+
+{% block title %}Top Engaged Accounts{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h2 class="fw-bold text-primary">Top Engaged Accounts</h2>
+            <p class="text-muted">
+                Showing {{ top_engaged_count }} of {{ total_accounts }} accounts with the highest engagement scores.
+            </p>
+        </div>
+        <div class="col-md-6 text-end">
+            <div class="d-flex gap-2 justify-content-end">
+                <form class="d-inline-flex gap-2" method="get">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">Show Top</span>
+                        <input type="number" name="limit" class="form-control" value="{{ limit }}" style="width: 70px;">
+                        <span class="input-group-text">Accounts</span>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-outline-primary">Update</button>
+                </form>
+                
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown">
+                        <i class="bi bi-download"></i> Export
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                        {% for format in export_formats %}
+                        <li><a class="dropdown-item" href="{% url 'engagement:top_engaged_accounts_export' format=format %}">{{ format|upper }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Account</th>
+                            <th>Last Engaged</th>
+                            <th>Engagement Score</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for status in statuses %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle bg-light-primary text-primary me-3">
+                                        {{ status.account.name|slice:":2"|upper }}
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold">{{ status.account.name }}</h6>
+                                        <small class="text-muted">{{ status.account.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if status.last_engaged_at %}
+                                {{ status.last_engaged_at|date:"M d, Y" }}
+                                <br>
+                                <small class="text-muted">{{ status.last_engaged_at|timesince }} ago</small>
+                                {% else %}
+                                <span class="text-warning">Never</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1 me-2" style="height: 6px; width: 100px;">
+                                        <div class="progress-bar {% if status.engagement_score < 30 %}bg-danger{% elif status.engagement_score < 60 %}bg-warning{% else %}bg-success{% endif %}"
+                                            role="progressbar" style="width: {{ status.engagement_score }}%"></div>
+                                    </div>
+                                    <span class="fw-bold {% if status.engagement_score >= 80 %}text-success{% elif status.engagement_score >= 60 %}text-warning{% else %}text-danger{% endif %}">{{
+                                        status.engagement_score }}</span>
+                                </div>
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="#" class="btn btn-outline-primary">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                    <a href="#" class="btn btn-outline-success">
+                                        <i class="bi bi-plus-circle"></i> Engage
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5">
+                                <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
+                                <p class="mt-3 mb-0 text-muted">No engagement data available</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if is_paginated %}
+            <div class="card-footer bg-white border-top-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ paginator.count }} accounts
+                    </small>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.limit %}&limit={{ request.GET.limit }}{% endif %}">Previous</a>
+                            </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_obj.number }}</span>
+                            </li>
+                            
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.limit %}&limit={{ request.GET.limit }}{% endif %}">Next</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

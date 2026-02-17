@@ -1,0 +1,97 @@
+{% extends "marketing/base.html" %}
+
+{% block title %}Enroll in Drip Campaign - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container text-center text-white">
+        <h1 class="block-title">Enroll in Drip Campaign</h1>
+        <p class="lead mb-0">Start a new automated sequence for a contact</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label for="{{ form.drip_campaign.id_for_label }}"
+                                class="form-label fw-bold text-primary">Drip Campaign *</label>
+                            {{ form.drip_campaign }}
+                            {% if form.drip_campaign.errors %}
+                            <div class="text-danger mt-1">{{ form.drip_campaign.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.account.id_for_label }}" class="form-label fw-bold text-primary">Account
+                                *</label>
+                            {{ form.account }}
+                            {% if form.account.errors %}
+                            <div class="text-danger mt-1">{{ form.account.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.email.id_for_label }}" class="form-label fw-bold text-primary">Email
+                                Address *</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                            <div class="text-danger mt-1">{{ form.email.errors }}</div>
+                            {% endif %}
+                            <div class="form-text text-muted small">Automated emails will be sent to this address.</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <a href="{% url 'marketing:drip_campaign_list' %}" class="btn btn-light">Cancel</a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-user-plus me-1"></i> Enroll Now
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 text-primary">Enrollment Logic</h5>
+                </div>
+                <div class="card-body">
+                    <h6>What Happens Next?</h6>
+                    <ol class="small text-muted ps-3">
+                        <li>Enrollment starts immediately.</li>
+                        <li>Initial "Wait" steps (if any) are processed.</li>
+                        <li>Emails are sent using the selected templates.</li>
+                        <li>Progress can be tracked in the campaign detail view.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .form-control,
+    select {
+        border: 1px solid #e3e6f3;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus,
+    select:focus {
+        border-color: #198754;
+        box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+    }
+</style>
+{% endblock %}

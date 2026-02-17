@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Module Dependencies{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>Module Dependencies</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:cockpit' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'infrastructure:infrastructure_dashboard' %}">Infrastructure</a></li>
+                    <li class="breadcrumb-item active">Module Dependencies</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <a href="{% url 'infrastructure:infrastructure_dashboard' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+                <div>
+                    <a href="{% url 'infrastructure:module_dependency_create' %}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Create Dependency
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" name="search" placeholder="Search dependencies..." value="{{ search_query }}">
+                        </div>
+                        <div class="col-md-4">
+                            <select name="dependency_type" class="form-select">
+                                <option value="">All Types</option>
+                                {% for value, label in dependency_types %}
+                                <option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select name="is_active" class="form-select">
+                                <option value="">All Statuses</option>
+                                <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active</option>
+                                <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                            <a href="{% url 'infrastructure:module_dependency_list' %}" class="btn btn-secondary">Clear</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Module Dependencies</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Dependent Module</th>
+                                    <th>Required Module</th>
+                                    <th>Dependency Type</th>
+                                    <th>Min Version</th>
+                                    <th>Max Version</th>
+                                    <th>Status</th>
+                                    <th>Created By</th>
+                                    <th>Created At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dependency in dependencies %}
+                                <tr>
+                                    <td>{{ dependency.dependent_module.name }}</td>
+                                    <td>{{ dependency.required_module.name }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if dependency.dependency_type == 'requires' %}bg-primary
+                                            {% elif dependency.dependency_type == 'conflicts_with' %}bg-danger
+                                            {% elif dependency.dependency_type == 'optional' %}bg-secondary
+                                            {% elif dependency.dependency_type == 'recommended' %}bg-info
+                                            {% endif %}">
+                                            {{ dependency.dependency_type|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ dependency.min_version|default:"-" }}</td>
+                                    <td>{{ dependency.max_version|default:"-" }}</td>
+                                    <td>
+                                        <span class="badge {% if dependency.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                            {% if dependency.is_active %}Active{% else %}Inactive{% endif %}
+                                        </span>
+                                    </td>
+                                    <td>{{ dependency.created_by.email|default:"System" }}</td>
+                                    <td>{{ dependency.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'infrastructure:module_dependency_update' dependency.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        <a href="{% url 'infrastructure:module_dependency_delete' dependency.id %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="9">No module dependencies found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if is_paginated %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_type %}&dependency_type={{ selected_type }}{% endif %}{% if selected_status %}&is_active={{ selected_status }}{% endif %}">First</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_type %}&dependency_type={{ selected_type }}{% endif %}{% if selected_status %}&is_active={{ selected_status }}{% endif %}">Previous</a>
+                                </li>
+                            {% endif %}
+
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_type %}&dependency_type={{ selected_type }}{% endif %}{% if selected_status %}&is_active={{ selected_status }}{% endif %}">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_type %}&dependency_type={{ selected_type }}{% endif %}{% if selected_status %}&is_active={{ selected_status }}{% endif %}">Last</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Dependency Visualization</h5>
+                </div>
+                <div class="card-body">
+                    <div id="dependency-graph" style="height: 400px; border: 1px solid #ddd;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<script>
+// Create dependency graph visualization
+document.addEventListener('DOMContentLoaded', function() {
+    // Sample data for visualization - in a real implementation, this would come from the backend
+    var nodes = new vis.DataSet([
+        {% for module in modules %}
+        {id: {{ module.id }}, label: "{{ module.name }}"},
+        {% endfor %}
+    ]);
+
+    var edges = new vis.DataSet([
+        {% for dependency in dependencies %}
+        {from: {{ dependency.dependent_module.id }}, to: {{ dependency.required_module.id }}, label: "{{ dependency.dependency_type }}"},
+        {% endfor %}
+    ]);
+
+    var container = document.getElementById('dependency-graph');
+    var data = {
+        nodes: nodes,
+        edges: edges
+    };
+    var options = {
+        physics: {
+            enabled: true,
+            stabilization: {iterations: 100}
+        },
+        edges: {
+            arrows: {to: {enabled: true}},
+            smooth: {enabled: true}
+        },
+        nodes: {
+            shape: 'box',
+            font: {
+                face: 'Arial',
+                size: 12
+            }
+        }
+    };
+
+    var network = new vis.Network(container, data, options);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'settings_app/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{% if object.pk %}Edit{% else %}Create{% endif %} Demographic Scoring Rule</h1>
+        <a href="{% url 'settings_app:scoring_rules_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="form-group">
+                            <label for="{{ form.name.id_for_label }}">Rule Name *</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="text-danger">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.field_name.id_for_label }}">Field Name *</label>
+                            {{ form.field_name }}
+                            {% if form.field_name.errors %}
+                            <div class="text-danger">{{ form.field_name.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Field to evaluate (e.g., job_title, industry,
+                                company_size).</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.operator.id_for_label }}">Operator *</label>
+                            {{ form.operator }}
+                            {% if form.operator.errors %}
+                            <div class="text-danger">{{ form.operator.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.field_value.id_for_label }}">Value *</label>
+                            {{ form.field_value }}
+                            {% if form.field_value.errors %}
+                            <div class="text-danger">{{ form.field_value.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Value to match against. For "In List", use
+                                comma-separated values.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.points.id_for_label }}">Points *</label>
+                            {{ form.points }}
+                            {% if form.points.errors %}
+                            <div class="text-danger">{{ form.points.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Points to award if condition matches.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.priority.id_for_label }}">Priority</label>
+                            {{ form.priority }}
+                            {% if form.priority.errors %}
+                            <div class="text-danger">{{ form.priority.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Higher priority rules are evaluated first.</small>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            {{ form.is_active }}
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                Active
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Rule
+                            </button>
+                            <a href="{% url 'settings_app:scoring_rules_list' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

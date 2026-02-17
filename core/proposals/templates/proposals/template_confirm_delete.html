@@ -1,0 +1,29 @@
+{% extends "proposals/base.html" %}
+
+{% block title %}Delete Template - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Delete Template</h3>
+                </div>
+                <div class="card-body">
+                    <p>Are you sure you want to delete the template <strong>"{{ object.email_template_name }}"</strong>?</p>
+                    <p class="text-danger">This action cannot be undone.</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'proposals:template_list' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

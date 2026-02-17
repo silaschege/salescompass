@@ -1,0 +1,283 @@
+{% extends 'settings_app/base.html' %}
+{% load static %}
+
+{% block title %}Module Labels - Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .page-header h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .page-header .subtitle {
+        color: #6b7280;
+        font-size: 14px;
+        margin-top: 4px;
+    }
+
+    .btn-primary {
+        background: #3b82f6;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background: #2563eb;
+        color: white;
+    }
+
+    .info-box {
+        background: #eff6ff;
+        border-left: 4px solid #3b82f6;
+        padding: 16px 20px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+    }
+
+    .info-box p {
+        margin: 0;
+        color: #1e40af;
+        font-size: 14px;
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .table {
+        width: 100%;
+        margin: 0;
+    }
+
+    .table thead {
+        background: #f9fafb;
+    }
+
+    .table th {
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 12px;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .table td {
+        padding: 16px;
+        border-bottom: 1px solid #e5e7eb;
+        vertical-align: middle;
+    }
+
+    .table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    .table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .module-name {
+        font-weight: 600;
+        color: #111827;
+        font-size: 14px;
+    }
+
+    .default-label {
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    .custom-label {
+        color: #059669;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .label-arrow {
+        color: #9ca3af;
+        margin: 0 8px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 13px;
+        border-radius: 4px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.2s;
+        border: 1px solid;
+    }
+
+    .btn-edit {
+        background: white;
+        color: #3b82f6;
+        border-color: #3b82f6;
+    }
+
+    .btn-edit:hover {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6b7280;
+    }
+
+    .empty-state svg {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 20px;
+        opacity: 0.3;
+    }
+
+    .empty-state h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #111827;
+        margin: 0 0 8px 0;
+    }
+
+    .empty-state p {
+        font-size: 14px;
+        margin: 0 0 20px 0;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 500;
+        text-transform: uppercase;
+        background: #dbeafe;
+        color: #1e40af;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1>Module Labels</h1>
+            <p class="subtitle">Customize module names to match your business terminology</p>
+        </div>
+        <a href="{% url 'settings_app:module_label_create' %}" class="btn-primary">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path
+                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+            </svg>
+            Customize Module
+        </a>
+    </div>
+
+    <!-- Info Box -->
+    <div class="info-box">
+        <p>
+            <strong>White-label Your CRM:</strong> Customize module names to use terminology that fits your business.
+            For example, change "Leads" to "Prospects" or "Opportunities" to "Deals".
+        </p>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+        {% if module_labels %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Module</th>
+                    <th>Default Label</th>
+                    <th>Custom Label</th>
+                    <th>Plural Form</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for label in module_labels %}
+                <tr>
+                    <td>
+                        <span class="module-name">{{ label.get_module_key_display }}</span>
+                        <span class="badge">{{ label.module_key }}</span>
+                    </td>
+                    <td>
+                        <span class="default-label">{{ label.get_module_key_display }}</span>
+                    </td>
+                    <td>
+                        <span class="label-arrow">→</span>
+                        <span class="custom-label">{{ label.custom_label }}</span>
+                    </td>
+                    <td>
+                        <span class="custom-label">{{ label.custom_label_plural|default:"—" }}</span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{% url 'settings_app:module_label_update' label.pk %}" class="btn-sm btn-edit">
+                                <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                    <path
+                                        d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+                                    <path fill-rule="evenodd"
+                                        d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z" />
+                                </svg>
+                                Edit
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <svg fill="currentColor" viewBox="0 0 16 16">
+                <path
+                    d="M4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H4zm0 1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z" />
+                <path d="M6 5h4v1H6V5zm0 2h4v1H6V7zm0 2h4v1H6V9z" />
+            </svg>
+            <h3>No Custom Module Labels</h3>
+            <p>Start white-labeling your CRM by customizing module names</p>
+            <a href="{% url 'settings_app:module_label_create' %}" class="btn-primary">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+                </svg>
+                Customize First Module
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

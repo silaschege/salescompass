@@ -1,0 +1,58 @@
+{% extends 'core/base_module.html' %}
+
+{% block module_nav %}
+<!-- General Section -->
+<div class="section-title">GENERAL</div>
+<a class="nav-link {% if request.resolver_match.url_name == 'app_selection' %}active{% endif %}"
+    href="{% url 'core:app_selection' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-grid nav-icon"></i>
+        <span>All Apps</span>
+    </div>
+</a>
+
+<!-- Access Control Section -->
+<div class="section-title mt-4">ACCESS CONTROL</div>
+<a class="nav-link {% if request.resolver_match.view_name == 'access_control:dashboard' %}active{% endif %}"
+    href="{% url 'access_control:dashboard' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-speedometer2 nav-icon"></i>
+        <span>Access Dashboard</span>
+    </div>
+</a>
+<a class="nav-link {% if request.resolver_match.view_name == 'access_control:manage_access' %}active{% endif %}"
+    href="{% url 'access_control:manage_access' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-shield-lock nav-icon"></i>
+        <span>Manage Access</span>
+    </div>
+</a>
+<a class="nav-link {% if request.resolver_match.view_name == 'access_control:tenant_list' %}active{% endif %}"
+    href="{% url 'access_control:tenant_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-building nav-icon"></i>
+        <span>Tenant Access List</span>
+    </div>
+</a>
+<a class="nav-link {% if request.resolver_match.view_name == 'access_control:user_list' %}active{% endif %}"
+    href="{% url 'access_control:user_list' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-people nav-icon"></i>
+        <span>User Access List</span>
+    </div>
+</a>
+<a class="nav-link {% if request.resolver_match.view_name == 'access_control:create_access' %}active{% endif %}"
+    href="{% url 'access_control:create_access' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-plus-circle nav-icon"></i>
+        <span>New Definition</span>
+    </div>
+</a>
+<a class="nav-link {% if request.resolver_match.view_name == 'access_control:assign_tenant_access' %}active{% endif %}"
+    href="{% url 'access_control:assign_tenant_access' %}">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-person-check nav-icon"></i>
+        <span>Assign Tenant Access</span>
+    </div>
+</a>
+{% endblock %}

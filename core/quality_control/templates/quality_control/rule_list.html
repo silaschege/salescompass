@@ -1,0 +1,38 @@
+{% extends "quality_control/base.html" %}
+
+{% block page_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">Inspection Rules & Checklists</h6>
+        <a href="{% url 'quality_control:rule_create' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus"></i> New Rule
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for rule in rules %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-left-info shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="h6 font-weight-bold text-info mb-0">{{ rule.name }}</div>
+                            <a href="{% url 'quality_control:rule_update' rule.pk %}"
+                                class="btn btn-sm btn-outline-secondary py-0">
+                                <i class="bi bi-pencil small"></i>
+                            </a>
+                        </div>
+                        <ul class="list-unstyled small">
+                            {% for item in rule.check_list %}
+                            <li><i class="bi bi-check-circle mr-1 text-success"></i> {{ item.label|default:item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-4">No inspection rules defined.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "engagement/base.html" %}
+
+{% block title %}Engagement Leaderboard - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Engagement Leaderboard</h1>
+        <p class="text-white text-center lead">Top performers driving customer engagement ({{ period }})</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0 text-primary">Top Engagers</h4>
+                        <span class="badge bg-light text-dark border">
+                            <i class="bi bi-calendar-event me-1"></i> {{ period }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if leaderboard %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-center" style="width: 80px;">Rank</th>
+                                    <th>Team Member</th>
+                                    <th class="text-center">Events Logged</th>
+                                    <th class="text-end pe-4">Total Score Generated</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in leaderboard %}
+                                <tr class="{% if forloop.counter <= 3 %}bg-light-yellow{% endif %}">
+                                    <td class="text-center">
+                                        {% if forloop.counter == 1 %}
+                                        <span class="h3 mb-0">🥇</span>
+                                        {% elif forloop.counter == 2 %}
+                                        <span class="h3 mb-0">🥈</span>
+                                        {% elif forloop.counter == 3 %}
+                                        <span class="h3 mb-0">🥉</span>
+                                        {% else %}
+                                        <span class="fw-bold text-muted">#{{ forloop.counter }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle me-3 bg-primary text-white d-flex align-items-center justify-content-center rounded-circle"
+                                                style="width: 40px; height: 40px;">
+                                                {{
+                                                user.created_by__first_name|first|default:user.created_by__email|first|upper
+                                                }}
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0">
+                                                    {{ user.created_by__first_name }} {{ user.created_by__last_name }}
+                                                </h6>
+                                                <small class="text-muted">{{ user.created_by__email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary rounded-pill">{{ user.event_count }}</span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <span class="h5 mb-0 fw-bold text-success">{{ user.total_score|floatformat:0
+                                            }}</span>
+                                        <small class="text-muted d-block">points</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center p-5">
+                        <i class="bi bi-trophy display-4 text-muted mb-3 opacity-50"></i>
+                        <h5>No engagement data yet</h5>
+                        <p class="text-muted">Start engaging with accounts to appear on the leaderboard!</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="display-4 mb-2">🚀</div>
+                            <h5>High Impact</h5>
+                            <p class="text-muted small">Focus on high-value activities like Demonstrations and Proposals
+                                to score more points.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="display-4 mb-2">🔄</div>
+                            <h5>Consistency</h5>
+                            <p class="text-muted small">Regular check-ins prevent score decay and keep accounts healthy.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="display-4 mb-2">🎯</div>
+                            <h5>Relevance</h5>
+                            <p class="text-muted small">Complete Next Best Actions to ensure you're doing the right
+                                thing at the right time.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-light-yellow {
+        background-color: #fffdf0;
+    }
+</style>
+{% endblock %}

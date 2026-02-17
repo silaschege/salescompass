@@ -1,0 +1,35 @@
+{% extends "feature_flags/base.html" %}
+
+{% block title %}Adoption Rates{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Adoption Rates</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Flag</th>
+                        <th>Status</th>
+                        <th>Rollout</th>
+                        <th>Estimated Reach</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in adoption_data %}
+                    <tr>
+                        <td>{{ data.flag.name }}</td>
+                        <td>{% if data.flag.is_active %}<span class="badge bg-success">Active</span>{% else %}<span
+                                class="badge bg-secondary">Disabled</span>{% endif %}</td>
+                        <td>{{ data.metrics.rollout_percentage }}%</td>
+                        <td>{{ data.metrics.estimated_reach }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

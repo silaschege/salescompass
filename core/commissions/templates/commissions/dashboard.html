@@ -1,0 +1,207 @@
+{% extends "commissions/base.html" %}
+{% load filters_extras %}
+
+{% block title %}Commissions Dashboard | SalesCompass{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Commissions Dashboard</h1>
+        <div class="text-muted">
+            Period: {{ period_start|date:"M d, Y" }} - {{ period_end|date:"M d, Y" }}
+        </div>
+    </div>
+
+    <!-- Performance Cards -->
+    <div class="row mb-4">
+        <!-- Quota Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Quota Target</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ performance.quota|floatformat:2 }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-bullseye fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Sales Closed</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ performance.sales|floatformat:2 }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-currency-dollar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attainment Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Attainment
+                                <span
+                                    class="badge badge-pill badge-{% if pace.status == 'ahead' %}success{% else %}warning{% endif %} ml-2"
+                                    title="{% if pace.status == 'ahead' %}Ahead of schedule{% else %}Behind schedule{% endif %}"
+                                    data-toggle="tooltip">
+                                    {{ pace.diff|floatformat:0 }}% {{ pace.status }}
+                                </span>
+                            </div>
+                            <div class="row no-gutters align-items-center">
+                                <div class="col-auto">
+                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">{{performance.attainment|floatformat:1 }}%</div>
+                                </div>
+                                <div class="col">
+                                    <div class="progress progress-sm mr-2">
+                                        <div class="progress-bar bg-info" role="progressbar"
+                                            style="width: {{ performance.attainment }}%"
+                                            aria-valuenow="{{ performance.attainment }}" aria-valuemin="0"
+                                            aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-clipboard-data fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Commissions Earned Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Commissions Earned</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ performance.commissions_earned|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-cash-coin fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forecast Section -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card shadow h-100 py-2 border-left-primary">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="font-weight-bold text-primary mb-1">Commission Forecast (Open Pipeline)</h5>
+                            <div class="text-muted small">Based on {{ forecast.opportunity_count }} open opportunities
+                                closing this period</div>
+                        </div>
+                        <div class="col-auto text-right">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Projected</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ forecast.forecast_amount|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto text-right ml-4">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Weighted</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{forecast.weighted_forecast_amount|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Earnings Trend (Last 12 Mos)</h6>
+                </div>
+                <div class="card-body">
+                    {% if trend %}
+                    <div class="chart-bar"
+                        style="height: 120px; display: flex; align-items: flex-end; justify-content: space-between;">
+                        {% for month in trend %}
+                        <div style="flex: 1; margin: 0 2px; background-color: #4e73df; height: {{ month.amount|floatformat:0 }}px; max-height: 100%; min-height: 1px;"
+                            title="{{ month.month }}: ${{ month.amount|floatformat:2 }}" data-toggle="tooltip">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center small mt-2 text-muted">
+                        {{ trend.0.month }} - {{ trend|last|dictsort:"sort_date"|last|get_item:"month" }}
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted my-4">No historical data available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Commissions Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Recent Commissions</h6>
+            <div>
+                <a href="{% url 'commissions:payments' %}" class="btn btn-sm btn-info mr-2">View Payments</a>
+                <a href="{% url 'commissions:history' %}" class="btn btn-sm btn-primary">View All History</a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Opportunity</th>
+                            <th>Amount</th>
+                            <th>Rate</th>
+                            <th>Commission</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for comm in recent_commissions %}
+                        <tr>
+                            <td>{{ comm.date_earned|date:"M d, Y" }}</td>
+                            <td>{{ comm.opportunity.name }}</td>
+                            <td>${{ comm.opportunity.amount|floatformat:2 }}</td>
+                            <td>{{ comm.rate_applied }}%</td>
+                            <td class="font-weight-bold text-success">${{ comm.amount|floatformat:2 }}</td>
+                            <td>
+                                <span
+                                    class="badge bg-{% if comm.status == 'paid' %}success{% elif comm.status == 'approved' %}info{% else %}warning{% endif %}">
+                                    {{ comm.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">No commissions earned yet this period.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

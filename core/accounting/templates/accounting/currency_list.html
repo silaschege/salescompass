@@ -1,0 +1,52 @@
+{% extends "accounting/base.html" %}
+
+{% block accounting_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">Currencies</h1>
+    <a href="{% url 'accounting:currency_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Add Currency
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="bg-light">
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Symbol</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for currency in currencies %}
+                <tr>
+                    <td><strong>{{ currency.code }}</strong></td>
+                    <td>{{ currency.name }}</td>
+                    <td>{{ currency.symbol }}</td>
+                    <td>
+                        {% if currency.is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'accounting:currency_update' currency.pk %}"
+                            class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-5">No currencies found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

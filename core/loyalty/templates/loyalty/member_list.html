@@ -1,0 +1,102 @@
+{% extends "loyalty/base.html" %}
+{% load humanize %}
+
+{% block loyalty_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h3 fw-bold mb-0">Loyalty Members</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item small"><a href="{% url 'loyalty:dashboard' %}"
+                            class="text-decoration-none text-muted">Hub</a></li>
+                    <li class="breadcrumb-item active small text-primary fw-bold">Members</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-light px-4 border shadow-sm">
+                <i class="bi bi-download me-2"></i> Export
+            </button>
+        </div>
+    </div>
+
+    <div class="premium-card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light bg-opacity-50">
+                    <tr>
+                        <th class="ps-4 py-3 text-muted small text-uppercase fw-bold">Customer</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold">Current Tier</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold text-center">Points Balance</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold">Member Since</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold">Last Active</th>
+                        <th class="pe-4 py-3 text-muted small text-uppercase fw-bold text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in members %}
+                    <tr>
+                        <td class="ps-4 py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3"
+                                    style="width: 38px; height: 38px;">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                <div>
+                                    <a href="{% url 'loyalty:member_detail' member.pk %}"
+                                        class="fw-bold text-primary text-decoration-none">
+                                        {{ member.customer.account_name }}
+                                    </a>
+                                    <div class="text-muted extra-small">{{ member.customer.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3">
+                            <span
+                                class="badge {% if member.current_tier == 'gold' or member.current_tier == 'platinum' %}badge-soft-warning{% elif member.current_tier == 'silver' %}badge-soft-primary{% else %}badge-soft-success{% endif %} px-3 rounded-pill text-uppercase">
+                                {{ member.get_current_tier_display }}
+                            </span>
+                        </td>
+                        <td class="py-3 text-center fw-bold h5 mb-0 text-dark">
+                            {{ member.points_balance|intcomma }}
+                        </td>
+                        <td class="py-3 text-muted small">{{ member.joined_date|date:"M d, Y" }}</td>
+                        <td class="py-3">
+                            <div class="small">{{ member.last_activity_date|timesince }} ago</div>
+                        </td>
+                        <td class="pe-4 py-3 text-end">
+                            <a href="{% url 'loyalty:member_detail' member.pk %}"
+                                class="btn btn-sm btn-light border shadow-none">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="py-4">
+                                <i class="bi bi-people text-muted mb-3 d-block" style="font-size: 3rem;"></i>
+                                <h5 class="text-muted fw-normal">No members registered yet</h5>
+                                <p class="text-muted small">Points are automatically awarded when customers make
+                                    purchases.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if is_paginated %}
+        <div class="card-footer bg-white border-top-0 py-4 px-4">
+            {% include "shared/_pagination.html" %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+<style>
+    .extra-small {
+        font-size: 0.75rem;
+    }
+</style>
+{% endblock %}

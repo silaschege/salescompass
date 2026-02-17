@@ -1,0 +1,213 @@
+{% extends "cases/base.html" %}
+{% load  auth_extras math %}
+{% block title %}SLA Dashboard - SalesCompass{% endblock %}
+
+{% block content %}
+        <h1 class="block-title fw-bold mb-0">SLA Breach Alert Dashboard</h1>
+        <p class="text-muted small text-center">Monitor and manage service level agreement compliance</p>
+
+<div class="container">
+    <!-- KPI Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-danger">
+                <div class="card-body text-center">
+                    <h6>Overdue Cases</h6>
+                    <h3>{{ total_overdue }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body text-center">
+                    <h6>Breach Rate</h6>
+                    <h3>{{ breach_rate }}%</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body text-center">
+                    <h6>Total Active Cases</h6>
+                    <h3>{{ overdue_cases|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                    <h6>Compliance</h6>
+                    <h3>{{ 100|sub:breach_rate }}%</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overdue Cases List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Overdue Cases ({{ overdue_cases|length }})</h5>
+                    <span class="badge bg-danger">{{ total_overdue }} Overdue</span>
+                </div>
+                <div class="card-body">
+                    {% if overdue_cases %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>Account</th>
+                                    <th>Priority</th>
+                                    <th>Owner</th>
+                                    <th>SLA Due</th>
+                                    <th>Overdue By</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for case in overdue_cases %}
+                                <tr class="table-danger">
+                                    <td>
+                                        <a href="{% url 'cases:detail' case.pk %}">
+                                            {{ case.subject|truncatechars:30 }}
+                                        </a>
+                                    </td>
+                                    <td>{{ case.account.name|truncatechars:20 }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if case.priority == 'critical' %}danger{% elif case.priority == 'high' %}warning{% elif case.priority == 'medium' %}info{% else %}secondary{% endif %}">
+                                            {{ case.get_priority_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ case.owner.email|default:"Unassigned" }}</td>
+                                    <td>{{ case.sla_due|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        {% now "U" as now_ts %}
+                                        {% with case.sla_due|date:"U" as due_ts %}
+                                            {{ now_ts|add:0|add:due_ts|abs|div_int:3600|floatformat:0 }}h
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'cases:detail' case.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                        <button class="btn btn-sm btn-outline-warning" onclick="escalateCase({{ case.id }})">
+                                            Escalate
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-success">
+                        <strong>Great job!</strong> No overdue cases currently. All SLAs are being met.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLA Policy Information -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>SLA Policy Guidelines</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded text-center">
+                                <span class="badge bg-danger mb-2">Critical</span>
+                                <p class="mb-1"><strong>4 hours</strong></p>
+                                <small>System outages, security issues</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded text-center">
+                                <span class="badge bg-warning text-dark mb-2">High</span>
+                                <p class="mb-1"><strong>24 hours</strong></p>
+                                <small>Major functionality issues</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded text-center">
+                                <span class="badge bg-info text-dark mb-2">Medium</span>
+                                <p class="mb-1"><strong>72 hours</strong></p>
+                                <small>Minor issues, general questions</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded text-center">
+                                <span class="badge bg-secondary mb-2">Low</span>
+                                <p class="mb-1"><strong>168 hours</strong></p>
+                                <small>Enhancement requests, feedback</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+<script>
+function escalateCase(caseId) {
+    if (confirm('Escalate this case to Level 1? This will notify management.')) {
+        fetch('/cases/api/escalate/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ case_id: caseId, level: 'level_1' })
+        }).then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Failed to escalate case');
+            }
+        }).catch(error => {
+            alert('Error: ' + error);
+        });
+    }
+}
+
+// Auto-refresh every 60 seconds
+setTimeout(() => {
+    location.reload();
+}, 60000);
+</script>
+
+{% block extra_head %}
+<style>
+.card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.table-danger {
+    background-color: #f8d7da !important;
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.3em 0.6em;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.alert {
+    border-radius: 0.5rem;
+}
+</style>
+{% endblock %}

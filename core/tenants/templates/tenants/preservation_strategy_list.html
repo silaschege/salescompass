@@ -1,0 +1,88 @@
+{% extends 'tenants/base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="fw-bold"><i class="bi bi-shield-lock me-2 text-success"></i>Preservation Strategies</h2>
+            <p class="text-muted">Define how tenant data should be preserved and retained.</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'tenants:preservation_strategy_create' %}"
+                class="btn btn-success shadow-sm rounded-pill px-4">
+                <i class="bi bi-plus-lg me-2"></i>New Strategy
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        {% if strategies %}
+        {% for strategy in strategies %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm glass-card hover-up">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="bg-success-soft rounded p-3 text-success">
+                            <i class="bi bi-database-check fs-4"></i>
+                        </div>
+                        {% if strategy.is_default %}
+                        <span class="badge bg-success border-0 px-3 py-2 rounded-pill">Default</span>
+                        {% endif %}
+                    </div>
+                    <h5 class="fw-bold mb-2">{{ strategy.name }}</h5>
+                    <p class="text-muted small mb-4 line-clamp-2">{{ strategy.description }}</p>
+
+                    <div class="list-group list-group-flush border-0 mb-4">
+                        <div class="list-group-item bg-transparent px-0 border-0 d-flex justify-content-between">
+                            <span class="text-muted small uppercase fw-bold">Retention</span>
+                            <span class="fw-medium text-dark">{{ strategy.retention_days }} Days</span>
+                        </div>
+                        <div class="list-group-item bg-transparent px-0 border-0 d-flex justify-content-between">
+                            <span class="text-muted small uppercase fw-bold">Type</span>
+                            <span class="fw-medium text-dark">{{ strategy.get_preservation_type_display }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 p-4 pt-0">
+                    <div class="d-grid">
+                        <a href="#" class="btn btn-light rounded-pill border-0 shadow-none">Manage Strategy</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="col-12">
+            <div class="card border-0 shadow-sm glass-card text-center py-5">
+                <div class="display-4 text-muted mb-3"><i class="bi bi-shield-slash"></i></div>
+                <h5>No preservation strategies defined</h5>
+                <p class="text-muted">Create a strategy to start managing data retention.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .bg-success-soft {
+        background-color: rgba(25, 135, 84, 0.1);
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .hover-up:hover {
+        transform: translateY(-5px);
+        transition: all 0.3s ease;
+    }
+
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}

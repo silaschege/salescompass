@@ -1,0 +1,70 @@
+{% extends "infrastructure/base.html" %}
+
+{% block title %}Update Resource Limits - Infrastructure{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Update Resource Limits</h1>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Tenant {{ object.tenant_id }}</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="id_is_throttled" name="is_throttled" {{
+                        form.is_throttled.value|yesno:"checked," }}>
+                    <label class="form-check-label" for="id_is_throttled">Throttled</label>
+                    {% if form.is_throttled.errors %}
+                    <div class="text-danger">{{ form.is_throttled.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_throttle_reason" class="form-label">Throttle Reason</label>
+                    <textarea class="form-control" id="id_throttle_reason" name="throttle_reason"
+                        rows="3">{{ form.throttle_reason.value|default:'' }}</textarea>
+                    {% if form.throttle_reason.errors %}
+                    <div class="text-danger">{{ form.throttle_reason.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="id_custom_api_limit" class="form-label">Custom API Limit</label>
+                        <input type="number" class="form-control" id="id_custom_api_limit" name="custom_api_limit"
+                            value="{{ form.custom_api_limit.value|default:'' }}">
+                        {% if form.custom_api_limit.errors %}
+                        <div class="text-danger">{{ form.custom_api_limit.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="id_custom_storage_limit_gb" class="form-label">Custom Storage Limit (GB)</label>
+                        <input type="number" step="0.01" class="form-control" id="id_custom_storage_limit_gb"
+                            name="custom_storage_limit_gb" value="{{ form.custom_storage_limit_gb.value|default:'' }}">
+                        {% if form.custom_storage_limit_gb.errors %}
+                        <div class="text-danger">{{ form.custom_storage_limit_gb.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="id_custom_db_connections" class="form-label">Custom DB Connections</label>
+                        <input type="number" class="form-control" id="id_custom_db_connections"
+                            name="custom_db_connections" value="{{ form.custom_db_connections.value|default:'' }}">
+                        {% if form.custom_db_connections.errors %}
+                        <div class="text-danger">{{ form.custom_db_connections.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <a href="{% url 'infrastructure:throttled_tenants' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

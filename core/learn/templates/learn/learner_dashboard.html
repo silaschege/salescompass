@@ -1,0 +1,89 @@
+{% extends "learn/base.html" %}
+
+{% block title %}My Learning Dashboard - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container py-5">
+        <h1 class="display-4">My Learning</h1>
+        <p class="lead">Track your progress and continue your learning journey</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center border-0 shadow-sm">
+                <div class="card-body">
+                    <h2 class="display-6 fw-bold text-primary">{{ total_started_courses }}</h2>
+                    <p class="text-muted mb-0">Courses Started</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-0 shadow-sm">
+                <div class="card-body">
+                    <h2 class="display-6 fw-bold text-success">{{ total_completed_lessons }}</h2>
+                    <p class="text-muted mb-0">Lessons Completed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 text-end d-flex align-items-center justify-content-end">
+            <a href="{% url 'learn:course_list' %}" class="btn btn-primary btn-lg">Browse All Courses</a>
+        </div>
+    </div>
+
+    <h3 class="mb-4">Continue Learning</h3>
+    <div class="row">
+        {% for data in enrolled_courses_data %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-info text-dark">{{ data.course.category.category_name }}</span>
+                        <small class="text-muted">Last active: Recently</small>
+                    </div>
+                    <h5 class="card-title">{{ data.course.title }}</h5>
+                    <div class="progress mb-2" style="height: 8px;">
+                        <div class="progress-bar" role="progressbar" style="width: {{ data.progress_percent }}%;"
+                            aria-valuenow="{{ data.progress_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>{{ data.progress_percent|floatformat:0 }}% Complete</span>
+                        <span>{{ data.completed_lessons }}/{{ data.total_lessons }} Lessons</span>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top-0">
+                    <a href="{% url 'learn:course_detail' data.course.slug %}"
+                        class="btn btn-outline-primary w-100">Continue Course</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="mb-4">
+                <i class="fas fa-graduation-cap fa-5x text-muted opacity-25"></i>
+            </div>
+            <h3>You haven't started any courses yet.</h3>
+            <p class="text-muted">Explore our catalog and find a course that interests you.</p>
+            <a href="{% url 'learn:course_list' %}" class="btn btn-primary">Browse Course Catalog</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .header-bar {
+        background: linear-gradient(135deg, #6f42c1 0%, #007bff 100%);
+        color: white;
+    }
+
+    .card {
+        transition: transform 0.2s;
+    }
+
+    .card:hover {
+        transform: translateY(-3px);
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,167 @@
+{% extends "marketing/base.html" %}
+
+{% block title %}Email Template Editor - {{ object.name }} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container text-center text-white">
+        <h1 class="block-title">Email Template Editor</h1>
+        <p class="lead mb-0">Design engaging and personalized emails for your campaigns</p>
+    </div>
+</div>
+
+<div class="container">
+    <form method="post">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body p-4">
+                        <!-- Subject -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-primary">Email Subject Line</label>
+                            {{ form.subject }}
+                        </div>
+
+                        <!-- HTML Editor -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-primary">Visual Editor</label>
+                            <textarea name="html_content" id="id_html_content"
+                                class="form-control">{{ object.html_content }}</textarea>
+                        </div>
+
+                        <!-- Plain Text -->
+                        <div class="mb-0">
+                            <label class="form-label fw-bold text-primary">Plain Text Alternative <small
+                                    class="text-muted fw-normal">(for older email clients)</small></label>
+                            {{ form.plain_text_content }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mb-5">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Save Changes
+                    </button>
+                    <a href="{% url 'marketing:template_list' %}" class="btn btn-light">Cancel</a>
+                    <button type="button" class="btn btn-outline-info ms-auto" id="preview-email">
+                        <i class="fas fa-eye me-1"></i> Full Preview
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Personalization Section -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0 text-primary">Personalization</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="small text-muted mb-3">Click a tag to insert it into the editor at your cursor
+                            position:</p>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for tag in merge_tags %}
+                            <button type="button" class="btn btn-sm btn-outline-primary insert-tag"
+                                data-tag="{{ tag }}">
+                                <i class="fas fa-plus small me-1"></i> {{ tag }}
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guidance Section -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0 text-primary">Design Tips</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="small text-muted ps-3 mb-0">
+                            <li class="mb-2"><strong>Personalization:</strong> Use tags to increase engagement rates.
+                            </li>
+                            <li class="mb-2"><strong>Responsiveness:</strong> Keep your layout simple for mobile
+                                devices.</li>
+                            <li class="mb-2"><strong>CTA:</strong> Use clear, high-contrast buttons for your primary
+                                action.</li>
+                            <li><strong>Spam:</strong> Avoid excessive capitalization or "spammy" keywords in subjects.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Email Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Email Preview</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body bg-light" id="previewContent">
+                <!-- Preview will be injected here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TinyMCE -->
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+    tinymce.init({
+        selector: '#id_html_content',
+        height: 500,
+        menubar: false,
+        plugins: [
+            'advlist autolink lists link image charmap preview anchor',
+            'searchreplace visualblocks code fullscreen',
+            'insertdatetime media table code help wordcount'
+        ],
+        toolbar: 'undo redo | formatselect | bold italic backcolor | \
+              alignleft aligncenter alignright alignjustify | \
+              bullist numlist outdent indent | removeformat | help',
+        content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+        skin: "oxide",
+        content_css: "default"
+    });
+
+    // Insert merge tag
+    document.querySelectorAll('.insert-tag').forEach(button => {
+        button.addEventListener('click', function () {
+            const tag = this.dataset.tag;
+            tinymce.activeEditor.insertContent(`{{ ${tag} }}`);
+        });
+    });
+
+    // Preview email
+    document.getElementById('preview-email').addEventListener('click', function () {
+        const content = tinymce.activeEditor.getContent();
+        document.getElementById('previewContent').innerHTML = `
+        <div style="max-width: 600px; margin: 20px auto; padding: 20px; background: #ffffff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-family: Arial, sans-serif;">
+            ${content}
+        </div>
+    `;
+        new bootstrap.Modal(document.getElementById('previewModal')).show();
+    });
+</script>
+
+<style>
+    .insert-tag {
+        font-family: monospace;
+        font-size: 0.8rem;
+    }
+
+    .form-control {
+        border: 1px solid #e3e6f3;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .btn-outline-info:hover {
+        color: white;
+    }
+</style>
+{% endblock %}

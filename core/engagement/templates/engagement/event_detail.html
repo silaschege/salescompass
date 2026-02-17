@@ -1,0 +1,331 @@
+{% extends "engagement/base.html" %}
+{% load auth_extras filters_extras %}
+
+{% block title %}{{ event.title }} - Engagement Hub{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Breadcrumbs & Title -->
+    <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-4 rounded-4 shadow-sm">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'engagement:feed' %}"
+                            class="text-decoration-none">Engagement Hub</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ entity_name|default:"Event Detail" }}</li>
+                </ol>
+            </nav>
+            <h2 class="mb-0 fw-bold text-dark">{{ event.title|default:event.get_event_type_display }}</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'engagement:feed' %}" class="btn btn-outline-secondary rounded-pill">
+                <i class="bi bi-arrow-left me-1"></i> Back
+            </a>
+            {% if perms.engagement.change_engagementevent %}
+            <a href="{% url 'engagement:event_update' event.pk %}" class="btn btn-primary rounded-pill">
+                <i class="bi bi-pencil me-1"></i> Edit
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Column: Engagement Flow (Timeline) -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-2">
+                    <h5 class="fw-bold text-dark mb-0">Engagement Flow</h5>
+                    <p class="text-muted small">Historical interactions for this {{ entity_type|default:"entity" }}</p>
+                </div>
+                <div class="card-body px-4">
+                    {% if interaction_flow %}
+                    <div class="timeline mt-3">
+                        {% for flow_event in interaction_flow %}
+                        <div
+                            class="timeline-item position-relative ps-5 pb-5 {% if flow_event.id == event.id %}current-event{% endif %}">
+                            <!-- Timeline Line -->
+                            {% if not forloop.last %}
+                            <div class="timeline-line position-absolute h-100"
+                                style="left: 17px; top: 34px; width: 2px; background: #e9ecef;"></div>
+                            {% endif %}
+
+                            <!-- Timeline Dot -->
+                            <div class="timeline-dot position-absolute rounded-circle d-flex align-items-center justify-content-center bg-white border border-2 border-{% if flow_event.id == event.id %}primary{% else %}secondary{% endif %} shadow-sm"
+                                style="left: 0; width: 36px; height: 36px; z-index: 2; transition: transform 0.2s ease;">
+                                <i
+                                    class="bi {{ flow_event.icon }} fs-6 text-{% if flow_event.id == event.id %}primary{% else %}muted{% endif %}"></i>
+                            </div>
+
+                            <!-- Content Card -->
+                            <div
+                                class="card border-0 bg-{% if flow_event.id == event.id %}light-primary{% else %}light-soft{% endif %} rounded-4 hover-shadow transition-all">
+                                <div class="card-body p-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6
+                                            class="mb-0 fw-bold {% if flow_event.id == event.id %}text-primary{% endif %}">
+                                            {{ flow_event.get_event_type_display }}
+                                        </h6>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge border text-dark bg-white shadow-sm small">
+                                                <i class="bi bi-star-fill text-warning me-1 small"></i>{{ flow_event.engagement_score|floatformat:0 }}
+                                            </span>
+                                            <small class="text-muted">{{ flow_event.created_at|date:"M d, Y H:i"}}</small>
+                                        </div>
+                                    </div>
+                                    <p class="mb-0 text-dark opacity-75">
+                                        {{ flow_event.title|default:flow_event.description }}
+                                    </p>
+
+                                    {% if flow_event.id != event.id %}
+                                    <a href="{% url 'engagement:event_detail' flow_event.pk %}"
+                                        class="btn btn-link btn-sm p-0 mt-2 text-decoration-none">
+                                        View Detail <i class="bi bi-arrow-right small"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-clock-history display-1 text-light"></i>
+                        <p class="text-muted mt-3">No engagement history found for this entity.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Entity Info & Actions -->
+        <div class="col-lg-4">
+            <!-- Entity Summary -->
+            {% if primary_entity %}
+            <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+                <div class="bg-primary py-4 px-4 text-white text-center">
+                    <div class="rounded-circle bg-white text-primary d-inline-flex align-items-center justify-content-center mb-3 shadow"
+                        style="width: 70px; height: 70px;">
+                        <i class="bi bi-person fs-1"></i>
+                    </div>
+                    <h5 class="fw-bold mb-1">{{ entity_name }}</h5>
+                    <p class="mb-0 opacity-75 small">{{ entity_type|title }}</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <label class="small text-muted text-uppercase fw-bold mb-2 d-block">Contact Info</label>
+                        {% if target_email %}
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-envelope text-muted me-3 fs-5"></i>
+                            <div>
+                                <small class="text-muted d-block small">Email</small>
+                                <span class="text-dark">{{ target_email }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if target_phone %}
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-phone text-muted me-3 fs-5"></i>
+                            <div>
+                                <small class="text-muted d-block small">Phone</small>
+                                <span class="text-dark">{{ target_phone }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <label class="small text-muted text-uppercase fw-bold mb-3 d-block">Quick Interactions</label>
+                    <div class="d-grid gap-2 mb-4">
+                        {% if target_phone %}
+                        <a href="{% url 'communication:whatsapp_send' %}?{{ entity_type }}_id={{ primary_entity.id }}&to={{ target_phone }}"
+                            class="btn btn-outline-success rounded-pill py-2">
+                            <i class="bi bi-whatsapp me-2"></i> Send WhatsApp
+                        </a>
+                        <button onclick="initiateCall('{{ target_phone }}')"
+                            class="btn btn-outline-primary rounded-pill py-2">
+                            <i class="bi bi-telephone me-2"></i> Make Call
+                        </button>
+                        {% endif %}
+                        {% if target_email %}
+                        <a href="{% url 'communication:email_compose' %}?{{ entity_type }}_id={{ primary_entity.id }}&to={{ target_email }}"
+                            class="btn btn-outline-info rounded-pill py-2">
+                            <i class="bi bi-envelope me-2"></i> Send Email
+                        </a>
+                        {% endif %}
+                    </div>
+
+                    <label class="small text-muted text-uppercase fw-bold mb-3 d-block">CRM Actions</label>
+                    <div class="d-grid gap-2">
+                        <a href="#" onclick="createTask()" class="btn btn-light rounded-pill py-2">
+                            <i class="bi bi-check2-circle me-2"></i> Follow-up Task
+                        </a>
+                        <a href="#" onclick="createNBA('check_in')" class="btn btn-light rounded-pill py-2">
+                            <i class="bi bi-lightning-charge me-2"></i> Next Best Action
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Original Event Summary -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                    <h6 class="fw-bold mb-0">Original Event Metadata</h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <small class="text-muted d-block mb-1">Created By</small>
+                            <span class="text-dark small">{{ event.created_by.email|default:"System" }}</span>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block mb-1">IP Address</small>
+                            <span class="text-dark small"><code>{{ event.ip_address|default:"N/A" }}</code></span>
+                        </div>
+                        {% if event.utm_source %}
+                        <div class="col-12 mt-3">
+                            <label class="small text-muted text-uppercase fw-bold mb-2 d-block">Attribution</label>
+                            <div class="bg-light p-3 rounded-3 small">
+                                <div><strong>Source:</strong> {{ event.utm_source }}</div>
+                                <div><strong>Medium:</strong> {{ event.utm_medium }}</div>
+                                <div><strong>Campaign:</strong> {{ event.utm_campaign }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 EnterpriseOS. All rights reserved.</p>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function initiateCall(phoneNumber) {
+        if (!phoneNumber) return;
+
+        // Show loading state
+        showToast('Initiating call...', 'info');
+
+        const formData = new FormData();
+        formData.append('phone_number', phoneNumber);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch('{% url "communication:call_initiate" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.msg || 'Call initiated successfully!', 'success');
+                } else {
+                    showToast('Error: ' + data.error, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Failed to initiate call', 'danger');
+            });
+    }
+
+    function createTask() {
+        const entityId = "{{ primary_entity.id }}";
+        const entityType = "{{ entity_type }}";
+        let url = "{% url 'tasks:task_create' %}?related_event_id={{ event.id }}";
+
+        if (entityType === 'account') url += "&account_id=" + entityId;
+        else if (entityType === 'lead') url += "&lead_id=" + entityId;
+        else if (entityType === 'contact') url += "&contact_id=" + entityId;
+
+        window.location.href = url;
+    }
+
+    function createNBA(actionType) {
+        const entityId = "{{ primary_entity.id }}";
+        const entityType = "{{ entity_type }}";
+        let url = "{% url 'engagement:next_best_action_create' %}?engagement_event_id={{ event.id }}&action_type=" + actionType;
+
+        if (entityType === 'account') url += "&account_id=" + entityId;
+        else if (entityType === 'lead') url += "&lead_id=" + entityId;
+        else if (entityType === 'contact') url += "&contact_id=" + entityId;
+
+        window.location.href = url;
+    }
+
+    function showToast(message, type) {
+        // Simple toast implementation or use existing one if available in base.html
+        alert(message); // Placeholder for demo, assuming toast system exists or can be added
+    }
+</script>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --soft-bg: #f8faff;
+    }
+
+    .bg-light-primary {
+        background-color: #f0f4ff !important;
+    }
+
+    .bg-light-soft {
+        background-color: var(--soft-bg) !important;
+    }
+
+    .hover-shadow {
+        transition: all 0.3s cubic-bezier(.25, .8, .25, 1);
+    }
+
+    .hover-shadow:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+
+    /* Timeline Styles */
+    .timeline-item.current-event .timeline-dot {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+    }
+
+    .timeline-item.current-event .card {
+        border-left: 4px solid #667eea !important;
+    }
+
+    /* Glassmorphism elements */
+    .card {
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+    }
+
+    /* Smooth Breadcrumbs */
+    .breadcrumb-item+.breadcrumb-item::before {
+        content: "›";
+        font-size: 1.2rem;
+        line-height: 1;
+        vertical-align: middle;
+        color: #adb5bd;
+    }
+
+    .btn-outline-success:hover {
+        background-color: #28a745;
+        color: white;
+    }
+</style>
+{% endblock %}

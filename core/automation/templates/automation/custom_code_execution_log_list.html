@@ -1,0 +1,85 @@
+{% extends 'automation/base.html' %}
+
+{% block title %}Custom Code Execution Logs - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar">
+    <div class="container">
+        <h1 class="block-title">📋 Execution Logs</h1>
+    </div>
+</div>
+
+<div class="mb-4">
+    <a href="{% url 'automation:custom_code_list' %}" class="btn btn-light">
+        <i class="bi bi-arrow-left"></i> Back to Snippets
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Snippet</th>
+                        <th>Status</th>
+                        <th>Execution Time</th>
+                        <th>Workflow Execution</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'automation:custom_code_detail' pk=log.custom_code_snippet.pk %}">
+                                {{ log.custom_code_snippet.name }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if log.execution_status == 'completed' %}
+                            <span class="badge bg-success">{{ log.execution_status }}</span>
+                            {% elif log.execution_status == 'failed' %}
+                            <span class="badge bg-danger">{{ log.execution_status }}</span>
+                            {% elif log.execution_status == 'timeout' %}
+                            <span class="badge bg-warning">{{ log.execution_status }}</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ log.execution_status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ log.execution_time_ms|default:"-" }} ms</td>
+                        <td>
+                            <a href="{% url 'automation:workflow_execution_detail' pk=log.workflow_execution.pk %}">
+                                #{{ log.workflow_execution.pk }}
+                            </a>
+                        </td>
+                        <td>{{ log.created_at|date:"M d, Y H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            No execution logs yet
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if page_obj %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% endif %}
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{
+                page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

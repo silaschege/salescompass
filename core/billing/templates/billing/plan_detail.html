@@ -1,0 +1,97 @@
+{% extends 'billing/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-card-list me-2"></i>{{ plan.name }} Plan</h2>
+            <p class="text-muted">Plan details and subscription metrics</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'billing:plan_update' plan_id=plan.id %}" class="btn btn-primary">
+                <i class="bi bi-pencil me-2"></i>Edit Plan
+            </a>
+            <a href="{% url 'billing:plan_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Plans
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Plan Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Name:</strong> {{ plan.name }}</p>
+                            <p><strong>Status:</strong>
+                                {% if plan.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Featured:</strong>
+                                {% if plan.is_featured %}
+                                <span class="badge bg-info">Yes</span>
+                                {% else %}
+                                <span class="badge bg-light text-dark">No</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Price:</strong> ${{ plan.price }}</p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6>Plan Features</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-people me-2"></i>Max Users: {{ plan.max_users }}</li>
+                        <li><i class="bi bi-hdd me-2"></i>Storage: {{ plan.storage_limit }}GB</li>
+                        <li><i class="bi bi-gear me-2"></i>API Calls: {{ plan.api_calls_limit }}</li>
+                        <li><i class="bi bi-check-circle me-2"></i>Reports: {% if plan.has_reports %}Yes{% else %}No{% endif %}</li>
+                        <li><i class="bi bi-check-circle me-2"></i>Custom Fields: {% if plan.has_custom_fields %}Yes{% else %}No{% endif %}</li>
+                        <li><i class="bi bi-check-circle me-2"></i>Integrations: {% if plan.has_integrations %}Yes{% else %}No{% endif %}</li>
+                    </ul>
+
+                    {% if plan.description %}
+                    <hr>
+                    <h6>Description</h6>
+                    <p>{{ plan.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Actions</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'billing:plan_toggle_active' plan_id=plan.id %}">
+                        {% csrf_token %}
+                        {% if plan.is_active %}
+                        <button type="submit" class="btn btn-outline-warning w-100 mb-2">
+                            <i class="bi bi-pause-circle me-2"></i>Deactivate Plan
+                        </button>
+                        {% else %}
+                        <button type="submit" class="btn btn-outline-success w-100 mb-2">
+                            <i class="bi bi-play-circle me-2"></i>Activate Plan
+                        </button>
+                        {% endif %}
+                    </form>
+                    <a href="{% url 'billing:plan_update' plan_id=plan.id %}" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-pencil me-2"></i>Edit Plan
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

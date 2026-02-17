@@ -1,0 +1,151 @@
+{% extends "marketing/base.html" %}
+{% load humanize %}
+
+{% block title %}Email Campaigns - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Email Campaigns</h1>
+        <p class="text-white text-center lead">Manage and monitor your automated email outreach</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Action Buttons -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="d-flex gap-2">
+                <a href="{% url 'marketing:email_campaign_create' %}" class="btn btn-primary">+ New Email Campaign</a>
+                <a href="{% url 'marketing:campaign_list' %}" class="btn btn-outline-secondary">← Back to Campaigns</a>
+            </div>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{% url 'marketing:email_template_list' %}" class="btn btn-outline-primary">
+                <i class="bi bi-file-earmark-code"></i> Email Templates
+            </a>
+        </div>
+    </div>
+
+    <!-- Email Campaigns Table -->
+    {% if email_campaigns %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Campaign Name</th>
+                    <th>Subject</th>
+                    <th>Status</th>
+                    <th>Scheduled / Sent</th>
+                    <th>Provider</th>
+                    <th>Stats</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for email_campaign in email_campaigns %}
+                <tr>
+                    <td>
+                        <a href="{% url 'marketing:email_campaign_update' email_campaign.pk %}"
+                            class="text-decoration-none">
+                            <strong>{{ email_campaign.campaign_name }}</strong>
+                        </a>
+                        <br>
+                        <small class="text-muted">Parent: {{ email_campaign.campaign.campaign_name }}</small>
+                    </td>
+                    <td>{{ email_campaign.subject|truncatechars:40 }}</td>
+                    <td>
+                        {% if email_campaign.status == 'draft' %}
+                        <span class="badge bg-secondary">Draft</span>
+                        {% elif email_campaign.status == 'scheduled' %}
+                        <span class="badge bg-info">Scheduled</span>
+                        {% elif email_campaign.status == 'sending' %}
+                        <span class="badge bg-warning">Sending</span>
+                        {% elif email_campaign.status == 'sent' %}
+                        <span class="badge bg-success">Sent</span>
+                        {% elif email_campaign.status == 'paused' %}
+                        <span class="badge bg-warning">Paused</span>
+                        {% else %}
+                        <span class="badge bg-danger">Cancelled</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if email_campaign.sent_at %}
+                        <span class="text-success">Sent {{ email_campaign.sent_at|naturaltime }}</span>
+                        {% elif email_campaign.scheduled_send_time %}
+                        <span class="text-info">Scheduled for {{ email_campaign.scheduled_send_time|date:"M d, Y H:i"
+                            }}</span>
+                        {% else %}
+                        <span class="text-muted">Not scheduled</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if email_campaign.email_provider_ref %}
+                        {{ email_campaign.email_provider_ref.label }}
+                        {% else %}
+                        <span class="text-muted">Default</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column">
+                            <small><strong>Recipients:</strong> {{ email_campaign.recipients|length }}</small>
+                            {% if email_campaign.tracking_enabled %}
+                            <small class="text-success"><i class="bi bi-graph-up"></i> Tracking ON</small>
+                            {% else %}
+                            <small class="text-muted">Tracking OFF</small>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column gap-1">
+                            <a href="{% url 'marketing:email_campaign_update' email_campaign.pk %}"
+                                class="btn btn-sm btn-outline-primary">Edit</a>
+                            <form method="post" action="{% url 'marketing:email_campaign_delete' email_campaign.pk %}"
+                                class="d-inline" onsubmit="return confirm('Delete this email campaign?')">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <div class="mb-4">
+            <i class="bi bi-envelope-paper display-1 text-muted"></i>
+        </div>
+        <h3 class="text-muted">No email campaigns found</h3>
+        <p class="text-muted mb-4">Launch your first automated email campaign to reach your leads.</p>
+        <a href="{% url 'marketing:email_campaign_create' %}" class="btn btn-primary btn-lg">Create Your First Email
+            Campaign</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="footer-bar mt-5">
+    <div class="container">
+        <p class="text-white mb-0">&copy; 2025 SalesCompass. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .table-hover tbody tr:hover {
+        background-color: rgba(111, 66, 193, 0.05);
+    }
+
+    .badge {
+        font-size: 0.75em;
+        padding: 0.3em 0.6em;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}

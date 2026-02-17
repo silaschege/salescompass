@@ -1,0 +1,496 @@
+{% extends "accounts/base.html" %}
+{% load account_filters %}
+
+{% block title %}Accounts Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="block-title fw-bold mb-0">Accounts Dashboard</h1>
+            <p class="text-muted">Overview of your account portfolio</p>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Accounts
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ accounts_summary.total_accounts }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-building fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Active Accounts
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ accounts_summary.active_accounts }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                At Risk Accounts
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ accounts_summary.at_risk_accounts }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Recent Engagement
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ accounts_summary.recent_engagement }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-comments fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ESG Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                ESG Certified
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ accounts_summary.esg_certified }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-leaf fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Avg. ESG Score
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ accounts_summary.avg_esg_score|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-star fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                High ESG Risk
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ accounts_summary.high_esg_risk }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                CO2 Saved (tCO2e)
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ accounts_summary.total_co2_saved|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tree fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Performing Accounts and Industry Distribution -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Top Performing Accounts</h6>
+                </div>
+                <div class="card-body">
+                    {% if top_accounts %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Account Name</th>
+                                    <th>Owner</th>
+                                    <th>Industry</th>
+                                    <th>Status</th>
+                                    <th>Health Score</th>
+                                    <th>Revenue</th>
+                                    <th>Engagement</th>
+                                    <th>ESG Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for account_data in top_accounts %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'accounts:account_detail' account_data.account.id %}">
+                                            {{ account_data.account.account_name }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {% if account_data.account.owner %}
+                                        {{account_data.account.owner.get_full_name|default:account_data.account.owner.email}}
+                                        {% else %}
+                                        <span class="text-muted">No Owner</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ account_data.account.industry|title }}</td>
+                                    <td>
+                                        <span class="badge 
+                                                    {% if account_data.account.status == 'active' %}badge-success
+                                                    {% elif account_data.account.status == 'at_risk' %}badge-warning
+                                                    {% elif account_data.account.status == 'churned' %}badge-danger
+                                                    {% else %}badge-secondary{% endif %}">
+                                            {{ account_data.account.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ account_data.health_score|floatformat:2 }}</td>
+                                    <td>${{ account_data.revenue|floatformat:2|default:0 }}</td>
+                                    <td>{{ account_data.engagement_score|default:0 }}/100</td>
+                                    <td>{{ account_data.account.overall_esg_score|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No top performing accounts to display.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- Account Status Distribution -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Account Status Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4 pb-2">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small">
+                        <span><i class="fas fa-circle text-success mr-1"></i> Active</span>
+                        <span><i class="fas fa-circle text-warning mr-1"></i> At Risk</span>
+                        <span><i class="fas fa-circle text-danger mr-1"></i> Churned</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ESG Score Distribution -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">ESG Score Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4 pb-2">
+                        <canvas id="esgChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small">
+                        <span><i class="fas fa-circle text-success mr-1"></i> High</span>
+                        <span><i class="fas fa-circle text-info mr-1"></i> Medium</span>
+                        <span><i class="fas fa-circle text-warning mr-1"></i> Low</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Industry Distribution and Quick Actions -->
+    <div class="row mb-4">
+        <!-- Industry Distribution -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Industry Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4 pb-2">
+                        <canvas id="industryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <a href="{% url 'accounts:account_create' %}" class="btn btn-primary btn-block">
+                                <i class="fas fa-plus"></i> New Account
+                            </a>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <a href="{% url 'accounts:bulk_import_upload' %}" class="btn btn-success btn-block">
+                                <i class="fas fa-file-import"></i> Import Accounts
+                            </a>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <a href="{% url 'accounts:account_list' %}" class="btn btn-info btn-block">
+                                <i class="fas fa-list"></i> View All
+                            </a>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <a href="" class="btn btn-secondary btn-block">
+                                <i class="fas fa-chart-bar"></i> Reports
+                            </a>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <a href="{% url 'accounts:account_kanban' %}" class="btn btn-warning btn-block">
+                                <i class="fas fa-columns"></i> Kanban View
+                            </a>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <a href="" class="btn btn-outline-primary btn-block">
+                                <i class="fas fa-calendar-alt"></i> Engagements
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity and Performance Metrics -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Account Performance Overview</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="text-muted mb-3">You have {{ accounts_summary.open_leads }} open leads and {{ accounts_summary.open_cases }} open cases across all accounts.</p>
+                            
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="border-start border-success border-3 p-3">
+                                        <div class="text-xs text-gray-600">Total Revenue</div>
+                                        <div class="h5 font-weight-bold">${{ accounts_summary.total_revenue|floatformat:2 }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="border-start border-info border-3 p-3">
+                                        <div class="text-xs text-gray-600">Avg. Health Score</div>
+                                        <div class="h5 font-weight-bold">{{ accounts_summary.avg_health_score|floatformat:2 }}/100</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="progress mb-2">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: {{ accounts_summary.active_percentage|default:0 }}%" 
+                                     aria-valuenow="{{ accounts_summary.active_percentage|default:0 }}" 
+                                     aria-valuemin="0" aria-valuemax="100">
+                                    {{ accounts_summary.active_percentage|floatformat:1 }}%
+                                </div>
+                                <div class="progress-bar bg-warning" role="progressbar" 
+                                     style="width: {{ accounts_summary.at_risk_percentage|default:0 }}%" 
+                                     aria-valuenow="{{ accounts_summary.at_risk_percentage|default:0 }}" 
+                                     aria-valuemin="0" aria-valuemax="100">
+                                    {{ accounts_summary.at_risk_percentage|floatformat:1 }}%
+                                </div>
+                                <div class="progress-bar bg-danger" role="progressbar" 
+                                     style="width: {{ accounts_summary.churned_percentage|default:0 }}%" 
+                                     aria-valuenow="{{ accounts_summary.churned_percentage|default:0 }}" 
+                                     aria-valuemin="0" aria-valuemax="100">
+                                    {{ accounts_summary.churned_percentage|floatformat:1 }}%
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-4 text-center">
+                                    <p class="mb-0 text-success">Active</p>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <p class="mb-0 text-warning">At Risk</p>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <p class="mb-0 text-danger">Churned</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Chart for account status distribution
+    document.addEventListener('DOMContentLoaded', function () {
+        // Get account data from the context
+        const activeCount = {{ accounts_summary.active_accounts|default:0 }};
+        const atRiskCount = {{ accounts_summary.at_risk_accounts|default:0 }};
+        const churnedCount = {{ accounts_summary.churned_accounts|default:0 }};
+
+        // Get the canvas element for status chart
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+        const statusChart = new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Active', 'At Risk', 'Churned'],
+                datasets: [{
+                    data: [activeCount, atRiskCount, churnedCount],
+                    backgroundColor: [
+                        '#28a745',  // green for active
+                        '#ffc107',  // yellow for at risk
+                        '#dc3545'   // red for churned
+                    ],
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+
+        // ESG Score Distribution Chart
+        const highEsgCount = {{ accounts_summary.high_esg_count|default:0 }};
+        const mediumEsgCount = {{ accounts_summary.medium_esg_count|default:0 }};
+        const lowEsgCount = {{ accounts_summary.low_esg_count|default:0 }};
+        
+        const esgCtx = document.getElementById('esgChart').getContext('2d');
+        const esgChart = new Chart(esgCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['High ESG', 'Medium ESG', 'Low ESG'],
+                datasets: [{
+                    data: [highEsgCount, mediumEsgCount, lowEsgCount],
+                    backgroundColor: [
+                        '#28a745',  // green for high
+                        '#17a2b8',  // blue for medium
+                        '#ffc107'   // yellow for low
+                    ],
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+
+        // Industry Distribution Chart
+        const industries = {{ accounts_summary.top_industries|safe }};
+        const industryCounts = {{ accounts_summary.top_industries_counts|safe }};
+        
+        const industryCtx = document.getElementById('industryChart').getContext('2d');
+        const industryChart = new Chart(industryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: industries,
+                datasets: [{
+                    data: industryCounts,
+                    backgroundColor: [
+                        '#007bff', '#28a745', '#dc3545', '#ffc107', '#6f42c1',
+                        '#fd7e14', '#6c757d', '#17a2b8', '#20c997', '#e83e8c'
+                    ],
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

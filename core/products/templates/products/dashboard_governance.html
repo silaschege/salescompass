@@ -1,0 +1,256 @@
+{% extends "products/base.html" %}
+{% load humanize %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .shadow-glow {
+        text-shadow: 0 0 10px rgba(67, 56, 202, 0.4);
+    }
+
+    .badge-soft-danger {
+        background: rgba(220, 38, 38, 0.1);
+        color: #dc2626;
+        border: 1px solid rgba(220, 38, 38, 0.2);
+    }
+
+    .premium-card {
+        transition: transform 0.2s ease;
+    }
+
+    .premium-card:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block products_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h3 fw-bold mb-0">Product Governance & Compliance</h1>
+            <p class="text-muted small mb-0">Financial integrity and valuation monitoring (IAS 2 / IPSAS 12)</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-white border px-4 shadow-sm">
+                <i class="bi bi-download me-2"></i> Compliance Report
+            </button>
+            <button class="btn btn-primary px-4 shadow-sm border-0">
+                <i class="bi bi-arrow-repeat me-2"></i> Recalculate AVCO
+            </button>
+        </div>
+    </div>
+
+    <!-- Compliance Overview Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="premium-card p-4 border-0 shadow-sm border-start border-primary border-4 bg-white rounded-4">
+                <div class="extra-small text-muted text-uppercase fw-bold mb-1">Total Inventory Value</div>
+                <div class="h3 fw-bold mb-0 text-dark">${{ total_inventory_value|intcomma }}</div>
+                <div class="extra-small text-success mt-2">
+                    <i class="bi bi-graph-up me-1"></i> +2.4% vs last month
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="premium-card p-4 border-0 shadow-sm border-start border-warning border-4 bg-white rounded-4">
+                <div class="extra-small text-muted text-uppercase fw-bold mb-1">Impairment Risk (NRV)</div>
+                <div class="h3 fw-bold mb-0 text-warning">${{ total_impairment_risk|intcomma }}</div>
+                <div class="extra-small text-muted mt-2">
+                    {{ impairment_count }} products exceed NRV
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="premium-card p-4 border-0 shadow-sm border-start border-info border-4 bg-white rounded-4">
+                <div class="extra-small text-muted text-uppercase fw-bold mb-1">Avg. Inventory Age</div>
+                <div class="h3 fw-bold mb-0 text-info">{{ avg_stock_age }} Days</div>
+                <div class="extra-small text-muted mt-2">
+                    Target: < 45 days </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div
+                    class="premium-card p-4 border-0 shadow-sm border-start border-success border-4 bg-white rounded-4">
+                    <div class="extra-small text-muted text-uppercase fw-bold mb-1">Audit Compliance</div>
+                    <div class="h3 fw-bold mb-0 text-success">{{ compliance_score }}%</div>
+                    <div class="extra-small text-muted mt-2">
+                        {% if compliance_score > 90 %}SECURE{% else %}VULNERABLE{% endif %} Hub Status
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="premium-card p-4 border-0 shadow-sm mb-4 bg-white rounded-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h6 class="fw-bold mb-0">Inventory Aging Wave (IAS 2)</h6>
+                        <span class="small text-muted">Value distribution by batch age</span>
+                    </div>
+                    <div style="height: 300px;">
+                        <canvas id="agingChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Batches Needing Attention -->
+                <div class="premium-card border-0 shadow-sm bg-white rounded-4 overflow-hidden">
+                    <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold mb-0">High-Risk Stock Batches</h6>
+                        <span class="badge badge-soft-danger px-3 rounded-pill extra-small">ATTENTION REQUIRED</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light bg-opacity-50 extra-small text-uppercase fw-bold">
+                                <tr>
+                                    <th class="ps-4">Product / Batch</th>
+                                    <th>Method</th>
+                                    <th>Cost Basis</th>
+                                    <th>NRV</th>
+                                    <th class="text-end pe-4">Loss Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for batch in risk_batches %}
+                                <tr>
+                                    <td class="ps-4 py-3">
+                                        <div class="fw-bold text-dark">{{ batch.product.product_name }}</div>
+                                        <div class="extra-small text-muted">{{ batch.batch_number }}</div>
+                                    </td>
+                                    <td><span class="badge badge-soft-primary extra-small">{{
+                                            batch.product.get_valuation_method_display }}</span></td>
+                                    <td class="fw-bold text-dark">${{ batch.cost_price|intcomma }}</td>
+                                    <td class="text-muted small">${{ batch.nrv|intcomma }}</td>
+                                    <td class="text-end pe-4">
+                                        <span class="text-danger fw-bold">-${{ batch.variance|intcomma }}</span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-5 text-muted">
+                                        <i class="bi bi-shield-check h3 d-block mb-2 text-success"></i>
+                                        No impaired stock batches detected.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="premium-card p-4 border-0 shadow-sm mb-4 bg-white rounded-4">
+                    <h6 class="fw-bold mb-4">Category Valuation Distribution</h6>
+                    <div style="height: 250px;">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="premium-card p-4 border-0 shadow-sm mb-4 bg-dark text-white rounded-4">
+                    <h6 class="fw-bold mb-4 small text-uppercase text-primary shadow-glow">Market Flux Indices</h6>
+                    <div class="d-flex flex-column gap-4">
+                        {% for flux in valuation_flux %}
+                        <div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small fw-medium">{{ flux.name }}</span>
+                                <span
+                                    class="extra-small {% if flux.change < 0 %}text-danger{% else %}text-success{% endif %}">
+                                    {{ flux.change|floatformat:1 }}%
+                                </span>
+                            </div>
+                            <div class="progress" style="height: 4px; background: rgba(255,255,255,0.1);">
+                                <div class="progress-bar bg-primary" style="width: {{ flux.progress }}%"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="premium-card p-4 border-0 shadow-sm bg-white rounded-4">
+                    <h6 class="fw-bold mb-3 small text-uppercase text-muted">Compliance Checklist</h6>
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item px-0 py-3 bg-transparent border-0 d-flex gap-3">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            <div>
+                                <div class="fw-bold text-dark">FIFO Batch Integrity</div>
+                                <div class="extra-small text-muted">All active quantities linked to purchase dates.
+                                </div>
+                            </div>
+                        </li>
+                        <li class="list-group-item px-0 py-3 bg-transparent border-0 d-flex gap-3">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            <div>
+                                <div class="fw-bold text-dark">GL Synchronization</div>
+                                <div class="extra-small text-muted">Inventory-to-Books delta is < 0.05%</div>
+                                </div>
+                        </li>
+                        <li class="list-group-item px-0 py-3 bg-transparent border-0 d-flex gap-3">
+                            <i
+                                class="bi {% if impairment_count > 0 %}bi-exclamation-circle text-warning{% else %}bi-check-circle-fill text-success{% endif %}"></i>
+                            <div>
+                                <div class="fw-bold text-dark">NRV Valuation</div>
+                                <div class="extra-small text-muted">{{ impairment_count }} batches require write-down
+                                    consideration.</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Aging Wave Chart
+        const ctxAging = document.getElementById('agingChart').getContext('2d');
+        new Chart(ctxAging, {
+            type: 'bar',
+            data: {
+                labels: ['0-30 Days', '31-60 Days', '61-90 Days', '90+ Days'],
+                datasets: [{
+                    label: 'Asset Value ($)',
+                    data: {{ aging_data| safe }
+        },
+            backgroundColor: 'rgba(67, 56, 202, 0.7)',
+            borderColor: '#4338ca',
+            borderWidth: 1,
+            borderRadius: 8,
+            barThickness: 40
+            }]
+        },
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { display: false } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+        // Category Distribution Chart
+        const ctxCat = document.getElementById('categoryChart').getContext('2d');
+        new Chart(ctxCat, {
+            type: 'polarArea',
+            data: {
+                labels: [{% for c in category_distribution %}"{{ c.name }}",{% endfor %}],
+            datasets: [{
+                data: [{% for c in category_distribution %}{{ c.value }}, {% endfor %}],
+            backgroundColor: [
+            'rgba(67, 56, 202, 0.7)',
+            'rgba(14, 165, 233, 0.7)',
+            'rgba(16, 185, 129, 0.7)',
+            'rgba(245, 158, 11, 0.7)'
+        ]
+            }]
+        },
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } },
+            scales: { r: { ticks: { display: false } } }
+        }
+    });
+    </script>
+    {% endblock %}

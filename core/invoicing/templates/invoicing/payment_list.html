@@ -1,0 +1,48 @@
+{% extends "invoicing/base.html" %}
+
+{% block invoicing_content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1 fw-bold">Payments</h2>
+            <p class="text-muted">Recorded payments from customers</p>
+        </div>
+        <a href="{% url 'invoicing:payment_create' %}" class="btn btn-primary fw-bold">
+            <i class="bi bi-plus-circle me-2"></i>Record Payment
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Date</th>
+                            <th>Invoice</th>
+                            <th>Method</th>
+                            <th>Reference</th>
+                            <th class="text-end pe-4">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td class="ps-4">{{ payment.payment_date }}</td>
+                            <td class="fw-medium">{{ payment.invoice.invoice_number }}</td>
+                            <td>{{ payment.get_payment_method_display }}</td>
+                            <td>{{ payment.reference_number|default:"-" }}</td>
+                            <td class="text-end pe-4 fw-bold">${{ payment.amount|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">No payments recorded yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

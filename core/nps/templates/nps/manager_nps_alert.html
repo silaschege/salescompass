@@ -1,0 +1,41 @@
+<!-- Manager NPS Alert Template -->
+<div class="email-container">
+    <div class="alert alert-danger">
+        <h2>Critical NPS Alert</h2>
+    </div>
+    
+    <p>Dear Team Leader,</p>
+    
+    <div class="nps-details">
+        <p>A critical NPS case has been escalated to your attention:</p>
+        
+        <div class="case-details">
+            <p><strong>Account:</strong> {{ account.name }}</p>
+            <p><strong>Score:</strong> {{ score }}</p>
+            <p><strong>Comment:</strong> {{ comment }}</p>
+            <p><strong>Customer Sentiment:</strong> {{ sentiment }}</p>
+        </div>
+        
+        <p>This case requires your immediate attention as it involves a high-value customer with significant feedback.</p>
+    </div>
+    
+    <div class="action-section">
+        <p>Please take the following actions:</p>
+        <ol>
+            <li>Review the case details in the CRM</li>
+            <li>Contact the customer directly to address concerns</li>
+            <li>Update the case status with your action plan</li>
+            <li>Provide feedback on the resolution</li>
+        </ol>
+    </div>
+    
+    <div class="case-link">
+        <p>Case Details: <a href="{{ case_url }}">{{ case_id }}</a></p>
+    </div>
+    
+    <p>Best regards,<br>SalesCompass System</p>
+    
+    <div class="footer">
+        <p class="small-text">This is an automated alert for critical NPS cases.</p>
+    </div>
+</div>

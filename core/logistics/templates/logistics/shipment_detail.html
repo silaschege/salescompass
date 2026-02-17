@@ -1,0 +1,50 @@
+{% extends "logistics/base.html" %}
+
+{% block page_content %}
+<div class="row">
+    <div class="col-xl-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Shipment #{{ shipment.id }}</h6>
+                <span
+                    class="badge {% if shipment.status == 'delivered' %}badge-success{% elif shipment.status == 'in_transit' %}badge-info{% elif shipment.status == 'cancelled' %}badge-danger{% else %}badge-warning{% endif %}">
+                    {{ shipment.get_status_display }}
+                </span>
+            </div>
+            <div class="card-body">
+                <p><strong>Carrier:</strong> {{ shipment.carrier.name }}</p>
+                <p><strong>Tracking #:</strong> {{ shipment.tracking_number|default:"Not assigned" }}</p>
+                <p><strong>Recipient:</strong> {{ shipment.recipient_name }}</p>
+                <p><strong>Destination:</strong> {{ shipment.destination_address }}</p>
+                <hr>
+                <p><strong>Estimated Delivery:</strong> {{ shipment.estimated_delivery|date:"Y-m-d"|default:"TBD" }}</p>
+                <p><strong>Actual Delivery:</strong> {{ shipment.actual_delivery|date:"Y-m-d"|default:"Pending" }}</p>
+                <hr>
+                <a href="{% url 'logistics:shipment_list' %}" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Tracking Updates</h6>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    {% for update in updates %}
+                    <div class="mb-3 border-left pl-3 ml-2">
+                        <div class="small text-muted">{{ update.timestamp|date:"Y-m-d H:i" }}</div>
+                        <div><strong>{{ update.location }}</strong>: {{ update.status_description }}</div>
+                    </div>
+                    {% empty %}
+                    <p class="text-center text-muted">No updates yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

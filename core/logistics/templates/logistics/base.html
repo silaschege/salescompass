@@ -1,0 +1,75 @@
+{% extends "logged_in/base.html" %}
+{% load static %}
+
+{% block title %}Logistics | SalesCompass{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<style>
+    /* Dashboard Specific: Cards */
+    .widget-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .widget-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 2px 16px rgba(111, 66, 193, 0.08);
+        /* Purple shadow hint */
+        transition: transform 0.2s, box-shadow 0.2s;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border: none;
+    }
+
+    .widget-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(111, 66, 193, 0.15);
+    }
+
+    /* Helper Classes */
+    .btn-primary {
+        background-color: #6f42c1;
+        border-color: #6f42c1;
+    }
+
+    .btn-primary:hover {
+        background-color: #5a34a0;
+        border-color: #5a34a0;
+    }
+</style>
+{% endblock %}
+
+{% block sidebar_nav %}
+<div class="sidebar" id="sidebar">
+    <a class="navbar-brand" href="{% url 'core:app_selection' %}">
+        <i class="bi bi-truck me-2"></i> Logistics
+    </a>
+    <nav class="nav flex-column">
+        <div class="section-title">MODULE MENU</div>
+        {% include "logistics/includes/module_nav.html" %}
+
+        <div class="section-title mt-4">SYSTEM</div>
+        <a class="nav-link" href="{% url 'core:app_selection' %}">
+            <i class="bi bi-grid nav-icon"></i> Control Plane
+        </a>
+        <div class="mt-auto pt-4 border-top">
+            <a class="nav-link text-danger" href="{% url 'core:logout' %}">
+                <i class="bi bi-box-arrow-right nav-icon"></i> Log Out
+            </a>
+        </div>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    {% block module_content %}
+    {% block page_content %}{% endblock %}
+    {% endblock %}
+</div>
+{% endblock %}

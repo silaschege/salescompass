@@ -1,0 +1,122 @@
+{% extends "products/base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{% if form.instance.pk %}Edit{% else %}Create{% endif %} Price List</h1>
+    </div>
+
+    <div class="row">
+        <!-- Settings Column -->
+        <div class="col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Settings</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+                            {% for error in field.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">Save Price List</button>
+                            <a href="{% url 'products:pricelist_list' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Items Column (Only visible if editing) -->
+        {% if form.instance.pk %}
+        <div class="col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Products in this User List</h6>
+                    <button class="btn btn-sm btn-success" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#addItemForm">
+                        <i class="fas fa-plus"></i> Add Item
+                    </button>
+                </div>
+                <div class="card-body">
+                    <!-- Inline Add Form -->
+                    <div class="collapse mb-4" id="addItemForm">
+                        <div class="card card-body bg-light">
+                            <h6>Add Product Price</h6>
+                            <form action="{% url 'products:pricelistitem_add' %}" method="post" class="row g-3">
+                                {% csrf_token %}
+                                <input type="hidden" name="price_list" value="{{ form.instance.pk }}">
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Product</label>
+                                    {{ item_form.product }}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Price</label>
+                                    {{ item_form.price }}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Min Qty</label>
+                                    {{ item_form.min_quantity }}
+                                </div>
+                                <div class="col-12 text-end">
+                                    <button type="submit" class="btn btn-primary btn-sm">Add Item</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Items Table -->
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>SKU</th>
+                                    <th>Base Price</th>
+                                    <th>List Price</th>
+                                    <th>Min Qty</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td>{{ item.product.product_name }}</td>
+                                    <td>{{ item.product.sku }}</td>
+                                    <td>{{ item.product.base_price }}</td>
+                                    <td class="font-weight-bold text-success">{{ item.price }}</td>
+                                    <td>{{ item.min_quantity }}</td>
+                                    <td>
+                                        <a href="{% url 'products:pricelistitem_delete' item.id %}" class="text-danger"
+                                            title="Remove">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No items in this list yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

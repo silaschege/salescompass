@@ -1,0 +1,39 @@
+{% extends "core/base_module.html" %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">{% block page_title %}Form{% endblock %}</h1>
+        <p class="text-white text-center lead">
+            {% block page_subtitle %}{% endblock %}
+        </p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form method="post" {% block form_attributes %}{% endblock %}>
+                        {% csrf_token %}
+                        {% block form_content %}
+                        {{ form.as_p }}
+                        {% endblock %}
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            {% block form_actions %}
+                            <a href="{% block cancel_url %}javascript:history.back(){% endblock %}"
+                                class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4">
+                                {% block submit_button_text %}Save{% endblock %}
+                            </button>
+                            {% endblock %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

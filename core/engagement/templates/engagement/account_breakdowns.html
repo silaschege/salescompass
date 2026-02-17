@@ -1,0 +1,429 @@
+{% extends "engagement/base.html" %}
+{% load auth_extras math filters_extras static %}
+
+{% block title %}Account Breakdowns - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Account Breakdowns</h1>
+        <p class="text-white text-center lead">Detailed engagement analysis by account, contact, and opportunity</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Back to Dashboard -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'engagement:dashboard' %}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Account-Specific Engagement Timeline -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Account Engagement Timeline</h5>
+                    <small class="text-muted">Top accounts by engagement activity</small>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="accountTimelineAccordion">
+                        {% for account_data in account_timeline_data %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false"
+                                    aria-controls="collapse{{ forloop.counter }}">
+                                    {{ account_data.account_name }}
+                                </button>
+                            </h2>
+                            <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse"
+                                aria-labelledby="heading{{ forloop.counter }}"
+                                data-bs-parent="#accountTimelineAccordion">
+                                <div class="accordion-body">
+                                    {% if account_data.data %}
+                                    <canvas id="accountTimelineChart{{ forloop.counter }}" height="200"></canvas>
+                                    {% else %}
+                                    <p class="text-muted">No engagement data available for this account.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">No account data available.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact-Level Engagement History -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Contact Engagement History</h5>
+                    <small class="text-muted">Top contacts by engagement activity</small>
+                </div>
+                <div class="card-body">
+                    {% if contact_history_data %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Contact</th>
+                                    <th>Account</th>
+                                    <th>Events</th>
+                                    <th>Avg Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contact in contact_history_data %}
+                                <tr>
+                                    <td>{{ contact.contact_name }}</td>
+                                    <td>{{ contact.account_name }}</td>
+                                    <td>{{ contact.total_events }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if contact.avg_score > 70 %}success{% elif contact.avg_score > 40 %}warning{% else %}danger{% endif %}">
+                                            {{ contact.avg_score }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No contact engagement data available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Opportunity Engagement Journey -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Opportunity Engagement Journey</h5>
+                    <small class="text-muted">Engagement progression for key opportunities</small>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="opportunityJourneyAccordion">
+                        {% for opp_data in opportunity_journey_data %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="oppHeading{{ forloop.counter }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#oppCollapse{{ forloop.counter }}" aria-expanded="false"
+                                    aria-controls="oppCollapse{{ forloop.counter }}">
+                                    {{ opp_data.opportunity_name }}
+                                </button>
+                            </h2>
+                            <div id="oppCollapse{{ forloop.counter }}" class="accordion-collapse collapse"
+                                aria-labelledby="oppHeading{{ forloop.counter }}"
+                                data-bs-parent="#opportunityJourneyAccordion">
+                                <div class="accordion-body">
+                                    <p><strong>Account:</strong> {{ opp_data.account_name }}</p>
+                                    <p><strong>Stage:</strong> {{ opp_data.stage }}</p>
+                                    {% if opp_data.event_timeline %}
+                                    <canvas id="oppJourneyChart{{ forloop.counter }}" height="150"></canvas>
+                                    {% else %}
+                                    <p class="text-muted">No engagement data available for this opportunity.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">No opportunity data available.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Engagement Journey Map -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Customer Engagement Journey</h5>
+                    <small class="text-muted">Common paths customers take through engagement events</small>
+                </div>
+                <div class="card-body">
+                    <canvas id="journeyMapChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Engagement Flow Sankey Diagram -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Engagement Flow Analysis</h5>
+                    <small class="text-muted">How customers transition between engagement event types</small>
+                </div>
+                <div class="card-body">
+                    <div id="sankeyDiagram" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Relationship Network Graph -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Engagement Relationship Network</h5>
+                    <small class="text-muted">Connections between accounts, contacts, and engagement events</small>
+                </div>
+                <div class="card-body">
+                    <div id="networkGraph" style="height: 500px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Engagement Comparison -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Engagement Comparison</h5>
+                    <small class="text-muted">Account and period comparisons</small>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs" id="comparisonTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="account-comparison-tab" data-bs-toggle="tab"
+                                data-bs-target="#account-comparison" type="button" role="tab"
+                                aria-controls="account-comparison" aria-selected="true">Account vs Account</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="period-comparison-tab" data-bs-toggle="tab"
+                                data-bs-target="#period-comparison" type="button" role="tab"
+                                aria-controls="period-comparison" aria-selected="false">Period vs Period</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="comparisonTabContent">
+                        <div class="tab-pane fade show active" id="account-comparison" role="tabpanel"
+                            aria-labelledby="account-comparison-tab">
+                            {% if engagement_comparison_data.accounts_comparison %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Account</th>
+                                            <th>Events</th>
+                                            <th>Avg Score</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for account in engagement_comparison_data.accounts_comparison %}
+                                        <tr>
+                                            <td>{{ account.account_name }}</td>
+                                            <td>{{ account.event_count }}</td>
+                                            <td>
+                                                <span class="badge bg-{% if account.avg_score > 70 %}success{% elif account.avg_score > 40 %}warning{% else %}danger{% endif %}">
+                                                    {{ account.avg_score }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <p class="text-muted mt-3">No account comparison data available.</p>
+                            {% endif %}
+                        </div>
+                        <div class="tab-pane fade" id="period-comparison" role="tabpanel"
+                            aria-labelledby="period-comparison-tab">
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6>Current Period</h6>
+                                            <h4>{{ engagement_comparison_data.period_comparison.current.event_count }}</h4>
+                                            <p class="mb-0">Events</p>
+                                            <p class="mb-0">
+                                                <span class="badge bg-{% if engagement_comparison_data.period_comparison.current.avg_score > 70 %}success{% elif engagement_comparison_data.period_comparison.current.avg_score > 40 %}warning{% else %}danger{% endif %}">
+                                                    {{ engagement_comparison_data.period_comparison.current.avg_score }} Avg Score
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-body text-center">
+                                            <h6>Previous Period</h6>
+                                            <h4>{{ engagement_comparison_data.period_comparison.previous.event_count }}</h4>
+                                            <p class="mb-0">Events</p>
+                                            <p class="mb-0">
+                                                <span class="badge bg-{% if engagement_comparison_data.period_comparison.previous.avg_score > 70 %}success{% elif engagement_comparison_data.period_comparison.previous.avg_score > 40 %}warning{% else %}danger{% endif %}">
+                                                    {{ engagement_comparison_data.period_comparison.previous.avg_score }} Avg Score
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'engagement/css/engagement_visuals.css' %}">
+<style>
+    .card { border: none; border-radius: 1rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); }
+    .card-header { border-bottom: 1px solid #e9ecef; padding: 1rem 1.25rem; }
+    .table thead th { font-weight: 600; color: #495057; }
+    .badge { font-size: 0.75rem; padding: 0.3em 0.6em; }
+    .nav-tabs .nav-link.active { background-color: #f8f9fa; border-bottom-color: transparent; font-weight: bold; }
+</style>
+
+<!-- Chart.js and D3 Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Account Timeline Charts
+        {% for account_data in account_timeline_data %}
+        {% if account_data.data %}
+        (function() {
+            const ctx = document.getElementById('accountTimelineChart{{ forloop.counter }}').getContext('2d');
+            const data = {{ account_data.data|safe }};
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(item => item.date),
+                    datasets: [{
+                        label: 'Avg Engagement Score',
+                        data: data.map(item => item.avg_score),
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
+            });
+        })();
+        {% endif %}
+        {% endfor %}
+
+        // Opportunity Journey Charts
+        {% for opp_data in opportunity_journey_data %}
+        {% if opp_data.event_timeline %}
+        (function() {
+            const ctx = document.getElementById('oppJourneyChart{{ forloop.counter }}').getContext('2d');
+            const data = {{ opp_data.event_timeline|safe }};
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(item => item.date),
+                    datasets: [
+                        {
+                            label: 'Score',
+                            data: data.map(item => item.avg_score),
+                            borderColor: '#28a745',
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Events',
+                            data: data.map(item => item.count),
+                            borderColor: '#ffc107',
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { position: 'left', beginAtZero: true, max: 100 },
+                        y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false } }
+                    }
+                }
+            });
+        })();
+        {% endif %}
+        {% endfor %}
+
+        // Engagement Journey Map
+        const journeyData = {{ engagement_journey_data|safe }};
+        if (journeyData && journeyData.length > 0) {
+            const ctx = document.getElementById('journeyMapChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: journeyData.map(item => item.path),
+                    datasets: [{
+                        label: 'Accounts',
+                        data: journeyData.map(item => item.count),
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                    }]
+                },
+                options: { indexAxis: 'y', responsive: true }
+            });
+        }
+
+        // Sankey Diagram
+        const flowData = {{ engagement_flow_data|safe }};
+        if (flowData && flowData.nodes && flowData.links && flowData.links.length > 0) {
+            const container = document.getElementById('sankeyDiagram');
+            const width = container.offsetWidth;
+            const height = 400;
+            const svg = d3.select("#sankeyDiagram").append("svg").attr("width", width).attr("height", height);
+            const sankey = d3.sankey().nodeWidth(20).nodePadding(15).extent([[1, 1], [width - 1, height - 5]]);
+            const graph = { 
+                nodes: flowData.nodes.map(d => Object.assign({}, d)), 
+                links: flowData.links.map(d => Object.assign({}, d)) 
+            };
+            sankey(graph);
+            const color = d3.scaleOrdinal(d3.schemeCategory10);
+            svg.append("g").attr("fill", "none").selectAll("path").data(graph.links).join("path")
+               .attr("d", d3.sankeyLinkHorizontal()).attr("stroke", d => color(d.source.name))
+               .attr("stroke-width", d => Math.max(1, d.width)).attr("stroke-opacity", 0.15);
+            svg.append("g").selectAll("rect").data(graph.nodes).join("rect")
+               .attr("x", d => d.x0).attr("y", d => d.y0).attr("height", d => d.y1 - d.y0)
+               .attr("width", d => d.x1 - d.x0).attr("fill", d => color(d.name)).attr("rx", 3);
+        }
+
+        // Relationship Network Graph
+        const networkData = {{ relationship_network_data|safe }};
+        if (networkData && networkData.nodes && networkData.links && networkData.nodes.length > 0) {
+            const container = document.getElementById('networkGraph');
+            const width = container.offsetWidth;
+            const height = 500;
+            const svg = d3.select("#networkGraph").append("svg").attr("width", width).attr("height", height);
+            const simulation = d3.forceSimulation(networkData.nodes)
+                .force("link", d3.forceLink(networkData.links).id(d => d.id).distance(120))
+                .force("charge", d3.forceManyBody().strength(-400))
+                .force("center", d3.forceCenter(width / 2, height / 2));
+
+            const link = svg.append("g").attr("stroke", "#cbd5e0").selectAll("line").data(networkData.links).join("line");
+            const node = svg.append("g").selectAll("circle").data(networkData.nodes).join("circle")
+                .attr("r", 8).attr("fill", d => d.type === 'account' ? "#f56565" : "#4fd1c5");
+
+            simulation.on("tick", () => {
+                link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                node.attr("cx", d => d.x).attr("cy", d => d.y);
+            });
+        }
+    });
+</script>
+{% endblock %}

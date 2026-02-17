@@ -1,0 +1,52 @@
+<div class="hardware-status d-flex gap-2">
+    <!-- Printer Status -->
+    {% if terminal.printer_type != 'disabled' %}
+    <span class="badge bg-success-soft text-success border border-success"
+        title="Printer: {{ terminal.printer_type|title }}">
+        <i class="feather icon-printer me-1"></i> Printer
+    </span>
+    {% else %}
+    <span class="badge bg-light text-muted border" title="Printer Disabled">
+        <i class="feather icon-printer me-1"></i> Off
+    </span>
+    {% endif %}
+
+    <!-- Scanner Status -->
+    {% if terminal.barcode_scanner_enabled %}
+    <span class="badge bg-info-soft text-info border border-info" title="Barcode Scanner Enabled">
+        <i class="feather icon-maximize me-1"></i> Scanner
+    </span>
+    {% endif %}
+
+    <!-- Cash Drawer Status -->
+    {% if terminal.cash_drawer_enabled %}
+    <span class="badge bg-warning-soft text-warning border border-warning" title="Cash Drawer Enabled">
+        <i class="feather icon-package me-1"></i> Drawer
+    </span>
+    {% endif %}
+
+    <!-- Customer Display Status -->
+    {% if terminal.customer_display_enabled %}
+    <span class="badge bg-primary-soft text-primary border border-primary" title="Customer Display Enabled">
+        <i class="feather icon-tv me-1"></i> Display
+    </span>
+    {% endif %}
+</div>
+
+<style>
+    .bg-success-soft {
+        background-color: #e6f7ef;
+    }
+
+    .bg-info-soft {
+        background-color: #e7f6f8;
+    }
+
+    .bg-warning-soft {
+        background-color: #fff8ec;
+    }
+
+    .bg-primary-soft {
+        background-color: #eef2ff;
+    }
+</style>

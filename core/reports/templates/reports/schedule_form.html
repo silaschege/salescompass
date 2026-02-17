@@ -1,0 +1,145 @@
+{% extends "reports/base.html" %}
+
+{% block title %}{% if object %}Edit Schedule{% else %}New Report Schedule{% endif %} - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">{% if object %}Edit Schedule{% else %}Create Schedule{% endif %}</h1>
+        <p class="text-white text-center lead">{% if object %}Update schedule for {{ object.report.report_name }}{% else
+            %}Automate your report delivery{% endif %}</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <!-- Report -->
+                                <div class="mb-4">
+                                    <label for="{{ form.report.id_for_label }}" class="form-label fw-bold text-primary">
+                                        Report <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.report }}
+                                    {% if form.report.errors %}
+                                    <div class="text-danger mt-1">{{ form.report.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text text-muted small">
+                                        Select the report to schedule for automated delivery
+                                    </div>
+                                </div>
+
+                                <!-- Frequency -->
+                                <div class="mb-4">
+                                    <label for="{{ form.frequency_ref.id_for_label }}"
+                                        class="form-label fw-bold text-primary">
+                                        Frequency <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.frequency_ref }}
+                                    {% if form.frequency_ref.errors %}
+                                    <div class="text-danger mt-1">{{ form.frequency_ref.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text text-muted small">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <span class="badge bg-info text-dark">Daily</span> - Every day
+                                            </div>
+                                            <div class="col-6">
+                                                <span class="badge bg-warning text-dark">Weekly</span> - Every week
+                                            </div>
+                                            <div class="col-6">
+                                                <span class="badge bg-success">Monthly</span> - Every 30 days
+                                            </div>
+                                            <div class="col-6">
+                                                <span class="badge bg-primary">Quarterly</span> - Every 90 days
+                                            </div>
+                                            <div class="col-6">
+                                                <span class="badge bg-info">Yearly</span> - Every 365 days
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Recipients -->
+                                <div class="mb-4">
+                                    <label for="{{ form.recipients.id_for_label }}"
+                                        class="form-label fw-bold text-primary">
+                                        Email Recipients <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.recipients }}
+                                    {% if form.recipients.errors %}
+                                    <div class="text-danger mt-1">{{ form.recipients.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text text-muted small">
+                                        Comma-separated email addresses (e.g., john@company.com,jane@company.com)
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <!-- Export Format -->
+                                <div class="mb-4">
+                                    <label for="{{ form.export_format_ref.id_for_label }}"
+                                        class="form-label fw-bold text-primary">
+                                        Export Format <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.export_format_ref }}
+                                    {% if form.export_format_ref.errors %}
+                                    <div class="text-danger mt-1">{{ form.export_format_ref.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text text-muted small">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <span class="badge bg-secondary">CSV</span> - Comma-separated values
+                                            </div>
+                                            <div class="col-6">
+                                                <span class="badge bg-success">Excel</span> - Microsoft Excel format
+                                            </div>
+                                            <div class="col-6">
+                                                <span class="badge bg-danger">PDF</span> - Portable Document Format
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Status -->
+                                <div class="mb-4">
+                                    <label for="{{ form.schedule_is_active.id_for_label }}" class="form-check">
+                                        {{ form.schedule_is_active }}
+                                        <span class="form-check-label fw-bold text-primary">Active</span>
+                                    </label>
+                                    <div class="form-text text-muted small">
+                                        Inactive schedules won't send reports automatically
+                                    </div>
+                                    {% if form.schedule_is_active.errors %}
+                                    <div class="text-danger mt-1">{{ form.schedule_is_active.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <a href="{% url 'reports:schedule_list' %}" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-left"></i> Back to Schedules
+                            </a>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'reports:schedule_list' %}" class="btn btn-light">Cancel</a>
+                                <button type="submit" class="btn btn-primary">
+                                    {% if object %}Update{% else %}Create{% endif %} Schedule
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

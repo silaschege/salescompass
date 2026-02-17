@@ -1,0 +1,67 @@
+{% extends 'tenants/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'tenants:lifecycle-dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{% if object %}Update{% else %}Create{% endif
+                        %} Record</li>
+                </ol>
+            </nav>
+
+            <div class="card border-0 shadow-sm glass-card">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h3 class="fw-bold mb-0">{% if object %}Update{% else %}New{% endif %} {{
+                        model_name|default:"Record" }}</h3>
+                    <p class="text-muted small">Please fill in the details below.</p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data" class="needs-validation">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-12 mb-4">
+                                {{ form|crispy }}
+                            </div>
+                        </div>
+                        <hr class="my-4 opacity-10">
+                        <div class="d-flex justify-content-end gap-3">
+                            <a href="javascript:history.back()"
+                                class="btn btn-light rounded-pill px-4 border-0">Cancel</a>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                                <i class="bi bi-save me-2"></i>{% if object %}Save Changes{% else %}Create Record{%
+                                endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 10px !important;
+        border: 1px solid #dee2e6;
+        padding: 0.75rem 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+        border-color: #0d6efd;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,317 @@
+﻿
+-----
+
+WeasyPrint could not import some external libraries. Please carefully follow the installation steps before reporting an issue:
+https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#installation
+https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#troubleshooting 
+
+-----
+
+Operations to perform:
+  Apply all migrations: invoicing
+Running migrations:
+c:\Users\User\Document
+s\GitHub\salescompass-
+main\env\Scripts\pytho
+n.exe : Traceback 
+(most recent call 
+last):
+At line:1 char:1
++ c:\Users\User\Docume
+nts\GitHub\salescompas
+s-main\env\Scripts\pyt
+hon.e ...
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: (Traceback    
+ (most recent call    
+ last)::String) [    
+], RemoteExceptio    n
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\env\Lib\s
+ite-packages\django\db
+\models\fields\__init_
+_.py", line 2128, in 
+get_prep_value
+    return int(value)
+TypeError: int() 
+argument must be a 
+string, a bytes-like 
+object or a real 
+number, not 
+'datetime.datetime'
+
+The above exception 
+was the direct cause 
+of the following 
+exception:
+
+Traceback (most 
+recent call last):
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\core\mana
+ge.py", line 21, in 
+<module>
+    main()
+    ~~~~^^
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\core\mana
+ge.py", line 17, in 
+main
+    execute_from_comma
+nd_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~
+~~~~~~~^^^^^^^^^^
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\env\Lib\s
+ite-packages\django\co
+re\management\__init__
+.py", line 443, in exe
+cute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\env\Lib\s
+ite-packages\django\co
+re\management\__init__
+.py", line 437, in 
+execute
+    self.fetch_command
+(subcommand).run_from_
+argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~^^^^^^^^^^^
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\env\Lib\s
+ite-packages\django\co
+re\management\base.py"
+, line 420, in 
+run_from_argv
+    
+self.execute(*args, 
+**cmd_options)
+    ~~~~~~~~~~~~^^^^^^
+^^^^^^^^^^^^^^^^
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\env\Lib\s
+ite-packages\django\co
+re\management\base.py"
+, line 464, in execute
+    output = 
+self.handle(*args, 
+**options)
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\env\Lib\s
+ite-packages\django\co
+re\management\base.py"
+, line 111, in wrapper
+    res = 
+handle_func(*args, 
+**kwargs)
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\env\Lib\s
+ite-packages\django\co
+re\management\commands
+\migrate.py", line 
+354, in handle
+    
+post_migrate_state = 
+executor.migrate(
+        targets,
+    ...<3 lines>...
+        fake_initial=f
+ake_initial,
+    )
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\env\Lib\s
+ite-packages\django\db
+\migrations\executor.p
+y", line 137, in 
+migrate
+    state = self._migr
+ate_all_forwards(
+        state, plan, 
+full_plan, fake=fake, 
+fake_initial=fake_init
+ial
+    )
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\env\Lib\s
+ite-packages\django\db
+\migrations\executor.p
+y", line 169, in 
+_migrate_all_forwards
+    state = 
+self.apply_migration(
+        state, 
+migration, fake=fake, 
+fake_initial=fake_init
+ial
+    )
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\env\Lib\s
+ite-packages\django\db
+\migrations\executor.p
+y", line 257, in 
+apply_migration
+    state = migration.
+apply(state, 
+schema_editor)
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\env\Lib\s
+ite-packages\django\db
+\migrations\migration.
+py", line 132, in 
+apply
+    operation.database
+_forwards(
+    ~~~~~~~~~~~~~~~~~~
+~~~~~~~~~^
+        
+self.app_label, 
+schema_editor, 
+old_state, 
+project_state
+        ^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\env\Lib\s
+ite-packages\django\db
+\migrations\operations
+\fields.py", line 
+118, in 
+database_forwards
+    schema_editor.add_
+field(
+    ~~~~~~~~~~~~~~~~~~
+~~~~~^
+        from_model,
+        ^^^^^^^^^^^
+        field,
+        ^^^^^^
+    )
+    ^
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\env\Lib\s
+ite-packages\django\db
+\backends\sqlite3\sche
+ma.py", line 325, in 
+add_field
+    self._remake_table
+(model, 
+create_field=field)
+    ~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^
+^^^^^
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\env\Lib\s
+ite-packages\django\db
+\backends\sqlite3\sche
+ma.py", line 151, in 
+_remake_table
+    self.effective_def
+ault(create_field)
+    ~~~~~~~~~~~~~~~~~~
+~~~~^^^^^^^^^^^^^^
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\env\Lib\s
+ite-packages\django\db
+\backends\base\schema.
+py", line 491, in 
+effective_default
+    return field.get_d
+b_prep_save(self._effe
+ctive_default(field), 
+self.connection)
+           ~~~~~~~~~~~
+~~~~~~~~~~~^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\env\Lib\s
+ite-packages\django\db
+\models\fields\related
+.py", line 1189, in 
+get_db_prep_save
+    return self.target
+_field.get_db_prep_sav
+e(value, 
+connection=connection)
+           ~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\env\Lib\s
+ite-packages\django\db
+\models\fields\__init_
+_.py", line 1011, in 
+get_db_prep_save
+    return self.get_db
+_prep_value(value, con
+nection=connection, 
+prepared=False)
+           ~~~~~~~~~~~
+~~~~~~~~~~~^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\env\Lib\s
+ite-packages\django\db
+\models\fields\__init_
+_.py", line 2820, in 
+get_db_prep_value
+    value = self.get_p
+rep_value(value)
+  File "C:\Users\User\
+Documents\GitHub\sales
+compass-main\env\Lib\s
+ite-packages\django\db
+\models\fields\__init_
+_.py", line 2130, in 
+get_prep_value
+    raise e.__class__(
+        "Field '%s' 
+expected a number but 
+got %r." % 
+(self.name, value),
+    ) from e
+TypeError: Field 'id' 
+expected a number but 
+got datetime.datetime(
+2026, 2, 17, 9, 11, 
+41, 176406, tzinfo=dat
+etime.timezone.utc).
+  Applying invoicing.0002_remove_creditadjustment_adjustment_type_ref_and_more...

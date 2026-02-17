@@ -1,0 +1,54 @@
+{% extends "assets/base.html" %}
+{% load humanize %}
+
+{% block asset_content %}
+<div class="container-fluid p-3">
+    <div class="d-flex align-items-center mb-4">
+        <a href="{% url 'assets:asset_detail' asset.pk %}"
+            class="btn btn-light btn-icon rounded-circle me-3 border shadow-sm">
+            <i class="bi bi-chevron-left"></i>
+        </a>
+        <h1 class="h4 fw-bold mb-0">Quick Asset Audit</h1>
+    </div>
+
+    <div class="premium-card p-4 border-0 shadow-sm text-center mb-4">
+        <div class="mb-4">
+            <img src="{% url 'assets:asset_qrcode' asset.pk %}" class="img-fluid border p-2 bg-white"
+                style="max-width: 120px;">
+        </div>
+        <h2 class="h5 fw-bold">{{ asset.name }}</h2>
+        <div class="badge badge-soft-primary mb-3">{{ asset.asset_number }}</div>
+
+        <div class="text-start mt-4 border-top pt-3">
+            <p class="small text-muted mb-1 text-uppercase fw-bold">Category</p>
+            <p class="fw-bold">{{ asset.category.name }}</p>
+
+            <p class="small text-muted mb-1 text-uppercase fw-bold">Current Location</p>
+            <p class="fw-bold">{{ asset.location|default:"Not assigned" }}</p>
+        </div>
+
+        <div class="d-grid gap-2 mt-4">
+            <a href="{% url 'assets:asset_verification' asset.pk %}" class="btn btn-primary py-3 fw-bold shadow-sm">
+                <i class="bi bi-check-circle me-2"></i> Confirm Presence
+            </a>
+            <a href="{% url 'assets:asset_maintenance' asset.pk %}" class="btn btn-outline-primary py-3 fw-bold">
+                <i class="bi bi-tools me-2"></i> Log Service
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #f8fafc !important;
+    }
+
+    .btn-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+{% endblock %}

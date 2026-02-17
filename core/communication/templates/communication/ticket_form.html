@@ -1,0 +1,102 @@
+{% extends "communication/base.html" %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit Ticket{% else %}New Ticket{% endif %} - Communication{% endblock %}
+
+{% block comm_title %}🎫 {% if form.instance.pk %}Edit #{{ form.instance.id }}{% else %}Create New Ticket{% endif %}{%
+endblock %}
+{% block comm_subtitle %}Provide the details for the support request{% endblock %}
+
+{% block comm_actions %}
+<a href="{% url 'communication:ticket_list' %}" class="btn btn-light fw-bold px-4 shadow-sm border">
+    <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+</a>
+{% endblock %}
+
+{% block comm_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="comm-card p-4">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Subject</label>
+                    {{ form.subject }}
+                    {% if form.subject.errors %}
+                    <div class="text-danger small mt-1">{{ form.subject.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold">Ticket Type</label>
+                        {{ form.ticket_type }}
+                        {% if form.ticket_type.errors %}
+                        <div class="text-danger small mt-1">{{ form.ticket_type.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold">Priority</label>
+                        {{ form.priority }}
+                        {% if form.priority.errors %}
+                        <div class="text-danger small mt-1">{{ form.priority.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold">Status</label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                        <div class="text-danger small mt-1">{{ form.status.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold">Assign To</label>
+                        {{ form.assigned_to }}
+                        {% if form.assigned_to.errors %}
+                        <div class="text-danger small mt-1">{{ form.assigned_to.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Problem Description</label>
+                    {{ form.ticket_description }}
+                    {% if form.ticket_description.errors %}
+                    <div class="text-danger small mt-1">{{ form.ticket_description.errors }}</div>
+                    {% endif %}
+                    <div class="form-text">Include as much detail as possible, including steps to reproduce for
+                        technical issues.</div>
+                </div>
+
+                <div class="row border-top pt-4">
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold">Resolution (Optional)</label>
+                        {{ form.resolution }}
+                        {% if form.resolution.errors %}
+                        <div class="text-danger small mt-1">{{ form.resolution.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold">Resolved At</label>
+                        {{ form.resolved_at }}
+                        {% if form.resolved_at.errors %}
+                        <div class="text-danger small mt-1">{{ form.resolved_at.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end border-top pt-4">
+                    <button type="submit" class="btn btn-comm btn-lg px-5 shadow-sm">
+                        <i class="bi bi-save me-2"></i> {% if form.instance.pk %}Update{% else %}Create{% endif %}
+                        Ticket
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

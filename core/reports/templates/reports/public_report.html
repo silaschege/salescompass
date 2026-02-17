@@ -1,0 +1,75 @@
+{% extends "reports/base.html" %}
+
+{% block title %}Public Report: {{ report.report_name }} - SalesCompass{% endblock %}
+
+{% block sidebar_nav %}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white py-3">
+            <h1 class="h3 mb-0">{{ report.report_name }}</h1>
+        </div>
+        <div class="card-body">
+            <p class="lead text-muted">{{ report.report_description }}</p>
+            <hr>
+
+            <div id="preview-container" class="position-relative" style="min-height: 500px;">
+                <canvas id="report-chart"></canvas>
+                <div id="report-table-container" class="d-none"></div>
+                <div id="loading-spinner" class="position-absolute top-50 start-50 translate-middle">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer text-muted">
+            <small>Shared via SalesCompass Intelligence Suite</small>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('report-chart').getContext('2d');
+        const tableContainer = document.getElementById('report-table-container');
+        const spinner = document.getElementById('loading-spinner');
+
+        const data = JSON.parse(document.getElementById('report-data').textContent);
+        const config = JSON.parse(document.getElementById('report-config').textContent);
+
+        spinner.classList.add('d-none');
+
+        if (data.is_pivot) {
+            document.getElementById('report-chart').classList.add('d-none');
+            tableContainer.classList.remove('d-none');
+
+            let html = '<table class="table table-bordered table-sm"><thead><tr><th>Rows \\ Cols</th>';
+            data.labels.forEach(label => html += `<th>${label}</th>`);
+            html += '</tr></thead><tbody>';
+
+            data.datasets.forEach(dataset => {
+                html += `<tr><td><strong>${dataset.label}</strong></td>`;
+                dataset.data.forEach(val => html += `<td>${val}</td>`);
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            tableContainer.innerHTML = html;
+        } else {
+            new Chart(ctx, {
+                type: config.chart_type === 'table' ? 'bar' : config.chart_type,
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "loyalty/base.html" %}
+{% load humanize %}
+
+{% block loyalty_content %}
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h3 fw-bold mb-0">Reward Programs</h1>
+            <p class="text-muted small mb-0">Active loyalty configurations for your tenant</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'loyalty:program_setup' %}" class="btn btn-primary px-4 shadow-sm border-0">
+                <i class="bi bi-plus-lg me-2"></i> New Program
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for pg in programs %}
+        <div class="col-md-6">
+            <div class="premium-card p-4 border-0 shadow-sm h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-1 text-primary">{{ pg.program_name }}</h5>
+                        <p class="text-muted small">{{ pg.description|default:"No description provided." }}</p>
+                    </div>
+                    <span
+                        class="badge {% if pg.is_active %}badge-soft-success{% else %}bg-light text-muted{% endif %} rounded-pill px-3">
+                        {% if pg.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+
+                <div class="bg-light bg-opacity-50 p-3 rounded mb-4">
+                    <div class="row text-center g-0">
+                        <div class="col-6 border-end">
+                            <div class="extra-small text-muted text-uppercase fw-bold">Members</div>
+                            <div class="h5 fw-bold mb-0">{{ pg.members.count|intcomma }}</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="extra-small text-muted text-uppercase fw-bold">Earn Rate</div>
+                            <div class="h5 fw-bold mb-0">{{ pg.points_per_currency }} pts/$</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'loyalty:program_edit' pg.pk %}" class="btn btn-sm btn-light border small px-3">Edit
+                        Rules</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="premium-card p-5 border-0 shadow-sm">
+                <i class="bi bi-wallet2 text-muted mb-3 d-block" style="font-size: 3rem;"></i>
+                <h5 class="text-muted fw-normal">No loyalty programs active</h5>
+                <a href="{% url 'loyalty:program_setup' %}" class="btn btn-primary px-4 shadow-sm border-0 mt-3">Initial
+                    Setup</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<style>
+    .extra-small {
+        font-size: 0.7rem;
+    }
+</style>
+{% endblock %}

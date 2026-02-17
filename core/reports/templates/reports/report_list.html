@@ -1,0 +1,101 @@
+{% extends "reports/base.html" %}
+{% load auth_extras core_extras filters_extras math %}
+{% block title %}Reports - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title text-center">Analytic Reports</h1>
+        <p class=" text-center lead">Access all your business intelligence reports</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <div class="d-flex gap-2">
+                <a href="{% url 'reports:builder' %}" class="btn btn-primary">+ New Report</a>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex gap-2">
+                <select name="report_type" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Report Types</option>
+                    {% for type in report_type_options %}
+                    <option value="{{ type.type_name }}" {% if report_type == type.type_name %}selected{% endif %}>
+                        {{ type.label }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <form method="get" class="d-flex">
+                    <input type="text" name="search" class="form-control me-2" placeholder="Search reports..."
+                        value="{{ search_term }}">
+                    <button type="submit" class="btn btn-outline-primary">Search</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if reports %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Report Name</th>
+                    <th>Type</th>
+                    <th>Owner</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in reports %}
+                <tr>
+                    <td>
+                        <a href="{% url 'reports:report_detail' report.pk %}" class="text-decoration-none">
+                            <strong>{{ report.report_name }}</strong>
+                        </a>
+                        <br>
+                        <small class="text-muted">{{ report.report_description|truncatewords:8 }}</small>
+                    </td>
+                    <td>
+                        <span class="badge bg-primary">{{ report.report_type_ref.label }}</span>
+                    </td>
+                    <td>
+                        {% if report.created_by %}
+                        {{ report.created_by.email }}
+                        {% else %}
+                        <span class="text-muted">Unassigned</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if report.report_is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ report.report_created_at|date:"M d, Y" }}</td>
+                    <td>
+                        <div class="d-flex flex-column gap-1">
+                            <a href="{% url 'reports:report_detail' report.pk %}"
+                                class="btn btn-sm btn-outline-primary">View</a>
+                            <a href="{% url 'reports:export_report' report.pk %}?format=csv"
+                                class="btn btn-sm btn-outline-secondary">Export</a>
+                            {% if report.created_by == request.user or request.user|has_perm:"reports:write" %}
+                            <a href="{% url 'reports:schedule_create' %}?report={{ report.pk }}"
+                                class="btn btn-sm btn-outline-info">Schedule</a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">No reports found.</div>
+    {% endif %}
+</div>
+{% endblock %}

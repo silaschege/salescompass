@@ -1,0 +1,207 @@
+NEW_FILE_CODE
+{% extends "developer/base.html" %}
+{% load static %}
+{% load math %} 
+{% block title %}Monitoring - Developer Portal{% endblock %}
+
+{% block content %}
+// ... existing code ...
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Monitoring Dashboard</h1>
+        <div class="text-muted">{{ time_range }}</div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">API Usage</h5>
+                    <h2>{{ api_usage.total_requests }}</h2>
+                    <p class="text-muted">Requests (7 days)</p>
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar" role="progressbar" style="width: {% widthratio api_usage.total_requests api_usage.total_requests 100 %}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Error Rate</h5>
+                    <h2>{{ error_rate|floatformat:2 }}%</h2>
+                    <p class="text-muted">Webhook Failures</p>
+                    <div class="d-flex">
+                        <div class="text-success mr-3">Success: {{ successful_webhooks }}</div>
+                        <div class="text-danger">Failures: {{ failed_webhooks }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Latency</h5>
+                    <h2>{{ latency.avg|floatformat:2 }}ms</h2>
+                    <p class="text-muted">Average Delivery Time</p>
+                    <div class="d-flex">
+                        <div class="text-primary mr-3">P95: {{ latency.p95|floatformat:2 }}ms</div>
+                        <div class="text-primary">P99: {{ latency.p99|floatformat:2 }}ms</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Active Tokens</h5>
+                    <h2>{{ api_usage.active_tokens }}</h2>
+                    <p class="text-muted">Total: {{ api_usage.total_tokens }}</p>
+                    <a href="{% url 'developer:api_keys' %}" class="btn btn-outline-primary btn-sm">Manage Tokens</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">API Usage Over Time</h5>
+                    <canvas id="apiUsageChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Webhook Success vs Failures</h5>
+                    <canvas id="webhookStatsChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quota Usage -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Quota Usage</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>API Token</th>
+                                    <th>Daily Requests</th>
+                                    <th>Rate Limit</th>
+                                    <th>Usage</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for token in quota_usage %}
+                                    <tr>
+                                        <td>{{ token.token.name }}</td>
+                                        <td>{{ token.usage_percent|floatformat:2 }}%</td>
+                                        <td>{{ token.token.daily_request_count }}/{{ token.token.rate_limit }}</td>
+                                        <td>
+                                            <div class="progress" style="height: 10px;">
+                                                <div class="progress-bar {% if token.usage_percent > 90 %}bg-danger{% elif token.usage_percent > 70 %}bg-warning{% else %}bg-success{% endif %}" 
+                                                     role="progressbar" 
+                                                     style="width: {{ token.usage_percent }}%;">
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if token.usage_percent > 90 %}
+                                                <span class="badge badge-danger">Critical</span>
+                                            {% elif token.usage_percent > 70 %}
+                                                <span class="badge badge-warning">Warning</span>
+                                            {% else %}
+                                                <span class="badge badge-success">Normal</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // API Usage Chart
+    fetch('/developer/api/usage-chart/')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('apiUsageChart');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.date),
+                    datasets: [{
+                        label: 'API Requests',
+                        data: data.map(d => d.requests),
+                        borderColor: '#4e73df',
+                        backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+
+    // Webhook Stats Chart
+    fetch('/developer/api/webhook-stats-chart/')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('webhookStatsChart');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.date),
+                    datasets: [
+                        {
+                            label: 'Successes',
+                            data: data.map(d => d.successes),
+                            backgroundColor: '#1cc88a'
+                        },
+                        {
+                            label: 'Failures',
+                            data: data.map(d => d.failures),
+                            backgroundColor: '#e74a3b'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+</script>
+{% endblock %}

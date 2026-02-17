@@ -1,0 +1,67 @@
+{% extends "accounting/base.html" %}
+
+{% block accounting_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Tax Rules</h1>
+        <a href="{% url 'accounting:tax_rule_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Tax Rule
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Automation Rules</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Rule Name</th>
+                            <th>Priority</th>
+                            <th>Applies Rate</th>
+                            <th>Condition: Region</th>
+                            <th>Condition: Category</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rule in tax_rules %}
+                        <tr>
+                            <td>{{ rule.name }}</td>
+                            <td>{{ rule.priority }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ rule.tax_rate.name }} ({{ rule.tax_rate.rate }}%)</span>
+                            </td>
+                            <td>{{ rule.get_region_display|default:"All Regions" }}</td>
+                            <td>{{ rule.product_category.name|default:"All Categories" }}</td>
+                            <td>
+                                {% if rule.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'accounting:tax_rule_update' rule.id %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'accounting:tax_rule_delete' rule.id %}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No tax rules defined.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

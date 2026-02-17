@@ -1,0 +1,16 @@
+<div class="card h-100 shadow-sm">
+    <div class="card-body">
+        <h6 class="card-title text-muted mb-2">Pipeline Health (ML)</h6>
+        <div class="d-flex align-items-center mb-3">
+            <h2 class="mb-0 text-primary">{{ avg_ml_prob }}%</h2>
+            <span class="ms-2 badge bg-success-soft text-success">Avg Win Prob</span>
+        </div>
+        <div class="progress mb-3" style="height: 6px;">
+            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ avg_ml_prob }}%"
+                aria-valuenow="{{ avg_ml_prob }}" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <p class="card-text small text-muted">
+            <strong>{{ high_prob_count }}</strong> out of {{ total_count }} opportunities have >70% win probability.
+        </p>
+    </div>
+</div>

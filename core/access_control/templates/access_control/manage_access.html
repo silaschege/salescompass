@@ -1,0 +1,248 @@
+{% extends "access_control/base.html" %}
+
+{% block title %}Manage Access Controls{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4 text-center">Manage Access Controls</h1>
+
+            <!-- Definitions Section -->
+            <div class="row mb-4">
+                <div class="col-md-6 mx-auto">
+                    <form method="get" action=".">
+                        <div class="input-group">
+                            <input type="text" name="q" class="form-control"
+                                placeholder="Search access controls, tenants, roles, users..."
+                                value="{{ search_query|default:'' }}">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-search"></i> Search
+                            </button>
+                            {% if search_query %}
+                            <a href="{% url 'access_control:manage_access' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Clear
+                            </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Access Control Definitions</h5>
+                    <a href="{% url 'access_control:create_access' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Define New Access Control
+                    </a>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Key</th>
+                                <th>Type</th>
+                                <th>Default Enabled</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for control in access_controls %}
+                            <tr>
+                                <td>
+                                    <strong>{{ control.name }}</strong>
+                                    <small class="text-muted d-block">{{ control.description|truncatechars:50 }}</small>
+                                </td>
+                                <td><code>{{ control.key }}</code></td>
+                                <td>
+                                    {% if control.access_type == 'permission' %}
+                                    <span class="badge bg-primary">Permission</span>
+                                    {% elif control.access_type == 'feature_flag' %}
+                                    <span class="badge bg-warning text-dark">Feature Flag</span>
+                                    {% else %}
+                                    <span class="badge bg-info">Entitlement</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if control.default_enabled %}
+                                    <i class="bi bi-check-circle text-success"></i> Yes
+                                    {% else %}
+                                    <i class="bi bi-x-circle text-muted"></i> No
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <a href="{% url 'access_control:edit_access' control.pk %}"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{% url 'access_control:delete_access' control.pk %}"
+                                            class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No definitions found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tenant Assignments Section -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Tenant Assignments</h5>
+                    <a href="{% url 'access_control:assign_tenant_access' %}" class="btn btn-secondary">
+                        <i class="bi bi-link-45deg"></i> Assign Access to Tenant
+                    </a>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Tenant Name</th>
+                                <th>Assigned Controls</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tenant in tenants %}
+                            <tr>
+                                <td>
+                                    <strong>{{ tenant.name }}</strong>
+                                    <small class="text-muted d-block">ID: {{ tenant.tenant_id }}</small>
+                                </td>
+                                <td><span class="badge bg-secondary">{{ tenant.access_count }} Assigned</span></td>
+                                <td class="text-end">
+                                    <a href="{% url 'access_control:tenant_access_detail' tenant.pk %}"
+                                        class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> View Assignments
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center">No tenants found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Role Assignments Section -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Role Assignments</h5>
+                    <!-- Button placeholder for assigning to role -->
+                    <button class="btn btn-secondary disabled" title="Not implemented yet">
+                        <i class="bi bi-person-badge"></i> Assign Access to Role
+                    </button>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Role Name</th>
+                                <th>Tenant</th>
+                                <th>Assigned Permissions</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for role in roles %}
+                            <tr>
+                                <td>
+                                    <strong>{{ role.name }}</strong>
+                                    {% if role.is_system_role %}
+                                    <span class="badge bg-info text-dark">System Role</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if role.tenant %}
+                                    {{ role.tenant.name }}
+                                    {% else %}
+                                    <em class="text-muted">System Wide</em>
+                                    {% endif %}
+                                </td>
+                                <td><span class="badge bg-secondary">{{ role.access_count }} Permissions</span></td>
+                                <td class="text-end">
+                                    <a href="{% url 'access_control:role_access_detail' role.pk %}"
+                                        class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> View Permissions
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No roles found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- User Assignments Section -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">User Assignments</h5>
+                    <!-- Button placeholder for assigning to user -->
+                    <button class="btn btn-secondary disabled" title="Not implemented yet">
+                        <i class="bi bi-person"></i> Assign Access to User
+                    </button>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>User Email</th>
+                                <th>Assigned Permissions</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users %}
+                            <tr>
+                                <td>
+                                    <strong>{{ u.email }}</strong>
+                                    <small class="text-muted d-block">
+                                        {% if u.first_name or u.last_name %}
+                                        {{ u.first_name }} {{ u.last_name }}
+                                        {% endif %}
+                                    </small>
+                                </td>
+                                <td>
+                                    {% if u.access_count > 0 %}
+                                    <span class="badge bg-primary">{{ u.access_count }} Direct Permissions</span>
+                                    {% else %}
+                                    <span class="text-muted small">No direct assignments</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'access_control:user_access_detail' u.pk %}"
+                                        class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> View Permissions
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center">No users found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

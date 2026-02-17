@@ -1,0 +1,928 @@
+{% extends "engagement/base.html" %}
+{% load static humanize auth_extras math filters_extras %}
+
+{% block title %}Engagement Dashboard - SalesCompass{% endblock %}
+
+{% block content %}
+<div class="header-bar mb-4">
+    <div class="container">
+        <h1 class="block-title">Engagement Dashboard</h1>
+        <p class="text-white text-center lead">Real-time insights into customer engagement and next best actions</p>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- Action Buttons and Date Range -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="d-flex gap-2">
+                <a href="{% url 'engagement:feed' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-activity"></i> Live Feed
+                </a>
+                <a href="{% url 'engagement:next_best_action' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-lightning"></i> Next Best Actions
+                </a>
+                <a href="{% url 'engagement:attribution_report' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-bar-chart-line"></i> Attribution
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-6 text-end">
+            <div class="btn-group" role="group">
+                <a href="#" class="btn btn-outline-secondary" data-range="7">7 Days</a>
+                <a href="#" class="btn btn-outline-secondary active" data-range="30">30 Days</a>
+                <a href="#" class="btn btn-outline-secondary" data-range="90">90 Days</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards with Trends -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Events</h6>
+                            <h3 class="mb-0">{{ total_events|intcomma }}</h3>
+                        </div>
+                        <div class="icon bg-primary text-white rounded-circle p-2">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-success">
+                            <i class="bi bi-arrow-up"></i> {{ events_trend }}% vs last period
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Important Events</h6>
+                            <h3 class="mb-0">{{ important_events|intcomma }}</h3>
+                        </div>
+                        <div class="icon bg-warning text-white rounded-circle p-2">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-warning">
+                            <i class="bi bi-arrow-up"></i> {{ important_events_trend }}% vs last period
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Avg Engagement Score</h6>
+                            <h3 class="mb-0">{{ engagement_score|floatformat:1 }}</h3>
+                        </div>
+                        <div class="icon bg-success text-white rounded-circle p-2">
+                            <i class="bi bi-bar-chart-line"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-success">
+                            <i class="bi bi-arrow-up"></i> {{ engagement_score_trend }}% vs last period
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Pending Actions</h6>
+                            <h3 class="mb-0">{{ pending_actions_count|length|intcomma }}</h3>
+                        </div>
+                        <div class="icon bg-info text-white rounded-circle p-2">
+                            <i class="bi bi-lightning"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-danger">
+                            {% if overdue_actions > 0 %}
+                            <i class="bi bi-exclamation-circle"></i> {{ overdue_actions }} overdue
+                            {% else %}
+                            <i class="bi bi-check-circle"></i> All on track
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header border-0 bg-white">
+                    <h5 class="mb-0">Engagement Events Over Time</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="engagementChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header border-0 bg-white">
+                    <h5 class="mb-0">Event Type Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="eventTypeChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 3: Heatmap & ROI -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">24/7 Engagement Heatmap</h5>
+                </div>
+                <div class="card-body">
+                    <div id="heatmapGrid" class="heatmap-grid-container">
+                        <!-- Heatmap will be rendered here -->
+                    </div>
+                    <div class="heatmap-legend mt-3 d-flex justify-content-center gap-2 align-items-center">
+                        <small class="text-muted">Less</small>
+                        <div class="heatmap-cell level-0"></div>
+                        <div class="heatmap-cell level-1"></div>
+                        <div class="heatmap-cell level-2"></div>
+                        <div class="heatmap-cell level-3"></div>
+                        <div class="heatmap-cell level-4"></div>
+                        <small class="text-muted">More</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Engagement vs Win Rate</h5>
+                    <small class="text-muted">Correlation Analysis</small>
+                </div>
+                <div class="card-body">
+                    <canvas id="roiChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="row">
+        <!-- Recent Events -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header border-0 bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Engagement Events</h5>
+                    <a href="{% url 'engagement:feed' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_events %}
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Account</th>
+                                    <th>Event</th>
+                                    <th>Type</th>
+                                    <th>Score</th>
+                                    <th>When</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for event in recent_events %}
+                                <tr class="{% if event.is_important %}table-warning{% endif %}">
+                                    <td>
+                                        <a href="{% url 'accounts:account_detail' event.account.pk %}"
+                                            class="text-decoration-none">
+                                            {{ event.account.name|truncatechars:20 }}
+                                        </a>
+                                    </td>
+                                    <td>{{ event.title|default:event.description|truncatechars:30 }}</td>
+                                    <td>
+                                        <span
+                                            class="badge bg-{% if event.priority == 'critical' %}danger{% elif event.priority == 'high' %}warning{% elif event.priority == 'medium' %}info{% else %}secondary{% endif %}">
+                                            {{ event.get_event_type_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 6px; width: 60px;">
+                                            <div class="progress-bar bg-{% if event.engagement_score > 70 %}success{% elif event.engagement_score > 40 %}warning{% else %}danger{% endif %}"
+                                                style="width: {{ event.engagement_score|floatformat:0 }}%;">
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ event.created_at|timesince }} ago</td>
+                                    <td>
+
+                                        <a href="{% url 'engagement:event_detail' event.pk %}"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center p-4">
+                        <i class="bi bi-activity display-4 text-muted"></i>
+                        <p class="text-muted mt-2">No recent events found.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Next Best Actions -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header border-0 bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Next Best Actions</h5>
+                    <a href="{% url 'engagement:next_best_action' %}" class="btn btn-sm btn-outline-primary">View
+                        All</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if pending_actions %}
+                    <div class="list-group list-group-flush">
+                        {% for action in pending_actions|slice:":5" %}
+                        <div class="list-group-item border-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">
+                                        <span
+                                            class="badge bg-{% if action.priority == 'critical' %}danger{% elif action.priority == 'high' %}warning{% elif action.priority == 'medium' %}info{% else %}secondary{% endif %} me-2">
+                                            {{ action.get_priority_display|slice:":1" }}
+                                        </span>
+                                        {{ action.description|truncatechars:40 }}
+                                    </h6>
+                                    <small class="text-muted d-block">
+                                        Due: {{ action.due_date|date:"M d, Y" }}
+                                    </small>
+                                    {% if action.account %}
+                                    <small class="text-muted">
+                                        Account: {{ action.account.name|truncatechars:20 }}
+                                    </small>
+                                    {% endif %}
+                                </div>
+                                <div class="ms-2">
+                                    {% if action.due_date < now %} <span class="badge bg-danger">Overdue</span>
+                                        {% endif %}
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-primary complete-action" data-action-id="{{ action.id }}">
+                                    <i class="bi bi-check-circle"></i> Complete
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center p-4">
+                        <i class="bi bi-lightning display-4 text-muted"></i>
+                        <p class="text-muted mt-2">No pending actions.</p>
+                        <a href="{% url 'engagement:next_best_action_create' %}" class="btn btn-sm btn-primary mt-2">
+                            <i class="bi bi-plus"></i> Create Action
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Dashboards Section -->
+    <div class="row mt-4">
+        <!-- Account-Specific Engagement Timeline -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Account Engagement Timeline</h5>
+                    <small class="text-muted">Top accounts by engagement activity</small>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="accountTimelineAccordion">
+                        {% for account_data in account_timeline_data %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false"
+                                    aria-controls="collapse{{ forloop.counter }}">
+                                    {{ account_data.account_name }}
+                                </button>
+                            </h2>
+                            <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse"
+                                aria-labelledby="heading{{ forloop.counter }}"
+                                data-bs-parent="#accountTimelineAccordion">
+                                <div class="accordion-body">
+                                    {% if account_data.data %}
+                                    <canvas id="accountTimelineChart{{ forloop.counter }}" height="200"></canvas>
+                                    {% else %}
+                                    <p class="text-muted">No engagement data available for this account.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">No account data available.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact-Level Engagement History -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Contact Engagement History</h5>
+                    <small class="text-muted">Top contacts by engagement activity</small>
+                </div>
+                <div class="card-body">
+                    {% if contact_history_data %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Contact</th>
+                                    <th>Account</th>
+                                    <th>Events</th>
+                                    <th>Avg Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contact in contact_history_data %}
+                                <tr>
+                                    <td>{{ contact.contact_name }}</td>
+                                    <td>{{ contact.account_name }}</td>
+                                    <td>{{ contact.total_events }}</td>
+                                    <td>
+                                        <span
+                                            class="badge bg-{% if contact.avg_score > 70 %}success{% elif contact.avg_score > 40 %}warning{% else %}danger{% endif %}">
+                                            {{ contact.avg_score }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No contact engagement data available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Opportunity Engagement Journey -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Opportunity Engagement Journey</h5>
+                    <small class="text-muted">Engagement progression for key opportunities</small>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="opportunityJourneyAccordion">
+                        {% for opp_data in opportunity_journey_data %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="oppHeading{{ forloop.counter }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#oppCollapse{{ forloop.counter }}" aria-expanded="false"
+                                    aria-controls="oppCollapse{{ forloop.counter }}">
+                                    {{ opp_data.opportunity_name }}
+                                </button>
+                            </h2>
+                            <div id="oppCollapse{{ forloop.counter }}" class="accordion-collapse collapse"
+                                aria-labelledby="oppHeading{{ forloop.counter }}"
+                                data-bs-parent="#opportunityJourneyAccordion">
+                                <div class="accordion-body">
+                                    <p><strong>Account:</strong> {{ opp_data.account_name }}</p>
+                                    <p><strong>Stage:</strong> {{ opp_data.stage }}</p>
+                                    {% if opp_data.event_timeline %}
+                                    <canvas id="oppJourneyChart{{ forloop.counter }}" height="150"></canvas>
+                                    {% else %}
+                                    <p class="text-muted">No engagement data available for this opportunity.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">No opportunity data available.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Engagement Journey Map -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Customer Engagement Journey</h5>
+                        <small class="text-muted">Common paths customers take through engagement events</small>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="journeyMapChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Engagement Flow Sankey Diagram -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Engagement Flow Analysis</h5>
+                        <small class="text-muted">How customers transition between engagement event types</small>
+                    </div>
+                    <div class="card-body">
+                        <div id="sankeyDiagram" style="height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Geographic Engagement -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Geographic Engagement Distribution</h5>
+                        <small class="text-muted">Engagement volume by country</small>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="geographicMap" style="height: 500px; background: #f8f9fa;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Relationship Network Graph -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Engagement Relationship Network</h5>
+                        <small class="text-muted">Connections between accounts, contacts, and engagement events</small>
+                    </div>
+                    <div class="card-body">
+                        <div id="networkGraph" style="height: 500px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Engagement Comparison -->
+        <div class="row mb-4">
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Engagement Comparison</h5>
+                        <small class="text-muted">Account and period comparisons</small>
+                    </div>
+                    <div class="card-body">
+                        <ul class="nav nav-tabs" id="comparisonTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="account-comparison-tab" data-bs-toggle="tab"
+                                    data-bs-target="#account-comparison" type="button" role="tab"
+                                    aria-controls="account-comparison" aria-selected="true">Account vs Account</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="period-comparison-tab" data-bs-toggle="tab"
+                                    data-bs-target="#period-comparison" type="button" role="tab"
+                                    aria-controls="period-comparison" aria-selected="false">Period vs Period</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content" id="comparisonTabContent">
+                            <div class="tab-pane fade show active" id="account-comparison" role="tabpanel"
+                                aria-labelledby="account-comparison-tab">
+                                {% if engagement_comparison_data.accounts_comparison %}
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Account</th>
+                                                <th>Events</th>
+                                                <th>Avg Score</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for account in engagement_comparison_data.accounts_comparison %}
+                                            <tr>
+                                                <td>{{ account.account_name }}</td>
+                                                <td>{{ account.event_count }}</td>
+                                                <td>
+                                                    <span
+                                                        class="badge bg-{% if account.avg_score > 70 %}success{% elif account.avg_score > 40 %}warning{% else %}danger{% endif %}">
+                                                        {{ account.avg_score }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <p class="text-muted mt-3">No account comparison data available.</p>
+                                {% endif %}
+                            </div>
+                            <div class="tab-pane fade" id="period-comparison" role="tabpanel"
+                                aria-labelledby="period-comparison-tab">
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <div class="card bg-light">
+                                            <div class="card-body text-center">
+                                                <h6>Current Period</h6>
+                                                <h4>{{ engagement_comparison_data.period_comparison.current.event_count
+                                                    }}</h4>
+                                                <p class="mb-0">Events</p>
+                                                <p class="mb-0">
+                                                    <span
+                                                        class="badge bg-{% if engagement_comparison_data.period_comparison.current.avg_score > 70 %}success{% elif engagement_comparison_data.period_comparison.current.avg_score > 40 %}warning{% else %}danger{% endif %}">
+                                                        {{
+                                                        engagement_comparison_data.period_comparison.current.avg_score
+                                                        }} Avg Score
+                                                    </span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-body text-center">
+                                                <h6>Previous Period</h6>
+                                                <h4>{{ engagement_comparison_data.period_comparison.previous.event_count
+                                                    }}</h4>
+                                                <p class="mb-0">Events</p>
+                                                <p class="mb-0">
+                                                    <span
+                                                        class="badge bg-{% if engagement_comparison_data.period_comparison.previous.avg_score > 70 %}success{% elif engagement_comparison_data.period_comparison.previous.avg_score > 40 %}warning{% else %}danger{% endif %}">
+                                                        {{
+                                                        engagement_comparison_data.period_comparison.previous.avg_score
+                                                        }} Avg Score
+                                                    </span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 mt-4">
+                                        <div style="height: 250px;">
+                                            <canvas id="periodTimelineChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'engagement/css/engagement_visuals.css' %}">
+<style>
+    .card {
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-header {
+        border-bottom: 1px solid #e9ecef;
+        padding: 1rem 1.25rem;
+    }
+
+    .icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .table thead th {
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .list-group-item {
+        padding: 1rem 1.25rem;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.3em 0.6em;
+    }
+
+    .btn-group .btn {
+        border-radius: 0.375rem !important;
+    }
+
+    .btn-group .btn.active {
+        background-color: #6f42c1;
+        border-color: #6f42c1;
+        color: white;
+    }
+
+    /* Heatmap Grid Styles */
+    .heatmap-grid-container {
+        display: grid;
+        grid-template-columns: repeat(25, 1fr);
+        grid-gap: 2px;
+        margin-top: 10px;
+    }
+
+    .heatmap-cell {
+        aspect-ratio: 1;
+        border-radius: 2px;
+        background-color: #ebedf0;
+    }
+
+    .heatmap-header {
+        font-size: 10px;
+        text-align: center;
+        color: #6a737d;
+    }
+
+    .heatmap-day {
+        font-size: 10px;
+        align-self: center;
+        color: #6a737d;
+    }
+
+    .level-0 {
+        background-color: #ebedf0;
+    }
+
+    .level-1 {
+        background-color: #9be9a8;
+    }
+
+    .level-2 {
+        background-color: #40c463;
+    }
+
+    .level-3 {
+        background-color: #30a14e;
+    }
+
+    .level-4 {
+        background-color: #216e39;
+    }
+
+    /* Map Styles */
+    .country {
+        fill: #ebedf0;
+        stroke: #fff;
+        stroke-width: 0.5px;
+        transition: fill 0.3s;
+    }
+
+    .country:hover {
+        fill: #6f42c1 !important;
+        cursor: pointer;
+    }
+</style>
+
+<!-- Chart.js and Visualization Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Date range buttons
+        document.querySelectorAll('[data-range]').forEach(button => {
+            button.addEventListener('click', function () {
+                document.querySelectorAll('[data-range]').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                const days = this.dataset.range;
+                console.log(`Switching to ${days} day range`);
+            });
+        });
+
+        // Complete action buttons
+        document.querySelectorAll('.complete-action').forEach(button => {
+            button.addEventListener('click', function () {
+                const actionId = this.dataset.actionId;
+                if (confirm('Mark this action as completed?')) {
+                    completeNextBestAction(actionId);
+                }
+            });
+        });
+
+        // Engagement Chart
+        const engagementCtx = document.getElementById('engagementChart').getContext('2d');
+        new Chart(engagementCtx, {
+            type: 'line',
+            data: {
+                labels: {{ chart_labels| safe }},
+        datasets: [{
+            label: 'Engagement Events',
+            data: {{ chart_data| safe }},
+        borderColor: '#6f42c1',
+        backgroundColor: 'rgba(111, 66, 193, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.3
+                    }]
+                },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: { beginAtZero: true },
+            x: { grid: { display: false } }
+        },
+        plugins: { legend: { display: false } }
+    }
+            });
+
+    // Event Type Chart
+    const eventTypeCtx = document.getElementById('eventTypeChart').getContext('2d');
+    new Chart(eventTypeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ event_type_labels| safe }},
+        datasets: [{
+            data: {{ event_type_data| safe }},
+        backgroundColor: ['#6f42c1', '#007bff', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6c757d'],
+        borderWidth: 0
+                    }]
+                },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { padding: 15, usePointStyle: true }
+            }
+        }
+    }
+            });
+
+    // ROI Chart
+    const roiCanvas = document.getElementById('roiChart');
+    if (roiCanvas) {
+        const roiData = {{ roi_data| safe
+    }};
+    new Chart(roiCanvas.getContext('2d'), {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Accounts',
+                data: roiData,
+                backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            let point = context.raw;
+                            return `${point.name}: Score ${point.x}, Win Rate ${point.y}%`;
+                        }
+                    }
+                },
+                legend: { display: false }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Engagement Score' } },
+                y: { beginAtZero: true, max: 100, title: { display: true, text: 'Win Rate (%)' } }
+            }
+        }
+    });
+            }
+
+    // Engagement Journey Chart
+    const journeyData = {{ engagement_journey_data| safe }};
+    if (journeyData && journeyData.length > 0) {
+        const journeyCtx = document.getElementById('journeyMapChart').getContext('2d');
+        new Chart(journeyCtx, {
+            type: 'bar',
+            data: {
+                labels: journeyData.map(item => item.path),
+                datasets: [{
+                    label: 'Number of Accounts',
+                    data: journeyData.map(item => item.count),
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: { indexAxis: 'y', responsive: true }
+        });
+    }
+
+    // Sankey Diagram
+    const flowData = {{ engagement_flow_data| safe }};
+    if (flowData && flowData.nodes && flowData.links && flowData.links.length > 0) {
+        const sankeyContainer = document.getElementById('sankeyDiagram');
+        const width = sankeyContainer.offsetWidth;
+        const height = 400;
+        const svg = d3.select("#sankeyDiagram").append("svg").attr("width", width).attr("height", height);
+        const sankey = d3.sankey().nodeWidth(20).nodePadding(15).extent([[1, 1], [width - 1, height - 5]]);
+        const graph = { nodes: flowData.nodes.map(d => Object.assign({}, d)), links: flowData.links.map(d => Object.assign({}, d)) };
+        sankey(graph);
+        const color = d3.scaleOrdinal(d3.schemeCategory10);
+        svg.append("g").attr("fill", "none").selectAll("path").data(graph.links).join("path").attr("d", d3.sankeyLinkHorizontal()).attr("stroke", d => color(d.source.name)).attr("stroke-width", d => Math.max(1, d.width)).attr("stroke-opacity", 0.15);
+        svg.append("g").selectAll("rect").data(graph.nodes).join("rect").attr("x", d => d.x0).attr("y", d => d.y0).attr("height", d => d.y1 - d.y0).attr("width", d => d.x1 - d.x0).attr("fill", d => color(d.name)).attr("rx", 3);
+    }
+
+    // Heatmap Grid
+    const heatmapData = {{ heatmap_2d_data| safe }};
+    const heatmapContainer = document.getElementById('heatmapGrid');
+    if (heatmapContainer && heatmapData) {
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        heatmapContainer.innerHTML = '<div class="heatmap-header-empty"></div>';
+        for (let h = 0; h < 24; h++) {
+            let hDiv = document.createElement('div');
+            hDiv.className = 'heatmap-header';
+            hDiv.innerText = h % 6 === 0 ? `${h}h` : '';
+            heatmapContainer.appendChild(hDiv);
+        }
+        heatmapData.forEach((row, dayIdx) => {
+            let dayDiv = document.createElement('div');
+            dayDiv.className = 'heatmap-day';
+            dayDiv.innerText = days[dayIdx];
+            heatmapContainer.appendChild(dayDiv);
+            row.forEach((val, hour) => {
+                let cell = document.createElement('div');
+                let level = val > 50 ? 4 : val > 20 ? 3 : val > 10 ? 2 : val > 0 ? 1 : 0;
+                cell.className = `heatmap-cell level-${level}`;
+                cell.title = `${days[dayIdx]} ${hour}:00 - ${val} events`;
+                heatmapContainer.appendChild(cell);
+            });
+        });
+    }
+
+    // WebSocket connection
+    const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+    const socket = new WebSocket(`${wsScheme}://${window.location.host}/ws/engagement/feed/`);
+    socket.onmessage = function (event) {
+        const message = JSON.parse(event.data);
+        if (message.type === 'engagement_alert') {
+            const data = message.data;
+            const toastContainer = document.getElementById('toast-container');
+            const toastEl = document.createElement('div');
+            toastEl.className = 'toast show';
+            toastEl.innerHTML = `<div class="toast-header"><strong class="me-auto">${data.title}</strong><button type="button" class="btn-close" data-bs-dismiss="toast"></button></div><div class="toast-body">${data.message}</div>`;
+            toastContainer.appendChild(toastEl);
+            setTimeout(() => toastEl.remove(), 5000);
+        }
+    };
+        });
+
+    function completeNextBestAction(actionId) {
+        fetch('{% url "engagement:complete_next_best_action" %}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ action_id: actionId })
+        }).then(response => response.json()).then(data => {
+            if (data.success) location.reload();
+            else alert('Error: ' + data.error);
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "accounting/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block accounting_content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{% if form.instance.pk %}Edit{% else %}Design{% endif %} Custom Report</h5>
+                <a href="{% url 'accounting:custom_report_list' %}" class="btn btn-sm btn-light">Back to List</a>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.name|as_crispy_field }}
+                            {{ form.report_type|as_crispy_field }}
+                            {{ form.is_active|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-info">
+                                <h6><i class="bi bi-info-circle"></i> Configuration Guide</h6>
+                                <p class="small mb-0">Define the report structure using JSON. You can specify rows,
+                                    sections, and account ranges.</p>
+                            </div>
+                            {{ form.config_data|as_crispy_field }}
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary">Save Report Design</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
