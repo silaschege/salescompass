@@ -16,8 +16,8 @@ def handle_invoice_posting(sender, instance, created, **kwargs):
 @receiver(post_save, sender=Payment)
 def handle_payment_posting(sender, instance, created, **kwargs):
     """
-    Automatically post to GL when a payment is marked as 'completed'.
+    Automatically post to GL when a new payment is created.
     """
-    if instance.status == 'completed' and not hasattr(instance, '_gl_posted'):
+    if created and not hasattr(instance, '_gl_posted'):
         AccountingIntegrationService.post_payment_to_gl(instance)
         instance._gl_posted = True

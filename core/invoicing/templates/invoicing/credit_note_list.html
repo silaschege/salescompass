@@ -22,21 +22,42 @@
                             <th>Date</th>
                             <th>Invoice</th>
                             <th>Reason</th>
-                            <th class="text-end pe-4">Amount</th>
+                            <th class="text-end">Amount</th>
+                            <th class="text-end pe-4">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for cn in credit_notes %}
                         <tr>
-                            <td class="ps-4 fw-medium">{{ cn.note_number }}</td>
+                            <td class="ps-4 fw-medium">
+                                <a href="{% url 'invoicing:credit_note_detail' cn.pk %}" class="text-decoration-none">
+                                    {{ cn.note_number }}
+                                </a>
+                            </td>
                             <td>{{ cn.issue_date }}</td>
                             <td>{{ cn.invoice.invoice_number }}</td>
                             <td>{{ cn.reason|truncatechars:50 }}</td>
-                            <td class="text-end pe-4 fw-bold">${{ cn.amount|floatformat:2 }}</td>
+                            <td class="text-end fw-bold">${{ cn.amount|floatformat:2 }}</td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group">
+                                    <a href="{% url 'invoicing:credit_note_detail' cn.pk %}"
+                                        class="btn btn-sm btn-outline-secondary" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'invoicing:credit_note_update' cn.pk %}"
+                                        class="btn btn-sm btn-outline-primary" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'invoicing:credit_note_delete' cn.pk %}"
+                                        class="btn btn-sm btn-outline-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">No credit notes found.</td>
+                            <td colspan="6" class="text-center py-5 text-muted">No credit notes found.</td>
                         </tr>
                         {% endfor %}
                     </tbody>

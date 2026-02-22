@@ -22,7 +22,8 @@
                             <th>Invoice</th>
                             <th>Method</th>
                             <th>Reference</th>
-                            <th class="text-end pe-4">Amount</th>
+                            <th class="text-end">Amount</th>
+                            <th class="text-end pe-4">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -32,11 +33,23 @@
                             <td class="fw-medium">{{ payment.invoice.invoice_number }}</td>
                             <td>{{ payment.get_payment_method_display }}</td>
                             <td>{{ payment.reference_number|default:"-" }}</td>
-                            <td class="text-end pe-4 fw-bold">${{ payment.amount|floatformat:2 }}</td>
+                            <td class="text-end fw-bold">${{ payment.amount|floatformat:2 }}</td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group">
+                                    <a href="{% url 'invoicing:payment_update' payment.pk %}"
+                                        class="btn btn-sm btn-outline-primary" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'invoicing:payment_delete' payment.pk %}"
+                                        class="btn btn-sm btn-outline-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">No payments recorded yet.</td>
+                            <td colspan="6" class="text-center py-5 text-muted">No payments recorded yet.</td>
                         </tr>
                         {% endfor %}
                     </tbody>

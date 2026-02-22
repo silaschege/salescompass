@@ -23,3 +23,4 @@ dj-database-url>=2.1.0
 scikit-learn
 weasyprint>=60.0.0
 python-barcode>=0.14.0
+reportlab>=4.0.0

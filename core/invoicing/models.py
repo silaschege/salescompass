@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from tenants.models import TenantAwareModel as TenantModel
 from core.models import User, TimeStampedModel
 from accounts.models import Account
@@ -41,6 +42,20 @@ class Invoice(TenantModel, TimeStampedModel):
     def balance_due(self):
         return self.total_amount - self.amount_paid
 
+    @property
+    def is_overdue(self):
+        """Returns True if the invoice is past its due date and not fully paid."""
+        if self.status in ('paid', 'cancelled', 'draft'):
+            return False
+        return self.due_date < timezone.now().date()
+
+    @property
+    def days_overdue(self):
+        """Returns the number of days past due. 0 if not overdue."""
+        if not self.is_overdue:
+            return 0
+        return (timezone.now().date() - self.due_date).days
+
 class InvoiceLine(TenantModel):
     """
     Line item for a Tenant Invoice.
@@ -51,12 +66,13 @@ class InvoiceLine(TenantModel):
     quantity = models.DecimalField(max_digits=10, decimal_places=2, default=1)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    discount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
 
     def save(self, *args, **kwargs):
         if self.product and not self.description:
             self.description = self.product.product_name
-        self.amount = self.quantity * self.unit_price
+        self.amount = (self.quantity * self.unit_price) - self.discount
         super().save(*args, **kwargs)
     
     def __str__(self):

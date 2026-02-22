@@ -147,7 +147,7 @@ class AccountingIntegrationService:
                     'account': cash_account,
                     'debit': payment.amount,
                     'credit': 0,
-                    'description': f"Payment {payment.payment_number}"
+                    'description': f"Payment Ref:{payment.reference_number or payment.pk}"
                 },
                 {
                     'account': ar_account,
@@ -160,15 +160,15 @@ class AccountingIntegrationService:
             journal = JournalService.create_journal_entry(
                 tenant=payment.tenant,
                 date=payment.payment_date,
-                description=f"Payment Posting: {payment.payment_number}",
+                description=f"Payment Posting: Ref:{payment.reference_number or payment.pk}",
                 user=None,
                 lines=lines,
-                reference=payment.payment_number,
+                reference=payment.reference_number or str(payment.pk),
                 status='posted'
             )
             return journal
         except Exception as e:
-            logger.error(f"Error posting payment {payment.payment_number} to GL: {e}")
+            logger.error(f"Error posting payment {payment.pk} to GL: {e}")
             return None
 
 class InvoiceService:

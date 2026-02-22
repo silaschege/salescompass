@@ -39,13 +39,14 @@ class InvoiceForm(forms.ModelForm):
 class InvoiceLineForm(forms.ModelForm):
     class Meta:
         model = InvoiceLine
-        fields = ['product', 'description', 'quantity', 'unit_price', 'tax_rate']
+        fields = ['product', 'description', 'quantity', 'unit_price', 'tax_rate', 'discount']
         widgets = {
             'product': forms.Select(attrs={'class': 'form-select product-select'}),
             'description': forms.TextInput(attrs={'class': 'form-control'}),
             'quantity': forms.NumberInput(attrs={'class': 'form-control qty-input', 'step': '0.01'}),
             'unit_price': forms.NumberInput(attrs={'class': 'form-control price-input', 'step': '0.01'}),
             'tax_rate': forms.NumberInput(attrs={'class': 'form-control tax-input', 'step': '0.01'}),
+            'discount': forms.NumberInput(attrs={'class': 'form-control discount-input', 'step': '0.01'}),
         }
     
     def __init__(self, *args, **kwargs):

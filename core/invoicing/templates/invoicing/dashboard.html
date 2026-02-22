@@ -3,7 +3,7 @@
 {% block invoicing_content %}
 <div class="container-fluid py-4">
     <div class="row g-4 mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3">
@@ -16,29 +16,83 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-warning bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="bi bi-hourglass-split text-warning fs-4"></i>
+                        </div>
+                        <h6 class="card-subtitle text-muted mb-0">Outstanding</h6>
+                    </div>
+                    <h2 class="card-title mb-0 fw-bold">${{ total_outstanding|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3">
                         <div class="bg-danger bg-opacity-10 p-3 rounded-3 me-3">
                             <i class="bi bi-exclamation-circle text-danger fs-4"></i>
                         </div>
-                        <h6 class="card-subtitle text-muted mb-0">Overdue Invoices</h6>
+                        <h6 class="card-subtitle text-muted mb-0">Overdue</h6>
                     </div>
                     <h2 class="card-title mb-0 fw-bold">{{ overdue_count }}</h2>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="bg-warning bg-opacity-10 p-3 rounded-3 me-3">
-                            <i class="bi bi-file-earmark-text text-warning fs-4"></i>
+                        <div class="bg-secondary bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="bi bi-file-earmark-text text-secondary fs-4"></i>
                         </div>
                         <h6 class="card-subtitle text-muted mb-0">Drafts</h6>
                     </div>
                     <h2 class="card-title mb-0 fw-bold">{{ draft_count }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aging Summary -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3 border-0">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2"></i>Invoice Aging Summary</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 text-center">
+                <div class="col">
+                    <div class="p-3 rounded-3 bg-success bg-opacity-10">
+                        <div class="fs-3 fw-bold text-success">{{ aging_current }}</div>
+                        <small class="text-muted fw-medium">Current</small>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 rounded-3 bg-info bg-opacity-10">
+                        <div class="fs-3 fw-bold text-info">{{ aging_0_30 }}</div>
+                        <small class="text-muted fw-medium">1-30 Days</small>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 rounded-3 bg-warning bg-opacity-10">
+                        <div class="fs-3 fw-bold text-warning">{{ aging_31_60 }}</div>
+                        <small class="text-muted fw-medium">31-60 Days</small>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 rounded-3" style="background: rgba(255, 152, 0, 0.1);">
+                        <div class="fs-3 fw-bold" style="color: #ff9800;">{{ aging_61_90 }}</div>
+                        <small class="text-muted fw-medium">61-90 Days</small>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 rounded-3 bg-danger bg-opacity-10">
+                        <div class="fs-3 fw-bold text-danger">{{ aging_90_plus }}</div>
+                        <small class="text-muted fw-medium">90+ Days</small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -61,6 +115,7 @@
                             <th>Date</th>
                             <th>Total</th>
                             <th class="text-center">Status</th>
+                            <th class="text-center">Aging</th>
                             <th class="text-end pe-4">Actions</th>
                         </tr>
                     </thead>
@@ -76,13 +131,23 @@
                                     {% if invoice.status == 'paid' %}bg-success
                                     {% elif invoice.status == 'sent' %}bg-info
                                     {% elif invoice.status == 'overdue' %}bg-danger
+                                    {% elif invoice.status == 'partial' %}bg-warning
                                     {% else %}bg-secondary{% endif %} bg-opacity-10 
                                     text-{% if invoice.status == 'paid' %}success
                                     {% elif invoice.status == 'sent' %}info
                                     {% elif invoice.status == 'overdue' %}danger
+                                    {% elif invoice.status == 'partial' %}warning
                                     {% else %}secondary{% endif %} fw-bold px-3">
                                     {{ invoice.get_status_display }}
                                 </span>
+                            </td>
+                            <td class="text-center">
+                                {% if invoice.is_overdue %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger fw-bold">{{ invoice.days_overdue
+                                    }}d overdue</span>
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
                             </td>
                             <td class="text-end pe-4">
                                 <a href="{% url 'invoicing:invoice_detail' invoice.pk %}"
@@ -91,7 +156,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">No recent invoices found.</td>
+                            <td colspan="7" class="text-center py-4 text-muted">No recent invoices found.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
